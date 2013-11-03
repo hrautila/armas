@@ -1,0 +1,64 @@
+
+CC = gcc
+THREADS = -pthread
+DEBUG = 
+OPT = $(DEBUG) -O3 -ffast-math -fomit-frame-pointer $(THREADS) -I. -I.. 
+ARCH = -march=native
+
+LIB := libarmasd.a
+
+OBJDIR := .libs
+
+
+BLAS1 := nrm2.o iamax.o asum.o dot.o scal.o axpy.o 
+TRMM  := trmm.o trmm_unb.o trmm_blk.o trmm_rec.o
+TRSM  := trsm.o trsm_unb.o trsm_blk.o trsm_rec.o
+BLAS3 := gemm.o symm.o $(TRMM) $(TRSM) syrk.o syr2k.o
+BLAS2 := gemv.o trmv.o trsv.o ger.o syr.o syr2.o
+OTHER := mnorm.o plus.o updtrmm.o updtrmv.o
+CORE := kernel.o mscale.o matrix.o matrix_ext.o support.o
+
+OBJECTS := $(CORE) $(BLAS3) $(BLAS2) $(BLAS1) $(OTHER)
+OBJS := $(addprefix $(OBJDIR)/,$(OBJECTS))
+
+BUILT_HEADERS = dmatrix.h
+BUILT_INCLUDES = $(addprefix armas/, $(BUILT_HEADERS))
+
+$(OBJDIR)/%.o: %.c dtype.h matrix.h internal.h 
+	$(CC) $(OPT) $(ARCH) -c -o $@ $<  
+
+$(OBJDIR)/%.o: core/%.c dtype.h matrix.h internal.h 
+	$(CC) $(OPT) $(ARCH) -c -o $@ $<  
+
+$(OBJDIR)/%.o: blas1/%.c dtype.h matrix.h internal.h 
+	$(CC) $(OPT) $(ARCH) -c -o $@ $<  
+
+$(OBJDIR)/%.o: blas2/%.c dtype.h matrix.h internal.h 
+	$(CC) $(OPT) $(ARCH) -c -o $@ $<  
+
+$(OBJDIR)/%.o: blas3/%.c dtype.h matrix.h internal.h 
+	$(CC) $(OPT) $(ARCH) -c -o $@ $<  
+
+
+all: lib $(BUILT_INCLUDES)
+
+$(OBJS): | $(OBJDIR)
+
+$(OBJDIR):
+	mkdir $(OBJDIR)
+
+lib: $(OBJDIR)/$(LIB)
+
+$(OBJDIR)/$(LIB): $(OBJS)
+	$(AR) r $@ $(OBJS)
+	ranlib $@
+
+
+armas/dmatrix.h: matrix.h
+	sed 's/__armas_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g' $< > $@
+
+clean:
+	rm -f $(OBJDIR)/*.o
+	rm -f $(OBJDIR)/*.a
+	rm -f $(BUILT_INCLUDES)
+

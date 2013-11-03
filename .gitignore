@@ -1,0 +1,8 @@
+*~
+*.[ao]
+*.bak
+*.pyc
+*.lo
+*.la
+.libs
+.deps

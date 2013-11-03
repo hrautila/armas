@@ -1,0 +1,29 @@
+A Rewrite of Matrix Algebra Subroutines
+---------------------------------------
+
+## Installation
+
+   $ ./configure
+   $ make
+   $ sudo make install
+
+
+## Building from GIT sources.
+
+   Need autoconf, automake and libtool packages.
+
+   $ libtoolize
+   $ aclocal
+   $ autoconf
+   $ autoheader
+   $ automake --add-missing
+   $ ./configure
+   $ make
+   $ sudo make install
+
+   Manual installation is something like following 
+
+   $ cd src
+   $ make -f makefile.test all
+   $ cp .lib/libarmasd.a /usr/local/lib
+   $ cp -a armas /usr/local/include
