@@ -1,18 +1,20 @@
-ARMAS - A Rewrite of Matrix Algebra Subroutines
-===============================================
+## ARMAS - A Rewrite of Matrix Algebra Subroutines
+
 
 Simple column major matrix package and basic linear algebra subroutine (BLAS) implementation
 with selected functionality from LAPACK linear algebra package. (LAPACK part upcoming)
 
 Support for double precision real numbers. Double precision complex support upcoming.
 
-## Installation
+### Installation
 
    From source package (not yet available). 
+
 
    $ ./configure
    $ make
    $ sudo make install
+
 
    To run some tests
 
@@ -20,9 +22,10 @@ Support for double precision real numbers. Double precision complex support upco
 
    For compiling and installing from GitHub tree see INSTALLATION.
 
-##  Some numbers
+###  Some numbers
 
     Performance numbers on few platforms. Programs in tests/perf directory.
+
 
     Lenovo S20
     CPU :  Intel(R) Xeon(R) CPU W3550 @ 3.07GHz
@@ -36,9 +39,11 @@ Support for double precision real numbers. Double precision complex support upco
     N: 1400,  20.7980,  27.2520,  34.2317 Gflops
     N: 1600,  25.7324,  30.7854,  33.4283 Gflops
 
+
     Maximum theoretical performance of Nehalem CPU is 4 flops/cycle with SSE instructions. 
     With 4 cpus clocked @3.07Ghz we get 34.3/3.07/4 = 2.8 flops/cycle/cpu,
     equals ~ 70% of maximum.
+
 
     Lenovo T530
     CPU :  Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
@@ -51,6 +56,7 @@ Support for double precision real numbers. Double precision complex support upco
     N: 1200,  49.4994,  59.6848,  62.9829 Gflops
     N: 1400,  64.2201,  64.4247,  64.5753 Gflops
     N: 1600,  48.1237,  57.2411,  63.8664 Gflops
+
 
     Maximum theoretical performance of Ivy Bridge CPU is 8 flops/cycle with AVX instructions. 
     With 4 cpus clocked @2.40Ghz we get 64.6/2.40/4 = 6.7 flops/cycle/cpu,
