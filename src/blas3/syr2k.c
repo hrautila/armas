@@ -8,6 +8,21 @@
 #include <pthread.h>
 
 #include "dtype.h"
+
+// ------------------------------------------------------------------------------
+// this file provides following type independent functions
+#if defined(__armas_2update_sym) 
+#define __ARMAS_PROVIDES 1
+#endif
+// this file requires external public functions
+#if defined(__kernel_colwise_inner_scale_c) && defined(__rank_diag)
+#define __ARMAS_REQUIRES 1
+#endif
+
+// compile if type dependent public function names defined
+#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+// ------------------------------------------------------------------------------
+
 #include "internal.h"
 #include "matrix.h"
 
@@ -173,9 +188,10 @@ int __armas_2update_sym(__armas_dense_t *C,
   const mdata_t *_A, *_B;
 
   if (C->rows == 0 || C->cols == 0)
-    return -1;
+    return 0;
 
-  conf->error = 0;
+  if (!conf)
+    conf = armas_conf_default();
 
   _C = (mdata_t*)C;
   _A = (const mdata_t *)A;
@@ -195,6 +211,7 @@ int __armas_2update_sym(__armas_dense_t *C,
   return __rank2_threaded(0, nproc, C, A, B, alpha, beta, flags, conf);
 }
 
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
 
 // Local Variables:
 // indent-tabs-mode: nil

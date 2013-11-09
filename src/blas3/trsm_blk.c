@@ -11,6 +11,21 @@
 #include <math.h>
 
 #include "dtype.h"
+
+// ------------------------------------------------------------------------------
+// this file provides following type independent functions
+#if defined(__solve_blocked)
+#define __ARMAS_PROVIDES 1
+#endif
+// this file requires external public functions
+#if defined(__kernel_colwise_inner_no_scale) && defined(__solve_blk_recursive)
+#define __ARMAS_REQUIRES 1
+#endif
+
+// compile if type dependent public function names defined
+#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+// ------------------------------------------------------------------------------
+
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -283,6 +298,7 @@ void __solve_blocked(mdata_t *B, const mdata_t *A, DTYPE alpha,
   }
 }
 
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
 
 // Local Variables:
 // indent-tabs-mode: nil

@@ -129,7 +129,8 @@ int __armas_mvupdate_trm(__armas_dense_t *A,
   int nx = __armas_size(X);
   int ny = __armas_size(Y);
 
-  conf->error = 0;
+  if (!conf)
+    conf = armas_conf_default();
 
   if (A->cols == 0 || A->rows == 0)
     return 0;

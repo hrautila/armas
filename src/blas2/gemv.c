@@ -185,8 +185,8 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
   int nx = __armas_size(X);
   int ny = __armas_size(Y);
   
-
-  conf->error = 0;
+  if (!conf)
+    conf = armas_conf_default();
 
   if (A->cols == 0 || A->rows == 0)
     return 0;

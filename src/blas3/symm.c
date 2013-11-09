@@ -9,6 +9,21 @@
 #include <stdlib.h>
 
 #include "dtype.h"
+
+// ------------------------------------------------------------------------------
+// this file provides following type independet functions
+#if defined(__armas_mult_sym) 
+#define __ARMAS_PROVIDES 1
+#endif
+// this file requires external public functions
+#if defined(__kernel_colblk_inner) && defined(__kernel_colwise_inner_no_scale)
+#define __ARMAS_REQUIRES 1
+#endif
+
+// compile if type dependent public function names defined
+#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+// ------------------------------------------------------------------------------
+
 #include "internal.h"
 #include "matrix.h"
 #include "matcpy.h"
@@ -365,6 +380,7 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
                              C, A, B, alpha, beta, flags, conf);
 }
 
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
 
 // Local Variables:
 // indent-tabs-mode: nil

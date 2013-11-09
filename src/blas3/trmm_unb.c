@@ -10,6 +10,19 @@
 #include <stdint.h>
 
 #include "dtype.h"
+
+// ------------------------------------------------------------------------------
+// this file provides following type independent functions
+#if defined(__trmm_unb)
+#define __ARMAS_PROVIDES 1
+#endif
+// this file requires no external public functions
+#define __ARMAS_REQUIRES 1
+
+// compile if type dependent public function names defined
+#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+// ------------------------------------------------------------------------------
+
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -299,7 +312,7 @@ void __trmm_unb(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int N, int
   }
 }
 
-
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
 
 // Local Variables:
 // indent-tabs-mode: nil

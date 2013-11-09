@@ -11,6 +11,22 @@
 #include <math.h>
 
 #include "dtype.h"
+
+// ------------------------------------------------------------------------------
+// this file provides following type independet functions
+#if defined(__armas_solve_trm) 
+#define __ARMAS_PROVIDES 1
+#endif
+// this file requires external public functions
+#if defined(__solve_right_unb) && defined(__solve_left_unb) && \
+    defined(__solve_recursive) && defined(__solve_blocked)
+#define __ARMAS_REQUIRES 1
+#endif
+
+// compile if type dependent public function names defined
+#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+// ------------------------------------------------------------------------------
+
 #include "internal.h"
 #include "matrix.h"
 
@@ -160,6 +176,8 @@ int __armas_solve_trm(__armas_dense_t *B, const __armas_dense_t *A,
   }
   return __solve_trm_threaded(0, nproc, B, A, alpha, flags, conf);
 }
+
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
 
 // Local Variables:
 // indent-tabs-mode: nil

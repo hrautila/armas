@@ -11,6 +11,21 @@
 #include <math.h>
 
 #include "dtype.h"
+
+// ------------------------------------------------------------------------------
+// this file provides following type independent functions
+#if defined(__armas_update_trm) && defined(__update_trm_blk)
+#define __ARMAS_PROVIDES 1
+#endif
+// this file requires external public functions
+#if defined(__kernel_colwise_inner_no_scale)
+#define __ARMAS_REQUIRES 1
+#endif
+
+// compile if type dependent public function names defined
+#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+// ------------------------------------------------------------------------------
+
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -522,6 +537,7 @@ int __armas_update_trm(__armas_dense_t *C,
   return __update_trm_threaded(0, nproc, C, A, B, alpha, beta, flags, conf);
 }
 
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
 
 // Local Variables:
 // indent-tabs-mode: nil

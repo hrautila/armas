@@ -276,8 +276,8 @@ int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A,
   mdata_t A0;
   int nx = __armas_size(X);
   
-
-  conf->error = 0;
+  if (!conf)
+    conf = armas_conf_default();
 
   if (A->cols == 0 || A->rows == 0)
     return 0;

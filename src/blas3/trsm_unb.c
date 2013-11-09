@@ -11,6 +11,19 @@
 #include <math.h>
 
 #include "dtype.h"
+
+// ------------------------------------------------------------------------------
+// this file provides following type independent functions
+#if defined(__solve_left_unb) && defined(__solve_right_unb)
+#define __ARMAS_PROVIDES 1
+#endif
+// this file requires no external public functions
+#define __ARMAS_REQUIRES 1
+
+// compile if type dependent public function names defined
+#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+// ------------------------------------------------------------------------------
+
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -464,7 +477,7 @@ void __solve_right_unb(mdata_t *B, const mdata_t *A, DTYPE alpha,
 }
 
 
-
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
 
 // Local Variables:
 // indent-tabs-mode: nil
