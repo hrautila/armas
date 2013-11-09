@@ -30,15 +30,17 @@ enum armas_flags {
   // multiplicaton from right
   ARMAS_RIGHT   = 0x40,
   // unit diagonal matrix
-  ARMAS_UNIT    = 0x100,
-  // symmetric matrix
-  ARMAS_SYMM    = 0x200,
+  ARMAS_UNIT    = 0x80,
   // operand A is conjugate transposed
-  ARMAS_CONJA   = 0x400,
+  ARMAS_CONJA   = 0x100,
   // operand B is conjugate transposed
-  ARMAS_CONJB   = 0x1000,
+  ARMAS_CONJB   = 0x200,
   // matrix operand is conjugate transposed
-  ARMAS_CONJ    = 0x2000,
+  ARMAS_CONJ    = 0x400,
+  // symmetric matrix
+  ARMAS_SYMM    = 0x800,
+  // hermitian matrix
+  ARMAS_HERM    = 0x1000
 };
 
 enum armas_opts {
