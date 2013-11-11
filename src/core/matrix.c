@@ -174,7 +174,7 @@ int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
     // scale strictly upper triangular part, if UNIT set, don't touch diagonal
     n = flags & ARMAS_UNIT ? 1 : 0;
     for (c = n; c < m->rows; c++) {
-      __armas_submatrix(&C, m, c, c+n, 1, m->rows-c-n, -1);
+      __armas_submatrix(&C, m, c, c+n, 1, m->rows-c-n);
       __armas_scale(&C, alpha, (armas_conf_t *)0);
     }
     break;
@@ -183,7 +183,7 @@ int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
     // scale strictly lower triangular part. if UNIT set, don't touch diagonal
     n = flags & ARMAS_UNIT ? 1 : 0;
     for (c = 0; c < m->cols-n; c++) {
-      __armas_submatrix(&C, m, c+n, c, m->rows-c-n, 1, -1);
+      __armas_submatrix(&C, m, c+n, c, m->rows-c-n, 1);
       __armas_scale(&C, alpha, (armas_conf_t *)0);
     }
     break;
@@ -209,7 +209,7 @@ int __armas_madd(__armas_dense_t *m, DTYPE alpha, int flags)
     // (works for upper trapezoidal matrix too)
     n = flags & ARMAS_UNIT ? 1 : 0;
     for (c = n; c < m->rows; c++) {
-      __armas_submatrix(&C, m, c, c+n, 1, m->rows-c-n, -1);
+      __armas_submatrix(&C, m, c, c+n, 1, m->rows-c-n);
       __blk_add((mdata_t *)&C, alpha, C.rows, C.cols);
     }
     break;
@@ -219,7 +219,7 @@ int __armas_madd(__armas_dense_t *m, DTYPE alpha, int flags)
     // (works for lower trapezoidal matrix too)
     n = flags & ARMAS_UNIT ? 1 : 0;
     for (c = 0; c < m->cols-n; c++) {
-      __armas_submatrix(&C, m, c+n, c, m->rows-c-n, 1, -1);
+      __armas_submatrix(&C, m, c+n, c, m->rows-c-n, 1);
       __blk_add((mdata_t *)&C, alpha, C.rows, C.cols);
     }
     break;
