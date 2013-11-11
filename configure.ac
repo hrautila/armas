@@ -5,7 +5,7 @@ AC_PREREQ([2.69])
 AC_INIT([A Rewrite of Matrix Algebra Subroutines], [0.1], [],
 	[armas], [https://github.com/hrautila/armas])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([src/dtype.h])
+AC_CONFIG_SRCDIR([src/Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
