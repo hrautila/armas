@@ -11,10 +11,12 @@
 #define _ARMAS_H_INCLUDED
 
 #include <stdint.h>
+#include <stdlib.h>
 
 enum armas_flags {
   ARMAS_NOTRANS = 0,
   ARMAS_NULL    = 0,
+  ARMAS_NONE    = 0,
   // operand A is transposed
   ARMAS_TRANSA  = 0x1,          
   // operand B is transposed
@@ -100,6 +102,78 @@ extern long armas_use_nproc(uint64_t nelems, armas_conf_t *conf);
 extern armas_conf_t *armas_conf_default();
 
 extern int armas_last_error();
+
+// pivot vectors
+
+typedef struct armas_pivots {
+  int npivots;
+  int *indexes;
+  int owner;
+} armas_pivots_t;
+
+#ifndef __INLINE
+#define __INLINE extern inline
+#endif
+
+__INLINE
+armas_pivots_t *armas_pivot_new(int sz)
+{
+  armas_pivots_t *ptable = (armas_pivots_t*)malloc(sizeof(armas_pivots_t));
+  if (!ptable)
+    return ptable;
+
+  ptable->indexes = (int *)calloc(sz, sizeof(int));
+  if (!ptable->indexes) {
+    free(ptable);
+    return (armas_pivots_t *)0;
+  }
+  ptable->npivots = sz;
+  ptable->owner = 1;
+  return ptable;
+}
+
+__INLINE
+armas_pivots_t *armas_pivot_make(armas_pivots_t *ptable, int sz, int *data)
+{
+  ptable->npivots = sz;
+  ptable->indexes = data;
+  ptable->owner = 0;
+  return ptable;
+}
+
+__INLINE
+void armas_pivot_release(armas_pivots_t *ptable)
+{
+  if (ptable && ptable->owner) {
+    free(ptable->indexes);
+    ptable->indexes = (int *)0;
+  }
+}
+
+__INLINE
+void armas_pivot_free(armas_pivots_t *ptable)
+{
+  if (!ptable)
+    return;
+  if (ptable->owner)
+    free(ptable->indexes);
+  free(ptable);
+}
+
+__INLINE
+int armas_pivot_size(armas_pivots_t *ptable)
+{
+  return ptable ? ptable->npivots : 0;
+}
+
+__INLINE
+int *armas_pivot_data(armas_pivots_t *ptable)
+{
+  return ptable ? ptable->indexes : (int *)0;
+}
+
+
+
 
 #endif
 
