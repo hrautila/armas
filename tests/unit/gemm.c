@@ -36,6 +36,7 @@ main(int argc, char **argv) {
   int nproc = 1;
   int fails = 0;
   int e0, e1;
+  double m_inf, m_one;
   uint64_t pschedule[] = {6*6, 10*10, 600*600, 800*800};
   int nsched = 4;
 
@@ -76,7 +77,11 @@ main(int argc, char **argv) {
   e1 = armas_d_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
   armas_d_transpose(&T, &Ct);
   ok = armas_d_allclose(&C, &T) && e0 == 0 && e1 == 0;
-  printf("%6s: gemm(A, B)   == transpose(gemm(B.T, A.T))\n", ok ? "OK" : "FAILED");
+  armas_d_scale_plus(&T, &C, 1.0, -1.0, ARMAS_NONE, &conf);
+  m_inf = armas_d_mnorm(&T, ARMAS_NORM_INF, &conf);
+  m_one = armas_d_mnorm(&T, ARMAS_NORM_ONE, &conf);
+  printf("%6s: gemm(A, B)   == transpose(gemm(B.T, A.T)) [_inf=%.3e, _one=%.3e]\n",
+         ok ? "OK" : "FAILED", m_inf, m_one);
   fails += 1 - ok;
 
   // test 2: M != N == K
@@ -92,7 +97,11 @@ main(int argc, char **argv) {
   e1 = armas_d_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSB, &conf);
   armas_d_transpose(&T, &Ct);
   ok = armas_d_allclose(&C, &T) && e0 == 0 && e1 == 0;
-  printf("%6s: gemm(A, B.T) == transpose(gemm(B, A.T))\n", ok ? "OK" : "FAILED");
+  armas_d_scale_plus(&T, &C, 1.0, -1.0, ARMAS_NONE, &conf);
+  m_inf = armas_d_mnorm(&T, ARMAS_NORM_INF, &conf);
+  m_one = armas_d_mnorm(&T, ARMAS_NORM_ONE, &conf);
+  printf("%6s: gemm(A, B.T) == transpose(gemm(B, A.T))   [_inf=%.3e, _one=%.3e]\n",
+         ok ? "OK" : "FAILED", m_inf, m_one);
   fails += 1 - ok;
 
   // test 3: M == K != N
@@ -108,7 +117,11 @@ main(int argc, char **argv) {
   e1 = armas_d_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA, &conf);
   armas_d_transpose(&T, &Ct);
   ok = armas_d_allclose(&C, &T) && e0 == 0 && e1 == 0;
-  printf("%6s: gemm(A.T, B) == transpose(gemm(B.T, A))\n", ok ? "OK" : "FAILED");
+  armas_d_scale_plus(&T, &C, 1.0, -1.0, ARMAS_NONE, &conf);
+  m_inf = armas_d_mnorm(&T, ARMAS_NORM_INF, &conf);
+  m_one = armas_d_mnorm(&T, ARMAS_NORM_ONE, &conf);
+  printf("%6s: gemm(A.T, B) == transpose(gemm(B.T, A))   [_inf=%.3e, _one=%.3e]\n",
+         ok ? "OK" : "FAILED", m_inf, m_one);
   fails += 1 - ok;
 
   exit(fails);
