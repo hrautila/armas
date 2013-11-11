@@ -168,7 +168,7 @@ int check(armas_d_dense_t *A, armas_d_dense_t *B, int chkdir, const char *msg)
   }
   printf("1: first difference at [%d, %d]\n", row, col);
   armas_d_submatrix(&S, A, row, col,
-		    min(9, A->rows-row), min(9, A->cols-col), -1);
+		    min(9, A->rows-row), min(9, A->cols-col));
   printf("A, [%d, %d]\n", row, col); armas_d_printf(stdout, "%9.2e", &S);
 
   return ok;
