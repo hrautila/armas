@@ -1,18 +1,21 @@
 
-AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -pthread
+AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -pthread -Iinc
 
 noinst_HEADERS = \
-	dtype.h \
-	internal.h \
-	matrix.h \
-	mult.h \
-	mult_nosimd.h \
-	mult_sse_f64.h \
-	mult_avx_f64.h \
-	mvec_nosimd.h
+	inc/dtype.h \
+	inc/internal.h \
+	inc/matrix.h \
+	inc/mult.h \
+	inc/mult_nosimd.h \
+	inc/mult_sse_f64.h \
+	inc/mult_avx_f64.h \
+	inc/mvec_nosimd.h \
+	inc/pivot.h \
+	inc/partition.h
 
 COMMON = \
-	core/support.c 
+	core/support.c \
+	core/pivot.c
 
 CORE = \
 	core/kernel.c \
@@ -20,7 +23,8 @@ CORE = \
 	core/matrix_ext.c \
 	core/mnorm.c \
 	core/mscale.c \
-	core/plus.c 
+	core/plus.c \
+	core/partition.c
 
 
 BLAS1 = \
@@ -80,9 +84,9 @@ libarmasz_la_LIBADD = libx.la libz.la
 BUILT_SOURCES = armas/dmatrix.h armas/zmatrix.h
 CLEANFILES = armas/dmatrix.h armas/zmatrix.h
 
-armas/dmatrix.h: matrix.h
+armas/dmatrix.h: inc/matrix.h
 	sed 's/__armas_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
 
-armas/zmatrix.h: matrix.h
+armas/zmatrix.h: inc/matrix.h
 	sed 's/__armas_/armas_z_/g;s/_ARMAS_MAT/_ARMAS_ZMAT/;s/DTYPE/double complex/g;s/ABSTYPE/double/g;s/__ZERO/0.0+0.0i/g;s:/\* COMPLEX_H \*/:#include <complex.h>:' $< > $@
 
