@@ -84,6 +84,8 @@ void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m)
   if (!efmt)
     efmt = "%8.1e";
 
+  int rowpartial = m->rows > 18;
+  int colpartial = m->cols > 9;
   for (i = 0; i < m->rows; i++ ) {
     printf("[");
     for (j = 0; j < m->cols; j++ ) {
@@ -91,8 +93,16 @@ void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m)
 	printf(", ");
       }
       printf(efmt, m->elems[j*m->step+i]);
+      if (colpartial && j == 3) {
+        j = m->cols - 5;
+        printf(", ...");
+      }
     }
     printf("]\n");
+    if (rowpartial && i == 8) {
+      printf(" ....\n");
+      i = m->rows - 10;
+    }
   }
 }
 
