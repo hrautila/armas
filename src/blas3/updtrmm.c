@@ -142,12 +142,12 @@ void __update_trm_naive(mdata_t *C, const mdata_t *A, const mdata_t *B,
     __update_upper_recursive(&c0, &a0, &b0, alpha, beta, flags, P, nb/2, nb/2, cache);
   }
 
-  // upper RIGHT square
+  // upper RIGHT square (nb/2 rows, nb-nb/2 cols)
   __subblock(&c0, C, 0, nb/2);
   __subblock(&a0, A, 0, 0);
   __subblock(&b0, B, (flags & ARMAS_TRANSB ? nb/2 : 0), (flags & ARMAS_TRANSB ? 0 : nb/2));
   __kernel_colwise_inner_scale_c(&c0, &a0, &b0, alpha, beta, flags,
-                                 P, 0, nb-nb/2, 0, nb-nb/2, cache);
+                                 P, 0, nb-nb/2, 0, nb/2, cache);
 
   // lower RIGHT diagonal
   __subblock(&c0, C, nb/2, nb/2);
@@ -195,12 +195,12 @@ void __update_trm_naive(mdata_t *C, const mdata_t *A, const mdata_t *B,
     __update_lower_recursive(&c0, &a0, &b0, alpha, beta, flags, P, nb/2, nb/2, cache);
   }
 
-  // lower LEFT square
+  // lower LEFT square (nb-nb/2 rows, nb/2 cols)
   __subblock(&c0, C, nb/2, 0);
   __subblock(&a0, A, (flags & ARMAS_TRANSA ? 0 : nb/2), (flags & ARMAS_TRANSA ? nb/2 : 0));
   __subblock(&b0, B, 0,    0);
   __kernel_colwise_inner_scale_c(&c0, &a0, &b0, alpha, beta, flags,
-                                 P, 0, nb-nb/2, 0, nb-nb/2, cache);
+                                 P, 0, nb/2, 0, nb-nb/2, cache);
 
   // lower RIGHT diagonal
   __subblock(&c0, C, nb/2, nb/2);
