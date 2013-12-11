@@ -11,7 +11,11 @@
 
 #include "matcpy.h"
 
-#if defined(__AVX__) //&& defined(USE_AVX)
+#if defined(__FMA__) && defined(USE_FMA)
+// AVX2/FMA 256bit vectorization
+#include "mult_fma.h"
+
+#elif defined(__AVX__) //&& defined(USE_AVX)
 // AVX1 256bit vectorization
 #include "mult_avx.h"
 

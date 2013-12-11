@@ -9,6 +9,7 @@ noinst_HEADERS = \
 	inc/mult_nosimd.h \
 	inc/mult_sse_f64.h \
 	inc/mult_avx_f64.h \
+	inc/mult_fma_f64.h \
 	inc/mvec_nosimd.h \
 	inc/pivot.h \
 	inc/partition.h
