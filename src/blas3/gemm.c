@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+/**
+ * @defgroup blas3 BLAS level 3 functions
+ */
 #include <stdlib.h>
 #include <stdint.h>
 #include <pthread.h>
@@ -103,16 +106,27 @@ int __mult_threaded(int blknum, int nblk, int colwise,
 // exported public functions
 
 
-/*! \brief Compute C = beta*C + alpha*op(A)*op(B) 
+/**
+ * @brief General matrix-matrix multiplication
  *
- * \param C result matrix
- * \param A first operand matrix
- * \param B second operand matrix
- * \param alpha constant
- * \param beta scaling constant
- * \param flags matrix operand indicator flags
- * \param conf environment configuration
+ * Computes
+ * > C = alpha*A*B + beta*C\n
+ * > C = alpha*A.T*B + beta*C   if TRANSA\n
+ * > C = alpha*A*B.T + beta*C   if TRANSB\n
+ * > C = alpha*A.T*B.T + beta*C if TRANSA and TRANSB
  *
+ * @param[in,out] C result matrix
+ * @param[in] A first operand matrix
+ * @param[in] B second operand matrix
+ * @param[in] alpha scalar constant
+ * @param[in] beta scalar constant
+ * @param[in] flags matrix operand indicator flags
+ * @param[in,out] conf environment configuration
+ *
+ * @retval 0 Operation succeeded
+ * @retval -1 Failed, conf->error set to actual error code.
+ *
+ * @ingroup blas3
  */
 int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_dense_t *B,
                  DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)

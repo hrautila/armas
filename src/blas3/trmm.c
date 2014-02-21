@@ -105,8 +105,33 @@ int __mult_trm_threaded(int blknum, int nblk,
   return err;
 }
 
-
-
+/**
+ * @brief Triangular matrix-matrix multiply
+ *
+ * If flag bit LEFT is set then computes 
+ * > B = alpha*A*B\n
+ * > B = alpha*A.T*B  if TRANSA or TRANS
+ *
+ * If flag bit RIGHT is set then computes
+ * > B = alpha*B*A\n
+ * > B = alpha*B*A.T  if TRANSA or TRANS
+ *
+ * The matrix A is upper (lower) triangular matrix if ARMAS_UPPER (ARMAS_LOWER) is
+ * set. If matrix A is upper (lowert) then the strictly lower (upper) part is not
+ * referenced. Flag bit UNIT indicates that matrix A is unit diagonal and the diagonal
+ * entries are not accessed.
+ *
+ * @param[in,out] B  Result matrix
+ * @param[in]   A Triangular operand matrix
+ * @param[in]   alpha scalar multiplier
+ * @param[in]   flags option bits
+ * @param[in,out] conf environment configuration
+ *
+ * @retval 0 Succeeded
+ * @retval -1 Failed, conf->error set to error code.
+ *
+ * @ingroup blas3
+ */
 int __armas_mult_trm(__armas_dense_t *B, const __armas_dense_t *A, 
                       DTYPE alpha, int flags, armas_conf_t *conf)
 {

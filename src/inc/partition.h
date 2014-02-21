@@ -302,16 +302,18 @@ void __continue_3x3to2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
   switch (direction) {
   case ARMAS_PBOTTOMRIGHT:
     __armas_submatrix(ATL, A, 0, 0,     nk+mb, nk+mb);
-    __armas_submatrix(ATR, A, 0, nk+mb, nk+mb, A->cols-nk-mb);
-    
-    __armas_submatrix(ABL, A, nk+mb, 0, A->rows-nk-mb, nk+mb);
+    if (ATR)
+      __armas_submatrix(ATR, A, 0, nk+mb, nk+mb, A->cols-nk-mb);
+    if (ABL)
+      __armas_submatrix(ABL, A, nk+mb, 0, A->rows-nk-mb, nk+mb);
     __armas_submatrix(ABR, A, nk+mb, nk+mb, -1, -1);
     break;
   case ARMAS_PTOPLEFT:
     __armas_submatrix(ATL, A, 0, 0,  nk, nk);
-    __armas_submatrix(ATR, A, 0, nk, nk, A->cols-nk);
-
-    __armas_submatrix(ABL, A, nk, 0, A->rows-nk, A->cols-nk);
+    if (ATR)
+      __armas_submatrix(ATR, A, 0, nk, nk, A->cols-nk);
+    if (ABL)
+      __armas_submatrix(ABL, A, nk, 0, A->rows-nk, A->cols-nk);
     __armas_submatrix(ATL, A, nk, nk, -1, -1);
     break;
   }

@@ -178,7 +178,31 @@ int __rank2_threaded(int blk, int nblk, __armas_dense_t *C,
 
 
 
-int __armas_2update_sym(__armas_dense_t *C,
+/**
+ * @brief Symmetric matrix rank-2k update
+ *
+ * Computes
+ * > C = beta*C + alpha*A*B.T + alpha*B*A.T\n
+ * > C = beta*C + alpha*A.T*B + alpha*B.T*A   if TRANSA
+ *
+ * Matrix C has elements stored in the  upper (lower) triangular part
+ * if flag bit ARMAS_UPPER (ARMAS_LOWER) is set.
+ * If matrix is upper (lower) then the strictly lower (upper) part is not referenced.
+ *
+ * @param[in,out] C result matrix
+ * @param[in] A first operand matrix
+ * @param[in] B second operand matrix
+ * @param[in] alpha scalar constant
+ * @param[in] beta scalar constant
+ * @param[in] flags matrix operand indicator flags
+ * @param[in,out] conf environment configuration
+ *
+ * @retval 0 Operation succeeded
+ * @retval -1 Failed, conf->error set to actual error code.
+ *
+ * @ingroup blas3
+ */
+int __armas_update2_sym(__armas_dense_t *C,
                         const __armas_dense_t *A, const __armas_dense_t *B,
                         DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {

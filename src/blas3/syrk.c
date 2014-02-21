@@ -167,6 +167,29 @@ int __rank_threaded(int blk, int nblk,
 // C := alpha*A*A.T + beta*C
 // C := alpha*A.T*A + beta*C
 
+/**
+ * @brief Symmetric matrix rank-k update
+ *
+ * Computes
+ * > C = beta*C + alpha*A*A.T\n
+ * > C = beta*C + alpha*A.T*A   if TRANSA
+ *
+ * Matrix C is upper (lower) triangular if flag bit ARMAS_UPPER (ARMAS_LOWER)
+ * is set. If matrix is upper (lower) then
+ * the strictly lower (upper) part is not referenced.
+ *
+ * @param[in,out] C symmetric result matrix
+ * @param[in] A first operand matrix
+ * @param[in] alpha scalar constant
+ * @param[in] beta scalar constant
+ * @param[in] flags matrix operand indicator flags
+ * @param[in,out] conf environment configuration
+ *
+ * @retval 0 Operation succeeded
+ * @retval -1 Failed, conf->error set to actual error code.
+ *
+ * @ingroup blas3
+ */
 int __armas_update_sym(__armas_dense_t *C,  const __armas_dense_t *A, 
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {

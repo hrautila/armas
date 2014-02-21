@@ -119,6 +119,25 @@ void __update_trmv_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
 }
 
 
+/**
+ * @brief General triangular/trapezoidial matrix rank update.
+ *
+ * Computes
+ *
+ * > A := A + alpha*X*Y.T.
+ *
+ * where A is upper (lower) triangular or trapezoidial matrix as defined with
+ * flag bits ARMAS_UPPER (ARMAS_LOWER).
+ *
+ * @param[in,out]  A target matrix
+ * @param[in]      X source vector
+ * @param[in]      Y source vector
+ * @param[in]      alpha scalar multiplier
+ * @param[in]      flags flag bits
+ * @param[in]      conf  configuration block
+ *
+ * @ingroup blas2
+ */
 int __armas_mvupdate_trm(__armas_dense_t *A,
                          const __armas_dense_t *X,  const __armas_dense_t *Y,  
                          DTYPE alpha, int flags, armas_conf_t *conf)

@@ -174,7 +174,22 @@ void __update_ger_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
   __update_ger_recursive(&A0, &x0, &y0, alpha, flags, N-N/2, M-M/2);
 }
 
-
+/**
+ * @brief General matrix rank update.
+ *
+ * Computes
+ *
+ * > A := A + alpha*X*Y.T.
+ *
+ * @param[in,out]  A target matrix
+ * @param[in]      X source vector
+ * @param[in]      Y source vector
+ * @param[in]      alpha scalar multiplier
+ * @param[in]      flags flag bits
+ * @param[in]      conf  configuration block
+ *
+ * @ingroup blas2
+ */
 int __armas_mvupdate(__armas_dense_t *A,
                      const __armas_dense_t *X,  const __armas_dense_t *Y,  
                      DTYPE alpha, int flags, armas_conf_t *conf)

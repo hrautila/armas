@@ -11,7 +11,7 @@
 
 #include "matcpy.h"
 
-#if defined(__FMA__) && defined(USE_FMA)
+#if defined(__FMA__) //&& defined(USE_FMA)
 // AVX2/FMA 256bit vectorization
 #include "mult_fma.h"
 

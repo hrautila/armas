@@ -28,7 +28,25 @@
 #include "matrix.h"
 #include "mvec_nosimd.h"
 
-
+/**
+ * @brief Symmetric matrix rank-1 update.
+ *
+ * Computes 
+ *
+ * > A := A + alpha*X*X.T
+ *
+ * where A is symmetric matrix stored in lower (upper) triangular part of matrix A.
+ * If flag ARMAS_LOWER (ARMAR_UPPER) is set matrix is store in lower (upper) triangular
+ * part of A and upper (lower) triangular part is not referenced.
+ *
+ * @param[in,out]  A target matrix
+ * @param[in]      X source vector
+ * @param[in]      alpha scalar multiplier
+ * @param[in]      flags flag bits 
+ * @param[in]      conf configuration block
+ *
+ * @ingroup blas2
+ */
 int __armas_mvupdate_sym(__armas_dense_t *A,
                          const __armas_dense_t *X,
                          DTYPE alpha, int flags, armas_conf_t *conf)

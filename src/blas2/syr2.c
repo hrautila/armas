@@ -82,7 +82,26 @@ void __update_syr2_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
 }
 
 
-int __armas_mv2update_sym(__armas_dense_t *A,
+/**
+ * @brief Symmetric matrix rank-2 update.
+ *
+ * Computes 
+ *
+ * > A := A + alpha*X*Y.T + alpha*Y*X.T
+ *
+ * where A is symmetric matrix stored in lower (upper) triangular part of matrix A.
+ * If flag ARMAS_LOWER (ARMAR_UPPER) is set matrix is store in lower (upper) triangular
+ * part of A and upper (lower) triangular part is not referenced.
+ *
+ * @param[in,out]  A target matrix
+ * @param[in]      X, Y source vector
+ * @param[in]      alpha scalar multiplier
+ * @param[in]      flags flag bits 
+ * @param[in]      conf configuration block
+ *
+ * @ingroup blas2
+ */
+int __armas_mvupdate2_sym(__armas_dense_t *A,
                           const __armas_dense_t *X,  const __armas_dense_t *Y,  
                           DTYPE alpha, int flags, armas_conf_t *conf)
 {

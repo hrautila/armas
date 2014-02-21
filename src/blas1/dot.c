@@ -88,7 +88,15 @@ DTYPE __vec_dot_recursive(const mvec_t *X, const mvec_t *Y, int n)
   return c0 + c1 + c2 + c3;
 }
 
-
+/**
+ * @brief Computes inner product of two vectors.
+ *
+ * @param[in] x vector
+ * @param[in] y vector
+ * @param[in] conf configuration block
+ *
+ * @ingroup blas1
+ */
 DTYPE __armas_dot(const __armas_dense_t *x, const __armas_dense_t *y, armas_conf_t *conf)
 {
   if (!conf)

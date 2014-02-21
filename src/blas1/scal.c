@@ -133,7 +133,18 @@ void __vec_add(mvec_t *X,  const DTYPE alpha, int N)
   }
 }
 
-
+/**
+ * @brief Computes x = alpha*x
+ *
+ * @param[in,out] x vector
+ * @param[in] alpha scalar multiplier
+ * @param[in,out] conf configuration block
+ *
+ * @retval 0 Ok
+ * @retval -1 Failed, conf->error holds error code
+ *
+ * @ingroup blas1
+ */
 int __armas_scale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 {
   if (!conf)
@@ -151,6 +162,18 @@ int __armas_scale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *con
   return 0;
 }
 
+/**
+ * @brief Computes x = x/alpha
+ *
+ * @param[in,out] x vector
+ * @param[in] alpha scalar divisor
+ * @param[in,out] conf configuration block
+ *
+ * @retval 0 Ok
+ * @retval -1 Failed, conf->error holds error code
+ *
+ * @ingroup blas1
+ */
 int __armas_invscale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 {
   if (!conf)
@@ -168,6 +191,18 @@ int __armas_invscale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *
   return 0;
 }
 
+/**
+ * @brief Computes x = x + alpha
+ *
+ * @param[in,out] x vector
+ * @param[in] alpha scalar constant
+ * @param[in,out] conf configuration block
+ *
+ * @retval 0 Ok
+ * @retval -1 Failed, conf->error holds error code
+ *
+ * @ingroup blas1
+ */
 int __armas_add(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 {
   if (!conf)

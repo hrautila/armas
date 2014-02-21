@@ -67,8 +67,18 @@ void __vec_axpy(mvec_t *Y,  const mvec_t *X, DTYPE alpha, int N)
   }
 }
 
-/*! \brief Compute y = y + alpha*x
+/**
+ * @brief Compute Y = Y + alpha*X
  *
+ * @param[in,out] y target and source vector
+ * @param[in]     x source vector
+ * @param[in]     alpha scalar multiplier
+ * @param[out]    conf configuration block
+ *
+ * @retval 0 Ok
+ * @retval -1 Failed, conf->error holds error code
+ *
+ * @ingroup blas1
  */
 int __armas_axpy(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, armas_conf_t *conf)
 {
@@ -78,11 +88,11 @@ int __armas_axpy(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, arma
 
   if (x->cols != 1 && x->rows != 1) {
     conf->error = ARMAS_ENEED_VECTOR;
-	return -1;
+    return -1;
   }
   if (y->cols != 1 && y->rows != 1) {
     conf->error = ARMAS_ENEED_VECTOR;
-	return -1;
+    return -1;
   }
   if (__armas_size(x) != __armas_size(y)) {
     conf->error = ARMAS_ESIZE;

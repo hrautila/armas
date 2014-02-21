@@ -17,40 +17,77 @@
   
 // non-inline functions
 
-__armas_dense_t *__armas_transpose(__armas_dense_t *d, __armas_dense_t *s)
+/**
+ * @brief Transpose matrix
+ *
+ * Transpose matrix to another matrix,   A = B.T
+ *
+ * @param A destination matrix
+ * @param B source matrix
+ *
+ * @retval A Success
+ * @retval NULL Failed
+ */
+__armas_dense_t *__armas_transpose(__armas_dense_t *A, __armas_dense_t *B)
 {
-  if (d->rows != s->cols || d->cols != s->rows)
+  if (A->rows != B->cols || A->cols != B->rows)
     return (__armas_dense_t *)0;
   
-  __CPTRANS(d->elems, d->step, s->elems, s->step, s->rows, s->cols);
-  return d;
+  __CPTRANS(A->elems, A->step, B->elems, B->step, B->rows, B->cols);
+  return A;
 }
 
-__armas_dense_t *__armas_mcopy(__armas_dense_t *d, __armas_dense_t *s)
+/**
+ * @brief Copy matrix
+ *
+ * Copy matrix to another matrix, A = B
+ *
+ * @param A destination matrix
+ * @param B source matrix
+ *
+ * @retval A Success
+ * @retval NULL Failed
+ */
+__armas_dense_t *__armas_mcopy(__armas_dense_t *A, __armas_dense_t *B)
 {
-  if (d->rows != s->rows || d->cols != s->cols)
+  if (A->rows != B->rows || A->cols != B->cols)
     return (__armas_dense_t *)0;
   
-  __CP(d->elems, d->step, s->elems, s->step, s->rows, s->cols);
-  return d;
+  __CP(A->elems, A->step, B->elems, B->step, B->rows, B->cols);
+  return A;
 }
 
 // Return true if A is element-wise equal with a tolerance to B. The tolerance
 // values are positive, typically very small numbers.
 // Elements are equal within tolerance if
 //     abs(a[i,j]-b[i,j]) <= atol + rtol*abs(b[i,j])
-int __armas_intolerance(__armas_dense_t *a, __armas_dense_t *b, ABSTYPE atol, ABSTYPE rtol)
+
+/**
+ * @brief Element-wize equality with in tolerances
+ *
+ * Test if A == B within given tolerances. Elements are considered equal if
+ *
+ *  > abs(A[i,j] - B[i,j]) <= atol + rtol*abs(B[i,j])
+ *
+ * @param A, B matrices
+ * @param atol absolute tolerance
+ * @param rtol relative tolerance
+ *
+ * @retval 0 not equal
+ * @retval 1 equal
+ */
+int __armas_intolerance(__armas_dense_t *A, __armas_dense_t *B, ABSTYPE atol, ABSTYPE rtol)
 {
   register int i, j;
   ABSTYPE df, ref;
 
-  if (a->rows != b->rows || a->cols != b->cols)
+  if (A->rows != B->rows || A->cols != B->cols)
     return 0;
 
-  for (j = 0; j < a->cols; j++) {
-    for (i = 0; i < a->rows; i++) {
-      df = __ABS(a->elems[i+j*a->step] - b->elems[i+j*b->step]);
-      ref = atol + rtol * __ABS(b->elems[i+j*b->step]);
+  for (j = 0; j < A->cols; j++) {
+    for (i = 0; i < A->rows; i++) {
+      df = __ABS(A->elems[i+j*A->step] - B->elems[i+j*B->step]);
+      ref = atol + rtol * __ABS(B->elems[i+j*B->step]);
       if (df > ref)
         return 0;
     }
@@ -58,13 +95,25 @@ int __armas_intolerance(__armas_dense_t *a, __armas_dense_t *b, ABSTYPE atol, AB
   return 1;
 }
 
-// Default relative tolerance, these are spyed from Python NumPy
+/**
+ * @brief Default relative tolerance.
+ */
 static const ABSTYPE RTOL = 1.0000000000000001e-05;
 
-// Default absolute tolerance
+/**
+ * @brief Default absolute tolerance.
+ */
 static const ABSTYPE ATOL = 1e-8;
 
 // Return true if A is element-wise equal with a tolerance to B.
+/**
+ * @brief Element-wise equality with predefined tolerances
+ *
+ * @param A, B matrices
+ *
+ * @retval 0 not equal
+ * @retval 1 equal
+ */
 int __armas_allclose(__armas_dense_t *a, __armas_dense_t *b)
 {
   return __armas_intolerance(a, b, ATOL, RTOL);

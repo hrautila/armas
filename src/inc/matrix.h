@@ -15,15 +15,25 @@
 
 // Internal 'type' independent declaration of matrix type. Public exported
 // types are copies of this with explicit element type.
+/**
+ * @brief Column major matrix type.
+ */
 typedef struct __armas_dense {
-  DTYPE *elems;
-  int step;
-  int rows;
-  int cols;
-  void *__data;         // Non-null if stucture owns elements
-  int __nbytes;         // sizeof __data buffer
+  DTYPE *elems;   ///< Matrix elements, 
+  int step;       ///< Row stride 
+  int rows;       ///< Number of rows
+  int cols;       ///< Number of columns
+  void *__data;   ///< Non-null if stucture owns elements
+  int __nbytes;   ///< sizeof __data buffer
 } __armas_dense_t;
 
+static inline int _M(__armas_dense_t *A) {
+  return A->rows;
+}
+
+static inline int _N(__armas_dense_t *A) {
+  return A->cols;
+}
 
 // function that constants
 typedef DTYPE (*CONSTFUNC)();
@@ -65,6 +75,26 @@ extern int     __armas_invscale(const __armas_dense_t *X, const DTYPE alpha, arm
 extern int     __armas_shift(const __armas_dense_t *X, const DTYPE alpha, armas_conf_t *conf);
 
 // Blas level 2 functions
+extern int __armas_mvmult(__armas_dense_t *Y,
+                          const __armas_dense_t *A, const __armas_dense_t *X,
+                          DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
+extern int __armas_mvupdate(__armas_dense_t *A,
+                            const __armas_dense_t *X,  const __armas_dense_t *Y,  
+                            DTYPE alpha, int flags, armas_conf_t *conf);
+extern int __armas_mvupdate2_sym(__armas_dense_t *A,
+                                 const __armas_dense_t *X,  const __armas_dense_t *Y,  
+                                 DTYPE alpha, int flags, armas_conf_t *conf);
+extern int __armas_mvupdate_sym(__armas_dense_t *A,
+                                const __armas_dense_t *X,
+                                DTYPE alpha, int flags, armas_conf_t *conf);
+extern int __armas_mvupdate_trm(__armas_dense_t *A,
+                                const __armas_dense_t *X,  const __armas_dense_t *Y,  
+                                DTYPE alpha, int flags, armas_conf_t *conf);
+extern int __armas_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A, 
+                              DTYPE alpha, int flags, armas_conf_t *conf);
+extern int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A, 
+                               DTYPE alpha, int flags, armas_conf_t *conf);
+
 
 // Blas level 3 functions
 extern int __armas_mult(__armas_dense_t *C,

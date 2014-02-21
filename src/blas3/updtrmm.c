@@ -476,6 +476,32 @@ int __update_trm_threaded(int blk, int nblk, __armas_dense_t *C,
 }
 
 
+/**
+ * @brief Triangular or trapezoidial matrix rank-k update
+ *
+ * Computes
+ * > C = beta*C + alpha*A*B\n
+ * > C = beta*C + alpha*A.T*B   if TRANSA\n
+ * > C = beta*C + alpha*A*B.T   if TRANSB\n
+ * > C = beta*C + alpha*A.T*B.T if TRANSA and TRANSB
+ *
+ * Matrix C is upper (lower) triangular or trapezoidial if flag bit
+ * ARMAS_UPPER (ARMAS_LOWER) is set. If matrix is upper (lower) then
+ * the strictly lower (upper) part is not referenced.
+ *
+ * @param[in,out] C triangular/trapezoidial result matrix
+ * @param[in] A first operand matrix
+ * @param[in] B second operand matrix
+ * @param[in] alpha scalar constant
+ * @param[in] beta scalar constant
+ * @param[in] flags matrix operand indicator flags
+ * @param[in,out] conf environment configuration
+ *
+ * @retval 0 Operation succeeded
+ * @retval -1 Failed, conf->error set to actual error code.
+ *
+ * @ingroup blas3
+ */
 int __armas_update_trm(__armas_dense_t *C,
                        const __armas_dense_t *A, const __armas_dense_t *B,
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)

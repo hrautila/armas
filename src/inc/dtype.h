@@ -282,7 +282,7 @@ typedef double ABSTYPE;
 #define __armas_mult_trm    armas_d_mult_trm
 #define __armas_solve_trm   armas_d_solve_trm
 #define __armas_update_sym  armas_d_update_sym
-#define __armas_2update_sym armas_d_2update_sym
+#define __armas_update2_sym armas_d_update2_sym
 #define __armas_update_trm  armas_d_update_trm
 
 // public functions: blas level 2, matrix-vector

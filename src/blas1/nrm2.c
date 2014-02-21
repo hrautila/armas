@@ -98,6 +98,14 @@ ABSTYPE __vec_nrm2_scaled(const mvec_t *X,  int N)
   return scale*__SQRT(sum);
 }
 
+/**
+ * @brief Norm2 of vector
+ *
+ * @param[in] x vector
+ * @param[in,out] conf configuration block
+ *
+ * @ingroup blas1
+ */
 ABSTYPE __armas_nrm2(const __armas_dense_t *x, armas_conf_t *conf)
 {
   if (!conf)

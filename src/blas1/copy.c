@@ -57,7 +57,17 @@ void __vec_copy(mvec_t *X,  mvec_t *Y, int N)
   }
 }
 
-/*! \brief Copy vector X to Y.
+/**
+ * @brief Copy vector X to Y.
+ *
+ * @param[out] Y target vector
+ * @param[in]  X source vector
+ * @param[in,out] conf configuration block
+ *
+ * @retval 0 Ok
+ * @retval -1 Failed, conf->error holds error code
+ *
+ * @ingroup blas1
  */
 int __armas_copy(__armas_dense_t *Y, const __armas_dense_t *X, armas_conf_t *conf)
 {

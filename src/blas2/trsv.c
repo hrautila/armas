@@ -268,6 +268,25 @@ void __trsv_recursive(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N
 }
 
 
+/**
+ * @brief Triangular matrix-vector solve
+ *
+ * Computes
+ *
+ * > X = alpha*A.-1*X\n
+ * > X = alpha*A.-T*X   if ARMAS_TRANS 
+ *
+ * where A is upper (lower) triangular matrix defined with flag bits ARMAS_UPPER
+ * (ARMAS_LOWER).
+ *
+ * @param[in,out] X target and source vector
+ * @param[in]     A matrix
+ * @param[in]     alpha scalar multiplier
+ * @param[in]     flags operand flags
+ * @param[in]     conf  configuration block
+ *
+ * @ingroup blas2
+ */
 int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A, 
                         DTYPE alpha, int flags, armas_conf_t *conf)
 {

@@ -70,7 +70,16 @@ void __vec_swap(mvec_t *X,  mvec_t *Y, int N)
   }
 }
 
-/*! \brief Swap vectors X and Y.
+/**
+ * @brief Swap vectors X and Y.
+ *
+ * @param[in,out] X, Y vectors
+ * @param[in,out] conf configuration block
+ *
+ * @retval 0 Ok
+ * @retval -1 Failed, conf->error holds error code
+ *
+ * @ingroup blas1
  */
 int __armas_swap(__armas_dense_t *Y, __armas_dense_t *X, armas_conf_t *conf)
 {

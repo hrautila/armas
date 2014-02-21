@@ -326,6 +326,37 @@ int __mult_sym_threaded(int blknum, int nblk, int colwise,
 
 
 
+/**
+ * @brief Symmetric matrix-matrix multiplication
+ *
+ * If flag LEFT is set computes
+ * > C = alpha*A*B + beta*C     \n
+ * > C = alpha*A.T*B + beta*C   if TRANSA\n
+ * > C = alpha*A*B.T + beta*C   if TRANSB\n
+ * > C = alpha*A.T*B.T + beta*C if TRANSA and TRANSB
+ *
+ * If flag RIGHT is set computes
+ * > C = alpha*B*A + beta*C    \n
+ * > C = alpha*B*A.T + beta*C   if TRANSA\n
+ * > C = alpha*B.T*A + beta*C   if TRANSB\n
+ * > C = alpha*B.T*A.T + beta*C if TRANSA and TRANSB
+ *
+ * Matrix A elements are stored on lower (upper) triangular part of the matrix
+ * if flag bit ARMAS_LOWER (ARMAS_UPPER) is set.
+ *
+ * @param[in,out] C result matrix
+ * @param[in] A symmetric matrix
+ * @param[in] B second operand matrix
+ * @param[in] alpha scalar constant
+ * @param[in] beta scalar constant
+ * @param[in] flags matrix operand indicator flags
+ * @param[in,out] conf environment configuration
+ *
+ * @retval 0 Operation succeeded
+ * @retval -1 Failed, conf->error set to actual error code.
+ *
+ * @ingroup blas3
+ */
 int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas_dense_t *B,
                       DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {

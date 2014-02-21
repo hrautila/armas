@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+/** @defgroup blas2 BLAS level 2 functions.
+ *
+ */
 #include <stdio.h>
 #include <stdint.h>
 
@@ -175,7 +178,23 @@ void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
   }
 }
 
-
+/**
+ * @brief General matrix-vector multiply.
+ *
+ * Computes
+ *
+ * > Y := alpha*A*X + beta*Y\n
+ * > Y := alpha*A.T*X + beta*Y  if ARMAS_TRANS
+ *
+ *  @param[in,out]  Y   target and source vector
+ *  @param[in]      A   source operand matrix
+ *  @param[in]      X   source operand vector
+ *  @param[in]      alpha, beta scalars
+ *  @param[in]      flags  flag bits
+ *  @param[in]      conf   configuration block
+ *
+ * @ingroup blas2
+ */
 int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_dense_t *X,
                    DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {

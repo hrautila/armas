@@ -5,6 +5,10 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+/**
+ * @defgroup blas1 BLAS level 1 functions
+ */
+
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -223,7 +227,12 @@ DTYPE __vec_sum_recursive(const mvec_t *X, int n)
 }
 
 
-/*! \brief Compute sum(abs(x))
+/**
+ * @brief Compute sum(abs(x))
+ *
+ * @retval sum of absolute values of x elements
+ *
+ * @ingroup blas1
  */
 ABSTYPE __armas_asum(const __armas_dense_t *x, armas_conf_t *conf)
 {
@@ -249,7 +258,12 @@ ABSTYPE __armas_asum(const __armas_dense_t *x, armas_conf_t *conf)
 }
 
 
-/*! \brief Compute sum(x)
+/**
+ * @brief Compute sum(x)
+ *
+ * @retval sum of x elements
+ *
+ * @ingroup blas1
  */
 DTYPE __armas_sum(const __armas_dense_t *x, armas_conf_t *conf)
 {

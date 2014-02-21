@@ -54,6 +54,17 @@ int __vec_iamax(const mvec_t *X,  int N)
   return ix;
 }
 
+/**
+ * @brief Index of max(abs(X))
+ *
+ * @param[in] x vector
+ * @param[in,out] conf configuration block
+ *
+ * @retval >= 0 index of maximum element
+ * @retval -1  error, conf->error holds error code
+ *
+ * @ingroup blas1
+ */
 int __armas_iamax(const __armas_dense_t *x, armas_conf_t *conf)
 {
   if (!conf)
