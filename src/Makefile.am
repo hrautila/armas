@@ -38,6 +38,7 @@ BLAS1 = \
 
 BLAS2 = \
 	blas2/gemv.c \
+	blas2/symv.c \
 	blas2/ger.c \
 	blas2/syr2.c \
 	blas2/syr.c \
