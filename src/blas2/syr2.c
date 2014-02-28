@@ -12,7 +12,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_mv2update_sym)
+#if defined(__armas_mvupdate2_sym)
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
@@ -135,15 +135,16 @@ int __armas_mvupdate2_sym(__armas_dense_t *A,
   A0 = (mdata_t){A->elems, A->step};
 
   switch (conf->optflags) {
+  case ARMAS_RECURSIVE:
+    __update_syr2_recursive(&A0, &x, &y, alpha, flags, nx);
+    break;
+
   case ARMAS_SNAIVE:
+  default:
     __update_trmv_unb(&A0, &x, &y, alpha, flags, nx, nx);
     __update_trmv_unb(&A0, &y, &x, alpha, flags, nx, nx);
     break;
 
-  case ARMAS_RECURSIVE:
-  default:
-    __update_syr2_recursive(&A0, &x, &y, alpha, flags, nx);
-    break;
   }
   return 0;
 }

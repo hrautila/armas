@@ -111,6 +111,7 @@ void __gemv_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 }
 
 
+
 void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
                       DTYPE alpha, DTYPE beta, int flags,
                       int S, int L, int R, int E)
@@ -177,6 +178,7 @@ void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
     __gemv_recursive(&y0, &A0, &x0, alpha, beta, flags, 0, nx-nx/2, 0, ny-ny/2);
   }
 }
+
 
 /**
  * @brief General matrix-vector multiply.
@@ -245,15 +247,7 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
   if (beta != 1.0) {
     __armas_scale(Y, beta, conf);
   }
-  switch (conf->optflags) {
-  case ARMAS_SNAIVE:
-    __gemv_unb(&y, &A0, &x, alpha, flags, 0, nx, 0, ny);
-    break;
-  case ARMAS_RECURSIVE:
-  default:
-    __gemv_recursive(&y, &A0, &x, alpha, beta, flags, 0, nx, 0, ny);
-    break;
-  }
+  __gemv_unb(&y, &A0, &x, alpha, flags, 0, nx, 0, ny);
   return 0;
 }
 

@@ -282,13 +282,7 @@ int __armas_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A,
   A0 = (mdata_t){A->elems, A->step};
 
   switch (conf->optflags) {
-  case ARMAS_SNAIVE:
-    __trmv_unb(&x, &A0, alpha, flags, nx);
-    break;
-
   case ARMAS_RECURSIVE:
-  default:
-
     switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {
     case ARMAS_LOWER|ARMAS_TRANS:
     case ARMAS_UPPER:
@@ -301,6 +295,12 @@ int __armas_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A,
       break;
     }
     break;
+
+  case ARMAS_SNAIVE:
+  default:
+    __trmv_unb(&x, &A0, alpha, flags, nx);
+    break;
+
   }
   return 0;
 }

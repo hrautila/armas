@@ -74,13 +74,13 @@ int __armas_mvupdate_sym(__armas_dense_t *A,
   A0 = (mdata_t){A->elems, A->step};
 
   switch (conf->optflags) {
-  case ARMAS_SNAIVE:
-    __update_trmv_unb(&A0, &x, &x, alpha, flags, nx, nx);
+  case ARMAS_RECURSIVE:
+    __update_trmv_recursive(&A0, &x, &x, alpha, flags, nx, nx);
     break;
 
-  case ARMAS_RECURSIVE:
+  case ARMAS_SNAIVE:
   default:
-    __update_trmv_recursive(&A0, &x, &x, alpha, flags, nx, nx);
+    __update_trmv_unb(&A0, &x, &x, alpha, flags, nx, nx);
     break;
   }
   return 0;

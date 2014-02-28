@@ -318,12 +318,7 @@ int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A,
   A0 = (mdata_t){A->elems, A->step};
 
   switch (conf->optflags) {
-  case ARMAS_SNAIVE:
-    __trsv_unb(&x, &A0, flags, nx);
-    break;
-
   case ARMAS_RECURSIVE:
-  default:
 
     switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {
     case ARMAS_LOWER|ARMAS_TRANS:
@@ -336,6 +331,11 @@ int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A,
       __trsv_forward_recursive(&x, &A0, flags, nx);
       break;
     }
+    break;
+
+  case ARMAS_SNAIVE:
+  default:
+    __trsv_unb(&x, &A0, flags, nx);
     break;
   }
   if (alpha != 1.0) {

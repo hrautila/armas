@@ -116,7 +116,7 @@ void __update1axpy(mdata_t *A, const mvec_t *X, const mvec_t *Y, DTYPE alpha, in
 
 
 /*
- * Unblocked update of triangular (M == N) and trapezoidial (M != N) matrix.
+ * Unblocked update of general M-by-N matrix.
  */
 void __update_ger_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
                        DTYPE alpha, int flags, int N, int M)
@@ -224,13 +224,13 @@ int __armas_mvupdate(__armas_dense_t *A,
   A0 = (mdata_t){A->elems, A->step};
 
   switch (conf->optflags) {
-  case ARMAS_SNAIVE:
-    __update_ger_unb(&A0, &x, &y, alpha, flags, ny, nx);
+  case ARMAS_RECURSIVE:
+    __update_ger_recursive(&A0, &x, &y, alpha, flags, ny, nx);
     break;
 
-  case ARMAS_RECURSIVE:
+  case ARMAS_SNAIVE:
   default:
-    __update_ger_recursive(&A0, &x, &y, alpha, flags, ny, nx);
+    __update_ger_unb(&A0, &x, &y, alpha, flags, ny, nx);
     break;
   }
   return 0;
