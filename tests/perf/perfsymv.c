@@ -2,56 +2,71 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 #include <time.h>
-#include <sys/time.h>
 
 #include <armas/dmatrix.h>
 #include "helper.h"
 
 main(int argc, char **argv) {
 
-  int ok, opt, i;
-  int count = 5;
-  int nproc = 2;
-  int N = 600;
   int verbose = 0;
+  int count = 5;
   double rt, min, max, avg;
   armas_conf_t conf;
-  armas_d_dense_t C, A, B;
+  armas_d_dense_t X, Y, Y0, Y1, A, At;
 
-  while ((opt = getopt(argc, argv, "vc:P:")) != -1) {
+  int ok, opt, i;
+  int N = 1701;
+  int nproc = 1;
+  int bsize = 0;
+  int algo = 'B';
+
+  while ((opt = getopt(argc, argv, "a:c:v")) != -1) {
     switch (opt) {
+    case 'a':
+      algo = *optarg;
+      break;
     case 'v':
       verbose = 1;
       break;
     case 'c':
       count = atoi(optarg);
       break;
-    case 'P':
-      nproc = atoi(optarg);
-      break;
-    default: /* ? */
-      fprintf(stderr, "Usage: time_gemm [-v] [-c numtest] [-P nproc] [size]");
-      break;
+    default:
+      fprintf(stderr, "usage: perfsymv [-a algo -c count -v] [size]\n");
+      exit(1);
     }
   }
+    
   if (optind < argc)
     N = atoi(argv[optind]);
 
   long seed = (long)time(0);
   srand48(seed);
 
-  conf.mb = 96; conf.nb = 128; conf.kb = 160;
-  conf.maxproc = nproc;
+  conf.mb = bsize == 0 ? 64  : bsize;
+  conf.nb = bsize == 0 ? 96  : bsize;
+  conf.kb = bsize == 0 ? 160 : bsize ;
+  conf.maxproc = 1;
+  switch (algo) {
+  case 'N':
+  case 'n':
+    conf.optflags = ARMAS_SNAIVE;
+    break;
+  case 'R':
+  case 'r':
+  default:
+    conf.optflags = ARMAS_RECURSIVE;
+    break;
+  }    
 
-  armas_d_init(&C, N, N);
+  armas_d_init(&Y, N, 1);
+  armas_d_init(&X, N, 1);
   armas_d_init(&A, N, N);
-  armas_d_init(&B, N, N);
   
-  armas_d_set_values(&C, zero, ARMAS_NULL);
-  armas_d_set_values(&A, unitrand, ARMAS_NULL);
-  armas_d_set_values(&B, unitrand, ARMAS_NULL);
+  armas_d_set_values(&Y, zero, ARMAS_NULL);
+  armas_d_set_values(&X, unitrand, ARMAS_NULL);
+  armas_d_set_values(&A, unitrand, ARMAS_SYMM);
 
   // C = A*B
   min = max = avg = 0.0;
@@ -59,7 +74,7 @@ main(int argc, char **argv) {
     flush();
     rt = time_msec();
 
-    armas_d_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
+    armas_d_mvmult_sym(&Y, &A, &X, 1.0, 0.0, ARMAS_LOWER, &conf);
     
     rt = time_msec() - rt;
 
@@ -75,7 +90,8 @@ main(int argc, char **argv) {
     if (verbose)
       printf("%2d: %.4f, %.4f, %.4f msec\n", i, min, avg, max);
   }
-  int64_t nops = 2*(int64_t)N*N*N;
+
+  int64_t nops = 2*(int64_t)N*N;
   printf("N: %4d, %8.4f, %8.4f, %8.4f Gflops\n",
 	 N, gflops(max, nops), gflops(avg, nops), gflops(min, nops));
 }
