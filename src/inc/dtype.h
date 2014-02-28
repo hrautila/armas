@@ -293,7 +293,7 @@ typedef double ABSTYPE;
 #define __armas_mvupdate      armas_d_mvupdate
 #define __armas_mvupdate_trm  armas_d_mvupdate_trm
 #define __armas_mvupdate_sym  armas_d_mvupdate_sym
-#define __armas_mv2update_sym armas_d_mv2update_sym
+#define __armas_mvupdate2_sym armas_d_mvupdate2_sym
 
 #define __armas_mvmult_diag   armas_d_mvmult_diag
 #define __armas_mvsolve_diag  armas_d_mvsolve_diag
