@@ -2,6 +2,8 @@
 *~
 *.bak
 *.pyc
+*.log
+*.trs
 
 # Libtool libraries
 *.lo
