@@ -11,7 +11,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(__armas_2update_sym) 
+#if defined(__armas_update2_sym) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -211,7 +211,7 @@ int __armas_update2_sym(__armas_dense_t *C,
   mdata_t *_C;
   const mdata_t *_A, *_B;
 
-  if (C->rows == 0 || C->cols == 0)
+  if (__armas_size(C) == 0 || __armas_size(A) == 0 || __armas_size(B) == 0)
     return 0;
 
   if (!conf)

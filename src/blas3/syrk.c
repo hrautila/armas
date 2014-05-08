@@ -198,8 +198,8 @@ int __armas_update_sym(__armas_dense_t *C,  const __armas_dense_t *A,
   mdata_t *_C;
   const mdata_t *_A;
 
-  if (C->rows == 0 || C->cols == 0)
-    return -1;
+  if (__armas_size(A) == 0 || __armas_size(C) == 0)
+    return 0;
 
   conf->error = 0;
 

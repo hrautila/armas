@@ -149,9 +149,12 @@ int __armas_solve_trm(__armas_dense_t *B, const __armas_dense_t *A,
                       DTYPE alpha, int flags, armas_conf_t *conf)
 {
   long nproc;
-  int K, ir, ie, ok, empty;
+  int K, ir, ie, ok;
   mdata_t *_B;
   const mdata_t *_A;
+
+  if (__armas_size(B) == 0 || __armas_size(A) == 0)
+    return 0;
 
   if (!conf)
     conf = armas_conf_default();
@@ -160,16 +163,12 @@ int __armas_solve_trm(__armas_dense_t *B, const __armas_dense_t *A,
   switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
   case ARMAS_RIGHT:
     ok = B->cols == A->rows && A->cols == A->rows;
-    empty = B->rows == 0 || A->cols == 0;
     break;
   case ARMAS_LEFT:
   default:
     ok = A->cols == A->rows && A->cols == B->rows;
-    empty = A->rows == 0 || B->cols == 0;
     break;
   }
-  if (empty)
-    return 0;
   if (! ok) {
     conf->error = 1;
     return -1;

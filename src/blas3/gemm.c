@@ -136,13 +136,11 @@ int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_den
   mdata_t *_C;
   const mdata_t *_A, *_B;
 
-  if (C->rows == 0 || C->cols == 0 || A->cols == 0 || B->rows == 0)
-    return 0;
+  if (__armas_size(A) == 0 || __armas_size(B) == 0 || __armas_size(C) == 0)
+    return  0;
 
   if (!conf)
     conf = armas_conf_default();
-
-  conf->error = 0;
 
   // check consistency
   switch (flags & (ARMAS_TRANSA|ARMAS_TRANSB)) {
@@ -160,7 +158,7 @@ int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_den
     break;
   }
   if (! ok) {
-    conf->error = 1;
+    conf->error = ARMAS_ESIZE;
     return -1;
   }
 

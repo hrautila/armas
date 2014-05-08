@@ -367,6 +367,8 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
 
   if (C->rows == 0 || C->cols == 0)
     return 0;
+  if (__armas_size(A) == 0 || __armas_size(B) == 0)
+    return 0;
 
   conf->error = 0;
 

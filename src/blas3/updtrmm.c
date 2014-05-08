@@ -511,12 +511,12 @@ int __armas_update_trm(__armas_dense_t *C,
   mdata_t *_C;
   const mdata_t *_A, *_B;
 
+  if (__armas_size(C) == 0 || __armas_size(A) == 0 || __armas_size(B) == 0)
+    return 0;
+
   if (!conf)
     conf = armas_conf_default();
   
-  if (C->rows == 0 || C->cols == 0)
-    return -1;
-
   switch (flags & (ARMAS_TRANSA|ARMAS_TRANSB)) {
   case ARMAS_TRANSA|ARMAS_TRANSB:
     ok = A->rows == B->cols && C->cols == B->rows;
