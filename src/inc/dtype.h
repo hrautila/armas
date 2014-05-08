@@ -3,7 +3,7 @@
 
 // This file is part of github.com/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
-// any later version. See the COPYING tile included in this archive.
+// any later version. See the COPYING file included in this archive.
 
 #ifndef __DTYPE_H
 #define __DTYPE_H 1
@@ -13,7 +13,7 @@
 
 #ifdef COMPLEX128
 /* ---------------------------------------------------------------------------
- * Definitions for single precision complex numbers.
+ * Definitions for double precision complex numbers.
  */
 typedef double complex DTYPE;
 typedef double ABSTYPE;
@@ -33,14 +33,6 @@ typedef double ABSTYPE;
 #define __SQRT csqrt
 
 // internally available functions
-#if 0
-#define __MSCALE       __Z_MSCALE
-#define __MPRINT       __Z_MPRINT
-#define __VPRINT       __Z_VPRINT
-#define __tile_print   __z_tile_print
-#define __SCALE        __Z_SCALE
-#endif
-
 #define __blk_add      __z_blk_add
 #define __blk_scale    __z_blk_scale
 #define __blk_print    __z_blk_print
@@ -92,8 +84,9 @@ typedef double ABSTYPE;
 #define __armas_transpose     armas_z_transpose
 #define __armas_allclose      armas_z_allclose
 #define __armas_intolerance   armas_z_intolerance
-#define __armas_mk_trm        armas_z_mk_trm
+#define __armas_make_trm      armas_z_make_trm
 #define __armas_scale_plus    armas_z_scale_plus
+#define __armas_isvector      armas_z_isvector
 
 #define __armas_index_valid  __armas_z_index_valid
 #define __armas_real_index   __armas_z_real_index
@@ -110,6 +103,7 @@ typedef double ABSTYPE;
 #define __armas_iamax    armas_z_iamax
 #define __armas_dot      armas_z_dot
 #define __armas_axpy     armas_z_axpy
+#define __armas_axpby    armas_z_axpby
 #define __armas_swap     armas_z_swap
 #define __armas_copy     armas_z_copy
 // 
@@ -156,8 +150,10 @@ typedef float ABSTYPE;
 #define __ONE     (float)1.0
 
 // functions from math.h
-#define __ABS  fabsf
-#define __SQRT sqrtf
+#define __ABS   fabsf
+#define __SQRT  sqrtf
+#define __HYPOT hypotf
+#define __SIGN  signbitf
 
 #define __SCALE  __S_SCALE
 #define __MSCALE __S_MSCALE
@@ -188,16 +184,10 @@ typedef double ABSTYPE;
 // functions from math.h
 #define __ABS  fabs
 #define __SQRT sqrt
+#define __HYPOT hypot
+#define __SIGN  signbit
 
 // internally available functions
-#if 0
-#define __MSCALE       __D_MSCALE
-#define __MPRINT       __D_MPRINT
-#define __VPRINT       __D_VPRINT
-#define __SCALE        __D_SCALE
-#define __tile_print   __d_tile_print
-#endif
-
 #define __blk_add      __d_blk_add
 #define __blk_scale    __d_blk_scale
 #define __blk_print    __d_blk_print
@@ -237,12 +227,20 @@ typedef double ABSTYPE;
 #define __repartition_1x2to1x3    __d_repartition_1x2to1x3
 #define __continue_1x3to1x2       __d_continue_1x3to1x2
 #define __partition_2x2           __d_partition_2x2
-#define __repartition_2x2to2x3    __d_repartition_2x2to2x3
+#define __repartition_2x2to3x3    __d_repartition_2x2to3x3
 #define __continue_3x3to2x2       __d_continue_2x3to2x2
+#define __merge2x1                __d_merge2x1
+#define __merge1x2                __d_merge1x2
+
+// ------------------------------------------------------------------------------
+// public matrix types
+#define __armas_dense_t       armas_d_dense_t
+
+// nil matrix
+#define __nil                 ((__armas_dense_t *)0)
 
 // ------------------------------------------------------------------------------
 // public matrix functions
-#define __armas_dense_t       armas_d_dense_t
 #define __armas_size          armas_d_size
 #define __armas_init          armas_d_init
 #define __armas_release       armas_d_release
@@ -260,9 +258,11 @@ typedef double ABSTYPE;
 #define __armas_get_at        armas_d_get_at
 #define __armas_index         armas_d_index
 #define __armas_data          armas_d_data
+#define __armas_col_as_row    armas_d_col_as_row
 #define __armas_printf        armas_d_printf
 #define __armas_print         armas_d_print
 #define __armas_set_values    armas_d_set_values
+#define __armas_newcopy       armas_d_newcopy
 #define __armas_mcopy         armas_d_mcopy
 #define __armas_mscale        armas_d_mscale
 #define __armas_madd          armas_d_madd
@@ -270,8 +270,9 @@ typedef double ABSTYPE;
 #define __armas_transpose     armas_d_transpose
 #define __armas_allclose      armas_d_allclose
 #define __armas_intolerance   armas_d_intolerance
-#define __armas_mk_trm        armas_d_mk_trm
+#define __armas_make_trm      armas_d_make_trm
 #define __armas_scale_plus    armas_d_scale_plus
+#define __armas_isvector      armas_d_isvector
 
 #define __armas_index_valid  __armas_d_index_valid
 #define __armas_real_index   __armas_d_real_index
@@ -284,6 +285,8 @@ typedef double ABSTYPE;
 #define __armas_update_sym  armas_d_update_sym
 #define __armas_update2_sym armas_d_update2_sym
 #define __armas_update_trm  armas_d_update_trm
+// marker for blas level 3
+#define __armas_blas3   1
 
 // public functions: blas level 2, matrix-vector
 #define __armas_mvmult        armas_d_mvmult
@@ -294,6 +297,8 @@ typedef double ABSTYPE;
 #define __armas_mvupdate_trm  armas_d_mvupdate_trm
 #define __armas_mvupdate_sym  armas_d_mvupdate_sym
 #define __armas_mvupdate2_sym armas_d_mvupdate2_sym
+// marker for blas level 2
+#define __armas_blas2   1
 
 #define __armas_mvmult_diag   armas_d_mvmult_diag
 #define __armas_mvsolve_diag  armas_d_mvsolve_diag
@@ -305,14 +310,21 @@ typedef double ABSTYPE;
 #define __armas_iamax   armas_d_iamax
 #define __armas_dot     armas_d_dot
 #define __armas_axpy    armas_d_axpy
+#define __armas_axpby   armas_d_axpby
 #define __armas_swap    armas_d_swap
 #define __armas_copy    armas_d_copy
+// marker for blas level 1
+#define __armas_blas1   1
 // 
 #define __armas_invscale armas_d_invscale
 #define __armas_sum      armas_d_sum
 #define __armas_amax     armas_d_amax
 #define __armas_add      armas_d_add
 
+#endif  /* FLOAT64 */
+
+#if defined(__armas_blas1) && defined(__armas_blas2) && defined(__armas_blas3)
+#define __armas_blas 1
 #endif
 
-#endif
+#endif  /* DTYPE_H */
