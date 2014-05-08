@@ -104,6 +104,11 @@ int min(int a, int b) {
   return a < b ? a : b;
 }
 
+static inline
+int max(int a, int b) {
+  return a < b ? b : a;
+}
+
 // compute start of i'th block out of r blocks in sz elements
 static inline
 int __block_index4(int i, int n, int sz) {
@@ -244,6 +249,7 @@ void __update_trmv_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
 extern
 void __update_trmv_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
                              DTYPE alpha, int flags, int N, int M);
+
 
 #endif
 
