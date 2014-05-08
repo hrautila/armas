@@ -23,7 +23,7 @@
 #include "matrix.h"
 
 static
-void __vec_copy(mvec_t *X,  mvec_t *Y, int N)
+void __vec_copy(mvec_t *X,  const mvec_t *Y, int N)
 {
   register int i, kx, ky;
   register double f0, f1, f2, f3;
@@ -90,8 +90,8 @@ int __armas_copy(__armas_dense_t *Y, const __armas_dense_t *X, armas_conf_t *con
   if (__armas_size(X) == 0 || __armas_size(Y) == 0) {
     return 0;
   }
-  mvec_t x = {X->elems, (X->rows == 1 ? X->step : 1)};
-  const mvec_t y = {Y->elems, (Y->rows == 1 ? Y->step : 1)};
+  const mvec_t x = {X->elems, (X->rows == 1 ? X->step : 1)};
+  mvec_t y = {Y->elems, (Y->rows == 1 ? Y->step : 1)};
 
   __vec_copy(&y, &x, __armas_size(Y));
   return 0;
