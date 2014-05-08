@@ -41,6 +41,12 @@ typedef DTYPE (*CONSTFUNC)();
 // function that returns value for element
 typedef DTYPE (*VALUEFUNC)(int, int);
 
+// function that returns workspace size 
+typedef int (*WSFUNC)(__armas_dense_t *, int);
+
+// function that returns workspace size 
+typedef int (*WSSIZE)(int, int, int);
+
 extern void __armas_print(const __armas_dense_t *m, FILE *out);
 extern void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m);
 extern int __armas_set_consts(__armas_dense_t *m, CONSTFUNC func, int flags);
@@ -50,10 +56,11 @@ extern int __armas_allclose(__armas_dense_t *A, __armas_dense_t *B);
 extern int __armas_intolerance(__armas_dense_t *A, __armas_dense_t *B, ABSTYPE atol, ABSTYPE rtol);
 
 extern __armas_dense_t *__armas_mcopy(__armas_dense_t *d, __armas_dense_t *s);
+extern __armas_dense_t *__armas_newcopy(__armas_dense_t *s);
 extern __armas_dense_t *__armas_transpose(__armas_dense_t *d, __armas_dense_t *s);
 
 extern int __armas_mscale(__armas_dense_t *d, DTYPE alpha, int flags);
-extern int __armas_mshift(__armas_dense_t *d, DTYPE alpha, int flags);
+extern int __armas_madd(__armas_dense_t *d, DTYPE alpha, int flags);
 
 extern int __armas_scale_plus(__armas_dense_t *A, const __armas_dense_t *B,
                               DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
@@ -66,13 +73,14 @@ extern ABSTYPE __armas_asum(const __armas_dense_t *X, armas_conf_t *conf);
 extern ABSTYPE __armas_nrm2(const __armas_dense_t *X, armas_conf_t *conf);
 extern DTYPE   __armas_dot(const __armas_dense_t *X, const __armas_dense_t *Y, armas_conf_t *conf);
 extern int     __armas_axpy(__armas_dense_t *Y, const __armas_dense_t *X, DTYPE alpha, armas_conf_t *conf);
+extern int     __armas_axpby(__armas_dense_t *Y, const __armas_dense_t *X, DTYPE alpha, DTYPE beta, armas_conf_t *conf);
 extern int     __armas_copy(__armas_dense_t *Y, const __armas_dense_t *X, armas_conf_t *conf);
 extern int     __armas_swap(__armas_dense_t *Y, __armas_dense_t *X, armas_conf_t *conf);
 
 extern DTYPE   __armas_sum(const __armas_dense_t *X, armas_conf_t *conf);
 extern int     __armas_scale(const __armas_dense_t *X, const DTYPE alpha, armas_conf_t *conf);
 extern int     __armas_invscale(const __armas_dense_t *X, const DTYPE alpha, armas_conf_t *conf);
-extern int     __armas_shift(const __armas_dense_t *X, const DTYPE alpha, armas_conf_t *conf);
+extern int     __armas_add(const __armas_dense_t *X, const DTYPE alpha, armas_conf_t *conf);
 
 // Blas level 2 functions
 extern int __armas_mvmult(__armas_dense_t *Y,
@@ -80,7 +88,7 @@ extern int __armas_mvmult(__armas_dense_t *Y,
                           DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
 extern int __armas_mvupdate(__armas_dense_t *A,
                             const __armas_dense_t *X,  const __armas_dense_t *Y,  
-                            DTYPE alpha, int flags, armas_conf_t *conf);
+                            DTYPE alpha, armas_conf_t *conf);
 extern int __armas_mvupdate2_sym(__armas_dense_t *A,
                                  const __armas_dense_t *X,  const __armas_dense_t *Y,  
                                  DTYPE alpha, int flags, armas_conf_t *conf);
@@ -120,15 +128,87 @@ extern int __armas_update_sym(__armas_dense_t *C, const __armas_dense_t *A,
                               DTYPE alpha, DTYPE beta, int flags,
                               armas_conf_t *conf);
 
-extern int __armas_2update_sym(__armas_dense_t *C,
+extern int __armas_update2_sym(__armas_dense_t *C,
                                const __armas_dense_t *A, const __armas_dense_t *B, 
                                DTYPE alpha, DTYPE beta, int flags,
                                armas_conf_t *conf);
 
+// Lapack
+
+// Cholesky
+extern int __armas_cholfactor(__armas_dense_t *A, int flags, armas_conf_t *conf);
+extern int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A, int flags,
+                             armas_conf_t *conf);
+
+// Hessenberg reduction
+extern int __armas_hessreduce(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+                              armas_conf_t *conf);
+extern int __armas_hessmult(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
+                            __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_hessreduce_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_hessmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf);
+
+// LU
+extern int __armas_lufactor(__armas_dense_t *A, armas_pivot_t *P, armas_conf_t *conf);
+extern int __armas_lusolve(__armas_dense_t *B, __armas_dense_t *A, armas_pivot_t *P,
+                           int flags, armas_conf_t *conf);
+
+// Symmetric LDL; Bunch-Kauffman
+extern int __armas_bkfactor(__armas_dense_t *A, __armas_dense_t *W,
+                            armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int __armas_bksolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *W,
+                           armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int __armas_bkfactor_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_bksolve_work(__armas_dense_t *A, armas_conf_t *conf);
+
+// LQ functions
+extern int __armas_lqbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+                           int K, armas_conf_t *conf);
+extern int __armas_lqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+                            armas_conf_t *conf);
+extern int __armas_lqmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
+                          __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_lqsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
+                           __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_lqbuild_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_lqfactor_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_lqmult_work(__armas_dense_t *C, int flags, armas_conf_t *conf);
+extern int __armas_lqsolve_work(__armas_dense_t *B, armas_conf_t *conf);
+
+// QL functions
+extern int __armas_qlbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+                           int K, armas_conf_t *conf);
+extern int __armas_qlfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+                            armas_conf_t *conf);
+extern int __armas_qlmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
+                          __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_qlbuild_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_qlfactor_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_qlmult_work(__armas_dense_t *C, int flags, armas_conf_t *conf);
+
+// QR functions
+extern int __armas_qrbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+                           int K, armas_conf_t *conf);
+extern int __armas_qrfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+                            armas_conf_t *conf);
+extern int __armas_qrmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
+                          __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_qrsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
+                           __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_qrbuild_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_qrfactor_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_qrmult_work(__armas_dense_t *C, int flags, armas_conf_t *conf);
+extern int __armas_qrsolve_work(__armas_dense_t *B, armas_conf_t *conf);
 
 #ifndef __INLINE 
 #define __INLINE extern inline
 #endif
+
+__INLINE
+int __armas_isvector(const __armas_dense_t *m)
+{
+  return m && (m->rows == 1 || m->cols == 1);
+}
 
 __INLINE
 int64_t __armas_size(const __armas_dense_t *m)
@@ -159,16 +239,19 @@ __armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c)
   if (r <= 0 || c <= 0) {
     m->rows = 0; m->cols = 0;
     m->step = 0;
+    m->elems = (DTYPE *)0;
+    m->__data = (void *)0;
+    m->__nbytes = 0;
     return m;
   }
-  m->rows = r;
-  m->cols = c;
-  m->step = r;
   m->__data = calloc(r*c+7, sizeof(DTYPE));
   if ( !m->__data ) {
     return (__armas_dense_t *)0;
   }
   m->__nbytes = (r*c+7)*sizeof(DTYPE);
+  m->rows = r;
+  m->cols = c;
+  m->step = r;
   doff = 0;
   if ((unsigned long)m->__data & 63) {
     doff = 64 - (((unsigned long)m->__data) & 63);
@@ -182,6 +265,7 @@ void __armas_release(__armas_dense_t *m)
 {
   if (m && m->__data) {
     free(m->__data);
+    m->rows = 0; m->cols = 0; m->step = 0;
     m->elems = (DTYPE *)0;
     m->__data = (void *)0;
     m->__nbytes = 0;
@@ -292,9 +376,22 @@ __armas_dense_t *__armas_submatrix(__armas_dense_t *A, const __armas_dense_t *B,
 
 //! \brief Make A diagonal row vector of B.
 __INLINE
-__armas_dense_t *__armas_diag(__armas_dense_t *A, const __armas_dense_t *B)
+__armas_dense_t *__armas_diag(__armas_dense_t *A, const __armas_dense_t *B, int k)
 {
-  return __armas_submatrix_ext(A, B, 0, 0, -1, -1, B->step+1);
+  int nk;
+  if (k > 0) {
+    // super diagonal
+    nk = B->rows < B->cols-k ? B->rows : B->cols-k;
+    return __armas_submatrix_ext(A, B, 0, k, 1, nk, B->step+1);
+  }
+  if (k < 0) {
+    // subdiagonal
+    nk = B->rows+k < B->cols ? B->rows+k : B->cols;
+    return __armas_submatrix_ext(A, B, -k, 0, 1, nk, B->step+1);
+  }
+  // main diagonal
+  nk = B->rows < B->cols ? B->rows : B->cols;
+  return __armas_submatrix_ext(A, B, 0, 0, 1, nk, B->step+1);
 }
 
 __INLINE
@@ -357,6 +454,13 @@ __INLINE
 DTYPE *__armas_data(__armas_dense_t *m)
 {
   return m ? m->elems : (DTYPE *)0;
+}
+
+__INLINE
+__armas_dense_t *__armas_col_as_row(__armas_dense_t *row, __armas_dense_t *col)
+{
+  __armas_make(row, 1, __armas_size(col), 1, __armas_data(col));
+  return row;
 }
 
 #endif
