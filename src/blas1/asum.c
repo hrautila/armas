@@ -26,6 +26,12 @@
 #include "internal.h"
 #include "matrix.h"
 
+#ifdef MIN_MVEC_SIZE
+#undef MIN_MVEC_SIZE
+#define MIN_MVEC_SIZE 1024
+#endif
+
+
 // return sum of absolute values
 static inline
 ABSTYPE __vec_asum(const mvec_t *X,  int N)
