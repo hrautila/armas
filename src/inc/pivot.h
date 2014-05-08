@@ -3,12 +3,14 @@
 #ifndef __PIVOT_H
 #define __PIVOT_H 1
 
+#include <armas/armas.h>
+
 #ifndef __INLINE
 #define __INLINE extern inline
 #endif
 
-static inline
-void __subpivot(armas_pivots_t *pA, armas_pivots_t *pB, int K, int N)
+__INLINE
+void __subpivot(armas_pivot_t *pA, armas_pivot_t *pB, int K, int N)
 {
   pA->npivots = N;
   pA->indexes = &pB->indexes[K];
@@ -24,8 +26,8 @@ void __subpivot(armas_pivots_t *pA, armas_pivots_t *pB, int K, int N)
  * Parameter nb is initial block size for pT (pTOP) or pB (pBOTTOM).  
  */
 __INLINE
-void __armas_pivot_2x1(armas_pivots_t *pT, armas_pivots_t *pB,
-                       armas_pivots_t *P, int nb, int direction)
+void __pivot_2x1(armas_pivot_t *pT, armas_pivot_t *pB,
+		 armas_pivot_t *P, int nb, int direction)
 {
   switch (direction) {
   case ARMAS_PTOP:
@@ -52,9 +54,9 @@ void __armas_pivot_2x1(armas_pivots_t *pT, armas_pivots_t *pB,
  *
  */
 __INLINE
-void __armas_pivot_repart_2x1to3x1(armas_pivots_t *pT, armas_pivots_t *p0,
-                                   armas_pivots_t *p1, armas_pivots_t *p2,
-                                   armas_pivots_t *P, int nb, int direction)
+void __pivot_repart_2x1to3x1(armas_pivot_t *pT, armas_pivot_t *p0,
+			     armas_pivot_t *p1, armas_pivot_t *p2,
+			     armas_pivot_t *P, int nb, int direction)
 {
   int nT = armas_pivot_size(pT);
   switch (direction) {
@@ -88,9 +90,9 @@ void __armas_pivot_repart_2x1to3x1(armas_pivots_t *pT, armas_pivots_t *p0,
  *
  */
 __INLINE
-void __armas_pivot_cont_3x1to2x1(armas_pivots_t *pT, armas_pivots_t *pB,
-                                 armas_pivots_t *p0, armas_pivots_t *p1,
-                                 armas_pivots_t *P, int direction)
+void __pivot_cont_3x1to2x1(armas_pivot_t *pT, armas_pivot_t *pB,
+			   armas_pivot_t *p0, armas_pivot_t *p1,
+			   armas_pivot_t *P, int direction)
 {
   int n0 = armas_pivot_size(p0);
   int n1 = armas_pivot_size(p1);
