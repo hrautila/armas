@@ -19,7 +19,7 @@ static armas_conf_t __default_conf = {
   64,   // MB (row count)
   128,  // NB (col count)
   160,  // KB (row/col count)
-  0,    // WB 
+  36,   // LB (lapack blocking size)
   1,    // max processors
   0,    // last error
   0     // opt flags
