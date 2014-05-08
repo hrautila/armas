@@ -29,6 +29,12 @@
 #include "matrix.h"
 #include "mvec_nosimd.h"
 
+#ifdef MIN_MVEC_SIZE
+#undef MIN_MVEC_SIZE
+#define  MIN_MVEC_SIZE 2048
+#endif
+
+
 // Y = alpha*A*X + beta*Y for rows R:E, A is M*N and 0 < R < E <= M, Update
 // with S:L columns from A and correspoding elements from X.
 // length of X. With matrix-vector operation will avoid copying data.
@@ -209,7 +215,7 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
   if (!conf)
     conf = armas_conf_default();
 
-  if (A->cols == 0 || A->rows == 0)
+  if (__armas_size(A) == 0 || __armas_size(X) == 0 || __armas_size(Y) == 0)
     return 0;
   
   if (X->rows != 1 && X->cols != 1) {
@@ -247,7 +253,11 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
   if (beta != 1.0) {
     __armas_scale(Y, beta, conf);
   }
-  __gemv_unb(&y, &A0, &x, alpha, flags, 0, nx, 0, ny);
+  if (conf->optflags & ARMAS_RECURSIVE) {
+    __gemv_recursive(&y, &A0, &x, alpha, beta, flags, 0, nx, 0, ny);
+  } else {
+    __gemv_unb(&y, &A0, &x, alpha, flags, 0, nx, 0, ny);
+  }
   return 0;
 }
 

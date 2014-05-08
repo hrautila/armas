@@ -185,14 +185,13 @@ void __update_ger_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  * @param[in]      X source vector
  * @param[in]      Y source vector
  * @param[in]      alpha scalar multiplier
- * @param[in]      flags flag bits
  * @param[in]      conf  configuration block
  *
  * @ingroup blas2
  */
 int __armas_mvupdate(__armas_dense_t *A,
                      const __armas_dense_t *X,  const __armas_dense_t *Y,  
-                     DTYPE alpha, int flags, armas_conf_t *conf)
+                     DTYPE alpha, armas_conf_t *conf)
 {
   int ok;
   mvec_t x, y;
@@ -200,11 +199,11 @@ int __armas_mvupdate(__armas_dense_t *A,
   int nx = __armas_size(X);
   int ny = __armas_size(Y);
 
+  if (__armas_size(A) == 0 || __armas_size(X) == 0 || __armas_size(Y) == 0)
+    return 0;
+  
   if (!conf)
     conf = armas_conf_default();
-  
-  if (A->cols == 0 || A->rows == 0)
-    return 0;
   
   if (X->rows != 1 && X->cols != 1) {
     conf->error = ARMAS_ENEED_VECTOR;
@@ -225,12 +224,12 @@ int __armas_mvupdate(__armas_dense_t *A,
 
   switch (conf->optflags) {
   case ARMAS_RECURSIVE:
-    __update_ger_recursive(&A0, &x, &y, alpha, flags, ny, nx);
+    __update_ger_recursive(&A0, &x, &y, alpha, 0, ny, nx);
     break;
 
   case ARMAS_SNAIVE:
   default:
-    __update_ger_unb(&A0, &x, &y, alpha, flags, ny, nx);
+    __update_ger_unb(&A0, &x, &y, alpha, 0, ny, nx);
     break;
   }
   return 0;

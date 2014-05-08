@@ -55,12 +55,12 @@ int __armas_mvupdate_sym(__armas_dense_t *A,
   mdata_t A0;
   int nx = __armas_size(X);
 
+  if (__armas_size(A) == 0 || __armas_size(X) == 0)
+    return 0;
+  
   if (!conf)
     conf = armas_conf_default();
 
-  if (A->cols == 0 || A->rows == 0)
-    return 0;
-  
   if (X->rows != 1 && X->cols != 1) {
     conf->error = ARMAS_ENEED_VECTOR;
     return -1;
