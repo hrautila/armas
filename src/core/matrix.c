@@ -20,7 +20,7 @@
 /**
  * @brief Transpose matrix
  *
- * Transpose matrix to another matrix,   A = B.T
+ * Transpose matrix to another matrix, A = B.T. Does not work for a vector.
  *
  * @param A destination matrix
  * @param B source matrix
@@ -38,18 +38,26 @@ __armas_dense_t *__armas_transpose(__armas_dense_t *A, __armas_dense_t *B)
 }
 
 /**
- * @brief Copy matrix
+ * @brief Copy matrix or vector
  *
- * Copy matrix to another matrix, A = B
+ * Copy matrix or vector to another matrix or vector, ie. A = B. Sizes of
+ * of operand must match, for matrix size(A) == size(B), for vector len(A) == len(B)
  *
- * @param A destination matrix
- * @param B source matrix
+ * @param A destination matrix or vector
+ * @param B source matrix or vector
  *
  * @retval A Success
- * @retval NULL Failed
+ * @retval NULL Incompatible sizes
  */
 __armas_dense_t *__armas_mcopy(__armas_dense_t *A, __armas_dense_t *B)
 {
+  if (__armas_isvector(A) && __armas_isvector(B)) {
+    if (__armas_size(A) != __armas_size(B))
+      return (__armas_dense_t *)0;
+    // blas1 vector copy
+    __armas_copy(A, B, (armas_conf_t *)0);
+    return A;
+  }
   if (A->rows != B->rows || A->cols != B->cols)
     return (__armas_dense_t *)0;
   
@@ -57,13 +65,27 @@ __armas_dense_t *__armas_mcopy(__armas_dense_t *A, __armas_dense_t *B)
   return A;
 }
 
-// Return true if A is element-wise equal with a tolerance to B. The tolerance
-// values are positive, typically very small numbers.
-// Elements are equal within tolerance if
-//     abs(a[i,j]-b[i,j]) <= atol + rtol*abs(b[i,j])
+/**
+ * @brief New copy of matrix
+ *
+ * Allocate space and copy matrix, A = newcopy(B)
+ *
+ * @param B source matrix
+ *
+ * @retval NOT NULL Success, pointer to new matrix
+ * @retval NULL Failed
+ */
+__armas_dense_t *__armas_newcopy(__armas_dense_t *A)
+{
+  __armas_dense_t *Anew = __armas_alloc(A->rows, A->cols);
+  if (Anew) {
+    __CP(Anew->elems, Anew->step, A->elems, A->step, A->rows, A->cols);
+  }
+  return Anew;
+}
 
 /**
- * @brief Element-wize equality with in tolerances
+ * @brief Element-wise equality with in tolerances
  *
  * Test if A == B within given tolerances. Elements are considered equal if
  *
@@ -105,7 +127,6 @@ static const ABSTYPE RTOL = 1.0000000000000001e-05;
  */
 static const ABSTYPE ATOL = 1e-8;
 
-// Return true if A is element-wise equal with a tolerance to B.
 /**
  * @brief Element-wise equality with predefined tolerances
  *
@@ -119,11 +140,6 @@ int __armas_allclose(__armas_dense_t *a, __armas_dense_t *b)
   return __armas_intolerance(a, b, ATOL, RTOL);
 }
 
-
-void __armas_print(const __armas_dense_t *m, FILE *out)
-{
-  __armas_printf(out, "%8.1", m);
-}
 
 void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m)
 {
@@ -155,6 +171,34 @@ void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m)
   }
 }
 
+void __armas_print(const __armas_dense_t *m, FILE *out)
+{
+  __armas_printf(out, "%8.1", m);
+}
+
+
+/**
+ * @brief Set matrix values
+ *
+ * Set matrix m values using parameter value function.
+ *
+ *  > m[i, j] = value(i, j)
+ *
+ * Elements affected are selected with flag bits. If flag bit
+ * ARMAS_UPPER (ARMAS_LOWER) is set the only upper (lower) triangular
+ * or trapezoidal elements are set. If bit ARMAS_UNIT is set then
+ * diagonal elements are not touched. If ARMAS_SYMM is set then
+ * target matrix must be square matrix and upper triangular part
+ * is transpose of lower triangular part. If bit ARMAS_UNIT is set then
+ * diagonal entry is set to one.
+ *
+ * @param m[in,out] matrix
+ * @param value[in] the element value function
+ * @param flags[in] flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT,ARMAS_SYMM)
+ *
+ * @returns 0  Succes
+ * @returns -1 Failure
+ */
 int __armas_set_values(__armas_dense_t *m, VALUEFUNC value, int flags)
 {
   int i, j;
@@ -165,14 +209,14 @@ int __armas_set_values(__armas_dense_t *m, VALUEFUNC value, int flags)
         m->elems[j*m->step+i] = value(i, j);
       }
       // don't set diagonal on upper trapezoidal matrix (cols > rows)
-      if (j < m->rows)
-        m->elems[j*m->step + j] = flags & ARMAS_UNIT ? __ONE : value(j, j);
+      if (j < m->rows && !(flags & ARMAS_UNIT))
+        m->elems[j*m->step + j] = value(j, j);
     }
     break;
   case ARMAS_LOWER:
     for (j = 0; j < m->cols; j++) {
-      if (j < m->rows)
-        m->elems[j*m->step + j] = flags & ARMAS_UNIT ? __ONE : value(j, j);
+      if (j < m->rows && !(flags & ARMAS_UNIT))
+        m->elems[j*m->step + j] = value(j, j);
       for (i = j+1; i < m->rows; i++) {
         m->elems[j*m->step+i] = value(i, j);
       }
@@ -200,7 +244,19 @@ int __armas_set_values(__armas_dense_t *m, VALUEFUNC value, int flags)
 }
 
 // make matrix triangular with unit or non-unit diagonal.
-void __armas_mk_trm(__armas_dense_t *m, int flags) {
+
+/**
+ * @brief Make matrix triangular or trapezoidal
+ *
+ * Set matrix m elements not part of upper (lower) triangular
+ * part to zero. If bit ARMAS_UNIT is set then diagonal element
+ * is set to one.
+ *
+ * @param m[in,out] matrix
+ * @param flags[in] flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
+ *
+ */
+void __armas_make_trm(__armas_dense_t *m, int flags) {
   int i, j;
   if (flags & ARMAS_UPPER) {
     // clear lower triangular/trapezoidial part
@@ -224,6 +280,19 @@ void __armas_mk_trm(__armas_dense_t *m, int flags) {
   }
 }
 
+/**
+ * @brief Scale matrix by real constant.
+ *
+ * Element wise scaling of matrix element by a constant. Affected
+ * elements are selected with flag bits. If ARMAS_UPPER (ARMAS_LOWER)
+ * is set then upper (lower) triangular part is scaled. If bit ARMAS_UNIT
+ * is set then diagonal entry is not touched.
+ *
+ * @param m[in,out] matrix
+ * @param alpha[in] scaling constant
+ * @param flags[in] flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
+ *
+ */
 int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
 {
   int c, n;
@@ -258,6 +327,17 @@ int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
   return 0;
 }
 
+/**
+ * @brief Element-wise increment of matrix by real constant.
+ *
+ * Affected elements are selected with flag bits. If ARMAS_UPPER (ARMAS_LOWER)
+ * is set then upper (lower) triangular part is scaled. If bit ARMAS_UNIT
+ * is set then diagonal entry is not touched.
+ *
+ * @param m[in,out] matrix
+ * @param alpha[in] scaling constant
+ * @param flags[in] flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
+ */
 int __armas_madd(__armas_dense_t *m, DTYPE alpha, int flags)
 {
   int c, n;
@@ -293,7 +373,6 @@ int __armas_madd(__armas_dense_t *m, DTYPE alpha, int flags)
   }
   return 0;
 }
-
 
 // Local Variables:
 // indent-tabs-mode: nil
