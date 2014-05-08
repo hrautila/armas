@@ -1,4 +1,5 @@
 
+AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -pthread -Iinc
 
 noinst_HEADERS = \
@@ -16,7 +17,7 @@ noinst_HEADERS = \
 
 COMMON = \
 	core/support.c \
-	core/pivot.c
+	core/pivot_ext.c
 
 CORE = \
 	core/kernel.c \
@@ -25,16 +26,19 @@ CORE = \
 	core/mnorm.c \
 	core/mscale.c \
 	core/plus.c \
-	core/partition.c
+	core/partition.c \
+	core/pivot.c
 
 
 BLAS1 = \
 	blas1/asum.c \
 	blas1/axpy.c \
+	blas1/copy.c \
 	blas1/dot.c \
 	blas1/iamax.c \
 	blas1/nrm2.c \
-	blas1/scal.c
+	blas1/scal.c \
+	blas1/swap.c
 
 BLAS2 = \
 	blas2/gemv.c \
@@ -61,6 +65,28 @@ BLAS3 = \
 	blas3/trsm_unb.c \
 	blas3/updtrmm.c
 
+LAPACK = \
+	lapack/bired.c \
+	lapack/chol.c \
+	lapack/hess.c \
+	lapack/house.c \
+	lapack/ldlbk.c \
+	lapack/ldlbkl.c \
+	lapack/ldlbku.c \
+	lapack/lq.c \
+	lapack/lqbld.c \
+	lapack/lqmult.c \
+	lapack/lqsolve.c \
+	lapack/lu.c \
+	lapack/qlbld.c \
+	lapack/ql.c \
+	lapack/qlmult.c \
+	lapack/qrbld.c \
+	lapack/qr.c \
+	lapack/qrmult.c \
+	lapack/qrsolve.c \
+	lapack/support.c \
+	lapack/trired.c 
 
 noinst_LTLIBRARIES = libd.la libz.la libx.la
 
@@ -68,7 +94,7 @@ noinst_LTLIBRARIES = libd.la libz.la libx.la
 libx_la_SOURCES = $(COMMON)
 
 # double precision
-libd_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3)
+libd_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
 libd_la_CPPFLAGS = -DFLOAT64
 
 # complex support
