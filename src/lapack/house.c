@@ -117,6 +117,11 @@ void __compute_householder(__armas_dense_t *a11, __armas_dense_t *x,
 void __compute_householder_vec(__armas_dense_t *x, __armas_dense_t *tau, armas_conf_t *conf) {
   __armas_dense_t alpha, x2;
 
+  if (__armas_size(x) == 0) {
+    __armas_set(tau, 0, 0, 0.0);
+    return;
+  }
+                              
   __armas_submatrix(&alpha, x, 0, 0, 1, 1);
   if (x->rows == 1) {
     __armas_submatrix(&x2, x, 0, 1, 1, __armas_size(x)-1);
@@ -129,6 +134,11 @@ void __compute_householder_vec(__armas_dense_t *x, __armas_dense_t *tau, armas_c
 
 void __compute_householder_rev(__armas_dense_t *x, __armas_dense_t *tau, armas_conf_t *conf) {
   __armas_dense_t alpha, x2;
+
+  if (__armas_size(x) == 0) {
+    __armas_set(tau, 0, 0, 0.0);
+    return;
+  }
 
   if (x->rows == 1) {
     __armas_submatrix(&alpha, x, 0, -1, 1, 1);
