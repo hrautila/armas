@@ -56,11 +56,11 @@ main(int argc, char **argv) {
   armas_d_set_values(&C, one, ARMAS_SYMM);
   armas_d_mcopy(&C0, &C);
 
-  armas_d_mk_trm(&C, ARMAS_UPPER);
+  armas_d_make_trm(&C, ARMAS_UPPER);
   armas_d_update_sym(&C, &A, alpha, 0.0, ARMAS_UPPER, &conf);
 
   armas_d_mult(&C0, &A, &At, alpha, 0.0, ARMAS_NULL, &conf);
-  armas_d_mk_trm(&C0, ARMAS_UPPER);
+  armas_d_make_trm(&C0, ARMAS_UPPER);
   ok = armas_d_allclose(&C0, &C);
 
   printf("%6s: syrk(C, A, U|N) == TriU(gemm(C, A, A.T))\n", ok ? "OK" : "FAILED");
@@ -71,11 +71,11 @@ main(int argc, char **argv) {
   armas_d_set_values(&C, one, ARMAS_SYMM);
   armas_d_mcopy(&C0, &C);
 
-  armas_d_mk_trm(&C, ARMAS_UPPER);
+  armas_d_make_trm(&C, ARMAS_UPPER);
   armas_d_update_sym(&C, &At, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
 
   armas_d_mult(&C0, &At, &At, alpha, 0.0, ARMAS_TRANSA, &conf);
-  armas_d_mk_trm(&C0, ARMAS_UPPER);
+  armas_d_make_trm(&C0, ARMAS_UPPER);
   ok = armas_d_allclose(&C0, &C);
 
   printf("%6s: syrk(C, A, U|T) == TriU(gemm(C, A.T, A))\n", ok ? "OK" : "FAILED");
@@ -86,11 +86,11 @@ main(int argc, char **argv) {
   armas_d_set_values(&C, one, ARMAS_SYMM);
   armas_d_mcopy(&C0, &C);
 
-  armas_d_mk_trm(&C, ARMAS_LOWER);
+  armas_d_make_trm(&C, ARMAS_LOWER);
   armas_d_update_sym(&C, &A, alpha, 0.0, ARMAS_LOWER, &conf);
 
   armas_d_mult(&C0, &A, &At, alpha, 0.0, ARMAS_NULL, &conf);
-  armas_d_mk_trm(&C0, ARMAS_LOWER);
+  armas_d_make_trm(&C0, ARMAS_LOWER);
   ok = armas_d_allclose(&C0, &C);
 
   printf("%6s: syrk(C, A, L|N) == TriL(gemm(C, A, A.T))\n", ok ? "OK" : "FAILED");
@@ -101,11 +101,11 @@ main(int argc, char **argv) {
   armas_d_set_values(&C, one, ARMAS_SYMM);
   armas_d_mcopy(&C0, &C);
 
-  armas_d_mk_trm(&C, ARMAS_LOWER);
+  armas_d_make_trm(&C, ARMAS_LOWER);
   armas_d_update_sym(&C, &At, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
 
   armas_d_mult(&C0, &At, &At, alpha, 0.0, ARMAS_TRANSA, &conf);
-  armas_d_mk_trm(&C0, ARMAS_LOWER);
+  armas_d_make_trm(&C0, ARMAS_LOWER);
   ok = armas_d_allclose(&C0, &C);
 
   printf("%6s: syrk(C, A, L|T) == TriL(gemm(C, A.T, A))\n", ok ? "OK" : "FAILED");

@@ -72,9 +72,9 @@ main(int argc, char **argv) {
   printf("C(M,N)  M > N: M=%d, N=%d, K=%d\n", M, N, N/2);
   // upper(C)
   armas_d_mult(&C0, &A, &B, alpha, 0.0, ARMAS_NULL, &conf);
-  armas_d_mk_trm(&C0, ARMAS_UPPER);
+  armas_d_make_trm(&C0, ARMAS_UPPER);
   armas_d_set_values(&C, zero, ARMAS_NULL);
-  armas_d_mk_trm(&C, ARMAS_UPPER);
+  armas_d_make_trm(&C, ARMAS_UPPER);
 
   // ----------------------------------------------------------------------------
   // 1. C = upper(C) + A*B
@@ -107,8 +107,8 @@ main(int argc, char **argv) {
   // ----------------------------------------------------------------------------
   // lower(C)
   armas_d_mult(&C0, &A, &B, alpha, 0.0, ARMAS_NULL, &conf);
-  armas_d_mk_trm(&C0, ARMAS_LOWER);
-  armas_d_mk_trm(&C, ARMAS_LOWER);
+  armas_d_make_trm(&C0, ARMAS_LOWER);
+  armas_d_make_trm(&C, ARMAS_LOWER);
 
   // ----------------------------------------------------------------------------
   // 1. C = lower(C) + A*B
@@ -163,13 +163,13 @@ main(int argc, char **argv) {
 
   armas_d_set_values(&C, zero, ARMAS_NULL);
   armas_d_mult(&C0, &A, &B, alpha, 0.0, ARMAS_NULL, &conf);
-  armas_d_mk_trm(&C0, ARMAS_UPPER);
+  armas_d_make_trm(&C0, ARMAS_UPPER);
 
   printf("C(M,N)  M < N: M=%d, N=%d, K=%d\n", M, N, N/2);
 
   // ----------------------------------------------------------------------------
   // 1. C = upper(C) + A*B
-  armas_d_mk_trm(&C, ARMAS_UPPER);
+  armas_d_make_trm(&C, ARMAS_UPPER);
   armas_d_update_trm(&C, &A, &B, alpha, 0.0, ARMAS_UPPER, &conf);
   ok = armas_d_allclose(&C0, &C);
   printf("%6s: trmupd(C, A, B, U|N|N) == TriU(gemm(C, A, B))\n", ok ? "OK" : "FAILED");
@@ -199,10 +199,10 @@ main(int argc, char **argv) {
   // ----------------------------------------------------------------------------
   // 1. C = lower(C) + A*B
   armas_d_mult(&C0, &A, &B, alpha, 0.0, ARMAS_NULL, &conf);
-  armas_d_mk_trm(&C0, ARMAS_LOWER);
+  armas_d_make_trm(&C0, ARMAS_LOWER);
 
   armas_d_set_values(&C, zero, ARMAS_NULL);
-  armas_d_mk_trm(&C, ARMAS_LOWER);
+  armas_d_make_trm(&C, ARMAS_LOWER);
   armas_d_update_trm(&C, &A, &B, alpha, 0.0, ARMAS_LOWER, &conf);
   ok = armas_d_allclose(&C0, &C);
   printf("%6s: trmupd(C, A, B, L|N|N) == TriL(gemm(C, A, B))\n", ok ? "OK" : "FAILED");

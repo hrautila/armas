@@ -55,8 +55,8 @@ main(int argc, char **argv) {
   armas_d_set_values(&A, zero, flags);
   armas_d_mcopy(&A0, &A);
 
-  armas_d_mvupdate(&A, &X, &Y, 1.0, 0, &conf);
-  armas_d_mvupdate(&A, &X, &Y, -1.0, 0, &conf);
+  armas_d_mvupdate(&A, &X, &Y, 1.0, &conf);
+  armas_d_mvupdate(&A, &X, &Y, -1.0, &conf);
   ok = armas_d_allclose(&A, &A0);
   printf("%6s : A = A + X*Y - X*Y\n", ok ? "OK" : "FAILED");
   exit(1 - ok);
