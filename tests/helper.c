@@ -4,6 +4,7 @@
 #include <math.h>
 #include <time.h>
 #include <sys/time.h>
+#include <float.h>
 
 #include <armas/dmatrix.h>
 
@@ -81,6 +82,19 @@ double unitrand(int i, int j) {
     init = 1;
   }
   return drand48();
+}
+
+int isOK(double nrm, int N)
+{
+  int nk = (int64_t)(fabs(nrm/DBL_EPSILON));
+  // if exactly zero then something suspect
+  return nrm != 0.0 && nk < (int64_t)N;
+}
+
+int isFINE(double nrm, double tol)
+{
+  // if exactly zero then something suspect
+  return nrm != 0.0 && fabs(nrm) < fabs(tol);
 }
 
 int in_tolerance(double a, double b)
@@ -173,5 +187,42 @@ int check(armas_d_dense_t *A, armas_d_dense_t *B, int chkdir, const char *msg)
 
   return ok;
 }
+
+void matrix_printf(FILE *out, const char *efmt, const armas_d_dense_t *m, int partial)
+{
+  int i, j;
+  if (!m)
+    return;
+  if (!efmt)
+    efmt = "%8.1e";
+
+  int rowpartial = partial && m->rows > 18 ;
+  int colpartial = partial && m->cols > 9;
+  for (i = 0; i < m->rows; i++ ) {
+    printf("[");
+    for (j = 0; j < m->cols; j++ ) {
+      if (j > 0) {
+	printf(", ");
+      }
+      printf(efmt, m->elems[j*m->step+i]);
+      if (colpartial && j == 3) {
+        j = m->cols - 5;
+        printf(", ...");
+      }
+    }
+    printf("]\n");
+    if (rowpartial && i == 8) {
+      printf(" ....\n");
+      i = m->rows - 10;
+    }
+  }
+}
+
+armas_d_dense_t *col_as_row(armas_d_dense_t *row, armas_d_dense_t *col)
+{
+  armas_d_make(row, 1, armas_d_size(col), 1, armas_d_data(col));
+  return row;
+}
+
 
 
