@@ -905,7 +905,7 @@ int __armas_bdmult(__armas_dense_t *C, __armas_dense_t *A,
       if (flags & ARMAS_RIGHT) {
         __armas_submatrix(&Ch, C, 0, 1, C->rows, C->cols-1);
       } else {
-        __armas_submatrix(&Ch, C, 0, 1, C->rows-1, C->cols);
+        __armas_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
       }
       err = __armas_lqmult(&Ch, &Ph, &tauh, W, flags, conf);
       break;
@@ -917,12 +917,12 @@ int __armas_bdmult(__armas_dense_t *C, __armas_dense_t *A,
     // M < N
     switch (flags & (ARMAS_MULTQ|ARMAS_MULTP)) {
     case ARMAS_MULTQ:
-      __armas_submatrix(&Qh, A, 0, 1, A->rows-1, A->rows-1);
+      __armas_submatrix(&Qh, A, 1, 0, A->rows-1, A->rows-1);
       __armas_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
       if (flags & ARMAS_RIGHT) {
         __armas_submatrix(&Ch, C, 0, 1, C->rows, C->cols-1);
       } else {
-        __armas_submatrix(&Ch, C, 0, 1, C->rows-1, C->cols);
+        __armas_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
       }
       err = __armas_qrmult(&Ch, &Qh, &tauh, W, flags, conf);
       break;
