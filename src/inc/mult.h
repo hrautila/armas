@@ -1,9 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright (c) Harri Rautila, 2012-2014
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of github.com/hrautila/matops package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
-// any later version. See the COPYING tile included in this archive.
+// any later version. See the COPYING file included in this archive.
 
 #ifndef __MULT_H
 #define __MULT_H 1
@@ -11,15 +11,15 @@
 
 #include "matcpy.h"
 
-#if defined(__FMA__) //&& defined(USE_FMA)
+#if defined(__FMA__) && defined(WITH_FMA)
 // AVX2/FMA 256bit vectorization
 #include "mult_fma.h"
 
-#elif defined(__AVX__) //&& defined(USE_AVX)
+#elif defined(__AVX__) && defined(WITH_AVX)
 // AVX1 256bit vectorization
 #include "mult_avx.h"
 
-#elif defined(__SSE3__) //&& defined(USE_SSE)
+#elif defined(__SSE3__) && defined(WITH_SSE)
 // SSE 128bit vectorization
 #include "mult_sse.h"
 

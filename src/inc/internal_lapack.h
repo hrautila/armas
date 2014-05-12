@@ -1,4 +1,10 @@
 
+// Copyright (c) Harri Rautila, 2012-2014
+
+// This file is part of github.com/hrautila/armas library. It is free software,
+// distributed under the terms of GNU Lesser General Public License Version 3, or
+// any later version. See the COPYING file included in this archive.
+
 #ifndef __ARMAS_INTERNAL_LAPACK_H
 #define __ARMAS_INTERNAL_LAPACK_H 1
 
