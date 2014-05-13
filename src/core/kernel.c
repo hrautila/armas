@@ -1,9 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright (c) Harri Rautila, 2012-2014
 
 // This file is part of github.com/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
-// any later version. See the COPYING tile included in this archive.
+// any later version. See the COPYING file included in this archive.
 
 #include <stdio.h>
 
@@ -31,10 +31,10 @@
 /* ---------------------------------------------------------------------------
  * Definitions for single precision complex numbers.
  */
-#if defined(__AVX__) && defined(AVX_C128)
+#if defined(__AVX__) && defined(WITH_AVX_C128)
 #include "mult_avx_c128.h"
 
-#elif defined(__SSE__) && defined(SSE_C128)
+#elif defined(__SSE__) && defined(WITH_SSE_C128)
 #include "mult_sse_c128.h"
 
 #else
@@ -48,10 +48,10 @@
  * Definitions for single precision complex numbers.
  */
 
-#if defined(__AVX__) && defined(AVX_C64)
+#if defined(__AVX__) && defined(WITH_AVX_C64)
 #include "mult_avx_c64.h"
 
-#elif defined(__SSE__) && defined(SSE_C64)
+#elif defined(__SSE__) && defined(WITH_SSE_C64)
 #include "mult_sse_c64.h"
 
 #else
@@ -63,10 +63,10 @@
 /* ---------------------------------------------------------------------------
  * Definitions for single precision floating type.
  */
-#if defined(__AVX__) && defined(AVX_F32)
+#if defined(__AVX__) && defined(WITH_AVX_F32)
 #include "mult_avx_f32.h"
 
-#elif defined(__SSE__) && defined(SSE_F32)
+#elif defined(__SSE__) && defined(WITH_SSE_F32)
 #include "mult_sse_f32.h"
 
 #else
@@ -78,10 +78,13 @@
 /* ---------------------------------------------------------------------------
  * Definitions for double precision floating types.
  */
-#if defined(__AVX__) //&& defined(AVX_F64)
+#if defined(__FMA__) && defined(WITH_FMA)
+#include "mult_fma_f64.h"
+
+#elif defined(__AVX__) && defined(WITH_AVX)
 #include "mult_avx_f64.h"
 
-#elif defined(__SSE__) //&& defined(SSE_F64)
+#elif defined(__SSE__) && defined(WITH_SSE)
 #include "mult_sse_f64.h"
 
 #else
@@ -281,6 +284,11 @@ void __kernel_inner(mdata_t *C, const mdata_t *A, const mdata_t *B,
     return;
   }
 
+  // clear Abuf, Bbuf to avoid NaN values later
+  memset(Abuf, 0, sizeof(Abuf));
+  memset(Bbuf, 0, sizeof(Bbuf));
+
+  // setup cache area
   Aa = (mdata_t){Abuf, MAX_KB};
   Ba = (mdata_t){Bbuf, MAX_KB};
   cache = (cache_t){&Aa, &Ba, KB, NB, MB};

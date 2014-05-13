@@ -61,6 +61,21 @@ void __rank2_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
     NB = E-S;
   }
 
+  if (KB > MAX_KB || KB <= 0) {
+    KB = MAX_KB;
+  }
+  if (NB > MAX_NB || NB <= 0) {
+    NB = MAX_NB;
+  }
+  if (MB > MAX_MB || MB <= 0) {
+    MB = MAX_MB;
+  }
+
+  // clear Abuf, Bbuf to avoid NaN values later
+  memset(Abuf, 0, sizeof(Abuf));
+  memset(Bbuf, 0, sizeof(Bbuf));
+
+  // setup cache area
   Acpy = (mdata_t){Abuf, MAX_KB};
   Bcpy = (mdata_t){Bbuf, MAX_KB};
   cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};

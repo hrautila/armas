@@ -110,6 +110,11 @@ void __update_trm_naive(mdata_t *C, const mdata_t *A, const mdata_t *B,
     KB = MAX_KB;
   }
 
+  // clear Abuf, Bbuf to avoid NaN values later
+  memset(Abuf, 0, sizeof(Abuf));
+  memset(Bbuf, 0, sizeof(Bbuf));
+
+  // setup cache area
   Acpy = (mdata_t){Abuf, MAX_KB};
   Bcpy = (mdata_t){Bbuf, MAX_KB};
   cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
@@ -238,8 +243,6 @@ void __update_trm_recursive(mdata_t *C, const mdata_t *A, const mdata_t *B,
     return;
   }
 
-  //printf("__update_trm_rec: S=%d, L=%d, R=%d, E=%d\n", S, L, R, E);
-
   // restrict block sizes as data is copied to aligned buffers of predefined max sizes.
   if (NB > MAX_NB || NB <= 0) {
     NB = MAX_NB;
@@ -251,6 +254,11 @@ void __update_trm_recursive(mdata_t *C, const mdata_t *A, const mdata_t *B,
     KB = MAX_KB;
   }
 
+  // clear Abuf, Bbuf to avoid NaN values later
+  memset(Abuf, 0, sizeof(Abuf));
+  memset(Bbuf, 0, sizeof(Bbuf));
+
+  // setup cache area
   Acpy = (mdata_t){Abuf, MAX_KB};
   Bcpy = (mdata_t){Bbuf, MAX_KB};
   cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
@@ -298,8 +306,6 @@ void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
     return;
   }
 
-  //printf("__update_trm_blk: S=%d, L=%d, R=%d, E=%d\n", S, L, R, E);
-
   // restrict block sizes as data is copied to aligned buffers of predefined max sizes.
   if (NB > MAX_NB || NB <= 0) {
     NB = MAX_NB;
@@ -311,6 +317,11 @@ void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
     KB = MAX_KB;
   }
 
+  // clear Abuf, Bbuf to avoid NaN values later
+  memset(Abuf, 0, sizeof(Abuf));
+  memset(Bbuf, 0, sizeof(Bbuf));
+
+  // setup cache area
   Acpy = (mdata_t){Abuf, MAX_KB};
   Bcpy = (mdata_t){Bbuf, MAX_KB};
   cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
