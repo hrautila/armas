@@ -27,6 +27,7 @@
 #define mm_load_A _mm_loadu_pd
 #endif
 
+#include "debug.h"
 
 // update 1x4 block of C (mult4x1x1)
 static inline
@@ -36,7 +37,7 @@ void __mult1c4(double *c0, double *c1, double *c2, double *c3,
                const double *b2, const double *b3, double alpha, int nR)
 {
   register int k;
-  register __m128d y0, y1, y2, y3, A0, ALPHA, Z, B0, B1, B2, B3;
+  register __m128d y0, y1, y2, y3, A0, ALPHA, Z;
 
   y0 = _mm_set1_pd(0.0);
   y1 = y2 = y3 = y0;
@@ -50,22 +51,13 @@ void __mult1c4(double *c0, double *c1, double *c2, double *c3,
   if (k == nR)
     goto update;
 
-  // mask both sources
   Z = _mm_set1_pd(0.0);
   A0 = mm_load_A(&a[k]);
-  B0 = mm_load_B(&b0[k]);
-  B1 = mm_load_B(&b1[k]);
-  B2 = mm_load_B(&b2[k]);
-  B3 = mm_load_B(&b3[k]);
   A0 = _mm_blend_pd(A0, Z, 0x2);
-  B0 = _mm_blend_pd(B0, Z, 0x2);
-  B1 = _mm_blend_pd(B1, Z, 0x2);
-  B2 = _mm_blend_pd(B2, Z, 0x2);
-  B3 = _mm_blend_pd(B3, Z, 0x2);
-  y0 += _mm_mul_pd(A0, B0);
-  y1 += _mm_mul_pd(A0, B1);
-  y2 += _mm_mul_pd(A0, B2);
-  y3 += _mm_mul_pd(A0, B3);
+  y0 += _mm_mul_pd(A0, mm_load_B(&b0[k]));
+  y1 += _mm_mul_pd(A0, mm_load_B(&b1[k]));
+  y2 += _mm_mul_pd(A0, mm_load_B(&b2[k]));
+  y3 += _mm_mul_pd(A0, mm_load_B(&b3[k]));
 
 update:
   ALPHA = _mm_set1_pd(alpha);
@@ -86,7 +78,7 @@ void __mult2c4(double *c0, double *c1, double *c2, double *c3,
                const double *b2, const double *b3, double alpha, int nR)
 {
   register int k;
-  register __m128d y0, y1, y2, y3, y4, y5, y6, y7, A0, A1, ALPHA, Z, B0, B1, B2, B3;
+  register __m128d y0, y1, y2, y3, y4, y5, y6, y7, A0, A1, ALPHA, Z;
 
   y0 = _mm_set1_pd(0.0);
   y1 = y2 = y3 = y4 = y5 = y6 = y7 = y0;
@@ -111,24 +103,14 @@ void __mult2c4(double *c0, double *c1, double *c2, double *c3,
   A1 = mm_load_A(&a1[k]);
   A0 = _mm_blend_pd(A0, Z, 0x2);
   A1 = _mm_blend_pd(A1, Z, 0x2);
-
-  B0 = mm_load_B(&b0[k]);
-  B1 = mm_load_B(&b1[k]);
-  B2 = mm_load_B(&b2[k]);
-  B3 = mm_load_B(&b3[k]);
-  B0 = _mm_blend_pd(B0, Z, 0x2);
-  B1 = _mm_blend_pd(B1, Z, 0x2);
-  B2 = _mm_blend_pd(B2, Z, 0x2);
-  B3 = _mm_blend_pd(B3, Z, 0x2);
-
-  y0 += _mm_mul_pd(A0, B0);
-  y1 += _mm_mul_pd(A0, B1);
-  y2 += _mm_mul_pd(A0, B2);
-  y3 += _mm_mul_pd(A0, B3);
-  y4 += _mm_mul_pd(A1, B0);
-  y5 += _mm_mul_pd(A1, B1);
-  y6 += _mm_mul_pd(A1, B2);
-  y7 += _mm_mul_pd(A1, B3);
+  y0 += _mm_mul_pd(A0, mm_load_B(&b0[k]));
+  y1 += _mm_mul_pd(A0, mm_load_B(&b1[k]));
+  y2 += _mm_mul_pd(A0, mm_load_B(&b2[k]));
+  y3 += _mm_mul_pd(A0, mm_load_B(&b3[k]));
+  y4 += _mm_mul_pd(A1, mm_load_B(&b0[k]));
+  y5 += _mm_mul_pd(A1, mm_load_B(&b1[k]));
+  y6 += _mm_mul_pd(A1, mm_load_B(&b2[k]));
+  y7 += _mm_mul_pd(A1, mm_load_B(&b3[k]));
 
 update:
   ALPHA = _mm_set1_pd(alpha);
@@ -154,7 +136,7 @@ void __mult1c2(double *c0, double *c1,
                const double * b0, const double * b1, double alpha, int nR)
 {
   register int k;
-  register __m128d y0, y1, A0, Z, ALPHA, B0, B1;
+  register __m128d y0, y1, A0, Z, ALPHA;
   y0 = _mm_set1_pd(0.0);
   y1 = y0;
   for (k = 0; k < nR-1; k += 2) {
@@ -167,14 +149,8 @@ void __mult1c2(double *c0, double *c1,
   Z = _mm_set1_pd(0.0);
   A0 = mm_load_A(&a[k]);
   A0 = _mm_blend_pd(A0, Z, 0x2);
-
-  B0 = mm_load_B(&b0[k]);
-  B1 = mm_load_B(&b1[k]);
-  B0 = _mm_blend_pd(B0, Z, 0x2);
-  B1 = _mm_blend_pd(B1, Z, 0x2);
-
-  y0 += _mm_mul_pd(A0, B0);
-  y1 += _mm_mul_pd(A0, B1);
+  y0 += _mm_mul_pd(A0, mm_load_B(&b0[k]));
+  y1 += _mm_mul_pd(A0, mm_load_B(&b1[k]));
 update:
   ALPHA = _mm_set1_pd(alpha);
   y0 = _mm_mul_pd(ALPHA,_mm_hadd_pd(y0, y1));
@@ -189,7 +165,7 @@ void __mult2c2(double *c0, double *c1,
                const double *b0, const double *b1, double alpha, int nR)
 {
   register int k;
-  register __m128d y0, y1, y2, y3, A0, A1, ALPHA, Z, B0, B1;
+  register __m128d y0, y1, y2, y3, A0, A1, ALPHA, Z;
   y0 = _mm_set1_pd(0.0);
   y1 = y0;
   y2 = y0;
@@ -209,16 +185,10 @@ void __mult2c2(double *c0, double *c1,
   A1 = mm_load_A(&a1[k]);
   A0 = _mm_blend_pd(A0, Z, 0x2);
   A1 = _mm_blend_pd(A1, Z, 0x2);
-
-  B0 = mm_load_B(&b0[k]);
-  B1 = mm_load_B(&b1[k]);
-  B0 = _mm_blend_pd(B0, Z, 0x2);
-  B1 = _mm_blend_pd(B1, Z, 0x2);
-
-  y0 += _mm_mul_pd(A0, B0);
-  y1 += _mm_mul_pd(A0, B1);
-  y2 += _mm_mul_pd(A1, B0);
-  y3 += _mm_mul_pd(A1, B1);
+  y0 += _mm_mul_pd(A0, mm_load_B(&b0[k]));
+  y1 += _mm_mul_pd(A0, mm_load_B(&b1[k]));
+  y2 += _mm_mul_pd(A1, mm_load_B(&b0[k]));
+  y3 += _mm_mul_pd(A1, mm_load_B(&b1[k]));
 
 update:
   ALPHA = _mm_set1_pd(alpha);
@@ -237,7 +207,7 @@ static inline
 void __mult1c1(double *c, const double *a, const double *b, double alpha, int nR)
 {
   register int k;
-  register __m128d y0, A, ALPHA, Z, B;
+  register __m128d y0, A, ALPHA, Z;
   y0 = _mm_set1_pd(0.0);
   for (k = 0; k < nR-1; k += 2) {
     A = mm_load_A(&a[k]);
@@ -249,9 +219,7 @@ void __mult1c1(double *c, const double *a, const double *b, double alpha, int nR
   Z = _mm_set1_pd(0.0);
   A = mm_load_A(&a[k]);
   A = _mm_blend_pd(A, Z, 0x2);
-  B = mm_load_B(&b[k]);
-  B = _mm_blend_pd(B, Z, 0x2);
-  y0 += _mm_mul_pd(A, B);
+  y0 += _mm_mul_pd(A, mm_load_B(&b[k]));
 
 update:
   ALPHA = _mm_set1_pd(alpha);
@@ -268,7 +236,7 @@ void __mult4c1(double *c0,
                 const double *b0, double alpha, int nR)
 {
   register int k;
-  register __m128d y0, y1, y2, y3, B0, ALPHA, Z, A0, A1, A2, A3;
+  register __m128d y0, y1, y2, y3, B0, ALPHA, Z;
 
   y0 = _mm_set1_pd(0.0);
   y1 = y2 = y3 = y0;
@@ -285,20 +253,10 @@ void __mult4c1(double *c0,
   Z = _mm_set1_pd(0.0);
   B0 = mm_load_B(&b0[k]);
   B0 = _mm_blend_pd(B0, Z, 0x2);
-
-  A0 = mm_load_A(&a0[k]);
-  A1 = mm_load_A(&a1[k]);
-  A2 = mm_load_A(&a2[k]);
-  A3 = mm_load_A(&a3[k]);
-  A0 = _mm_blend_pd(A0, Z, 0x2);
-  A1 = _mm_blend_pd(A1, Z, 0x2);
-  A2 = _mm_blend_pd(A2, Z, 0x2);
-  A3 = _mm_blend_pd(A3, Z, 0x2);
-
-  y0 += _mm_mul_pd(B0, A0);
-  y1 += _mm_mul_pd(B0, A1);
-  y2 += _mm_mul_pd(B0, A2);
-  y3 += _mm_mul_pd(B0, A3);
+  y0 += _mm_mul_pd(B0, mm_load_A(&a0[k]));
+  y1 += _mm_mul_pd(B0, mm_load_A(&a1[k]));
+  y2 += _mm_mul_pd(B0, mm_load_A(&a2[k]));
+  y3 += _mm_mul_pd(B0, mm_load_A(&a3[k]));
 
 update:
   ALPHA = _mm_set1_pd(alpha);
@@ -317,7 +275,7 @@ void __mult4c2(double *c0, double *c1,
                const double *b0, const double *b1, double alpha, int nR)
 {
   register int k;
-  register __m128d y0, y1, y2, y3, y4, y5, y6, y7, B0, B1, ALPHA, Z, A0, A1, A2, A3;
+  register __m128d y0, y1, y2, y3, y4, y5, y6, y7, B0, B1, ALPHA, Z;
 
   y0 = _mm_set1_pd(0.0);
   y1 = y2 = y3 = y0;
@@ -342,25 +300,14 @@ void __mult4c2(double *c0, double *c1,
   B0 = _mm_blend_pd(B0, Z, 0x2);
   B1 = mm_load_B(&b1[k]);
   B1 = _mm_blend_pd(B1, Z, 0x2);
-
-  A0 = mm_load_A(&a0[k]);
-  A1 = mm_load_A(&a1[k]);
-  A2 = mm_load_A(&a2[k]);
-  A3 = mm_load_A(&a3[k]);
-  A0 = _mm_blend_pd(A0, Z, 0x2);
-  A1 = _mm_blend_pd(A1, Z, 0x2);
-  A2 = _mm_blend_pd(A2, Z, 0x2);
-  A3 = _mm_blend_pd(A3, Z, 0x2);
-
-  y0 += _mm_mul_pd(B0, A0);
-  y1 += _mm_mul_pd(B0, A1);
-  y2 += _mm_mul_pd(B0, A2);
-  y3 += _mm_mul_pd(B0, A3);
-
-  y4 += _mm_mul_pd(B1, A0);
-  y5 += _mm_mul_pd(B1, A1);
-  y6 += _mm_mul_pd(B1, A2);
-  y7 += _mm_mul_pd(B1, A3);
+  y0 += _mm_mul_pd(B0, mm_load_A(&a0[k]));
+  y1 += _mm_mul_pd(B0, mm_load_A(&a1[k]));
+  y2 += _mm_mul_pd(B0, mm_load_A(&a2[k]));
+  y3 += _mm_mul_pd(B0, mm_load_A(&a3[k]));
+  y4 += _mm_mul_pd(B1, mm_load_A(&a0[k]));
+  y5 += _mm_mul_pd(B1, mm_load_A(&a1[k]));
+  y6 += _mm_mul_pd(B1, mm_load_A(&a2[k]));
+  y7 += _mm_mul_pd(B1, mm_load_A(&a3[k]));
 
 update:
   ALPHA = _mm_set1_pd(alpha);
@@ -386,7 +333,7 @@ void __mult2c1(double *c0,
                const double *b0, double alpha, int nR)
 {
   register int k;
-  register __m128d y0, y1, y2, y3, B0, ALPHA, Z, A0, A1;
+  register __m128d y0, y1, y2, y3, B0, ALPHA, Z;
 
   y0 = _mm_set1_pd(0.0);
   y1 = y0;
@@ -401,14 +348,8 @@ void __mult2c1(double *c0,
   Z = _mm_set1_pd(0.0);
   B0 = mm_load_B(&b0[k]);
   B0 = _mm_blend_pd(B0, Z, 0x2);
-
-  A0 = mm_load_A(&a0[k]);
-  A1 = mm_load_A(&a1[k]);
-  A0 = _mm_blend_pd(A0, Z, 0x2);
-  A1 = _mm_blend_pd(A1, Z, 0x2);
-
-  y0 += _mm_mul_pd(B0, A0);
-  y1 += _mm_mul_pd(B0, A1);
+  y0 += _mm_mul_pd(B0, mm_load_A(&a0[k]));
+  y1 += _mm_mul_pd(B0, mm_load_A(&a1[k]));
 
 update:
   ALPHA = _mm_set1_pd(alpha);
