@@ -26,11 +26,11 @@
 
 // no recursion for vectors shorter than this
 #ifndef MIN_MVEC_SIZE
-#define MIN_MVEC_SIZE 48
+#define MIN_MVEC_SIZE 256
 #endif
 
 #ifndef MIN_MBLOCK_SIZE
-#define MIN_MBLOCK_SIZE 48
+#define MIN_MBLOCK_SIZE 256
 #endif
 
 enum armas_partition {
