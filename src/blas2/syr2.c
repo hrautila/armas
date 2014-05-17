@@ -111,7 +111,7 @@ int __armas_mvupdate2_sym(__armas_dense_t *A,
   int nx = __armas_size(X);
   int ny = __armas_size(Y);
 
-  if (__armas_size(A) == 0 || __armas_size(X) == 0 || __armas_size(Y))
+  if (__armas_size(A) == 0 || __armas_size(X) == 0 || __armas_size(Y) == 0)
     return 0;
   
   if (!conf)
