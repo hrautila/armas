@@ -30,10 +30,7 @@ enum pivot_dir {
   do { if ( (exp) ) return -1; } while (0)
 
 
-// worksize calculation: (*wsfunc)(rows, cols, lb)
-typedef int (*wsfunc)(int, int, int);
-
-extern int estimate_lb(int M, int N, int wsize, wsfunc wsizer);
+extern int compute_lb(int M, int N, int wsize, WSSIZE wsizer);
 
 // helper functions
 extern
@@ -56,6 +53,27 @@ void __apply_col_pivots(__armas_dense_t *A, armas_pivot_t *P, int dir, armas_con
 
 extern
 int __pivot_index(__armas_dense_t *A, armas_conf_t *conf);
+
+// internal householder
+extern
+void __compute_householder(__armas_dense_t *a11, __armas_dense_t *x,
+                           __armas_dense_t *tau, armas_conf_t *conf);
+extern
+void __compute_householder_vec(__armas_dense_t *x, __armas_dense_t *tau, armas_conf_t *conf);
+
+extern
+void __compute_householder_rev(__armas_dense_t *x, __armas_dense_t *tau, armas_conf_t *conf);
+
+extern
+int __apply_householder2x1(__armas_dense_t *tau, __armas_dense_t *v,
+                           __armas_dense_t *a1,  __armas_dense_t *A2,
+                           __armas_dense_t *w1,  int flags, armas_conf_t *conf);
+
+extern
+int __apply_householder1x1(__armas_dense_t *tau, __armas_dense_t *v,
+                           __armas_dense_t *a1,  __armas_dense_t *A2,
+                           __armas_dense_t *w1,  int flags, armas_conf_t *conf);
+
 
 // internal LDL functions
 extern int
