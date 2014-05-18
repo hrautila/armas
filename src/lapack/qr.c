@@ -331,7 +331,7 @@ int __armas_qrreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
 int __armas_qrfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                      armas_conf_t *conf)
 {
-  int wsmin, lb;
+  int wsmin, wsneed, lb;
   if (!conf)
     conf = armas_conf_default();
 
@@ -341,6 +341,13 @@ int __armas_qrfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
     conf->error = ARMAS_EWORK;
     return -1;
   }
+  // adjust blocking factor for workspace
+  wsneed = __ws_qrfactor(A->rows, A->cols, lb);
+  if (lb > 0 && __armas_size(W) < wsneed) {
+    lb = compute_lb(A->rows, A->cols, wsneed, __ws_qrfactor);
+    lb = min(lb, conf->lb);
+  }
+
   if (lb == 0 || A->cols <= lb) {
     __unblk_qrfactor(A, tau, W, conf);
   } else {

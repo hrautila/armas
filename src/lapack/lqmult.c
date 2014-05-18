@@ -30,15 +30,15 @@
  * Internal worksize calculation functions.
  */
 static inline
-int __ws_lqmult_left(__armas_dense_t *A, int lb)
+int __ws_lqmult_left(int M, int N, int lb)
 {
-  return lb == 0 ? A->cols : lb*(A->cols+lb);
+  return lb == 0 ? N : lb*(N+lb);
 }
 
 static inline
-int __ws_lqmult_right(__armas_dense_t *A, int lb)
+int __ws_lqmult_right(int M, int N, int lb)
 {
-  return lb == 0 ? A->rows : lb*(A->rows+lb);
+  return lb == 0 ? M : lb*(M+lb);
 }
 
 /*
@@ -287,7 +287,7 @@ __blk_lqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   int mb, nb, cb, tb, transpose ;
 
   if (flags & ARMAS_TRANS) {
-    // from top-left to bottom-right to produce normal sequence (C*Q.T)
+    // from top-left to bottom-right to produce transpose sequence (C*Q.T)
     pAstart = ARMAS_PTOPLEFT;
     pAdir   = ARMAS_PBOTTOMRIGHT;
     pStart  = ARMAS_PTOP;
@@ -298,7 +298,7 @@ __blk_lqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
     Aref = &ABR;
     transpose = TRUE;
   } else {
-    // from bottom-right to top-left to produce transpose sequence (C*Q)
+    // from bottom-right to top-left to produce normal sequence (C*Q)
     pAstart = ARMAS_PBOTTOMRIGHT;
     pAdir   = ARMAS_PTOPLEFT;
     pStart  = ARMAS_PBOTTOM;
@@ -357,7 +357,7 @@ __blk_lqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
  *
  *    Q = H(k)H(k-1)...H(1)
  *
- * as returned by DecomposeLQ().
+ * as returned by lqfactor().
  *
  * Arguments:
  *  C     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
@@ -388,8 +388,8 @@ __blk_lqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
 int __armas_lqmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                    int flags, armas_conf_t *conf)
 {
-  WSFUNC wsizer;
-  int wsmin, lb, ok;
+  WSSIZE wsizer;
+  int wsmin, lb, ok, wsneed;
   if (!conf)
     conf = armas_conf_default();
 
@@ -407,10 +407,16 @@ int __armas_lqmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   }
 
   lb = conf->lb;
-  wsmin = wsizer(C, 0);
+  wsmin = wsizer(C->rows, C->cols, 0);
   if (! W || __armas_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
+  }
+  // adjust blocking factor for workspace
+  wsneed = wsizer(C->rows, C->cols, lb);
+  if (lb > 0 && __armas_size(W) < wsneed) {
+    lb = compute_lb(C->rows, C->cols, __armas_size(W), wsizer);
+    lb = min(lb, conf->lb);
   }
 
   if (lb == 0 || A->cols <= lb) {
@@ -450,9 +456,9 @@ int __armas_lqmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf)
   if (!conf)
     conf = armas_conf_default();
   if (flags & ARMAS_RIGHT) {
-    return __ws_lqmult_right(A, conf->lb);
+    return __ws_lqmult_right(A->rows, A->cols, conf->lb);
   }
-  return __ws_lqmult_left(A, conf->lb);
+  return __ws_lqmult_left(A->rows, A->cols, conf->lb);
 }
 
 

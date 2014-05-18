@@ -169,7 +169,7 @@ __blk_qrmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
     __repartition_2x1to3x1(&tT,
                            &t0,
                            &t1,
-                           &t2,     /**/ tau, lb, pDir);
+                           &t2,     /**/ tau, A11.cols, pDir);
     __repartition_2x1to3x1(&CT,
                            &C0,
                            &C1,
@@ -320,10 +320,10 @@ __blk_qrmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   }
 
   __partition_2x2(&ATL,  __nil,
-                  __nil, &ABR,  /**/  A, mb, 0/*nb*/, pAstart);
+                  __nil, &ABR,  /**/  A, mb, nb, pAstart);
   __partition_1x2(&CL, &CR,     /**/  C, cb, pCstart);
   __partition_2x1(&tT, 
-                  &tB,   /**/  tau, 0/*tb*/, pStart);
+                  &tB,   /**/  tau, tb, pStart);
                  
   while (Aref->rows > 0 && Aref->cols > 0) {
     __repartition_2x2to3x3(&ATL,
@@ -333,7 +333,7 @@ __blk_qrmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
     __repartition_2x1to3x1(&tT,
                            &t0,
                            &t1,
-                           &t2,     /**/ tau, lb, pDir);
+                           &t2,     /**/ tau, A11.cols, pDir);
     __repartition_1x2to1x3(&CL,
                            &C0, &C1, &C2, /**/ C, A11.cols, pCdir);
     // ---------------------------------------------------------------------------
@@ -389,7 +389,9 @@ int __armas_qrmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                    int flags, armas_conf_t *conf)
 {
   WSSIZE wsizer;
-  int wsmin, lb, ok;
+  int wsmin, wsneed, lb, ok;
+  __armas_dense_t tauh;
+
   if (!conf)
     conf = armas_conf_default();
 
@@ -412,7 +414,14 @@ int __armas_qrmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
     conf->error = ARMAS_EWORK;
     return -1;
   }
+  // adjust blocking factor for workspace
+  wsneed = wsizer(C->rows, C->cols, lb);
+  if (lb > 0 && __armas_size(W) < wsneed) {
+    lb = compute_lb(C->rows, C->cols, __armas_size(W), wsizer);
+    lb = min(lb, conf->lb);
+  }
 
+  __armas_submatrix(&tauh, tau, 0, 0, A->cols, 1);
   if (lb == 0 || A->cols <= lb) {
     // unblocked 
     if (flags & ARMAS_LEFT) {
@@ -430,11 +439,11 @@ int __armas_qrmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
     if (flags & ARMAS_LEFT) {
       // temporary space after block reflector T, 
       __armas_make(&Wrk, C->cols, lb, C->cols, &__armas_data(W)[__armas_size(&T)]);
-      __blk_qrmult_left(C, A, tau, &T, &Wrk, flags, lb, conf);
+      __blk_qrmult_left(C, A, &tauh, &T, &Wrk, flags, lb, conf);
     } else {
       // temporary space after block reflector T, 
       __armas_make(&Wrk, C->rows, lb, C->rows, &__armas_data(W)[__armas_size(&T)]);
-      __blk_qrmult_right(C, A, tau, &T, &Wrk, flags, lb, conf);
+      __blk_qrmult_right(C, A, &tauh, &T, &Wrk, flags, lb, conf);
     }
   }
   return 0;

@@ -203,7 +203,7 @@ int __blk_qrbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *T,
 int __armas_qrbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W, int K,
                     armas_conf_t *conf)
 {
-  int wsmin, lb;
+  int wsmin, wsneed, lb;
   if (!conf)
     conf = armas_conf_default();
 
@@ -212,6 +212,12 @@ int __armas_qrbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
   if (! W || __armas_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
+  }
+  // adjust blocking factor for workspace
+  wsneed = __ws_qrbuild(A->rows, A->cols, lb);
+  if (lb > 0 && __armas_size(W) < wsneed) {
+    lb = compute_lb(A->rows, A->cols, __armas_size(W), __ws_qrbuild);
+    lb = min(lb, conf->lb);
   }
   if (lb == 0 || A->cols <= lb) {
     __unblk_qrbuild(A, tau, W, A->rows-K, A->cols-K, TRUE, conf);

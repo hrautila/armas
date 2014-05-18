@@ -71,15 +71,25 @@ int __armas_bkfactor(__armas_dense_t *A, __armas_dense_t *W,
                      armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
   __armas_dense_t Wrk;
-  int lb, k, wsmin;
+  int lb, k, wsmin, wsneed;
   if (!conf)
     conf = armas_conf_default();
 
-  wsmin = __ws_ldlfactor(A->rows, A->cols, conf->lb);
+  lb = conf->lb;
+  wsmin = __ws_ldlfactor(A->rows, A->cols, lb);
   if (__armas_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
   }
+  // adjust blocking factor for workspace
+  wsneed = __ws_ldlfactor(A->rows, A->cols, lb);
+  if (lb > 0 && __armas_size(W) < wsneed) {
+    lb = compute_lb(A->rows, A->cols, wsneed, __ws_ldlfactor);
+    lb = min(lb, conf->lb);
+    if (lb < 5)
+      lb = 0;
+  }
+
   if (A->rows != A->cols || A->cols != armas_pivot_size(P)) {
     conf->error = ARMAS_ESIZE;
     return -1;
@@ -89,7 +99,6 @@ int __armas_bkfactor(__armas_dense_t *A, __armas_dense_t *W,
     armas_pivot_set(P, k, 0);
   }
 
-  lb = conf->lb;
   if (lb == 0 || A->cols <= lb) {
     __armas_make(&Wrk, A->rows, 2, A->rows, __armas_data(W));
     if (flags & ARMAS_UPPER) {

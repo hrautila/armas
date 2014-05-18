@@ -786,18 +786,25 @@ int __armas_bdreduce(__armas_dense_t *A, __armas_dense_t *tauq,
                      __armas_dense_t *taup, __armas_dense_t *W,
                      armas_conf_t *conf)
 {
-  int wsmin, wsize, lb;
-  __armas_dense_t Y, Z;
+  int wsmin, wsneed, lb;
+
   if (!conf)
     conf = armas_conf_default();
   
-  wsmin = __ws_bdreduce(A->rows, A->cols, conf->lb);
+  lb = conf->lb;
+  wsmin = __ws_bdreduce(A->rows, A->cols, 0);
   if (__armas_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
   }
+  // adjust blocking factor for workspace
+  wsneed = __ws_bdreduce(A->rows, A->cols, lb);
+  if (lb > 0 && __armas_size(W) < wsneed) {
+    lb = compute_lb(A->rows, A->cols, wsneed, __ws_bdreduce);
+    lb = min(lb, conf->lb);
+  }
 
-  lb = conf->lb;
+
   if (A->rows >= A->cols) {
     if (lb > 0 && A->cols > lb) {
       __blk_bdreduce_left(A, tauq, taup, W, lb, conf);

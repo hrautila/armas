@@ -23,23 +23,26 @@
 #include "internal_lapack.h"
 
 // calculate maximum blocking size for an operation. 
-int estimate_lb(int M, int N, int wsz, WSSIZE worksize)
+int compute_lb(int M, int N, int wsz, WSSIZE worksize)
 {
-  int lb = 4;
+  int lb = 0;
   int k = 0;
   int wblk = (*worksize)(M, N, 4);
   if (wsz < wblk) {
     return 0;
   }
-  while (wsz > wblk && k < 100) {
+  do {
     lb += 4;
-    wblk = (*worksize)(M, N, lb);
+    wblk = (*worksize)(M, N, lb+4);
     k++;
-  }
+  } while  (wsz > wblk && k < 100);
+  if (k == 100)
+    return 0;
+
   if (wblk > wsz) {
     lb -= 4;
   }
-  return lb;
+  return lb < 0 ? 0 : lb;
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

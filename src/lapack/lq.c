@@ -326,7 +326,7 @@ int __armas_lqreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
 int __armas_lqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                      armas_conf_t *conf)
 {
-  int wsmin, lb;
+  int wsmin, lb, wsneed;
   if (!conf)
     conf = armas_conf_default();
 
@@ -335,6 +335,12 @@ int __armas_lqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
   if (! W || __armas_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
+  }
+  // adjust blocking factor for workspace
+  wsneed = __ws_lqfactor(A->rows, A->cols, lb);
+  if (lb > 0 && __armas_size(W) < wsneed) {
+    lb = compute_lb(A->rows, A->cols, __armas_size(W), __ws_lqfactor);
+    lb = min(lb, conf->lb);
   }
   if (lb == 0 || A->cols <= lb) {
     __unblk_lqfactor(A, tau, W, conf);

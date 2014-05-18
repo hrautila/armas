@@ -355,8 +355,8 @@ __blk_qlmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
 int __armas_qlmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                    int flags, armas_conf_t *conf)
 {
-  wsfunc wsizer;
-  int wsmin, lb, ok;
+  WSSIZE wsizer;
+  int wsmin, lb, ok, wsneed;
   if (!conf)
     conf = armas_conf_default();
 
@@ -378,6 +378,12 @@ int __armas_qlmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   if (! W || __armas_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
+  }
+  // adjust blocking factor for workspace
+  wsneed = wsizer(C->rows, C->cols, lb);
+  if (lb > 0 && __armas_size(W) < wsneed) {
+    lb = compute_lb(C->rows, C->cols, __armas_size(W), wsizer);
+    lb = min(lb, conf->lb);
   }
 
   if (lb == 0 || A->cols <= lb) {

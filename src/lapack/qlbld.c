@@ -198,7 +198,7 @@ int __blk_qlbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *T,
 int __armas_qlbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W, int K,
                     armas_conf_t *conf)
 {
-  int wsmin, lb;
+  int wsmin, lb, wsneed;
   if (!conf)
     conf = armas_conf_default();
 
@@ -208,6 +208,13 @@ int __armas_qlbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
     conf->error = ARMAS_EWORK;
     return -1;
   }
+  // adjust blocking factor for workspace
+  wsneed = __ws_qlbuild(A->rows, A->cols, lb);
+  if (lb > 0 && __armas_size(W) < wsneed) {
+    lb = compute_lb(A->rows, A->cols, __armas_size(W), __ws_qlbuild);
+    lb = min(lb, conf->lb);
+  }
+
   if (lb == 0 || A->cols <= lb) {
     __unblk_qlbuild(A, tau, W, A->rows-K, A->cols-K, TRUE, conf);
   } else {
