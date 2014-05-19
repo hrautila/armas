@@ -142,8 +142,6 @@ __blk_qlmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   __partition_2x1(&tT, 
                   &tB,   /**/  tau, tb, pStart);
                  
-  __armas_submatrix(&w12, W, 0, 0, C->cols, 1);
-
   while (Aref->rows > 0 && Aref->cols > 0) {
     __repartition_2x2to3x3(&ATL,
                            &A00,  &A01,  __nil,
@@ -156,7 +154,7 @@ __blk_qlmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
     __repartition_2x1to3x1(&tT,
                            &t0,
                            &t1,
-                           &t2,     /**/ tau, lb, pDir);
+                           &t2,     /**/ tau, A11.cols, pDir);
     // ---------------------------------------------------------------------------
     // block reflector for current block
     __merge2x1(&AT, &A01, &A11);
