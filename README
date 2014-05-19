@@ -1,5 +1,5 @@
-A Rewrite of Matrix Algebra Subroutines
----------------------------------------
+Another Rewrite of Matrix Algebra Subroutines
+---------------------------------------------
 
 Simple column major matrix package and basic linear algebra subroutine (BLAS) implementation
 with selected functionality from LAPACK linear algebra package. (LAPACK part upcoming)
