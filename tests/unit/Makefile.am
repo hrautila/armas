@@ -8,7 +8,11 @@ noinst_HEADERS = ../helper.h
 
 DOUBLE = dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dgemv dger dtrmv dtrsv
 
-LAPACK =  bidiag chol hess lu ldl qrfact qrbld qrmult lqfact lqbld lqmult qlfact qlbld qlmult
+LAPACK =  \
+   trdred bidiag chol hess lu ldl \
+   qrfact qrbld qrmult qrsol \
+   lqfact lqbld lqmult lqsol \
+   qlfact qlbld qlmult
 
 check_PROGRAMS = $(DOUBLE) $(LAPACK)
 
@@ -30,10 +34,12 @@ chol_SOURCES   = chol.c ../helper.c
 lu_SOURCES     = lu.c ../helper.c
 ldl_SOURCES    = ldl.c ../helper.c
 hess_SOURCES   = hessred.c ../helper.c
+trdred_SOURCES = trdred.c ../helper.c
 
 qrfact_SOURCES = qrfact.c ../helper.c
 qrbld_SOURCES  = qrbld.c ../helper.c
 qrmult_SOURCES = qrmult.c ../helper.c
+qrsol_SOURCES  = qrsol.c ../helper.c
 
 qlfact_SOURCES = qlfact.c ../helper.c
 qlbld_SOURCES  = qlbld.c ../helper.c
@@ -42,6 +48,7 @@ qlmult_SOURCES = qlmult.c ../helper.c
 lqfact_SOURCES = lqfact.c ../helper.c
 lqbld_SOURCES  = lqbld.c ../helper.c
 lqmult_SOURCES = lqmult.c ../helper.c
+lqsol_SOURCES  = lqsol.c ../helper.c
 
 
 TESTS = $(check_PROGRAMS)
