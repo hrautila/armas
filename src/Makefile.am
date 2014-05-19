@@ -1,10 +1,14 @@
 
+##DEBUG = -D__DEBUG__
+DEBUG =
 AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -pthread -Iinc
+AM_CFLAGS = -g -O3 -march=native -ffast-math -fomit-frame-pointer -pthread -Iinc $(DEBUG)
 
 noinst_HEADERS = \
 	inc/dtype.h \
+	inc/dlpack.h \
 	inc/internal.h \
+	inc/internal_lapack.h \
 	inc/matrix.h \
 	inc/mult.h \
 	inc/mult_nosimd.h \
@@ -13,7 +17,17 @@ noinst_HEADERS = \
 	inc/mult_fma_f64.h \
 	inc/mvec_nosimd.h \
 	inc/pivot.h \
-	inc/partition.h
+	inc/partition.h \
+	inc/mult_avx_c128.h \
+	inc/mult_avx_c64.h \
+	inc/mult_avx_f32.h \
+	inc/mult_fma_c128.h \
+	inc/mult_fma_c64.h \
+	inc/mult_fma_f32.h \
+	inc/mult_sse_c128.h \
+	inc/mult_sse_c64.h \
+	inc/mult_sse_f32.h 
+
 
 COMMON = \
 	core/support.c \
@@ -95,7 +109,7 @@ libx_la_SOURCES = $(COMMON)
 
 # double precision
 libd_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
-libd_la_CPPFLAGS = -DFLOAT64
+libd_la_CPPFLAGS = -DFLOAT64 -DWITH_AVX
 
 # complex support
 libz_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2)
