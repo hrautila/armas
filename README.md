@@ -64,42 +64,43 @@ Matrix interfaces provide a simple column major matrix implementation.
 
 #### Creating and deleting matrices
 
+```c
   // declare matrix variable
   armas_d_dense_t A;
   armas_d_init(&A, N, N);
   ...
   // release storage
   armas_d_release(&A);
-
+```
 Same as above but with pointer variables.
-
+```c
   armas_d_dense_t *A;
   A = armas_d_alloc(100, 100);
   ...
   armas_d_free(A);
-
+```
 Above versions allocate storage for matrix elements and assign ownership of the storage
 area to initialized matrix variable. Separately allocated storage can also be used for matrix
 storage. 
-
+```c
   // on-stack buffer
   armas_d_dense_t A;
   double elems[20];
   // initialized A as 4x5 matrix with row stride of 4 
   armas_d_make(&A, 4, 5, 4, elems);
-  
+```  
 Vectors are declared as matrices with one column or row.
-
+```c
   // column vector
   armas_d_init(&x, 10, 1);
   // row vector
   armas_d_inti(&y, 1, 10);
-
+```
 #### Accessing elements
 
 Single elements of a M-by-N matrix are accessed by [row,col] indexes where row = 0...M-1 and
 col = 0...N-1. Negative indexes are accepted.
-
+```c
   // get and set element at [i, j]
   val = armas_d_get(&A, i, j)
   armas_d_set(&A, i, j, val-1.0);
@@ -107,9 +108,9 @@ col = 0...N-1. Negative indexes are accepted.
   // following are equivalent -- set bottom-right element to zero
   armas_d_set(&A, M-1, N-1, 0.0);
   armas_d_set(&A, -1, -1, 0.0);
-
+```
 Matrix views are supported. Matrix view (submatrix) shares storage with its parent matrix.
-
+```c
   armas_d_init(&A, 50, 50);
   // B = A[10:30, 10:40]
   armas_d_submatrix(&B, &A, 10, 10, 20, 30);
@@ -117,31 +118,31 @@ Matrix views are supported. Matrix view (submatrix) shares storage with its pare
   // setting element in parent, reading its value in submatrix
   armas_d_set(&A, 10, 10, 5.0);
   val = armas_d_get(&B, 0, 0);  // val == 5.0
-
+```
 
 Matrix rows and columns can be accessed as views. 
-
+```c
   armas_d_init(&A, 10, 10);
   // row vector,    r.rows == 1, r.cols == 10, r.step == 10
   armas_d_row(&r, &A, 2);     
   // column vector, c.rows == 10, c.cols == 1, r.step == 10
   armas_d_column(&c, &A, 2);  
-
+```
 
 Matrix diagonals can be accessed as row vectors.
-
+```c
   // D = diag(A)
   armas_d_diag(&D, &A, 0);
   // S = first superdiagonal of A
   armas_d_diag(&S, &A, 1);
   // E = first subdiagonal of A
   armas_d_diag(&E, &A, -1);
-
+```
 
 #### Setting and output
 
 Setting values with value function as A[i,j] = func(i, j)
-
+```c
   // all elements
   armas_d_set_values(&A, func, ARMAS_ANY);
 
@@ -153,12 +154,12 @@ Setting values with value function as A[i,j] = func(i, j)
 
   // set symmetric
   armas_d_set_values(&S, func, ARMAS_SYMM);
-
+```
 
 Printing matrix to stream.
-
+```c
   armas_d_printf(stdout, "%7.4f", &A);
-
+```
 
 #### Basic operations
 
@@ -166,21 +167,21 @@ Vector and matrix variables in capital letters, type is pointer to matrix ie. ar
 
  
 Copying, B = A
-
+```c
   armas_d_mcopy(B, A);
-
+```
 Transpose, B = A.T
-
+```c
   armas_d_transpose(B, A);
-
+```
 Element-wise scaling, B = alpha*B
-
+```c
   armas_d_mscale(B, alpha);
-
+```
 Element-wise adding with constant, B += alpha
-
+```c
   armas_d_madd(B, alpha)
-
+```
 #### Basic linear algebra routines
 
 Configuration block holds tuning parameters for low level kernel functions and error code of the
@@ -189,202 +190,203 @@ last error. Error code is not cleared at function entry.
 ##### Vector-vector operations (Blas level 1)
 
 Dot product of two vectors (blas.DDOT)
-
+```c
    value = armas_d_dot(X, Y, conf)
-
+```
 Vector 2-norm (blas.DNRM2)
-
+```c
    value = armas_d_nrm2(X, conf)
-
+```
 Sum of absolute values of vector elements (blas.DASUM)
-
+```c
    asum = armas_d_asum(X, conf);
-
+```
 Sum of vector elements
-
+```c
    sum = armas_d_sum(X, conf)
-
+```
 Index of maximum absolute value (blas.DIAMAX)
-
+```c
    index = armas_d_iamax(X, conf)
-
+```
 Vector-vector sum Y = Y + alpha*X (blas.DAXPY)
-
+```c
    armas_d_axpy(Y, X, alpha, conf)
-
+```
 Extended vector-vector sum Y = beta*Y + alpha*X 
-
+```c
    armas_d_axpby(Y, X, alpha, beta, conf)
-
+```c
 
 ##### Vector-matrix operations (BLAS level 2)
 
 Flag bits in operations:
 
-  ARMAS_TRANS  : matrix is transposed
-  ARMAS_UPPER  : matrix is upper triangular
-  ARMAS_LOWER  : matrix is lower trinngular
-  ARMAS_UNIT   : matrix is unit diagonal
+    ARMAS_TRANS  : matrix is transposed
+    ARMAS_UPPER  : matrix is upper triangular
+    ARMAS_LOWER  : matrix is lower trinngular
+    ARMAS_UNIT   : matrix is unit diagonal
 
 General matrix-vector product Y = beta*Y + alpha*op(A)*X (blas.DGEMV)
-
+```c
    armas_d_mvmult(Y, A, X, alpha, beta, flags, conf)
-
+```
 Symmetric matrix-vector product Y = beta*Y + alpha*op(A)*X (blas.DSYMV)
-
+```c
    armas_d_mvmult_sym(Y, A, X, alpha, beta, flags, conf)
-
+```
 Triangular matrix-vector product Y = alpha*op(A)*Y (blas.DTRMV)
-
+```c
    armas_d_mvmult_trm(Y, A, alpha, flags, conf)
-
+```
 Triangular matrix-vector solve Y = alpha*op(A.-1)*Y (blas.DTRSV)
-
+```c
    armas_d_mvsolve_trm(Y, A, alpha, flags, conf)
-
+```
 General matrix rank update  A = A + alpha*X*Y  (blas.GER)
-
+```c
    armas_d_mvupdate(A, X, Y, alpha, conf)
-
+```
 Symmetric matrix rank update  A = A + alpha*X*X.T  (blas.SYR)
-
+```c
    armas_d_mvupdate_sym(A, X, alpha, flags, conf)
-
+```
 Symmetric matrix rank-2 update  A = A + alpha*X*Y.T + alpha*Y*X.T  (blas.SYR2)
-
+```c
    armas_d_mvupdate2_sym(A, X, Y, alpha, flags, conf)
-
+```
 
 ##### Matrix-matrix operations (BLAS level 3)
 
 Additional flag bits in operations:
 
-  ARMAS_TRANSA : first matrix is transposed
-  ARMAS_TRANSB : second matrix is transposed
-  ARMAS_LEFT   : operations from left
-  ARMAS_RIGHT  : operations from right
+    ARMAS_TRANSA : first matrix is transposed
+    ARMAS_TRANSB : second matrix is transposed
+    ARMAS_LEFT   : operations from left
+    ARMAS_RIGHT  : operations from right
 
 General matrix-matrix product C = beta*C + alpha*op(A)*op(B) (blas.DGEMM)
-
+```c
    armas_d_mult(C, A, B, alpha, beta, flags, conf)
-
+```
 Symmetric matrix-matrix product C = beta*C + alpha*op(A)*op(B) (blas.DSYMM)
-
+```c
    armas_d_mult_sym(C, A, B, alpha, beta, flags, conf)
-
+```
 Triangular matrix-matrix product B = alpha*op(A)*B (blas.DTRMM)
-
+```c
    armas_d_mult_trm(B, A, alpha, flags, conf)
-
+```
 Triangular matrix-matrix solve B = alpha*op(A.-1)*B (blas.DTRSM)
-
+```c
    armas_d_solve_trm(Y, A, alpha, flags, conf)
-
+```
 Symmetric matrix rank-k update  A = A + alpha*X*X.T  (blas.SYRK)
-
+```c
    armas_d_update_sym(A, X, alpha, flags, conf)
-
+```
 Symmetric matrix rank-2k update  A = A + alpha*X*Y.T + alpha*Y*X.T  (blas.SYRK2)
-
+```c
    armas_d_update2_sym(A, X, Y, alpha, flags, conf)
-
+```
 
 ##### Linear algebra
 
 New flag bits for linear algebra operations
 
-  ARMAS_MULTQ  : multiply with Q
-  ARMAS_MULTP  : multiply with Q
+    ARMAS_MULTQ  : multiply with Q
+    ARMAS_MULTP  : multiply with Q
 
 Cholesky factorization of positive definite matrix A = L*L.T  (lapack.DPOTRF)
-
+```c
    armas_d_cholfactor(A, conf)
-
+```
 Solving of Cholesky factorized linear system  B = A.-1*B    (lapack.DPOTRS)
-
+```c
    armas_d_cholsolve(B, A, conf)
-
+```
 LU factorization with partial pivoting of general matrix  A = P.-1*L*U*P  (lapack.DGETRF)
-
+```c
    armas_d_lufactor(A, pivots, conf)
-
+```
 Solving of LU factorized linear system  (lapack.DGETRS)
-
+```c
    armas_d_lusolve(B, A, pivots, conf)
-
+```
 Bunch-Kauffman LDL.T factorization of symmetric real matrix (lapack.DSYTRF)
-
+```c
    armas_d_bkfactor(A, W, pivots, flags, conf)
-
+```
 Solving of BK factorized linear system (lapackd.DSYTRS)
-
+```c
    armas_d_bksolve(B, A, W, pivots, flags, conf)
-
+```
 QR factorization of general M-by-N matrix A = Q*R (lapack.DGEQRF)
-
+```c
    armas_d_qrfactor(A, tau, W, conf)
-
+```
 Building the orthogonal matrix Q from QR factorization (lapack.DORGQR)
-
+```c
    armas_d_qrbuild(A, tau, W, conf)
-
+```
 Multiplying general matrix with orthogonal matrix Q from QR factorization (lapack.DORMQR)
-
+```c
    armas_d_qrmult(C, A, tau, W, flags, conf)
-
+```
 Solving of QR factorized linear system
-
+```c
    armas_d_qrsolve(B, A, tau, W, flags, conf)
-
+```
 LQ factorization of general M-by-N matrix A = L*Q (lapack.DGELQF)
-
+```c
    armas_d_lqfactor(A, tau, W, conf)
-
+```
 Building the orthogonal matrix Q from LQ factorization (lapack.DORGLQ)
-
+```c
    armas_d_lqbuild(A, tau, W, conf)
-
+```
 Multiplying general matrix with orthogonal matrix Q from LQ factorization (lapack.DORMLQ)
-
+```c
    armas_d_lqmult(C, A, tau, W, flags, conf)
-
+```
 Solving of LQ factorized linear system
-
+```c
    armas_d_lqsolve(B, A, tau, W, flags, conf)
-
+```
 QL factorization of general M-by-N matrix A = Q*L (lapack.DGEQLF)
-
+```c
    armas_d_qlfactor(A, tau, W, conf)
-
+```
 Building the orthogonal matrix Q from QL factorization (lapack.DORGQL)
-
+```c
    armas_d_qlbuild(A, tau, W, conf)
-
+```
 Multiplying general matrix with orthogonal matrix Q from QL factorization (lapack.DORMQL)
-
+```c
    armas_d_qlmult(C, A, tau, W, flags, conf)
-
+```
 Hessenberg reduction of general N-by-N matrix A = H*B*H.T (lapackd.DGEHRD)
-
+```c
   armas_d_hessreduce(A, tau, W, conf)
-
+```
 Multiplying general matrix with orthogonal matrix Q from Hessenberg reduction (lapack.DORMHR)
-
+```c
    armas_d_hessmult(C, A, tau, W, flags, conf)
-
+```
 Bidiagonalization of general M-by-N matrix A = Q*B*P.T (lapackd.DGEBRD)
-
+```c
   armas_d_bdreduce(A, tauq, taup, W, conf)
-
+```
 Multiplying general matrix with orthogonal matrix Q or P from Bidiagonal reduction (lapack.DORMBR)
-
+```c
    armas_d_bdmult(C, A, tau, W, flags, conf)
-
+```
 Tridiagonalization of symmetric N-by-N matrix A = Q*T*Q.T (lapackd.DSYTRD)
-
+```c
   armas_d_trdreduce(A, tau, W, flags, conf)
-
+```
 Multiplying general matrix with orthogonal matrix Q from tridiagonal reduction (lapack.DORMTR)
-
+```c
    armas_d_trdmult(C, A, tau, W, flags, conf)
+```
 
