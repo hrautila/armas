@@ -1,0 +1,35 @@
+
+
+Integrate double precision complex to blas1/2/3 code base
+ - Handling of CONJUGATE transpose within kernel functions
+ - Per instruction set optimizations.
+ - Unit tests for BLAS1/2/3 functionality
+
+Complex versions of lapack functionality
+ - requires proper handling of conjugate tranpose in blas-functions
+
+Per instruction set optimizations for single precision floats and complex numbers
+
+Matrix I/O
+ - functions for reading and writing matrices from files
+ - marshalling/unmarshalling for transmission
+
+Unit testing for all supported types
+
+Automake
+ - instruction set testing for compilation
+ - use of config.h (not used, should it?)
+ - library selection, all or only some versions
+
+Missing lapack functionality
+ - Eigenvalue computations
+ - Singular value decomposition
+ - Condition numbers estimation
+ - ...
+
+Multi-threading support
+ - replace current simplistic implementation with something better
+
+
+
+
