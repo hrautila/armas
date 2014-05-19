@@ -16,6 +16,7 @@ int test_reduce(int M, int N, int lb, int verbose)
   armas_d_dense_t A0, A1, tau0, tau1, W, tmp;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
+  int wchange = lb > 8 ? 2*M : 0;
   double nrm;
 
   armas_d_init(&A0, N, N);
@@ -25,7 +26,7 @@ int test_reduce(int M, int N, int lb, int verbose)
 
   conf.lb = lb;
   wsize = armas_d_hessreduce_work(&A0, &conf);
-  armas_d_init(&W, wsize, 1);
+  armas_d_init(&W, wsize-wchange, 1);
 
   // set source data
   armas_d_set_values(&A0, unitrand, ARMAS_ANY);
@@ -63,6 +64,7 @@ int test_mult(int M, int N, int lb, int verbose)
   armas_d_dense_t A0, A1, B, tau0, W, Blow;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize, err;
+  int wchange = lb > 8 ? 2*M : 0;
   double nrm;
 
   armas_d_init(&A0, N, N);
@@ -73,7 +75,7 @@ int test_mult(int M, int N, int lb, int verbose)
   conf.lb = lb;
   // A is square; left and right work sizes are equal
   wsize = armas_d_hessmult_work(&A0, ARMAS_LEFT, &conf);
-  armas_d_init(&W, wsize, 1);
+  armas_d_init(&W, wsize-wchange, 1);
 
   // set source data
   armas_d_set_values(&A0, unitrand, ARMAS_ANY);

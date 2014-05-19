@@ -22,6 +22,7 @@ int test_mult_identity(int M, int N, int lb, int verbose)
   armas_d_dense_t A0, C, tau0, W, D;
   int wsize;
   double n0, n1;
+  int wchange = lb > 8 ? 2*M : 0;
   armas_conf_t conf = *armas_conf_default();
   
   armas_d_init(&A0, M, N);
@@ -39,7 +40,7 @@ int test_mult_identity(int M, int N, int lb, int verbose)
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
   wsize = armas_d_qlmult_work(&C, ARMAS_LEFT, &conf);
-  armas_d_init(&W, wsize, 1);
+  armas_d_init(&W, wsize-wchange, 1);
 
   // factorize
   armas_d_qlfactor(&A0, &tau0, &W, &conf);

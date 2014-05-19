@@ -20,6 +20,7 @@ int test_factor(int M, int N, int lb, int verbose)
   armas_d_dense_t A0, A1, tau0, tau1, W, row;
   int wsize;
   double n0, n1;
+  int wchange = lb > 8 ? 2*M : 0;
   armas_conf_t conf = *armas_conf_default();
   
   if (lb == 0)
@@ -37,7 +38,7 @@ int test_factor(int M, int N, int lb, int verbose)
   // allocate workspace according the blocked invocation
   conf.lb = lb;
   wsize = armas_d_qrfactor_work(&A0, &conf);
-  armas_d_init(&W, wsize, 1);
+  armas_d_init(&W, wsize-wchange, 1);
 
   // factorize
   conf.lb = 0;
