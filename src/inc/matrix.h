@@ -135,6 +135,14 @@ extern int __armas_update2_sym(__armas_dense_t *C,
 
 // Lapack
 
+// Bidiagonal reduction
+extern int __armas_bdreduce(__armas_dense_t *A, __armas_dense_t *tauq, __armas_dense_t *taup,
+                            __armas_dense_t *W, armas_conf_t *conf);
+extern int __armas_bdmult(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
+                          __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_bdreduce_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_bdmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf);
+
 // Cholesky
 extern int __armas_cholfactor(__armas_dense_t *A, int flags, armas_conf_t *conf);
 extern int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A, int flags,
@@ -199,6 +207,17 @@ extern int __armas_qrbuild_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_qrfactor_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_qrmult_work(__armas_dense_t *C, int flags, armas_conf_t *conf);
 extern int __armas_qrsolve_work(__armas_dense_t *B, armas_conf_t *conf);
+
+// Tridiagonal reduction
+extern int __armas_trdreduce(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+                             int flags, armas_conf_t *conf);
+extern int __armas_trdmult(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
+                           __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_trdreduce_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_trdmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf);
+
+// -------------------------------------------------------------------------------------------
+// inline functions
 
 #ifndef __INLINE 
 #define __INLINE extern inline

@@ -97,7 +97,6 @@
 #define __update_lq_right       __d_update_lq_right
 #define __unblk_lq_reflector    __d_unblk_lq_reflector
 
-
 // LU functions
 #define __armas_lufactor        armas_d_lufactor
 #define __armas_lusolve         armas_d_lusolve
@@ -133,8 +132,22 @@
 // Tridiagonalization functions
 #define __armas_trdreduce       armas_d_trdreduce
 #define __armas_trdreduce_work  armas_d_trdreduce_work
+#define __armas_trdmult         armas_d_trdmult
+#define __armas_trdmult_work    armas_d_trdmult_work
 
 #endif /* FLOAT64 */
 
+// common 
+#if defined(__update_lq_left) && defined(__update_lq_right) && defined(__unblk_lq_reflector)
+#define __update_lq 1
+#endif
+
+#if defined(__update_ql_left) && defined(__update_ql_right) && defined(__unblk_ql_reflector)
+#define __update_ql 1
+#endif
+
+#if defined(__update_qr_left) && defined(__update_qr_right) && defined(__unblk_qr_reflector)
+#define __update_qr 1
+#endif
 
 #endif  /* __ARMAS_DLPACK_H */
