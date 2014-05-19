@@ -345,7 +345,17 @@ void __continue_3x3to2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
 __INLINE
 void __merge2x1(__armas_dense_t *ABLK, __armas_dense_t *AT, __armas_dense_t *AB)
 {
+  if (__armas_size(AT) == 0 && __armas_size(AB) == 0) {
+    ABLK->rows = 0; ABLK->cols = 0;
+    return;
+  }
+  if (__armas_size(AT) == 0) {
+    __armas_submatrix(ABLK, AB, 0, 0, AB->rows, AB->cols);
+  } else if (__armas_size(AB) == 0) {
+    __armas_submatrix(ABLK, AT, 0, 0, AT->rows, AT->cols);
+  } else {
     __armas_submatrix(ABLK, AT, 0, 0, AT->rows+AB->rows, AT->cols);
+  }
 }
 
 /*
@@ -356,7 +366,17 @@ void __merge2x1(__armas_dense_t *ABLK, __armas_dense_t *AT, __armas_dense_t *AB)
 __INLINE
 void __merge1x2(__armas_dense_t *ABLK, __armas_dense_t *AL, __armas_dense_t *AR)
 {
-  __armas_submatrix(ABLK, AL, 0, 0, AL->rows, AL->cols+AR->cols);
+  if (__armas_size(AL) == 0 && __armas_size(AR) == 0) {
+    ABLK->rows = 0; ABLK->cols = 0;
+    return;
+  }
+  if (__armas_size(AL) == 0) {
+    __armas_submatrix(ABLK, AR, 0, 0, AR->rows, AR->cols);
+  } else if (__armas_size(AR) == 0) {
+    __armas_submatrix(ABLK, AL, 0, 0, AL->rows, AL->cols);
+  } else {
+    __armas_submatrix(ABLK, AL, 0, 0, AL->rows, AL->cols+AR->cols);
+  }
 }
 
 #endif
