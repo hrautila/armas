@@ -1,12 +1,12 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013,2014
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
-// any later version. See the COPYING tile included in this archive.
+// any later version. See the COPYING file included in this archive.
 
 #include <pthread.h>
-
+#include <string.h>
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
