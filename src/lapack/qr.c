@@ -242,7 +242,7 @@ int __unblk_qr_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t
                            &A00,  __nil, __nil,
                            &a10,  &a11,  __nil,
                            &A20,  &a21,  &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
-    __repartition_2x2to3x3(&ATL,
+    __repartition_2x2to3x3(&TTL,
                            &T00,  &t01,  &T02,
                            __nil, &t11,  &t12,
                            __nil, __nil,  &T22,  /**/  T, 1, ARMAS_PBOTTOMRIGHT);

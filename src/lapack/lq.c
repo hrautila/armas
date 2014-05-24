@@ -239,7 +239,7 @@ int __unblk_lq_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t
                            &A00,  &a01,  &A02,
                            __nil, &a11,  &a12,
                            __nil, __nil, &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
-    __repartition_2x2to3x3(&ATL,
+    __repartition_2x2to3x3(&TTL,
                            &T00,  &t01,  &T02,
                            __nil, &t11,  &t12,
                            __nil, __nil, &T22,  /**/  T, 1, ARMAS_PBOTTOMRIGHT);
