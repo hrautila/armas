@@ -216,7 +216,7 @@ Vector-vector sum Y = Y + alpha*X (blas.DAXPY)
 Extended vector-vector sum Y = beta*Y + alpha*X 
 ```c
    armas_d_axpby(Y, X, alpha, beta, conf)
-```c
+```
 
 ##### Vector-matrix operations (BLAS level 2)
 
