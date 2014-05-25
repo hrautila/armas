@@ -12,7 +12,8 @@ LAPACK =  \
    trdred bidiag chol hess lu ldl \
    qrfact qrbld qrmult qrsol \
    lqfact lqbld lqmult lqsol \
-   qlfact qlbld qlmult
+   qlfact qlbld qlmult \
+   rqfact rqbld rqmult
 
 check_PROGRAMS = $(DOUBLE) $(LAPACK)
 
@@ -50,6 +51,9 @@ lqbld_SOURCES  = lqbld.c ../helper.c
 lqmult_SOURCES = lqmult.c ../helper.c
 lqsol_SOURCES  = lqsol.c ../helper.c
 
+rqfact_SOURCES = rqfact.c ../helper.c
+rqbld_SOURCES  = rqbld.c ../helper.c
+rqmult_SOURCES = rqmult.c ../helper.c
 
 TESTS = $(check_PROGRAMS)
 
