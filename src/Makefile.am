@@ -99,6 +99,9 @@ LAPACK = \
 	lapack/qr.c \
 	lapack/qrmult.c \
 	lapack/qrsolve.c \
+	lapack/rqbld.c \
+	lapack/rq.c \
+	lapack/rqmult.c \
 	lapack/support.c \
 	lapack/trired.c 
 
