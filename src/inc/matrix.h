@@ -176,6 +176,8 @@ extern int __armas_lqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_de
                             armas_conf_t *conf);
 extern int __armas_lqmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                           __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_lqreflector(__armas_dense_t *T, __armas_dense_t *V, __armas_dense_t *tau,
+                               armas_conf_t *conf);
 extern int __armas_lqsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
                            __armas_dense_t *W, int flags, armas_conf_t *conf);
 extern int __armas_lqbuild_work(__armas_dense_t *A, armas_conf_t *conf);
@@ -190,6 +192,8 @@ extern int __armas_qlfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_de
                             armas_conf_t *conf);
 extern int __armas_qlmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                           __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_qlreflector(__armas_dense_t *T, __armas_dense_t *V, __armas_dense_t *tau,
+                               armas_conf_t *conf);
 extern int __armas_qlbuild_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_qlfactor_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_qlmult_work(__armas_dense_t *C, int flags, armas_conf_t *conf);
@@ -201,12 +205,31 @@ extern int __armas_qrfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_de
                             armas_conf_t *conf);
 extern int __armas_qrmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                           __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_qrreflector(__armas_dense_t *T, __armas_dense_t *V, __armas_dense_t *tau,
+                               armas_conf_t *conf);
 extern int __armas_qrsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
                            __armas_dense_t *W, int flags, armas_conf_t *conf);
 extern int __armas_qrbuild_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_qrfactor_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_qrmult_work(__armas_dense_t *C, int flags, armas_conf_t *conf);
 extern int __armas_qrsolve_work(__armas_dense_t *B, armas_conf_t *conf);
+
+
+// RQ functions
+extern int __armas_rqbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+                           int K, armas_conf_t *conf);
+extern int __armas_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+                            armas_conf_t *conf);
+extern int __armas_rqmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
+                          __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_rqreflector(__armas_dense_t *T, __armas_dense_t *V, __armas_dense_t *tau,
+                               armas_conf_t *conf);
+extern int __armas_rqsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
+                           __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_rqbuild_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_rqfactor_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_rqmult_work(__armas_dense_t *C, int flags, armas_conf_t *conf);
+extern int __armas_rqsolve_work(__armas_dense_t *B, armas_conf_t *conf);
 
 // Tridiagonal reduction
 extern int __armas_trdreduce(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,

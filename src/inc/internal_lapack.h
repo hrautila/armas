@@ -127,5 +127,20 @@ __update_qr_left(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t *Y1,
 extern int
 __unblk_qr_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t *tau,
 		     armas_conf_t *conf);
+// internal RQ functions
+extern int
+__update_rq_right(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t *Y1,
+		  __armas_dense_t *Y2, __armas_dense_t *T, __armas_dense_t *Wrk,
+		  int transpose, armas_conf_t *conf);
+extern int
+__update_rq_left(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t *Y1,
+		 __armas_dense_t *Y2, __armas_dense_t *T, __armas_dense_t *Wrk,
+		 int transpose, armas_conf_t *conf);
+extern int
+__unblk_rq_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t *tau,
+		     armas_conf_t *conf);
+
+
+
 
 #endif /* __ARMAS_INTERNAL_LAPACK_H */

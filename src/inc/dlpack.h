@@ -129,6 +129,19 @@
 #define __update_qr_right       __d_update_qr_right
 #define __unblk_qr_reflector    __d_unblk_qr_reflector
 
+// RQ functions
+#define __armas_rqbuild         armas_d_rqbuild
+#define __armas_rqbuild_work    armas_d_rqbuild_work
+#define __armas_rqfactor        armas_d_rqfactor
+#define __armas_rqfactor_work   armas_d_rqfactor_work
+#define __armas_rqmult          armas_d_rqmult
+#define __armas_rqmult_work     armas_d_rqmult_work
+#define __armas_rqreflector     armas_d_rqreflector
+// internal RQ related function available for others
+#define __update_rq_left        __d_update_rq_left
+#define __update_rq_right       __d_update_rq_right
+#define __unblk_rq_reflector    __d_unblk_rq_reflector
+
 // Tridiagonalization functions
 #define __armas_trdreduce       armas_d_trdreduce
 #define __armas_trdreduce_work  armas_d_trdreduce_work
@@ -148,6 +161,10 @@
 
 #if defined(__update_qr_left) && defined(__update_qr_right) && defined(__unblk_qr_reflector)
 #define __update_qr 1
+#endif
+
+#if defined(__update_rq_left) && defined(__update_rq_right) && defined(__unblk_rq_reflector)
+#define __update_rq 1
 #endif
 
 #endif  /* __ARMAS_DLPACK_H */

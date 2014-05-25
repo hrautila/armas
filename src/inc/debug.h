@@ -43,9 +43,17 @@ static inline void __check_mm256(__m256d val) {
 #define CHECK_NAN(val)  __check_nan(val)
 
 #define CHECK_MM256(val) __check_mm256(val)
+
+#define IFERROR(exp) do { \
+  int _e = (exp); \
+  if (_e) { printf("error at: %s:%d\n", __FILE__, __LINE__); } \
+  } while (0);
+
 #else
 #define CHECK_NAN(val)
 #define CHECK_MM256(val)
+
+#define IFERROR(exp) exp
 
 #endif // defined(__DEBUG__)
 
