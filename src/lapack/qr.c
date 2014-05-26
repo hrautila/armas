@@ -289,18 +289,16 @@ int __armas_qrreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
  * @brief Compute QR factorization of a M-by-N matrix A = Q * R.
  *
  * Arguments:
- *  A   On entry, the M-by-N matrix A. On exit, the elements on and above
- *      the diagonal contain the min(M,N)-by-N upper trapezoidal matrix R.
- *      The elements below the diagonal with the column vector 'tau', represent
- *      the ortogonal matrix Q as product of elementary reflectors.
+ *  A    On entry, the M-by-N matrix A, M >= N. On exit, upper triangular matrix R
+ *       and the orthogonal matrix Q as product of elementary reflectors.
  *
- * tau  On exit, the scalar factors of the elementary reflectors.
+ *  tau  On exit, the scalar factors of the elementary reflectors.
  *
- * W    Workspace, N-by-nb matrix used for work space in blocked invocations. 
+ *  W    Workspace, N-by-nb matrix used for work space in blocked invocations. 
  *
- * conf The blocking configuration. If nil then default blocking configuration
- *      is used. Member conf.LB defines blocking size of blocked algorithms.
- *      If it is zero then unblocked algorithm is used.
+ *  conf The blocking configuration. If nil then default blocking configuration
+ *       is used. Member conf.LB defines blocking size of blocked algorithms.
+ *       If it is zero then unblocked algorithm is used.
  *
  * @returns:
  *      0 if succesfull, -1 otherwise
@@ -309,7 +307,7 @@ int __armas_qrreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
  *
  *  Ortogonal matrix Q is product of elementary reflectors H(k)
  *
- *    Q = H(1)H(2),...,H(K), where K = min(M,N)
+ *    Q = H(0)H(1),...,H(K-1), where K = min(M,N)
  *
  *  Elementary reflector H(k) is stored on column k of A below the diagonal with
  *  implicit unit value on diagonal entry. The vector TAU holds scalar factors
@@ -334,6 +332,12 @@ int __armas_qrfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
   int wsmin, wsneed, lb;
   if (!conf)
     conf = armas_conf_default();
+
+  // must have: M >= N
+  if (A->rows < A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
 
   lb = conf->lb;
   wsmin = __ws_qrfactor(A->rows, A->cols, 0);

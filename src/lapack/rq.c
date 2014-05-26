@@ -329,7 +329,7 @@ int __armas_rqreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
  * Compute RQ factorization of a M-by-N matrix A: A = R*Q 
  *
  * Arguments:
- *  A    On entry, the M-by-N matrix A, M < N. On exit, upper triangular matrix R
+ *  A    On entry, the M-by-N matrix A, M <= N. On exit, upper triangular matrix R
  *       and the orthogonal matrix Q as product of elementary reflectors.
  *
  *  tau  On exit, the scalar factors of the elemenentary reflectors.
@@ -347,18 +347,18 @@ int __armas_rqreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
  *
  * Ortogonal matrix Q is product of elementary reflectors H(k)
  *
- *   Q = H(1)H(2),...,H(k), where k = min(M,N)
+ *   Q = H(0)H(1),...,H(K-1), where K = min(M,N)
  *
- * Elementary reflector H(k) is stored on first N-M+k-1 elements of row k-1 of A.
- * with implicit unit value on element N-M+k-1 entry. The vector TAU holds scalar
+ * Elementary reflector H(k) is stored on first N-M+k elements of row k of A.
+ * with implicit unit value on element N-M+k entry. The vector TAU holds scalar
  * factors of the elementary reflectors.
  *
  * Contents of matrix A after factorization is as follow:
  *
- *    ( v1 v1 r  r  r  r )  M=4, N=6
- *    ( v2 v2 v2 r  r  r )  
- *    ( v3 v3 v3 v3 r  r )  
- *    ( v4 v4 v4 v4 v4 r )  
+ *    ( v0 v0 r  r  r  r )  M=4, N=6
+ *    ( v1 v1 v1 r  r  r )  
+ *    ( v2 v2 v2 v2 r  r )  
+ *    ( v3 v3 v3 v3 v3 r )  
  *
  * where r is element of R and vk is element of H(k).
  *
@@ -372,7 +372,7 @@ int __armas_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
     conf = armas_conf_default();
 
   // must have: M <= N
-  if (A->rows > A-cols) {
+  if (A->rows > A->cols) {
     conf->error = ARMAS_ESIZE;
     return -1;
   }

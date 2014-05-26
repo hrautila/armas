@@ -325,22 +325,20 @@ int __armas_qlreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
   return 0;
 }
 
-/*
+/**
  * Compute QL factorization of a M-by-N matrix A: A = Q * L.
  *
  * Arguments:
- *  A   On entry, the M-by-N matrix A. On exit, the elements on and below
- *      the diagonal contain the min(M,N)-by-N lower trapezoidal matrix L.
- *      The elements above the diagonal with the column vector 'tau', represent
- *      the ortogonal matrix Q as product of elementary reflectors.
+ *  A    On entry, the M-by-N matrix A, M >= N. On exit, lower triangular matrix L
+ *       and the orthogonal matrix Q as product of elementary reflectors.
  *
- * tau  On exit, the scalar factors of the elemenentary reflectors.
+ *  tau  On exit, the scalar factors of the elemenentary reflectors.
  *
- * W    Workspace, N-by-nb matrix used for work space in blocked invocations. 
+ *  W    Workspace, N-by-nb matrix used for work space in blocked invocations. 
  *
- * conf The blocking configuration. If nil then default blocking configuration
- *      is used. Member conf.LB defines blocking size of blocked algorithms.
- *      If it is zero then unblocked algorithm is used.
+ *  conf The blocking configuration. If nil then default blocking configuration
+ *       is used. Member conf.LB defines blocking size of blocked algorithms.
+ *       If it is zero then unblocked algorithm is used.
  *
  * Returns:
  *      Error indicator.
@@ -349,7 +347,7 @@ int __armas_qlreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
  *
  *  Ortogonal matrix Q is product of elementary reflectors H(k)
  *
- *    Q = H(k)...H(2)H(1), where K = min(M,N)
+ *    Q = H(K-1)...H(1)H(0), where K = min(M,N)
  *
  *  Elementary reflector H(k) is stored on column k of A above the diagonal with
  *  implicit unit value on diagonal entry. The vector TAU holds scalar factors
@@ -357,16 +355,16 @@ int __armas_qlreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
  *
  *  Contents of matrix A after factorization is as follow:
  *
- *    ( v1 v2 v3 v4 )   for M=6, N=4
- *    ( v1 v2 v3 v4 )
- *    ( l  v2 v3 v4 )
- *    ( l  l  v3 v4 )
- *    ( l  l  l  v4 )
+ *    ( v0 v1 v2 v3 )   for M=6, N=4
+ *    ( v0 v1 v2 v3 )
+ *    ( l  v1 v2 v3 )
+ *    ( l  l  v2 v3 )
+ *    ( l  l  l  v3 )
  *    ( l  l  l  l  )
  *
  *  where l is element of L, vk is element of H(k).
  *
- * DecomposeQL is compatible with lapack.DGEQLF
+ *  qlfactor() is compatible with lapack.DGEQLF
  */
 int __armas_qlfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                      armas_conf_t *conf)
@@ -374,6 +372,12 @@ int __armas_qlfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
   int wsmin, lb, wsneed;
   if (!conf)
     conf = armas_conf_default();
+
+  // must have: M >= N
+  if (A->rows < A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
 
   lb = conf->lb;
   wsmin = __ws_qlfactor(A->rows, A->cols, 0);
