@@ -22,21 +22,23 @@ enum armas_flags {
   ARMAS_NULL    = 0,
   ARMAS_NONE    = 0,
   ARMAS_ANY     = 0,
-  ARMAS_TRANSA  = 0x1,     ///< operand A is transposed
-  ARMAS_TRANSB  = 0x2,     ///< operand B is transposed
-  ARMAS_TRANS   = 0x4,     ///< matrix operand is transposed
-  ARMAS_LOWER   = 0x8,     ///< lower triangular matrix
-  ARMAS_UPPER   = 0x10,    ///< upper triangular matrix 
-  ARMAS_LEFT    = 0x20,    ///< multiplicaton from left
-  ARMAS_RIGHT   = 0x40,    ///< multiplicaton from right
-  ARMAS_UNIT    = 0x80,    ///< unit diagonal matrix
-  ARMAS_CONJA   = 0x100,   ///< operand A is conjugate transposed
-  ARMAS_CONJB   = 0x200,   ///< operand B is conjugate transposed
-  ARMAS_CONJ    = 0x400,   ///< matrix operand is conjugate transposed
-  ARMAS_SYMM    = 0x800,   ///< symmetric matrix
-  ARMAS_HERM    = 0x1000,  ///< hermitian matrix
-  ARMAS_MULTQ   = 0x2000,  ///< multiply with Q in bidiagonal 
-  ARMAS_MULTP   = 0x4000,  ///< multiply with P in bidiagonal 
+  ARMAS_LOWER   = 0x1,          ///< lower triangular matrix
+  ARMAS_UPPER   = 0x2,          ///< upper triangular matrix 
+  ARMAS_SYMM    = 0x4,          ///< symmetric matrix
+  ARMAS_HERM    = 0x8,          ///< hermitian matrix
+  ARMAS_UNIT    = 0x10,         ///< unit diagonal matrix
+  ARMAS_LEFT    = 0x20,         ///< multiplicaton from left
+  ARMAS_RIGHT   = 0x40,         ///< multiplicaton from right
+  ARMAS_TRANSA  = 0x80,         ///< operand A is transposed
+  ARMAS_TRANSB  = 0x100,        ///< operand B is transposed
+  ARMAS_TRANS   = ARMAS_TRANSA, ///< matrix operand is transposed
+  ARMAS_CONJA   = 0x200,        ///< operand A is conjugate transposed
+  ARMAS_CONJB   = 0x400,        ///< operand B is conjugate transposed
+  ARMAS_CONJ    = ARMAS_CONJA,  ///< matrix operand is conjugate transposed
+  ARMAS_MULTQ   = 0x800,        ///< multiply with Q in bidiagonal 
+  ARMAS_MULTP   = 0x1000,       ///< multiply with P in bidiagonal 
+  ARMAS_WANTQ   = 0x2000,       ///< build the Q matrix in bidiagonal 
+  ARMAS_WANTP   = 0x4000,       ///< build the P matrix in bidiagonal 
 };
 
 enum armas_opts {

@@ -228,8 +228,7 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
   }
 
   // check consistency
-  switch (flags & (ARMAS_TRANSA|ARMAS_TRANS)) {
-  case ARMAS_TRANSA:
+  switch (flags & ARMAS_TRANS) {
   case ARMAS_TRANS:
     ok = A->cols == ny && A->rows == nx;
     break;
@@ -240,10 +239,6 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
   if (! ok) {
     conf->error = ARMAS_ESIZE;
     return -1;
-  }
-
-  if ((flags & ARMAS_TRANSA) && !(flags & ARMAS_TRANS)) {
-    flags |= ARMAS_TRANS;
   }
 
   x = (mvec_t){X->elems, (X->rows == 1 ? X->step : 1)};
