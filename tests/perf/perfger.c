@@ -74,7 +74,7 @@ main(int argc, char **argv) {
     flush();
     rt = time_msec();
 
-    armas_d_mvupdate(&A, &Y, &X, 1.0, 0, &conf);
+    armas_d_mvupdate(&A, &Y, &X, 1.0, &conf);
     
     rt = time_msec() - rt;
 
