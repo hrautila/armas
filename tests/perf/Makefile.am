@@ -1,4 +1,6 @@
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -I../ -I../../src
 
 LDADD = ../../src/libarmasd.la
