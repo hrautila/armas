@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([A Rewrite of Matrix Algebra Subroutines], [0.1], [],
+AC_INIT([Another Rewrite of Matrix Algebra Subroutines], [0.1], [],
 	[armas], [https://github.com/hrautila/armas])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/Makefile.am])
