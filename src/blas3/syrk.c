@@ -216,7 +216,8 @@ int __armas_update_sym(__armas_dense_t *C,  const __armas_dense_t *A,
   if (__armas_size(A) == 0 || __armas_size(C) == 0)
     return 0;
 
-  conf->error = 0;
+  if (!conf)
+    conf = armas_conf_default();
 
   if (flags & ARMAS_TRANS)
     flags |= ARMAS_TRANSA;
