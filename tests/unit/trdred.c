@@ -69,6 +69,7 @@ int test_mult_trd(int M, int N, int lb, int verbose, int flags)
   int ok, wsize, err;
   double nrm;
   int tN = M < N ? M : N;
+  char *uplo = flags & ARMAS_UPPER ? "UPPER" : "LOWER";
 
   armas_d_init(&A0, N, N);
   armas_d_init(&A1, N, N);
@@ -112,7 +113,7 @@ int test_mult_trd(int M, int N, int lb, int verbose, int flags)
 
   nrm = armas_d_mnorm(&T0, ARMAS_NORM_ONE, &conf);
   ok = isFINE(nrm, N*1e-12);
-  printf("%s: Q*T*Q.T == A\n", PASS(ok));
+  printf("%s: [%s] Q*T*Q.T == A\n", PASS(ok), uplo);
   if (verbose > 0) {
     printf("  ||A - Q*T*Q.T||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
   }
@@ -129,6 +130,7 @@ int test_mult_a(int M, int N, int lb, int verbose, int flags)
   int ok, wsize, err;
   double nrm;
   int tN = M < N ? M : N;
+  char *uplo = flags & ARMAS_UPPER ? "UPPER" : "LOWER";
 
   armas_d_init(&A0, N, N);
   armas_d_init(&A1, N, N);
@@ -170,7 +172,7 @@ int test_mult_a(int M, int N, int lb, int verbose, int flags)
   nrm = armas_d_mnorm(&T0, ARMAS_NORM_ONE, &conf);
 
   ok = isFINE(nrm, N*1e-12);
-  printf("%s: Q.T*A*Q == T\n", PASS(ok));
+  printf("%s: [%s] Q.T*A*Q == T\n", PASS(ok), uplo);
   if (verbose > 0) {
     printf("  ||T - Q.T*A*Q||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
   }
@@ -178,6 +180,50 @@ int test_mult_a(int M, int N, int lb, int verbose, int flags)
 }
 
 
+int test_build(int M, int N, int lb, int K, int verbose, int flags)
+{
+  armas_d_dense_t A0, tauq0, d0, W, tmp, QQt;
+  armas_conf_t conf = *armas_conf_default();
+  int ok, wsize;
+  double nrm;
+  int tN = M < N ? M : N;
+  char *uplo = flags & ARMAS_UPPER ? "UPPER" : "LOWER";
+
+  armas_d_init(&A0, N, N);
+  armas_d_init(&tauq0, tN, 1);
+  //------------------------------------------------------
+
+  conf.lb = lb;
+  wsize = armas_d_trdreduce_work(&A0, &conf);
+  armas_d_init(&W, wsize, 1);
+
+  // set source data
+  armas_d_set_values(&A0, unitrand, flags);
+  // reduce to tridiagonal matrix
+  conf.lb = lb;
+  armas_d_trdreduce(&A0, &tauq0, &W, flags, &conf);
+  // ----------------------------------------------------------------
+  // Q-matrix
+  armas_d_trdbuild(&A0, &tauq0, &W, K, flags, &conf);
+  armas_d_init(&QQt, N, N);
+  armas_d_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+  armas_d_diag(&d0, &QQt, 0);
+  armas_d_madd(&d0, -1.0, ARMAS_NONE);
+
+  nrm = armas_d_mnorm(&QQt, ARMAS_NORM_ONE, &conf);
+    
+  ok = isFINE(nrm, N*1e-12);
+  printf("%s: [%s] I == Q*Q.T\n", PASS(ok), uplo);
+  if (verbose > 0) {
+    printf("  ||I - Q*Q.T||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+  }
+  //------------------------------------------------------
+  armas_d_release(&A0);
+  armas_d_release(&tauq0);
+  armas_d_release(&W);
+  armas_d_release(&QQt);
+  return ok;
+}
 
 main(int argc, char **argv)
 {
@@ -229,6 +275,10 @@ main(int argc, char **argv)
   if (! test_mult_a(N, N, LB, verbose, ARMAS_LOWER))
     fails++;
   if (! test_mult_a(N, N, LB, verbose, ARMAS_UPPER))
+    fails++;
+  if (! test_build(N, N, LB, N/2, verbose, ARMAS_LOWER))
+    fails++;
+  if (! test_build(N, N, LB, N/2, verbose, ARMAS_UPPER))
     fails++;
   
   exit(fails);
