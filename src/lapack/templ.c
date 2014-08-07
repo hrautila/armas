@@ -30,6 +30,7 @@
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
 // Local Variables:
+// c-basic-offset: 4
 // indent-tabs-mode: nil
 // End:
 
