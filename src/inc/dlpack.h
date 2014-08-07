@@ -47,6 +47,8 @@
 #define __armas_bdreduce_work    armas_d_bdreduce_work
 #define __armas_bdmult           armas_d_bdmult
 #define __armas_bdmult_work      armas_d_bdmult_work
+#define __armas_bdbuild          armas_d_bdbuild
+#define __armas_bdbuild_work     armas_d_bdbuild_work
 
 // Symmetric LDL functions
 #define __armas_bkfactor        armas_d_bkfactor
@@ -145,6 +147,8 @@
 // Tridiagonalization functions
 #define __armas_trdreduce       armas_d_trdreduce
 #define __armas_trdreduce_work  armas_d_trdreduce_work
+#define __armas_trdbuild        armas_d_trdbuild
+#define __armas_trdbuild_work   armas_d_trdbuild_work
 #define __armas_trdmult         armas_d_trdmult
 #define __armas_trdmult_work    armas_d_trdmult_work
 

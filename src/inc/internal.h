@@ -109,6 +109,30 @@ int max(int a, int b) {
   return a < b ? b : a;
 }
 
+
+// Calculate how many row/column blocks are needed with blocking size WB.
+static inline
+int blocking(int M, int N, int WB, int *nM, int *nN)
+{
+  *nM = M/WB;
+  *nN = N/WB;
+  if (M % WB > WB/10) {
+    *nM += 1;
+  }
+  if (N % WB > WB/10) {
+    *nN += 1;
+  }
+  return (*nM)*(*nN);
+}
+
+// compute start of k'th out of nblk block when block size wb and total is K
+// requires: K/wb == nblk or K/wb == nblk-1
+static inline
+int block_index(int k, int nblk, int wb, int K)
+{
+  return k == nblk ? K : k*wb;
+}
+
 // compute start of i'th block out of r blocks in sz elements
 static inline
 int __block_index4(int i, int n, int sz) {

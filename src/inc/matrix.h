@@ -13,6 +13,10 @@
 /* COMPLEX_H */
 #include <armas/armas.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Internal 'type' independent declaration of matrix type. Public exported
 // types are copies of this with explicit element type.
 /**
@@ -138,10 +142,13 @@ extern int __armas_update2_sym(__armas_dense_t *C,
 // Bidiagonal reduction
 extern int __armas_bdreduce(__armas_dense_t *A, __armas_dense_t *tauq, __armas_dense_t *taup,
                             __armas_dense_t *W, armas_conf_t *conf);
+extern int __armas_bdbuild(__armas_dense_t *A, __armas_dense_t *tau,
+                           __armas_dense_t *W, int K, int flags, armas_conf_t *conf);
 extern int __armas_bdmult(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
                           __armas_dense_t *W, int flags, armas_conf_t *conf);
 extern int __armas_bdreduce_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_bdmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf);
+extern int __armas_bdbuild_work(__armas_dense_t *A, int flags, armas_conf_t *conf);
 
 // Cholesky
 extern int __armas_cholfactor(__armas_dense_t *A, int flags, armas_conf_t *conf);
@@ -234,10 +241,13 @@ extern int __armas_rqsolve_work(__armas_dense_t *B, armas_conf_t *conf);
 // Tridiagonal reduction
 extern int __armas_trdreduce(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                              int flags, armas_conf_t *conf);
+extern int __armas_trdbuild(__armas_dense_t *A, __armas_dense_t *tau,
+                            __armas_dense_t *W, int K, int flags, armas_conf_t *conf);
 extern int __armas_trdmult(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
                            __armas_dense_t *W, int flags, armas_conf_t *conf);
 extern int __armas_trdreduce_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_trdmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf);
+extern int __armas_trdbuild_work(__armas_dense_t *A, armas_conf_t *conf);
 
 // -------------------------------------------------------------------------------------------
 // inline functions
@@ -504,6 +514,12 @@ __armas_dense_t *__armas_col_as_row(__armas_dense_t *row, __armas_dense_t *col)
   __armas_make(row, 1, __armas_size(col), 1, __armas_data(col));
   return row;
 }
+
+#ifdef __cplusplus
+}
+#endif
+
+
 
 #endif
   

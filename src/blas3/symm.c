@@ -25,6 +25,7 @@
 // ------------------------------------------------------------------------------
 
 #include "internal.h"
+#include "scheduler.h"
 #include "matrix.h"
 #include "matcpy.h"
 
@@ -254,7 +255,7 @@ void __kernel_symm_right(mdata_t *C, const mdata_t *A, const mdata_t *B,
 }
 
 static
-void *__start_thread(void *arg) {
+void *__compute_block(void *arg) {
   kernel_param_t *kp = (kernel_param_t *)arg;
   if (kp->flags & ARMAS_RIGHT) {
     __kernel_symm_right(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
@@ -268,7 +269,8 @@ void *__start_thread(void *arg) {
   return arg;
 }
 
-
+// ------------------------------------------------------------------------------------
+// Recursive scheduling of threads
 
 static
 int __mult_sym_threaded(int blknum, int nblk, int colwise, 
@@ -332,7 +334,7 @@ int __mult_sym_threaded(int blknum, int nblk, int colwise,
   }
 
   // create new thread to compute this block
-  err = pthread_create(&th, NULL, __start_thread, &kp);
+  err = pthread_create(&th, NULL, __compute_block, &kp);
   if (err) {
     conf->error = -err;
     return -1;
@@ -344,7 +346,93 @@ int __mult_sym_threaded(int blknum, int nblk, int colwise,
   return err;
 }
 
+// --------------------------------------------------------------------------------------
+// new scheduler; N workers, either nblk blocks or tiles of size WBxWB
 
+static
+int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
+                        const __armas_dense_t *A,
+                        const __armas_dense_t *B,
+                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
+{
+  int rN, cN, i, j, iR, iE, jS, jL, k, nT, K;
+  blas_task_t *tasks;
+  mdata_t *_C;
+  const mdata_t *_A, *_B;
+  armas_counter_t ready;
+
+  _C = (mdata_t*)C;
+  _A = (const mdata_t *)A;
+  _B = (const mdata_t *)B;
+
+  K = flags & ARMAS_TRANSA ? A->rows : A->cols;
+
+  // number of tasks
+  nT = conf->optflags & ARMAS_BLAS_BLOCKED
+    ? nblk
+    : blocking(C->rows, C->cols, conf->wb, &rN, &cN);
+
+  tasks = (blas_task_t *)calloc(nT, sizeof(blas_task_t));
+  if (! tasks) {
+    conf->error = ARMAS_EMEMORY;
+    return -1;
+  }
+  armas_counter_init(&ready, nT);
+  k = 0; 
+
+  if (conf->optflags & ARMAS_BLAS_BLOCKED) {
+    // compute in nblk blocks
+    iR = 0; iE = C->rows;
+    jS = 0; jL = C->cols;
+    for (j = 0; j < nblk; j++) {
+      if (colwise) {
+        jS = __block_index4(j,   nblk, C->cols);
+        jL = __block_index4(j+1, nblk, C->cols);
+      } else {
+        iR = __block_index4(j,   nblk, C->rows);
+        iE = __block_index4(j+1, nblk, C->rows);
+      }
+      // set parameters
+      __kernel_params(&tasks[k].kp, _C, _A, _B, alpha, beta, flags, K, jS, jL, iR, iE,
+                      conf->kb, conf->nb, conf->mb, conf->optflags);
+      // init task
+      armas_task_init(&tasks[k].t, k, __compute_block, &tasks[k].kp, &ready);
+      // schedule
+      armas_schedule(&tasks[k].t);
+      k++;
+    }
+  } else {
+    // compute in tiles of wb x wb
+    for (j = 0; j < cN; j++) {
+      jS = block_index(j,   cN, conf->wb, C->cols);
+      jL = block_index(j+1, cN, conf->wb, C->cols);
+      for (i = 0; i < rN; i++) {
+        iR = block_index(i,   rN, conf->wb, C->rows);
+        iE = block_index(i+1, rN, conf->wb, C->rows);
+        // set parameters
+        __kernel_params(&tasks[k].kp, _C, _A, _B, alpha, beta, flags, K, jS, jL, iR, iE,
+                        conf->kb, conf->nb, conf->mb, conf->optflags);
+        // init task
+        armas_task_init(&tasks[k].t, k, __compute_block, &tasks[k].kp, &ready);
+        // schedule
+        armas_schedule(&tasks[k].t);
+        k++;
+      }
+    }
+  }
+
+  // wait for tasks to finish
+  armas_counter_wait(&ready);
+  // 1. check that task worker count is zero on all tasks
+  int refcnt = 0;
+  for (i = 0; i < nT; i++) {
+    refcnt += tasks[i].t.wcnt;
+  }
+  assert(refcnt == 0);
+  // release task memory
+  free(tasks);
+  return 0;
+}
 
 /**
  * @brief Symmetric matrix-matrix multiplication
@@ -390,13 +478,13 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
   if (__armas_size(A) == 0 || __armas_size(B) == 0)
     return 0;
 
-  conf->error = 0;
+  if (!conf)
+    conf = armas_conf_default();
 
   // check consistency
   switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
   case ARMAS_RIGHT:
     ok = C->rows == B->rows && C->cols == A->cols && B->cols == A->rows && A->rows == A->cols;
-    empty = A->cols == 0 || B->rows == 0;
     break;
   case ARMAS_LEFT:
   default:
@@ -404,10 +492,8 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
     empty = A->rows == 0 || B->cols == 0;
     break;
   }
-  if (empty)
-    return 0;
   if (! ok) {
-    conf->error = 1;
+    conf->error = ARMAS_ESIZE;
     return -1;
   }
 
@@ -428,7 +514,13 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
     return 0;
   }
 
-  int colwise = 20*nproc < C->cols;
+  int colwise = C->rows < C->cols;
+  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
+    return __mult_sym_schedule(nproc, colwise,
+                               C, A, B, alpha, beta, flags, conf);
+  }
+
+  // default is recursive scheduling of threads
   return __mult_sym_threaded(0, nproc, colwise,
                              C, A, B, alpha, beta, flags, conf);
 }

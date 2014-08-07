@@ -14,6 +14,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Operarand flag bits
  */
@@ -46,7 +50,13 @@ enum armas_opts {
   ARMAS_SNAIVE    = 0x1,
   ARMAS_KAHAN     = 0x2,
   ARMAS_PAIRWISE  = 0x4,
-  ARMAS_RECURSIVE = 0x8
+  ARMAS_RECURSIVE = 0x8,
+  ARMAS_BLAS_RECURSIVE = 0x10,
+  ARMAS_BLAS_BLOCKED = 0x20,
+  ARMAS_BLAS_TILED = 0x40,
+  ARMAS_SCHED_ROUNDROBIN = 0x80,
+  ARMAS_SCHED_RANDOM = 0x100,
+  ARMAS_SCHED_TWO = 0x200
 };
 
 /**
@@ -59,7 +69,8 @@ enum armas_errors {
   ARMAS_EIMP = 4,          ///< not implemented
   ARMAS_EWORK = 5,         ///< workspace to small
   ARMAS_ESINGULAR = 6,     ///< singular matrix
-  ARMAS_ENEGATIVE = 7      ///< negative value on diagonal
+  ARMAS_ENEGATIVE = 7,     ///< negative value on diagonal
+  ARMAS_EMEMORY = 8        ///< memory allocation failed
 };
 
 enum armas_norms {
@@ -82,6 +93,7 @@ typedef struct armas_conf {
   int kb;        ///< block size relative to operand matrix common dimension (blas3)
   int lb;        ///< block size for blocked algorithms (lapack)
   int maxproc;   ///< max processors to use
+  int wb;        ///< block size for cpu scheduler
   int error;     ///< last error
   int optflags;  ///< config options
 } armas_conf_t;
@@ -89,13 +101,14 @@ typedef struct armas_conf {
 // use default configuration block
 #define ARMAS_CDFLT  (armas_conf_t *)0;
 
-extern void armas_nproc_schedule(uint64_t *nproc_schedule, int count);
-
 extern long armas_use_nproc(uint64_t nelems, armas_conf_t *conf);
+extern int armas_nblocks(uint64_t nelems, int wb, int maxproc, int flags);
 
 extern armas_conf_t *armas_conf_default();
 
 extern int armas_last_error();
+
+extern void armas_init(void);
 
 // pivot vectors
 
@@ -165,8 +178,9 @@ armas_pivot_t *armas_pivot_make(armas_pivot_t *ptable, int sz, int *data)
 __INLINE
 void armas_pivot_release(armas_pivot_t *ptable)
 {
-  if (ptable && ptable->owner) {
-    free(ptable->indexes);
+  if (ptable) {
+    if (ptable->owner)
+      free(ptable->indexes);
     ptable->indexes = (int *)0;
     ptable->npivots = 0;
   }
@@ -223,6 +237,11 @@ void armas_pivot_set(armas_pivot_t *ptable, int k, int val)
 }
 
 extern void armas_pivot_printf(FILE* out, const char *fmt, armas_pivot_t *pivot);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

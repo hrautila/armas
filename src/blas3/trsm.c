@@ -29,10 +29,12 @@
 
 #include "internal.h"
 #include "matrix.h"
+#include "scheduler.h"
 
+// ------------------------------------------------------------------------------
 
 static
-void *__start_thread(void *arg) {
+void *__compute_block(void *arg) {
   kernel_param_t *kp = (kernel_param_t *)arg;
     switch (kp->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
     case ARMAS_SNAIVE:
@@ -55,6 +57,9 @@ void *__start_thread(void *arg) {
     }
   return arg;
 }
+
+// ------------------------------------------------------------------------------
+// recursive threading 
 
 static
 int __solve_trm_threaded(int blknum, int nblk, 
@@ -104,7 +109,7 @@ int __solve_trm_threaded(int blknum, int nblk,
                   conf->kb, conf->nb, conf->mb, conf->optflags);
 
   // create new thread to compute this block
-  err = pthread_create(&th, NULL, __start_thread, &kp);
+  err = pthread_create(&th, NULL, __compute_block, &kp);
   if (err) {
     conf->error = -err;
     return -1;
@@ -116,6 +121,64 @@ int __solve_trm_threaded(int blknum, int nblk,
   return err;
 }
 
+
+
+// ------------------------------------------------------------------------------
+// blocked scheduling to worker threads.
+
+static
+int __solve_trm_schedule(int nblk, 
+                         __armas_dense_t *B, const __armas_dense_t *A, 
+                         DTYPE alpha, int flags, armas_conf_t *conf)
+{
+  int ir, ie, err, nT, k, j;
+  mdata_t *_B;
+  const mdata_t *_A;
+  blas_task_t *tasks;
+  armas_counter_t ready;
+
+  _B = (mdata_t*)B;
+  _A = (const mdata_t *)A;
+
+  nT = nblk;
+  tasks = (blas_task_t *)calloc(nT, sizeof(blas_task_t));
+  if (! tasks) {
+    conf->error = ARMAS_EMEMORY;
+    return -1;
+  }
+  armas_counter_init(&ready, nT);
+  k = 0; 
+
+  for (j = 0; j < nblk; j++) {
+    if (flags & ARMAS_RIGHT) {
+      ir = __block_index4(j, nblk, B->rows);
+      ie = __block_index4(j+1, nblk, B->rows);
+    } else {
+      ir = __block_index4(j, nblk, B->cols);
+      ie = __block_index4(j+1, nblk, B->cols);
+    }
+
+    // C = B, not used: beta = alpha, L, R = 0
+    __kernel_params(&tasks[k].kp, _B, _A, 0, alpha, alpha, flags, A->cols, ir, 0, 0, ie,
+                  conf->kb, conf->nb, conf->mb, conf->optflags);
+    // init task
+    armas_task_init(&tasks[k].t, k, __compute_block, &tasks[k].kp, &ready);
+    // schedule
+    armas_schedule(&tasks[k].t);
+    k++;
+  }
+
+  // wait for tasks to finish
+  armas_counter_wait(&ready);
+  // 1. check that task worker count is zero on all tasks
+  int refcnt = 0;
+  for (j = 0; j < nT; j++) {
+    refcnt += tasks[j].t.wcnt;
+  }
+  assert(refcnt == 0);
+  // release task memory
+  free(tasks);
+}
 
 
 /**
@@ -149,7 +212,7 @@ int __armas_solve_trm(__armas_dense_t *B, const __armas_dense_t *A,
                       DTYPE alpha, int flags, armas_conf_t *conf)
 {
   long nproc;
-  int K, ir, ie, ok;
+  int K, ir, ie, ok, opts;
   mdata_t *_B;
   const mdata_t *_A;
 
@@ -170,14 +233,21 @@ int __armas_solve_trm(__armas_dense_t *B, const __armas_dense_t *A,
     break;
   }
   if (! ok) {
-    conf->error = 1;
+    conf->error = ARMAS_ESIZE;
     return -1;
   }
 
   _B = (mdata_t*)B;
   _A = (const mdata_t *)A;
 
-  nproc = armas_use_nproc(__armas_size(B), conf);
+  // tiled scheduling not supported
+  opts = conf->optflags;
+  if (opts & ARMAS_BLAS_TILED) {
+    opts |= ARMAS_BLAS_BLOCKED;
+    opts ^= ARMAS_BLAS_TILED;
+  }
+  nproc = armas_nblocks(__armas_size(B), conf->wb, conf->maxproc, opts);
+  // nproc = armas_use_nproc(__armas_size(B), conf);
   //printf("__armas_solve_trm2: nproc=%d, opts=x%x\n", (int)nproc, conf->optflags);
 
   if (nproc == 1) {
@@ -199,6 +269,10 @@ int __armas_solve_trm(__armas_dense_t *B, const __armas_dense_t *A,
       __solve_blocked(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb);
       return 0;
     }
+  }
+
+  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
+    return __solve_trm_schedule(nproc, B, A, alpha, flags, conf);
   }
   return __solve_trm_threaded(0, nproc, B, A, alpha, flags, conf);
 }

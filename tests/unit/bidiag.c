@@ -202,6 +202,83 @@ int test_mult_qtp(int M, int N, int lb, int verbose)
   return ok;
 }
 
+// compute: ||B - Q.T*A*P|| == O(eps)
+int test_build_qp(int M, int N, int lb, int K, int flags, int verbose)
+{
+  armas_d_dense_t A0, tauq0, taup0, W, tmp, Qh, QQt, d0, d1;
+  armas_conf_t conf = *armas_conf_default();
+  int ok, wsize, err, ws2;
+  double nrm;
+  char *mbyn = M >= N ? "M >= N" : "M < N";
+
+  armas_d_init(&A0, M, N);
+  armas_d_init(&tauq0, imin(M, N), 1);
+  armas_d_init(&taup0, imin(M, N), 1);
+
+  conf.lb = lb;
+  wsize = armas_d_bdreduce_work(&A0, &conf);
+  armas_d_init(&W, wsize, 1);
+
+  // set source data
+  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
+
+  // reduce to bidiagonal matrix
+  conf.lb = lb;
+  armas_d_bdreduce(&A0, &tauq0, &taup0, &W, &conf);
+
+  conf.error = 0;
+  if (flags & ARMAS_WANTQ) {
+    armas_d_bdbuild(&A0, &tauq0, &W, K, flags, &conf);
+
+    if (M < N) {
+      armas_d_init(&QQt, M, M);
+      armas_d_submatrix(&Qh, &A0, 0, 0, M, M);
+      armas_d_mult(&QQt, &Qh, &Qh, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    } else {
+      armas_d_init(&QQt, N, N);
+      armas_d_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    }
+    armas_d_diag(&d0, &QQt, 0);
+    armas_d_madd(&d0, -1.0, ARMAS_NONE);
+
+    nrm = armas_d_mnorm(&QQt, ARMAS_NORM_ONE, &conf);
+    
+    ok = isFINE(nrm, N*1e-12);
+    printf("%s: %s  I == Q.T*Q\n", PASS(ok), mbyn);
+    if (verbose > 0) {
+      printf("  ||I - Q.T*Q||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+    }
+  } else {
+    // P matrix
+    armas_d_bdbuild(&A0, &taup0, &W, K, flags, &conf);
+
+    if (N < M) {
+      armas_d_init(&QQt, N, N);
+      armas_d_submatrix(&Qh, &A0, 0, 0, N, N);
+      armas_d_mult(&QQt, &Qh, &Qh, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    } else {
+      armas_d_init(&QQt, M, M);
+      armas_d_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    }
+    armas_d_diag(&d0, &QQt, 0);
+    armas_d_madd(&d0, -1.0, ARMAS_NONE);
+
+    nrm = armas_d_mnorm(&QQt, ARMAS_NORM_ONE, &conf);
+    
+    ok = isFINE(nrm, N*1e-12);
+    printf("%s: %s  I == P*P.T\n", PASS(ok), mbyn);
+    if (verbose > 0) {
+      printf("  ||I - P*P.T||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+    }
+  }
+
+  armas_d_release(&A0);
+  armas_d_release(&tauq0);
+  armas_d_release(&taup0);
+  armas_d_release(&W);
+  armas_d_release(&QQt);
+  return ok;
+}
 
 main(int argc, char **argv)
 {
@@ -254,6 +331,14 @@ main(int argc, char **argv)
   if (! test_mult_qtp(M, N, LB, verbose))
     fails++;
   if (! test_mult_qtp(N, M, LB, verbose))
+    fails++;
+  if (! test_build_qp(M, N, LB, N/2, ARMAS_WANTQ, verbose))
+    fails++;
+  if (! test_build_qp(M, N, LB, N/2, ARMAS_WANTP, verbose))
+    fails++;
+  if (! test_build_qp(N, M, LB, N/2, ARMAS_WANTQ, verbose))
+    fails++;
+  if (! test_build_qp(N, M, LB, N/2, ARMAS_WANTP, verbose))
     fails++;
 
   exit(fails);
