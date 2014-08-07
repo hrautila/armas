@@ -1,6 +1,12 @@
+2014-08-07  Harri  <harri.rautila@gmail.com>
+
+	* New threaded scheduling policy for BLAS3 functions.
+	* Blocking configurations from environment variables.
+	* Q matrix generation for bidiagonal and tridiagonal reductions.
+
 2014-07-24  Harri  <harri.rautila@gmail.com>
 
-	* Blas 1/2/4 functionality ready.
+	* Blas 1/2/3 functionality ready.
 	* Lapack computational functions for factorizations (Cholesky, LU, Bunch-Kauffman,
 	QR/LQ/RQ/QL) done.
 	* Computational routines for matrix reductions (Hessenberg, bidiagonal, tridiagonal) ok.
