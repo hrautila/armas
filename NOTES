@@ -1,0 +1,70 @@
+
+Library parameter initialization
+--------------------------------
+
+All runtime configuration parameters are stored in armas_conf_t structure. Function
+armas_conf_default() returns pointer to default library configuration block which is initially
+set to compile time values. Runtime configuration is affected by ARMAS_CONFIG environment
+variable. Function armas_init() reads and parses this environment variable and sets
+default configuration block according to the environment variable. 
+
+Runtime configuration can be obtained by explicit call to armas_init() or by the first call to
+armas_conf_default() function. All public library functions call this function if provided with
+NULL configuration block parameter.
+
+Basic configuration 
+-------------------
+
+ARMAS_CONFIG has the format "MB,NB,KB,LB,WB,NPROC"
+
+Low level blocking configuration for BLAS3 level functions is defined by parameters MB, NB and
+KB. In matrix-matrix multiplication (GEMM) MB,NB block is computed as sum of [MB,KB]x[KB,NB]
+blocks. Other BLAS3 level functions use these blocking parameters as appropriate. 
+
+Parameter LB defines the blocking size for LAPACK level functions. Blocked code progresses
+in LB size blocks.
+
+Parameter WB defines parallel scheduling for BLAS3 level functions. For RECURSIVE and BLOCKED
+scheduling WB is used to calculate the number of parallel execution threads. The number
+of threads used is MIN(CEIL(<number-of-elements>/WB), NPROC).  For TILED 
+scheduling the work is divided to [WB,WB] size tasks and scheduled to NPROC threads.
+
+Parameter NPROC is maximum number of processors to use in parallel execution of BLAS3 level
+subroutines.
+
+Scheduling configuration
+------------------------
+
+Runtime scheduling configuration is defined with the ARMAS_SCHED environment variable. It has
+format <SCHEDPARAMS>,<CPUSPEC-LIST>. The SCHEDPARAMS is character string where the first 
+character defines scheduling policy: recursive (R), blocked (B) or tiled (T). Second 
+character defines how blocked and tiled scheduling distribute tasks to worker threads:
+round-robin (R) or random (Z). Optional third character defines whether task is enqueued
+to one (1) worker or to two (2) workers in power-of-two fashion.
+
+RECURSIVE scheduling for K tasks means that K-1 threads are recursively started and
+the last K'th block is computed in calling thread's context. Then on return from the 
+recursive calls the started threads are waited to complete (joined). 
+
+In BLOCKED scheduling for K tasks all tasks are distributed to K workers and calling
+thread waits on a counting semaphore for the completition of all tasks. 
+
+In TILED scheduling P tasks are distributed to K workers and calling thread wait for
+the completition of all P tasks. The value of P is computed from the number of elements
+in the target matrix and the blocking parameter WB.
+
+The CPUSPEC-LIST is comma separated list of CPUSPECS. Each CPUSPEC is either cpu range or
+cpu mask spesificion or simple cpu number. The range specifications has form
+of FIRST-LAST[/STEP] where FIRST and LAST define inclusive range and an options STEP to 
+select every STEP'th cpu from the range. Cpu mask specification has format [START:]HEXMASK
+where START is cpu number of first cpu and HEXMASK is 64bit mask. Simple cpu is as the name
+says simple cpu number. Following three specifications are equivalent: '8-15/2', '8:0x55' 
+and '8,10,12,14'.
+
+Runtime scheduling configuration ARMAS_SCHED is meaningfull only when NPROC parameter
+has value greater than one.
+
+
+
+
+
