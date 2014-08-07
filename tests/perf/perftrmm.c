@@ -63,14 +63,20 @@ main(int argc, char **argv) {
   if (trans)
     flags |= ARMAS_TRANSA;
 
-  conf.mb = 64; conf.nb = 128; conf.kb = 160;
-  conf.maxproc = nproc;
+  //armas_init();
+  conf = *armas_conf_default();
+  /*conf.mb = 64; conf.nb = 128; conf.kb = 160;
+    conf.maxproc = nproc; */
   if (algo == 'N' || algo == 'n') {
     conf.optflags |= ARMAS_SNAIVE;
   } else if (algo == 'R' || algo == 'r') {
     conf.optflags |= ARMAS_RECURSIVE;
   }
 
+  if (verbose) {
+    printf(".mb=%d, .nb=%d, .kb=%d, .wb=%d\n", conf.mb, conf.nb, conf.kb,conf.wb);
+    printf(".maxproc=%d\n", conf.maxproc);
+  }
   armas_d_init(&A, N, N);
   armas_d_init(&B, N, N);
   

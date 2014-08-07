@@ -13,14 +13,17 @@ main(int argc, char **argv) {
 
   int ok, opt, i;
   int count = 5;
-  int nproc = 2;
+  int nproc = 0;
   int N = 600;
   int verbose = 0;
   double rt, min, max, avg;
   armas_conf_t conf;
   armas_d_dense_t C, A, B;
 
-  while ((opt = getopt(argc, argv, "vc:P:")) != -1) {
+  armas_init();
+  conf = *armas_conf_default();
+
+  while ((opt = getopt(argc, argv, "vc:P:o")) != -1) {
     switch (opt) {
     case 'v':
       verbose = 1;
@@ -30,6 +33,9 @@ main(int argc, char **argv) {
       break;
     case 'P':
       nproc = atoi(optarg);
+      break;
+    case 'o':
+      conf.optflags |= ARMAS_BLAS_RECURSIVE;
       break;
     default: /* ? */
       fprintf(stderr, "Usage: time_gemm [-v] [-c numtest] [-P nproc] [size]");
@@ -42,8 +48,9 @@ main(int argc, char **argv) {
   long seed = (long)time(0);
   srand48(seed);
 
-  conf.mb = 96; conf.nb = 128; conf.kb = 160;
-  conf.maxproc = nproc;
+  //conf.mb = 96; conf.nb = 128; conf.kb = 160;
+  if (nproc > 0)
+    conf.maxproc = nproc;
 
   armas_d_init(&C, N, N);
   armas_d_init(&A, N, N);

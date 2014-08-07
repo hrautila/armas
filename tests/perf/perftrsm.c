@@ -67,8 +67,10 @@ main(int argc, char **argv) {
   long seed = (long)time(0);
   srand48(seed);
 
-  conf.mb = 96; conf.nb = 128; conf.kb = 160;
-  conf.maxproc = nproc;
+  /* conf.mb = 96; conf.nb = 128; conf.kb = 160;
+     conf.maxproc = nproc; */
+  conf = *armas_conf_default();
+  
   if (algo == 'N' || algo == 'n') {
     conf.optflags |= ARMAS_SNAIVE;
   } else if (algo == 'R' || algo == 'r') {
