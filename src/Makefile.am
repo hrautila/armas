@@ -31,6 +31,7 @@ noinst_HEADERS = \
 
 COMMON = \
 	core/support.c \
+	core/sched.c \
 	core/pivot_ext.c
 
 CORE = \
@@ -41,7 +42,8 @@ CORE = \
 	core/mscale.c \
 	core/plus.c \
 	core/partition.c \
-	core/pivot.c
+	core/pivot.c 
+
 
 
 BLAS1 = \
@@ -81,6 +83,7 @@ BLAS3 = \
 
 LAPACK = \
 	lapack/bired.c \
+	lapack/bibld.c \
 	lapack/chol.c \
 	lapack/hess.c \
 	lapack/house.c \
@@ -103,7 +106,8 @@ LAPACK = \
 	lapack/rq.c \
 	lapack/rqmult.c \
 	lapack/support.c \
-	lapack/trired.c 
+	lapack/trired.c \
+	lapack/tribld.c
 
 noinst_LTLIBRARIES = libd.la libz.la libx.la
 
