@@ -90,7 +90,7 @@ ABSTYPE __armas_amax(const __armas_dense_t *x, armas_conf_t *conf)
   if (imax != -1) {
     int r = x->rows == 0 ? 0    : imax;
     int c = x->rows == 0 ? imax : 0;
-    return __armas_get(x, r, c);
+    return __ABS(__armas_get(x, r, c));
   }
   return __ZERO;
 }
