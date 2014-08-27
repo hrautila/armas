@@ -43,6 +43,10 @@ enum armas_flags {
   ARMAS_MULTP   = 0x1000,       ///< multiply with P in bidiagonal 
   ARMAS_WANTQ   = 0x2000,       ///< build the Q matrix in bidiagonal 
   ARMAS_WANTP   = 0x4000,       ///< build the P matrix in bidiagonal 
+  ARMAS_WANTU   = 0x8000,       ///< generate left eigenvectors
+  ARMAS_WANTV   = 0x10000,      ///< generate right eigenvectors
+  ARMAS_FORWARD = 0x20000,      ///< apply forward
+  ARMAS_BACKWARD= 0x40000       ///< apply backward
 };
 
 enum armas_opts {
@@ -70,7 +74,8 @@ enum armas_errors {
   ARMAS_EWORK = 5,         ///< workspace to small
   ARMAS_ESINGULAR = 6,     ///< singular matrix
   ARMAS_ENEGATIVE = 7,     ///< negative value on diagonal
-  ARMAS_EMEMORY = 8        ///< memory allocation failed
+  ARMAS_EMEMORY = 8,       ///< memory allocation failed
+  ARMAS_ECONVERGE = 9      ///< algorithm does not converge
 };
 
 enum armas_norms {
