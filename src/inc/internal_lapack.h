@@ -47,13 +47,16 @@ void __apply_pivots(__armas_dense_t *A, armas_pivot_t *P, armas_conf_t *conf);
 
 extern
 void __apply_row_pivots(__armas_dense_t *A, armas_pivot_t *P, int dir, armas_conf_t *conf);
-
 extern
 void __apply_col_pivots(__armas_dense_t *A, armas_pivot_t *P, int dir, armas_conf_t *conf);
-
 extern
 int __pivot_index(__armas_dense_t *A, armas_conf_t *conf);
-
+extern
+int __pivot_sort(__armas_dense_t *D, armas_pivot_t *P, int direction);
+extern
+int __eigen_sort(__armas_dense_t *D, __armas_dense_t *U, __armas_dense_t *V, __armas_dense_t *C,
+		 armas_conf_t *conf);
+		  
 // internal householder
 extern
 void __compute_householder(__armas_dense_t *a11, __armas_dense_t *x,
@@ -140,6 +143,11 @@ extern int
 __unblk_rq_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t *tau,
 		     armas_conf_t *conf);
 
+// internal Bidiagonal SVD
+extern DTYPE __bsvd2x2(DTYPE *smin, DTYPE *smax, DTYPE f, DTYPE g, DTYPE h);
+extern void __bsvd2x2_vec(DTYPE *ssmin, DTYPE *ssmax,
+			  DTYPE *cosl, DTYPE *sinl, DTYPE *cosr, DTYPE *sinr,
+			  DTYPE f, DTYPE g, DTYPE h);
 
 
 

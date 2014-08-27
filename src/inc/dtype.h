@@ -250,12 +250,17 @@ typedef double ABSTYPE;
 #define __armas_column        armas_d_column
 #define __armas_row           armas_d_row
 #define __armas_submatrix     armas_d_submatrix
+#define __armas_subvector     armas_d_subvector
 #define __armas_submatrix_ext armas_d_submatrix_ext
 #define __armas_diag          armas_d_diag
 #define __armas_get           armas_d_get
 #define __armas_set           armas_d_set
+#define __armas_get_unsafe    armas_d_get_unsafe
+#define __armas_set_unsafe    armas_d_set_unsafe
 #define __armas_set_at        armas_d_set_at
 #define __armas_get_at        armas_d_get_at
+#define __armas_get_at_unsafe armas_d_get_at_unsafe
+#define __armas_set_at_unsafe armas_d_set_at_unsafe
 #define __armas_index         armas_d_index
 #define __armas_data          armas_d_data
 #define __armas_col_as_row    armas_d_col_as_row

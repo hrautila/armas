@@ -41,6 +41,11 @@
 #define __swap_rows               __d_swap_rows
 #define __swap_cols               __d_swap_cols
 #define __apply_row_pivots        __d_apply_row_pivots
+#define __pivot_index             __d_pivot_index
+#define __pivot_sort              __d_pivot_sort
+#define __eigen_sort              __d_eigen_sort
+// marker for above function
+#define __lapack_pivots  1
 
 // Bidiagonal reduction
 #define __armas_bdreduce         armas_d_bdreduce
@@ -151,6 +156,24 @@
 #define __armas_trdbuild_work   armas_d_trdbuild_work
 #define __armas_trdmult         armas_d_trdmult
 #define __armas_trdmult_work    armas_d_trdmult_work
+
+// Givens
+#define __armas_gvcompute       armas_d_gvcompute
+#define __armas_gvrotate        armas_d_gvrotate
+#define __armas_gvleft          armas_d_gvleft
+#define __armas_gvright         armas_d_gvright
+#define __armas_gvupdate        armas_d_gvupdate
+
+// Bidiagonal SVD
+#define __armas_bdsvd           armas_d_bdsvd
+// internal 
+#define __bdsvd2x2              __d_bdsvd2x2
+#define __bdsvd2x2_vec          __d_bdsvd2x2_vec
+
+// Additional
+#define __armas_qdroots         armas_d_qdroots
+#define __armas_mult_diag       armas_d_mult_diag
+#define __armas_solve_diag      armas_d_solve_diag
 
 #endif /* FLOAT64 */
 
