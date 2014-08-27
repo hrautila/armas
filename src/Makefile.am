@@ -9,6 +9,11 @@ noinst_HEADERS = \
 	inc/dlpack.h \
 	inc/internal.h \
 	inc/internal_lapack.h \
+	inc/scheduler.h \
+	inc/sync.h \
+	inc/chan.h \
+	inc/compat.h \
+	inc/kernel.h \
 	inc/matrix.h \
 	inc/mult.h \
 	inc/mult_nosimd.h \
@@ -82,6 +87,11 @@ BLAS3 = \
 	blas3/updtrmm.c
 
 LAPACK = \
+	lapack/bdsvd.c \
+	lapack/aux.c \
+	lapack/givens.c \
+	lapack/diag.c \
+	lapack/qdroot.c \
 	lapack/bired.c \
 	lapack/bibld.c \
 	lapack/chol.c \
@@ -109,7 +119,23 @@ LAPACK = \
 	lapack/trired.c \
 	lapack/tribld.c
 
-noinst_LTLIBRARIES = libd.la libz.la libx.la
+
+COMPAT = \
+	compat/axpy.c \
+	compat/copy.c \
+	compat/dot.c \
+	compat/nrm2.c \
+	compat/swap.c \
+	compat/gemv.c \
+	compat/symv.c \
+	compat/ger.c \
+	compat/syr.c \
+	compat/syr2.c \
+	compat/gemm.c \
+	compat/symm.c \
+	compat/potrf.c 
+
+noinst_LTLIBRARIES = libd.la libz.la libx.la libdcompat.la
 
 # common to all 
 libx_la_SOURCES = $(COMMON)
@@ -118,13 +144,17 @@ libx_la_SOURCES = $(COMMON)
 libd_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
 libd_la_CPPFLAGS = -DFLOAT64 -DWITH_AVX
 
+# double precision compability
+libdcompat_la_SOURCES = $(COMPAT)
+libdcompat_la_CPPFLAGS = -DFLOAT64 -DCOMPAT
+
 # complex support
 libz_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2)
 libz_la_CPPFLAGS = -DCOMPLEX128
 
 lib_LTLIBRARIES = libarmasd.la libarmasz.la
 libarmasd_la_SOURCES = 
-libarmasd_la_LIBADD = libx.la libd.la
+libarmasd_la_LIBADD = libx.la libd.la libdcompat.la
 
 libarmasz_la_SOURCES = 
 libarmasz_la_LIBADD = libx.la libz.la
