@@ -7,7 +7,7 @@ LDADD = ../../src/libarmasd.la
 
 noinst_HEADERS = ../helper.h
 
-noinst_PROGRAMS = dgemm dsymm dtrmm dtrsm dsymv dgemv dtrmv dger dsyr2
+noinst_PROGRAMS = dgemm dsymm dtrmm dtrsm dsymv dgemv dtrmv dger dsyr2 perfgv perfgvr
 
 dgemm_SOURCES = perfgemm.c ../helper.c
 
@@ -26,4 +26,9 @@ dger_SOURCES  = perfger.c ../helper.c
 dtrmv_SOURCES = perftrmv.c ../helper.c
 
 dsyr2_SOURCES = perfsyr2.c ../helper.c
+
+perfgv_SOURCES = perfgv.c ../helper.c
+
+perfgvr_SOURCES = perfgvr.c ../helper.c
+
 
