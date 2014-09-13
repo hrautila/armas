@@ -287,6 +287,83 @@ void __bdsvd2x2_vec(DTYPE *ssmin, DTYPE *ssmax,
 
 
 
+/*
+ * Eigenvalues of 2x2 symmetric matrix
+ *
+ *  ( a  b ) are roots of characteristic polynomial x^2 - T*x + D = 0
+ *  ( b  c ) where T = a + c, D = a*c - b*b
+ *
+ *  z1 = T + sign(T)*sqrt(T^2 - 4D)/2, z2 = 2*D/(T + sign(T)*sqrt(T^2 - 4D))
+ *
+ *  sqrt(T^2 - 4*D)  == sqrt((a + c)^2 - 4*(a*c - b*b)) == sqrt(a^2 + 2ac + c^2 - 4ac + 4b^2)
+ *  == sqrt(a^2 - 2ac + c^2 + 4b^2) == sqrt((a - c)^2 + (2b)^2) == HYPOT(|a-c|,|2b|)
+ *
+ * computing HYPOT(|a-c|, |2b|):
+ *  |a - c| > |2b|:
+ *    |a - c|*sqrt(1.0 + (|2b|/|a - c|)^2)
+ *  |a - c| < |2b|
+ *    |2b|*sqrt((|a - c|/|2b|)^2 + 1.0)
+ *  |a - c| = |2b|
+ *    |2b|*sqrt(2.0)
+ *
+ * Zt = T + copysign(hypot(|a-c|, |2b|), T)
+ * z1 = Zt/2
+ * z2 = 2*(a*c - b*b)/Zt
+ */
+void __sym_eigen2x2(DTYPE *z1, DTYPE *z2, DTYPE a, DTYPE b, DTYPE c)
+{
+    DTYPE T, b2a, amca, Zt, acmax, acmin;
+
+    acmax = a; acmin = c;
+    if (__ABS(c) > __ABS(a)) {
+        acmax = c; acmin = a;
+    }
+    b2a = __ABS(b + b);
+    T = a + c;
+    amca = __ABS(a - c);
+    Zt = T + __COPYSIGN(__HYPOT(amca, b2a), T);
+    *z1 = __HALF*Zt;
+    *z2 = __TWO*((acmax/Zt) * acmin - (b/Zt)*b);
+}
+
+
+/*
+ * Eigenvector corresponding eigenvalue z1 for symmetric 2x2 matrix.
+ *
+ *  ( a - z1    b    ) ( x0 ) = ( 0 )
+ *  (   b     c - z1 ) ( x1 )   ( 0 )
+ *
+ * gives
+ *  (a - z1)*x0 + b*x1 = 0  => x1 = (z1 - a)/b * x0
+ *  b*x0 + (c - z1)*x1 = 0  => x1 = b/(z1 - c) * x0
+ *
+ *     ht =  hypot(1, (z1-a)/b)
+ *  => x0 = 1/ht
+ *     x1 = (z1 - a)/(ht*b)
+ */
+void __sym_eigen2x2vec(DTYPE *z1, DTYPE *z2, DTYPE *cs, DTYPE *sn, DTYPE a, DTYPE b, DTYPE c)
+{
+    DTYPE T, b2a, amca, Zt, acmax, acmin, ht;
+
+    acmax = a; acmin = c;
+    if (__ABS(c) > __ABS(a)) {
+        acmax = c; acmin = a;
+    }
+    b2a = __ABS(b + b);
+    T = a + c;
+    amca = __ABS(a - c);
+    Zt = T + __COPYSIGN(__HYPOT(amca, b2a), T);
+    *z1 = __HALF*Zt;
+    *z2 = __TWO*((acmax/Zt) * acmin - (b/Zt)*b);
+        
+    // these should be thought out for cancellation effects....
+    ht = __HYPOT(1.0, (*z1 - a)/b);
+    *cs = 1.0/ht;
+    *sn = (*z1 - a)/(b*ht);
+}
+
+
+
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
 // Local Variables:
