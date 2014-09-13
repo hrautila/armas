@@ -54,6 +54,37 @@ int __vec_iamax(const mvec_t *X,  int N)
   return ix;
 }
 
+static inline
+int __vec_iamin(const mvec_t *X,  int N)
+{
+  register int i, ix, n;
+  register ABSTYPE min, c0, c1;
+
+  if (N <= 1)
+    return 0;
+
+  min = __ABS(X->md[0]);
+  ix = 0;
+  for (i = 0; i < N-1; i += 2) {
+    c0 = __ABS(X->md[(i+0)*X->inc]);
+    c1 = __ABS(X->md[(i+1)*X->inc]);
+    if (c1 < c0) {
+      n = 1;
+      c0 = c1;
+    }
+    if (c0 < min) {
+      ix = i+n;
+      min = c0;
+    }
+    n = 0;
+  }    
+  if (i < N) {
+    c0 = __ABS(X->md[i*X->inc]);
+    ix = c0 < min ? N-1 : ix;
+  }
+  return ix;
+}
+
 /**
  * @brief Index of max(abs(X))
  *
@@ -93,6 +124,34 @@ ABSTYPE __armas_amax(const __armas_dense_t *x, armas_conf_t *conf)
     return __ABS(__armas_get(x, r, c));
   }
   return __ZERO;
+}
+
+
+/**
+ * @brief Index of min(abs(X))
+ *
+ * @param[in] x vector
+ * @param[in,out] conf configuration block
+ *
+ * @retval >= 0 index of minimum element
+ * @retval -1  error, conf->error holds error code
+ *
+ * @ingroup blas1
+ */
+int __armas_iamin(const __armas_dense_t *x, armas_conf_t *conf)
+{
+  if (!conf)
+    conf = armas_conf_default();
+  
+  // only for column or row vectors
+  if (x->cols != 1 && x->rows != 1) {
+    conf->error = ARMAS_ENEED_VECTOR;
+    return -1;
+  }
+
+  // assume column vector
+  mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
+  return __vec_iamin(&X, __armas_size(x));
 }
 
 #endif /* __ARMAS_REQUIRES && __ARMAS_PROVIDES */
