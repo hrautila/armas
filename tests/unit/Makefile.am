@@ -6,10 +6,11 @@ LDADD = ../../src/libarmasd.la
 
 noinst_HEADERS = ../helper.h
 
-DOUBLE = dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dgemv dger dtrmv dtrsv
+DOUBLE = dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dgemv dger dtrmv dtrsv diag
 
 LAPACK =  \
-	bdsvd givens trdred bidiag chol hess lu ldl \
+	trdevd bdsvd givens trdred \
+	bidiag chol hess lu ldl \
 	qrfact qrbld qrmult qrsol \
 	lqfact lqbld lqmult lqsol \
 	qlfact qlbld qlmult \
@@ -28,8 +29,10 @@ dgemv_SOURCES  = gemv.c ../helper.c
 dger_SOURCES   = ger.c ../helper.c
 dtrmv_SOURCES  = trmv.c ../helper.c
 dtrsv_SOURCES  = trsv.c ../helper.c
+diag_SOURCES   = diag.c ../helper.c
 
 ## LAPACK
+trdevd_SOURCES = trdevd.c ../helper.c
 bdsvd_SOURCES  = bdsvd.c ../helper.c
 givens_SOURCES = givens.c ../helper.c
 bidiag_SOURCES = bidiag.c ../helper.c
