@@ -56,6 +56,12 @@ int __pivot_sort(__armas_dense_t *D, armas_pivot_t *P, int direction);
 extern
 int __eigen_sort(__armas_dense_t *D, __armas_dense_t *U, __armas_dense_t *V, __armas_dense_t *C,
 		 armas_conf_t *conf);
+extern
+void __abs_sort_vec(__armas_dense_t *D, int updown);
+extern
+void __sort_vec(__armas_dense_t *D, int updown);
+extern
+int __sort_eigenvec(__armas_dense_t *D, __armas_dense_t *U, __armas_dense_t *V, __armas_dense_t *C, int updown);
 		  
 // internal householder
 extern
@@ -148,7 +154,9 @@ extern DTYPE __bsvd2x2(DTYPE *smin, DTYPE *smax, DTYPE f, DTYPE g, DTYPE h);
 extern void __bsvd2x2_vec(DTYPE *ssmin, DTYPE *ssmax,
 			  DTYPE *cosl, DTYPE *sinl, DTYPE *cosr, DTYPE *sinr,
 			  DTYPE f, DTYPE g, DTYPE h);
-
+// tridiagonal EVD
+extern void __sym_eigen2x2(DTYPE *z1, DTYPE *z2, DTYPE a, DTYPE b, DTYPE c);
+extern void __sym_eigen2x2vec(DTYPE *z1, DTYPE *z2, DTYPE *cs, DTYPE *sn, DTYPE a, DTYPE b, DTYPE c);
 
 
 #endif /* __ARMAS_INTERNAL_LAPACK_H */
