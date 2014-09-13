@@ -192,7 +192,9 @@ void __armas_gvright(__armas_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int r
  * \param nrot [in]
  *      Number of rotation to apply.
  * \param flags [in]
- *      Select from left (ARMAS_LEFT) or right (ARMAS_RIGHT).
+ *      Select from left (ARMAS_LEFT) or right (ARMAS_RIGHT). Or with direction
+ *      flag backward (ARMAS_BACKWARD)  or forward (ARMAS_FORWARD). Forward is
+ *      default direction for updates.
  * \return
  *      Number of rotation applied, min(nrot, A->rows-start) for left and
  *      min(nrot, A->cols-start) for right.
@@ -202,24 +204,45 @@ void __armas_gvright(__armas_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int r
 int __armas_gvupdate(__armas_dense_t *A, int start, 
                      __armas_dense_t *C, __armas_dense_t *S, int nrot, int flags)
 {
-    int k, n, end = start+nrot-1;
+    int k, n, end = start+nrot;
     DTYPE c, s;
 
-    if (flags & ARMAS_LEFT) {
-        end = min(A->rows, end);
-        for (k = start, n = 0; n < nrot && k < end; n++, k++) {
-            c = __armas_get_at_unsafe(C, n);
-            s = __armas_get_at_unsafe(S, n);
-            if (c != 1.0 || s != 0.0)
-                __gvleft(A, c, s, k, k+1, 0, A->cols);
+    if (flags & ARMAS_BACKWARD) {
+        if (flags & ARMAS_LEFT) {
+            end = min(A->rows, end);
+            for (k = end, n = nrot; n > 0 && k > start; n--, k--) {
+                c = __armas_get_at_unsafe(C, n-1);
+                s = __armas_get_at_unsafe(S, n-1);
+                if (c != 1.0 || s != 0.0)
+                    __gvleft(A, c, s, k-1, k, 0, A->cols);
+            }
+        } else {
+            end = min(A->cols, end);
+            for (k = end, n = nrot; n > 0 && k > start; n--, k--) {
+                c = __armas_get_at_unsafe(C, n-1);
+                s = __armas_get_at_unsafe(S, n-1);
+                if (c != 1.0 || s != 0.0)
+                    __gvright(A, c, s, k-1, k, 0, A->rows);
+            }
         }
     } else {
-        end = min(A->cols, end);
-        for (k = start, n = 0; n < nrot && k < end; n++, k++) {
-            c = __armas_get_at_unsafe(C, n);
-            s = __armas_get_at_unsafe(S, n);
-            if (c != 1.0 || s != 0.0)
-                __gvright(A, c, s, k, k+1, 0, A->rows);
+        // here we apply forward direction
+        if (flags & ARMAS_LEFT) {
+            end = min(A->rows, end);
+            for (k = start, n = 0; n < nrot && k < end; n++, k++) {
+                c = __armas_get_at_unsafe(C, n);
+                s = __armas_get_at_unsafe(S, n);
+                if (c != 1.0 || s != 0.0)
+                    __gvleft(A, c, s, k, k+1, 0, A->cols);
+            }
+        } else {
+            end = min(A->cols, end);
+            for (k = start, n = 0; n < nrot && k < end; n++, k++) {
+                c = __armas_get_at_unsafe(C, n);
+                s = __armas_get_at_unsafe(S, n);
+                if (c != 1.0 || s != 0.0)
+                    __gvright(A, c, s, k, k+1, 0, A->rows);
+            }
         }
     }
     return n;
