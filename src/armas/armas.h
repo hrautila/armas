@@ -49,18 +49,26 @@ enum armas_flags {
   ARMAS_BACKWARD= 0x40000       ///< apply backward
 };
 
+enum armas_sort {
+  ARMAS_ASC  = 1,       ///< Sort to ascending order
+  ARMSA_DESC = -1       ///< Sort to descending order
+};
+
 enum armas_opts {
   ARMAS_BLOCKED   = 0,
   ARMAS_SNAIVE    = 0x1,
   ARMAS_KAHAN     = 0x2,
   ARMAS_PAIRWISE  = 0x4,
   ARMAS_RECURSIVE = 0x8,
-  ARMAS_BLAS_RECURSIVE = 0x10,
-  ARMAS_BLAS_BLOCKED = 0x20,
-  ARMAS_BLAS_TILED = 0x40,
-  ARMAS_SCHED_ROUNDROBIN = 0x80,
-  ARMAS_SCHED_RANDOM = 0x100,
-  ARMAS_SCHED_TWO = 0x200
+  ARMAS_BLAS_RECURSIVE = 0x10,  ///< recursive parallel threading
+  ARMAS_BLAS_BLOCKED = 0x20,    ///< parallel threading with variable blocksize
+  ARMAS_BLAS_TILED = 0x40,      ///< parallel threading with fixed blocksize
+  ARMAS_SCHED_ROUNDROBIN = 0x80,///< round-robin scheduling to workers
+  ARMAS_SCHED_RANDOM = 0x100,   ///< scheduling to random workers
+  ARMAS_SCHED_TWO = 0x200,      ///< scheduling in power-of-two fashion
+  ARMAS_BSVD_GOLUB = 0x400,     ///< use Golub algorithm in bidiagonal SVD
+  ARMAS_BSVD_DEMMEL = 0x800,    ///< use Demmel-Kahan algorithm in bidiagonal SVD
+  ARMAS_ABSTOL = 0x1000         ///< compute using absolute tolerance
 };
 
 /**
@@ -101,6 +109,7 @@ typedef struct armas_conf {
   int wb;        ///< block size for cpu scheduler
   int error;     ///< last error
   int optflags;  ///< config options
+  int tolmult;   ///< tolerance multiplier, used tolerance is tolmult*EPSILON
 } armas_conf_t;
 
 // use default configuration block
