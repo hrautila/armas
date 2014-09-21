@@ -52,10 +52,9 @@ int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
 
     maxiter = 6*N;
     iq = N; ip = 0;
-    for (stop = 0, n = 0; !stop && maxiter > 0; maxiter--, n++) {
+    for (stop = 0, n = 0; !stop && maxiter > 0 && iq > 0; maxiter--, n++) {
         // 1. deflate off-diagonal entries if they are small
         d0 = __ABS(__armas_get_at_unsafe(D, iq-1));
-        //ip = 0;
         for (k = iq-1; k > 0; k--) {
             e1 = __ABS(__armas_get_at_unsafe(E, k-1));
             d1 = __ABS(__armas_get_at_unsafe(D, k-1));
@@ -63,21 +62,19 @@ int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
                 __armas_set_at_unsafe(E, k-1, __ZERO);
                 if (k == (iq-1)) {
                     // convergence of bottom value;
-                    //printf(".. converge at bottom %d, eigenvalue=%e\n", k, d0);
                     iq = iq - 1;
-                    stop = k == 0 || iq <= ip;
+                    stop = k == 0;
                     goto Next; 
                 } else if (k-1 == ip) {
                     // convergence of top value;
-                    //printf(".. converge at top %d, eigenvalue=%e\n", k, d1);
                     ip = k;
-                    stop = ip == iq;
+                    //stop = ip == iq;
                     goto Next; 
                 }
-                //printf(".. deflated at %d\n", k);
                 ip = k;
                 break;
             }
+            ip = k - 1;
             d0 = d1;
         }
 
@@ -123,13 +120,11 @@ int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
             d1 = __armas_get_at_unsafe(D, iq-1);
             // Wilkinson shift from trailing 2x2 matrix
             ushift = __wilkinson(d0, e0, d1);
-            //printf(".. forward d0 = %f, e0 = %f, d1 = %f\n", d0, e0, d1);
             f0 = __armas_get_at_unsafe(&sD, 0) - ushift;
             g0 = __armas_get_at_unsafe(&sE, 0);
             nrot = __trd_qrsweep(&sD, &sE, &Cr, &Sr, f0, g0, saves);
             // update eigenvectors
             if (V) {
-                //printf(".. gvupdate; ip=%d, nrot=%d\n", ip, nrot);
                 __armas_gvupdate(V, ip, &Cr, &Sr, nrot, ARMAS_RIGHT);
             }
         } else {
@@ -137,7 +132,6 @@ int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
             d0 = __armas_get_at_unsafe(D, ip);
             d1 = __armas_get_at_unsafe(D, ip+1);
             e0 = __armas_get_at_unsafe(E, ip);
-            //printf(".. backward d0 = %f, e0 = %f, d1 = %f\n", d0, e0, d1);
             // Wilkinson shift from leading 2x2 matrix
             ushift = __wilkinson(d1, e0, d0);
             f0 = __armas_get_at_unsafe(D, iq-1) - ushift;
@@ -145,7 +139,6 @@ int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
             nrot = __trd_qlsweep(&sD, &sE, &Cr, &Sr, f0, g0, saves);
             // update eigenvectors
             if (V) {
-                //printf(".. gvupdate; ip=%d, nrot=%d\n", ip, nrot);
                 __armas_gvupdate(V, ip, &Cr, &Sr, nrot, ARMAS_RIGHT|ARMAS_BACKWARD);
             }
         }

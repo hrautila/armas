@@ -116,9 +116,9 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
                    __armas_dense_t *U, __armas_dense_t *V,
                    __armas_dense_t *CS, DTYPE tol, armas_conf_t *conf)
 {
-    int N, work, maxit, i, n, k, nrot, ip, iq, zero, saves, newip, newiq, asbtol, forwards;
+    int N, work, maxit, i, n, k, nrot, ip, iq, zero, saves, newip, newiq, abstol, forwards;
     int ipold, iqold;
-    DTYPE e0, e1, d0, d1, dp, f0, g0, c, s, r, ushift, slow, shigh, threshold, abstol, mu;
+    DTYPE e0, e1, d0, d1, dp, f0, g0, c, s, r, ushift, slow, shigh, threshold, mu;
     __armas_dense_t sD, sE, Cr, Sr, Cl, Sl;
 
     N = __armas_size(D);
@@ -144,15 +144,13 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
         if (maxit*__SAFEMIN < threshold)
             threshold = maxit*__SAFEMIN;
     }
-    //printf("threshold = %e\n", threshold);
 
     // iq points past the last entry i.e. last entry on index iq-1
     // First divide B to blocks B0, B1, B2 where B2 has all off diagonal
     // entries less than treshold value. B1 has all off-diagonal entries
     // greater than threshold value. 
     ip = 0; iq = N; ipold = ip; iqold = iq;
-    //maxit = 20;
-    for (work = 1, n = 0; work && maxit > 0; maxit--, n++) {
+    for (work = 1, n = 0; work && maxit > 0 && iq > 0; maxit--, n++) {
         // from (1);
         // a. find largest iq such that |E(iq)|...|E(N-2)| < threshold
         //    and if none then iq = N
@@ -178,7 +176,7 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
                     //printf("  convergence of bottom .. %d\n", k);
                     iq = iq - 1;
                     // work until we hit bottom at index 0
-                    work = k > 0 && iq > ip;
+                    work = k > 0; 
                     goto Next;
                 }
                 // E[k] == 0.0; E[k+1] ... E[iq-2] != 0
@@ -313,7 +311,7 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
                 // standard shifted QR
                 f0 = (__ABS(d0) - ushift) * (copysign(__ONE, d0) + ushift/d0);
                 g0 = __armas_get_at_unsafe(E, ip);
-                //printf("..standard shift forward... %e\n", ushift);
+                //printf("..standard shift forward, u=%e, f0=%e\n", ushift, f0);
                 nrot = __bd_qrsweep(&sD, &sE, &Cr, &Sr, &Cl, &Sl, f0, g0, saves);
             }
             e0 = __ABS(__armas_get_at_unsafe(E, iq-2));
