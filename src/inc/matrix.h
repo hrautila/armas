@@ -248,6 +248,24 @@ extern int __armas_trdmult(__armas_dense_t *B, __armas_dense_t *A, __armas_dense
 extern int __armas_trdreduce_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_trdmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf);
 extern int __armas_trdbuild_work(__armas_dense_t *A, armas_conf_t *conf);
+extern int __armas_trdeigen(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *V,
+                            __armas_dense_t *W, int flags, armas_conf_t *conf);
+
+// Givens
+extern void __armas_gvcompute(DTYPE *c, DTYPE *s, DTYPE *r, DTYPE a, DTYPE b);
+extern void __armas_gvrotate(DTYPE *v0, DTYPE *v1, DTYPE c, DTYPE s, DTYPE y0, DTYPE y1);
+extern void __armas_gvleft(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int col, int ncol);
+extern void __armas_gvright(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int col, int ncol);
+extern int __armas_gvupdate(__armas_dense_t *A, int start, 
+                            __armas_dense_t *C, __armas_dense_t *S, int nrot, int flags);
+// Bidiagonal SVD
+extern int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *U, __armas_dense_t *V,
+                         __armas_dense_t *W, int flags, armas_conf_t *conf);
+
+// additional
+extern int __armas_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c);
+extern int __armas_mult_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_conf_t *conf);
+extern int __armas_solve_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_conf_t *conf);
 
 // -------------------------------------------------------------------------------------------
 // inline functions
@@ -426,6 +444,44 @@ __armas_dense_t *__armas_submatrix(__armas_dense_t *A, const __armas_dense_t *B,
   return __armas_submatrix_ext(A, B, r, c, nr, nc, B->step);
 }
 
+//! \brief Make A submatrix view of B. (Unsafe version without any limit checks.)
+__INLINE
+__armas_dense_t *__armas_submatrix_unsafe(__armas_dense_t *A, const __armas_dense_t *B,
+                                          int r, int c, int nr, int nc)
+{
+  return __armas_make(A, nr, nc, B->step, &B->elems[c*B->step+r]);
+}
+
+//! \brief Make X subvector of Y
+__INLINE
+__armas_dense_t *__armas_subvector(__armas_dense_t *X, const __armas_dense_t *Y,
+                                   int n, int len)
+{
+  if (!__armas_isvector(Y)) {
+    X->rows = X->cols = 0;
+  } else {
+    if (Y->rows == 1) {
+      __armas_submatrix(X, Y, 0, n, 1, len);
+    } else {
+      __armas_submatrix(X, Y, n, 0, len, 1);
+    }
+  }
+  return X;
+}
+
+//! \brief Make X subvector of Y (Unsafe version without any limit checks.)
+__INLINE
+__armas_dense_t *__armas_subvector_unsafe(__armas_dense_t *X, const __armas_dense_t *Y,
+                                          int n, int len)
+{
+  if (Y->rows == 1) {
+    __armas_submatrix_unsafe(X, Y, 0, n, 1, len);
+  } else {
+    __armas_submatrix_unsafe(X, Y, n, 0, len, 1);
+  }
+  return X;
+}
+
 //! \brief Make A diagonal row vector of B.
 __INLINE
 __armas_dense_t *__armas_diag(__armas_dense_t *A, const __armas_dense_t *B, int k)
@@ -446,6 +502,26 @@ __armas_dense_t *__armas_diag(__armas_dense_t *A, const __armas_dense_t *B, int 
   return __armas_submatrix_ext(A, B, 0, 0, 1, nk, B->step+1);
 }
 
+//! \brief Make A diagonal row vector of B. (unsafe version).
+__INLINE
+__armas_dense_t *__armas_diag_unsafe(__armas_dense_t *A, const __armas_dense_t *B, int k)
+{
+  int nk;
+  if (k > 0) {
+    // super diagonal (starts at k'th colomn of A)
+    nk = B->rows < B->cols-k ? B->rows : B->cols-k;
+    return __armas_make(A, 1, nk, B->step+1, &B->elems[k*B->step]);
+  }
+  if (k < 0) {
+    // subdiagonal (starts at k'th row of A)
+    nk = B->rows+k < B->cols ? B->rows+k : B->cols;
+    return __armas_make(A, 1, nk, B->step+1, &B->elems[-k]);
+  }
+  // main diagonal
+  nk = B->rows < B->cols ? B->rows : B->cols;
+  return __armas_make(A, 1, nk, B->step+1, &B->elems[0]);
+}
+
 __INLINE
 DTYPE __armas_get(const __armas_dense_t *m, int row, int col)
 {
@@ -455,6 +531,12 @@ DTYPE __armas_get(const __armas_dense_t *m, int row, int col)
     row += m->rows;
   if (col < 0)
     col += m->cols;
+  return m->elems[col*m->step+row];
+}
+
+__INLINE
+DTYPE __armas_get_unsafe(const __armas_dense_t *m, int row, int col)
+{
   return m->elems[col*m->step+row];
 }
 
@@ -471,6 +553,12 @@ void __armas_set(__armas_dense_t *m, int row, int col, DTYPE val)
 }
 
 __INLINE
+void __armas_set_unsafe(__armas_dense_t *m, int row, int col, DTYPE val)
+{
+  m->elems[col*m->step+row] = val;
+}
+
+__INLINE
 void __armas_set_at(__armas_dense_t *m, int ix, DTYPE val)
 {
   if (__armas_size(m) == 0)
@@ -481,6 +569,12 @@ void __armas_set_at(__armas_dense_t *m, int ix, DTYPE val)
 }
 
 __INLINE
+void __armas_set_at_unsafe(__armas_dense_t *m, int ix, DTYPE val)
+{
+  m->elems[(m->rows == 1 ? ix*m->step : ix)] = val;
+}
+
+__INLINE
 DTYPE __armas_get_at(const __armas_dense_t *m, int ix)
 {
   if (__armas_size(m) == 0)
@@ -488,6 +582,12 @@ DTYPE __armas_get_at(const __armas_dense_t *m, int ix)
   if (ix < 0)
     ix += __armas_size(m);
   return m->elems[__armas_real_index(m, ix)];
+}
+
+__INLINE
+DTYPE __armas_get_at_unsafe(__armas_dense_t *m, int ix)
+{
+  return m->elems[(m->rows == 1 ? ix*m->step : ix)];
 }
 
 __INLINE

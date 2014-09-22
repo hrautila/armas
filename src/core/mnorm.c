@@ -35,7 +35,7 @@ ABSTYPE __armas_matrix_norm_one(const __armas_dense_t *x, armas_conf_t *conf)
 
   for (k = 0; k < x->cols; k++) {
     __armas_submatrix(&v, x, 0, k, x->rows, 1);
-    cmax = __armas_amax(&v, conf);
+    cmax = __ABS(__armas_amax(&v, conf));
     if (cmax > amax) {
       amax = cmax;
     }
@@ -52,7 +52,7 @@ ABSTYPE __armas_matrix_norm_inf(const __armas_dense_t *x, armas_conf_t *conf)
 
   for (k = 0; k < x->rows; k++) {
     __armas_submatrix(&v, x, k, 0, 1, x->cols);
-    cmax = __armas_amax(&v, conf);
+    cmax = __ABS(__armas_amax(&v, conf));
     if (cmax > amax) {
       amax = cmax;
     }
@@ -90,7 +90,7 @@ ABSTYPE __armas_mnorm(const __armas_dense_t *x, int which, armas_conf_t *conf)
     break;
   case ARMAS_NORM_INF:
     if (is_vector) {
-      normval = __armas_amax(x, conf);
+      normval = __ABS(__armas_amax(x, conf));
     } else {
       normval = __armas_matrix_norm_inf(x, conf);
     }

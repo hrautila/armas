@@ -41,6 +41,9 @@
 #define __swap_rows               __d_swap_rows
 #define __swap_cols               __d_swap_cols
 #define __apply_row_pivots        __d_apply_row_pivots
+#define __pivot_index             __d_pivot_index
+// marker for above function
+#define __lapack_pivots  1
 
 // Bidiagonal reduction
 #define __armas_bdreduce         armas_d_bdreduce
@@ -151,6 +154,39 @@
 #define __armas_trdbuild_work   armas_d_trdbuild_work
 #define __armas_trdmult         armas_d_trdmult
 #define __armas_trdmult_work    armas_d_trdmult_work
+// Tridiagonal EVD
+#define __armas_trdeigen        armas_d_trdeigen
+
+// Givens
+#define __armas_gvcompute       armas_d_gvcompute
+#define __armas_gvrotate        armas_d_gvrotate
+#define __armas_gvleft          armas_d_gvleft
+#define __armas_gvright         armas_d_gvright
+#define __armas_gvupdate        armas_d_gvupdate
+
+// Bidiagonal SVD
+#define __armas_bdsvd           armas_d_bdsvd
+// internal 
+#define __bdsvd2x2              __d_bdsvd2x2
+#define __bdsvd2x2_vec          __d_bdsvd2x2_vec
+#define __bdsvd_golub		__d_bdsvd_golub
+#define __bdsvd_demmel		__d_bdsvd_demmel
+
+// internal
+#define __sym_eigen2x2          __d_sym_eigen2x2
+#define __sym_eigen2x2vec       __d_sym_eigen2x2vec
+
+// Sorting vectors (internal)
+#define __pivot_sort              __d_pivot_sort
+#define __eigen_sort              __d_eigen_sort
+#define __abs_sort_vec            __d_abs_sort_vec 
+#define __sort_vec                __d_sort_vec 
+#define __sort_eigenvec           __d_sort_eigenvec
+
+// Additional
+#define __armas_qdroots         armas_d_qdroots
+#define __armas_mult_diag       armas_d_mult_diag
+#define __armas_solve_diag      armas_d_solve_diag
 
 #endif /* FLOAT64 */
 
