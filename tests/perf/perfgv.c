@@ -260,7 +260,7 @@ main(int argc, char **argv) {
     nops = N;
     nops *= 7;
   } else if (testno == 2) {
-    nops = M*M;
+    nops = N*N;
     nops *= 7;
   }
   printf("N: %4ld, %8.4f, %8.4f, %8.4f Gflops\n", N,
