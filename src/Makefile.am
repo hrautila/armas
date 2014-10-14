@@ -87,6 +87,7 @@ BLAS3 = \
 	blas3/updtrmm.c
 
 LAPACK = \
+	lapack/trdsec.c \
 	lapack/trdevd.c \
 	lapack/sort.c \
 	lapack/bdsvd.c \
