@@ -154,7 +154,8 @@ int __vec_abs_minmax(__armas_dense_t *D, int minmax)
  * \param[in,out] V
  *      Optional matrix of row eigenvectors, on exit rows sorted to reflect sorted eigenvalues.
  * \param[in,out] C
- *      Optional column matrix, on exit rows sorted to reflect sorted eigenvalues.
+ *      Optional column matrix or vector, on exit columns/elements sorted to reflect sorted
+ *      eigenvalues.
  * \param[in] updown
  *      Sort to ascending order if updown > 0 and descending order if < 0.
  */
@@ -183,15 +184,22 @@ int __sort_eigenvec(__armas_dense_t *D, __armas_dense_t *U,
                 __armas_column(&m1, U, k+pk);
                 __armas_swap(&m1, &m0, (armas_conf_t *)0);
             }
-            if (C) {
-                __armas_column(&m0, C, k);
-                __armas_column(&m1, C, k+pk);
-                __armas_swap(&m1, &m0, (armas_conf_t *)0);
-            }
             if (V) {
                 __armas_row(&m0, V, k);
                 __armas_row(&m1, V, k+pk);
                 __armas_swap(&m1, &m0, (armas_conf_t *)0);
+            }
+            if (C) {
+                if (__armas_isvector(C)) {
+                    t0 = __armas_get_at_unsafe(C, k);
+                    __armas_set_at_unsafe(C, k, __armas_get_at_unsafe(C, k+pk));
+                    __armas_set_at_unsafe(C, pk+k, t0);
+                    
+                } else {
+                    __armas_column(&m0, C, k);
+                    __armas_column(&m1, C, k+pk);
+                    __armas_swap(&m1, &m0, (armas_conf_t *)0);
+                }
             }
         }
     }
