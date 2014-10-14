@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_qdroots) 
+#if defined(__armas_qdroots) && defined(__armas_discriminant)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
@@ -116,6 +116,9 @@ DTYPE discriminant(DTYPE a, DTYPE b, DTYPE c)
  *	Coefficient of quadratic equation.
  * @return
  *	zero if roots are real and non-zero if roots are complex or coincident real.
+ *
+ * For details see
+ *   W. Kahan, On the cost of Floating-Point Computation Without Extra-Precise Arithmetic, 2004
  */
 int __armas_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c)
 {
@@ -132,6 +135,22 @@ int __armas_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c)
     *x1 = s/a;
     *x2 = c/s;
     return 0;
+}
+
+/*
+ * \brief Compute, with precission, value of discriminant in quadractic equation A*x^2 + 2B*x + C
+ *
+ * \param[out] dval
+ *      Value of discriminant
+ * \param[in] a, b, c
+ *      Coefficients of quadratic function.
+ *
+ * For details see
+ *   W. Kahan, On the Cost of Floating-Point Computation Without Extra-Precise Arithmetic, 2004
+ */
+void __armas_discriminant(DTYPE *dval, DTYPE a, DTYPE b, DTYPE c)
+{
+    *dval = discriminant(a, b, c);
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
