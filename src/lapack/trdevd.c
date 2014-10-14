@@ -34,7 +34,6 @@
  *
  * Lapack: DSTEQR
  */
-static
 int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
                 __armas_dense_t *V, __armas_dense_t *CS, ABSTYPE tol, armas_conf_t *conf)
 {
