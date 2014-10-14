@@ -157,6 +157,9 @@ extern void __bsvd2x2_vec(DTYPE *ssmin, DTYPE *ssmax,
 // tridiagonal EVD
 extern void __sym_eigen2x2(DTYPE *z1, DTYPE *z2, DTYPE a, DTYPE b, DTYPE c);
 extern void __sym_eigen2x2vec(DTYPE *z1, DTYPE *z2, DTYPE *cs, DTYPE *sn, DTYPE a, DTYPE b, DTYPE c);
+extern int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
+		       __armas_dense_t *V, __armas_dense_t *CS, ABSTYPE tol, armas_conf_t *conf);
+
 
 
 #endif /* __ARMAS_INTERNAL_LAPACK_H */

@@ -156,6 +156,9 @@
 #define __armas_trdmult_work    armas_d_trdmult_work
 // Tridiagonal EVD
 #define __armas_trdeigen        armas_d_trdeigen
+#define __armas_trdsec_solve    armas_d_trdsec_solve
+#define __armas_trdsec_eigen    armas_d_trdsec_eigen
+#define __armas_trdsec_solve_vec armas_d_trdsec_solve_vec
 
 // Givens
 #define __armas_gvcompute       armas_d_gvcompute
@@ -175,6 +178,7 @@
 // internal
 #define __sym_eigen2x2          __d_sym_eigen2x2
 #define __sym_eigen2x2vec       __d_sym_eigen2x2vec
+#define __trdevd_qr             __d_trdevd_qr
 
 // Sorting vectors (internal)
 #define __pivot_sort              __d_pivot_sort
@@ -185,6 +189,7 @@
 
 // Additional
 #define __armas_qdroots         armas_d_qdroots
+#define __armas_discriminant    armas_d_discriminant
 #define __armas_mult_diag       armas_d_mult_diag
 #define __armas_solve_diag      armas_d_solve_diag
 

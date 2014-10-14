@@ -250,7 +250,17 @@ extern int __armas_trdmult_work(__armas_dense_t *A, int flags, armas_conf_t *con
 extern int __armas_trdbuild_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_trdeigen(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *V,
                             __armas_dense_t *W, int flags, armas_conf_t *conf);
+// Secular functions solvers
+extern int __armas_trdsec_solve(__armas_dense_t *y, __armas_dense_t *d,
+                                __armas_dense_t *z, __armas_dense_t *delta, DTYPE rho,
+                                armas_conf_t *conf);
+extern int __armas_trdsec_solve_vec(__armas_dense_t *y, __armas_dense_t *v, __armas_dense_t *Qd,
+                                    __armas_dense_t *d, __armas_dense_t *z,
+                                    DTYPE rho, armas_conf_t *conf);
 
+extern int __armas_trdsec_eigen(__armas_dense_t *Q, __armas_dense_t *v, __armas_dense_t *Qd,
+                                armas_conf_t *conf);
+  
 // Givens
 extern void __armas_gvcompute(DTYPE *c, DTYPE *s, DTYPE *r, DTYPE a, DTYPE b);
 extern void __armas_gvrotate(DTYPE *v0, DTYPE *v1, DTYPE c, DTYPE s, DTYPE y0, DTYPE y1);
@@ -264,6 +274,7 @@ extern int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t
 
 // additional
 extern int __armas_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c);
+extern void __armas_discriminant(DTYPE *d, DTYPE a, DTYPE b, DTYPE c);
 extern int __armas_mult_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_conf_t *conf);
 extern int __armas_solve_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_conf_t *conf);
 
