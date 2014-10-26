@@ -504,22 +504,26 @@ int __blk_trdreduce_upper(__armas_dense_t *A, __armas_dense_t *tauq,
   return err;
 }
 
-/*
- * Reduce symmetric matrix to tridiagonal form by similiarity transformation A = Q*T*Q.T
+/**
+ * \brief Reduce symmetric matrix to tridiagonal form by similiarity transformation A = Q*T*Q.T
  *
- * Arguments
- *  A      On entry, symmetric matrix with elemets stored in upper (lower) triangular
- *         part. On exit, diagonal and first super (sub) diagonals hold matrix T.
- *         The upper (lower) triangular part above (below) first super(sub)diagonal
- *         is used to store orthogonal matrix Q.
+ * \param[in,out]  A
+ *      On entry, symmetric matrix with elemets stored in upper (lower) triangular
+ *      part. On exit, diagonal and first super (sub) diagonals hold matrix T.
+ *      The upper (lower) triangular part above (below) first super(sub)diagonal
+ *      is used to store orthogonal matrix Q.
  *
- *  tauq   Scalar coefficients of elementary reflectors.
+ * \param[out] tauq
+ *      Scalar coefficients of elementary reflectors.
  *
- *  W      Workspace
+ * \param[in] W
+ *      Workspace
  *
- *  flags  LOWER or UPPER
+ * \param[in] flags
+ *      ARMAS_LOWER or ARMAS_UPPER
  *
- *  confs  Optional blocking configuration
+ * \param[in] confs
+ *      Optional blocking configuration
  *
  * If LOWER, then the matrix Q is represented as product of elementary reflectors
  *
@@ -533,12 +537,14 @@ int __blk_trdreduce_upper(__armas_dense_t *A, __armas_dense_t *tauq,
  *
  * The contents of A on exit is as follow for N = 5.
  *
+ * \verbatim
  *  LOWER                    UPPER
- *   ( d  .  .  .  . )         ( d  e  v1 v2 v3 )
- *   ( e  d  .  .  . )         ( .  d  e  v2 v3 )
- *   ( v1 e  d  .  . )         ( .  .  d  e  v3 )
+ *   ( d  .  .  .  . )         ( d  e  v3 v2 v1 )
+ *   ( e  d  .  .  . )         ( .  d  e  v2 v1 )
+ *   ( v1 e  d  .  . )         ( .  .  d  e  v1 )
  *   ( v1 v2 e  d  . )         ( .  .  .  d  e  )
  *   ( v1 v2 v3 e  d )         ( .  .  .  .  d  )
+ * \endverbatim
  */
 int __armas_trdreduce(__armas_dense_t *A, __armas_dense_t *tauq,
                       __armas_dense_t *W, int flags, armas_conf_t *conf)
@@ -547,6 +553,10 @@ int __armas_trdreduce(__armas_dense_t *A, __armas_dense_t *tauq,
   int wsmin, wsneed, lb, err = 0;
   if (!conf)
     conf = armas_conf_default();
+
+  // default to lower triangular if uplo not defined
+  if (!(flags & (ARMAS_LOWER|ARMAS_UPPER)))
+    flags |= ARMAS_LOWER;
 
   if (A->rows != A->cols) {
     conf->error = ARMAS_ESIZE;
@@ -590,6 +600,8 @@ int __armas_trdreduce_work(__armas_dense_t *A, armas_conf_t *conf)
 }
 
 /*
+ * \brief Multiply matrix C with orthogonal matrix Q.
+ *
  */
 int __armas_trdmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                     __armas_dense_t *W, int flags, armas_conf_t *conf)
@@ -597,6 +609,13 @@ int __armas_trdmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau
   __armas_dense_t Ch, Qh, tauh;
   int err = 0;
   
+  // default to multiplication from left is nothing defined
+  if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))
+    flags |= ARMAS_LEFT;
+  // default to lower triangular if uplo not defined
+  if (!(flags & (ARMAS_LOWER|ARMAS_UPPER)))
+    flags |= ARMAS_LOWER;
+
   if (flags & ARMAS_LOWER) {
     if (flags & ARMAS_LEFT) {
       __armas_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
