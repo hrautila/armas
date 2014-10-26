@@ -87,6 +87,7 @@ BLAS3 = \
 	blas3/updtrmm.c
 
 LAPACK = \
+	lapack/svd.c \
 	lapack/trdsec.c \
 	lapack/trdevd.c \
 	lapack/sort.c \
@@ -165,12 +166,18 @@ libarmasz_la_SOURCES =
 libarmasz_la_LIBADD = libx.la libz.la
 
 
-BUILT_SOURCES = armas/dmatrix.h armas/zmatrix.h
-CLEANFILES = armas/dmatrix.h armas/zmatrix.h
+BUILT_SOURCES = armas/dmatrix.h armas/zmatrix.h armas/linalgd.h
+CLEANFILES = armas/dmatrix.h armas/zmatrix.h armas/linalgd.h
 
 armas/dmatrix.h: inc/matrix.h
 	sed 's/__armas_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
 
+armas/linalgd.h: inc/linalg.h
+	sed 's/__armas_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s:"matrix.h":<armas/dmatrix.h>:;s/_LINALG_/_LINALGD_/;' $< > $@
+
+# comples types
+
 armas/zmatrix.h: inc/matrix.h
 	sed 's/__armas_/armas_z_/g;s/_ARMAS_MAT/_ARMAS_ZMAT/;s/DTYPE/double complex/g;s/ABSTYPE/double/g;s/__ZERO/0.0+0.0i/g;s:/\* COMPLEX_H \*/:#include <complex.h>:' $< > $@
+
 
