@@ -168,12 +168,10 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
         for (k = iq-1; k > 0; k--) {
             d0 = __ABS(__armas_get_at_unsafe(D, k-1));
             e0 = __ABS(__armas_get_at_unsafe(E, k-1));
-            //printf( "  [%2d], d0 = %e, e0 = %e\n", k, d0, e0);
             if (e0 < threshold) {
                 __armas_set_at_unsafe(E, k-1, __ZERO);
                 if (k == (iq - 1)) {
                     // convergence of bottom singular value
-                    //printf("  convergence of bottom .. %d\n", k);
                     iq = iq - 1;
                     // work until we hit bottom at index 0
                     work = k > 0; 
@@ -185,8 +183,8 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
             }
             ip = k - 1;
             // update estimates
-            slow = min(slow, d0);
-            shigh = max(max(shigh, d0), e0);
+            slow = __MIN(slow, d0);
+            shigh = __MAX(__MAX(shigh, d0), e0);
         }
 
         if (iq <= ip) {
@@ -197,7 +195,6 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
         if ((iq - ip) == 2) {
             // 2x2 block, do separately
             DTYPE smin, smax, cosl, sinl, cosr, sinr;
-            //printf(".. 2x2 block at %d ... %d\n", ip, iq);
             d0 = __armas_get_at_unsafe(D, ip);
             d1 = __armas_get_at_unsafe(D, ip+1);
             e1 = __armas_get_at_unsafe(E, ip);
@@ -222,7 +219,6 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
             d1 = __ABS(__armas_get_at_unsafe(D, iq-1));
             // select direction
             forwards = d1 >= d0;
-            //printf("..select direction %d [%e, %e]\n", forwards, d0, d1);
         }
 
         // convergence
@@ -233,7 +229,6 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
             // this is the standard convergence test 
             if ((abstol && e0 < threshold) || e0 < tol*d0) {
                 __armas_set_at_unsafe(E, iq-2, __ZERO);
-                //printf("..deflate (1a) E[%d] %e < %e\n", iq-2, e0, tol*d0);
                 iq = iq - 1;
                 goto Next;
             }
@@ -245,7 +240,6 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
                     if (__ABS(e0) <= tol*mu) {
                         // test recurrence |e(j)/mu(j)| <= tol
                         __armas_set_at_unsafe(E, k, __ZERO);
-                        //printf("..deflate (1b) E[%d] %e < %e\n", k, e0, tol*mu);
                         goto Next;
                     }
                     d0 = __ABS(__armas_get_at_unsafe(D, k+1));
@@ -258,7 +252,6 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
             d0 = __ABS(__armas_get_at_unsafe(D, ip));
             if ((abstol && e0 < threshold) || e0 < tol*d0) {
                 __armas_set_at_unsafe(E, ip, __ZERO);
-                //printf("..deflate (2a) E[%d] %e < %e\n", ip, e0, tol*d0);
                 ip = ip + 1;
                 goto Next;
             }
@@ -270,7 +263,6 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
                     if (__ABS(e0) <= tol*mu) {
                         // test recurrence |e(j)/mu(j)| <= tol
                         __armas_set_at_unsafe(E, k-1, __ZERO);
-                        //printf("..deflate (2b) E[%d] %e < %e\n", k-1, e0, tol*mu);
                         goto Next;
                     }
                     d0 = __ABS(__armas_get_at_unsafe(D, k-1));
@@ -305,18 +297,17 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
         if (forwards) {
             if (zero) {
                 // implicit zero shift QR
-                //printf("..zero shift forward...\n");
                 nrot = __bd_qrzero(&sD, &sE, &Cr, &Sr, &Cl, &Sl, saves);
             } else {
                 // standard shifted QR
                 f0 = (__ABS(d0) - ushift) * (copysign(__ONE, d0) + ushift/d0);
                 g0 = __armas_get_at_unsafe(E, ip);
-                //printf("..standard shift forward, u=%e, f0=%e\n", ushift, f0);
                 nrot = __bd_qrsweep(&sD, &sE, &Cr, &Sr, &Cl, &Sl, f0, g0, saves);
             }
             e0 = __ABS(__armas_get_at_unsafe(E, iq-2));
-            if (e0 <= threshold)
+            if (e0 <= threshold) {
                 __armas_set_at_unsafe(E, iq-2, __ZERO);
+            }
             if (U) {
                 __armas_gvupdate(U, ip, &Cl, &Sl, nrot, ARMAS_RIGHT);
             }
@@ -326,18 +317,17 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
         } else {
             if (zero) {
                 // implicit zero shift QL
-                //printf("..zero shift backward...\n");
                 nrot = __bd_qlzero(&sD, &sE, &Cr, &Sr, &Cl, &Sl, saves);
             } else {
                 // standard shifted QL
                 f0 = (__ABS(d0) - ushift) * (copysign(__ONE, d0) + ushift/d0);
                 g0 = __armas_get_at_unsafe(E, iq-2);
-                //printf("..standard shift backward... %e\n", ushift);
                 nrot = __bd_qlsweep(&sD, &sE, &Cr, &Sr, &Cl, &Sl, f0, g0, saves);
             }
             e0 = __ABS(__armas_get_at_unsafe(E, ip));
-            if (e0 <= threshold)
+            if (e0 <= threshold) {
                 __armas_set_at_unsafe(E, ip, __ZERO);
+            }
             if (U) {
                 __armas_gvupdate(U, ip, &Cr, &Sr, nrot, ARMAS_RIGHT|ARMAS_BACKWARD);
             }
