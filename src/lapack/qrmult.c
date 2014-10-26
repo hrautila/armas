@@ -149,7 +149,7 @@ __blk_qrmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
     pDir    = ARMAS_PTOP;
     mb = max(0, A->rows - A->cols);
     nb = max(0, A->cols - A->rows);
-    tb = max(0, __armas_size(tau) - min(A->rows, A->cols));
+    tb = max(0, __armas_size(tau) - __IMIN(A->rows, A->cols));
     Aref = &ATL;
     transpose = FALSE;
   }
@@ -231,7 +231,7 @@ __unblk_qrmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *ta
     mb = max(0, A->rows - A->cols);
     nb = max(0, A->cols - A->rows);
     cb = max(0, C->cols - A->cols);
-    tb = max(0, __armas_size(tau) - min(A->rows, A->cols));
+    tb = max(0, __armas_size(tau) - __IMIN(A->rows, A->cols));
     Aref = &ATL;
   } else {
     pAstart = ARMAS_PTOPLEFT;
@@ -303,7 +303,7 @@ __blk_qrmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
     mb = max(0, A->rows - A->cols);
     nb = max(0, A->cols - A->rows);
     cb = max(0, C->cols - A->cols);
-    tb = max(0, __armas_size(tau) - min(A->rows, A->cols));
+    tb = max(0, __armas_size(tau) - __IMIN(A->rows, A->cols));
     Aref = &ATL;
     transpose = TRUE;
   } else {
@@ -395,6 +395,10 @@ int __armas_qrmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   if (!conf)
     conf = armas_conf_default();
 
+  // default to multiplication from left is nothing defined
+  if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))
+    flags |= ARMAS_LEFT;
+
   if (flags & ARMAS_RIGHT) {
     ok = C->cols == A->rows;
     wsizer = __ws_qrmult_right;
@@ -418,7 +422,7 @@ int __armas_qrmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   wsneed = wsizer(C->rows, C->cols, lb);
   if (lb > 0 && __armas_size(W) < wsneed) {
     lb = compute_lb(C->rows, C->cols, __armas_size(W), wsizer);
-    lb = min(lb, conf->lb);
+    lb = __IMIN(lb, conf->lb);
   }
 
   __armas_submatrix(&tauh, tau, 0, 0, A->cols, 1);

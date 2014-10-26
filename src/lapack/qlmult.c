@@ -358,6 +358,10 @@ int __armas_qlmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   if (!conf)
     conf = armas_conf_default();
 
+  // default to multiplication from left is nothing defined
+  if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))
+    flags |= ARMAS_LEFT;
+
   if (flags & ARMAS_RIGHT) {
     ok = C->cols == A->rows;
     wsizer = __ws_qlmult_right;
