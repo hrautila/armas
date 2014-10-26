@@ -37,6 +37,16 @@
 // machine accurancy as in LAPACK library 
 #define __EPS         (DBL_EPSILON/2.0)
 
+static inline
+DTYPE __MIN(DTYPE a, DTYPE b) {
+  return a < b ? a : b;
+}
+
+static inline
+DTYPE __MAX(DTYPE a, DTYPE b) {
+  return a > b ? a : b;
+}
+
 // internal helpers
 #define __swap_rows               __d_swap_rows
 #define __swap_cols               __d_swap_cols
@@ -169,11 +179,17 @@
 
 // Bidiagonal SVD
 #define __armas_bdsvd           armas_d_bdsvd
+#define __armas_bdsvd_work      armas_d_bdsvd_work
+
 // internal 
 #define __bdsvd2x2              __d_bdsvd2x2
 #define __bdsvd2x2_vec          __d_bdsvd2x2_vec
 #define __bdsvd_golub		__d_bdsvd_golub
 #define __bdsvd_demmel		__d_bdsvd_demmel
+
+// SVD
+#define __armas_svd		armas_d_svd
+#define __armas_svd_work	armas_d_svd_work
 
 // internal
 #define __sym_eigen2x2          __d_sym_eigen2x2

@@ -66,6 +66,9 @@ extern __armas_dense_t *__armas_transpose(__armas_dense_t *d, __armas_dense_t *s
 extern int __armas_mscale(__armas_dense_t *d, DTYPE alpha, int flags);
 extern int __armas_madd(__armas_dense_t *d, DTYPE alpha, int flags);
 
+#if !defined(__ARMAS_LINALG_H)
+// these were moved to linalg.h, if it is included skip these.
+
 extern int __armas_scale_plus(__armas_dense_t *A, const __armas_dense_t *B,
                               DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
 extern ABSTYPE __armas_mnorm(const __armas_dense_t *A, int norm, armas_conf_t *conf);
@@ -271,12 +274,19 @@ extern int __armas_gvupdate(__armas_dense_t *A, int start,
 // Bidiagonal SVD
 extern int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *U, __armas_dense_t *V,
                          __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_bdsvd_work(__armas_dense_t *D, armas_conf_t *conf);
+
+extern int __armas_svd(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V, __armas_dense_t *A,
+                       __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_svd_work(__armas_dense_t *D, int flags, armas_conf_t *conf);
 
 // additional
 extern int __armas_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c);
 extern void __armas_discriminant(DTYPE *d, DTYPE a, DTYPE b, DTYPE c);
 extern int __armas_mult_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_conf_t *conf);
 extern int __armas_solve_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_conf_t *conf);
+
+#endif // ! defined(__ARMAS_LINALG_H)
 
 // -------------------------------------------------------------------------------------------
 // inline functions

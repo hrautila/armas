@@ -32,6 +32,16 @@ enum pivot_dir {
 
 extern int compute_lb(int M, int N, int wsize, WSSIZE wsizer);
 
+static inline
+long __IMAX(long a, long b) {
+  return a > b ? a : b;
+}
+
+static inline
+long __IMIN(long a, long b) {
+  return a < b ? a : b;
+}
+
 // helper functions
 extern
 void __swap_rows(__armas_dense_t *A, int src, int dst, armas_conf_t *conf);
