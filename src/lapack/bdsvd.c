@@ -111,7 +111,7 @@ int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
 {
     __armas_dense_t CS, *uu, *vv;
     int err, N = __armas_size(D);
-    ABSTYPE tol = 5.0;
+    ABSTYPE tol = 8.0;
 
     uu = (__armas_dense_t *)0;
     vv = (__armas_dense_t *)0;
@@ -125,7 +125,8 @@ int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
             conf->error = ARMAS_EINVAL;
             return -1;
         }
-        if (U->cols != N) {
+        // U columns need to be at least N
+        if (U->cols < N) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
@@ -136,15 +137,10 @@ int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
             conf->error = ARMAS_EINVAL;
             return -1;
         }
-        if (V->rows != N) {
+        // V rows need to be at least N
+        if (V->rows < N) {
             conf->error = ARMAS_ESIZE;
             return -1;
-        }
-        if (flags & ARMAS_WANTU) {
-            if (V->rows != U->cols) {
-                conf->error = ARMAS_ESIZE;
-                return -1;
-            }
         }
         vv = V;
     }
@@ -185,6 +181,16 @@ int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
     return err;
 }
 
+/*
+ * Workspace need to compute SVD of bidiagonal or bidiagonalizable matrix S.
+ */
+int __armas_bdsvd_work(__armas_dense_t *S, armas_conf_t *conf)
+{
+    if (__armas_isvector(S)) {
+        return 4*__armas_size(S);
+    }
+    return 4*(S->rows < S->cols ? S->rows : S->cols);
+}
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
