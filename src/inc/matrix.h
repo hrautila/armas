@@ -253,6 +253,9 @@ extern int __armas_trdmult_work(__armas_dense_t *A, int flags, armas_conf_t *con
 extern int __armas_trdbuild_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_trdeigen(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *V,
                             __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_eigen_sym(__armas_dense_t *D, __armas_dense_t *A,
+                             __armas_dense_t *W, int flags, armas_conf_t *conf);
+
 // Secular functions solvers
 extern int __armas_trdsec_solve(__armas_dense_t *y, __armas_dense_t *d,
                                 __armas_dense_t *z, __armas_dense_t *delta, DTYPE rho,

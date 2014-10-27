@@ -170,6 +170,9 @@ DTYPE __MAX(DTYPE a, DTYPE b) {
 #define __armas_trdsec_eigen    armas_d_trdsec_eigen
 #define __armas_trdsec_solve_vec armas_d_trdsec_solve_vec
 
+// Eigenvalue
+#define __armas_eigen_sym       armas_d_eigen_sym
+
 // Givens
 #define __armas_gvcompute       armas_d_gvcompute
 #define __armas_gvrotate        armas_d_gvrotate
