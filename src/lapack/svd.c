@@ -38,6 +38,98 @@ DTYPE zeros(int i, int j) {
     return __ZERO;
 }
 
+
+static
+int __armas_svd_small(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V,
+                      __armas_dense_t *A, __armas_dense_t *W, int flags, armas_conf_t *conf)
+{
+    __armas_dense_t tau;
+    int M, N, K;
+    DTYPE d0, d1, e0, smin, smax, cosr, sinr, cosl, sinl, r;
+    DTYPE buf[2];
+
+    M = A->rows; N = A->cols;
+    K = __IMIN(M, N);
+    __armas_make(&tau, K, 1, K, buf);
+    if (M >= N) {
+        if (__armas_qrfactor(A, &tau, W, conf) != 0)
+            return -2;
+    } else {
+        if (__armas_lqfactor(A, &tau, W, conf) != 0)
+            return -2;
+    }
+
+    if (M == 1 || N == 1) {
+        // either tall M-by-1 or wide 1-by-N
+        __armas_set_at_unsafe(S, 0, __ABS(__armas_get_unsafe(A, 0, 0)));
+        if (N == 1) {
+            __armas_copy(U, A, conf);
+            __armas_qrbuild(U, &tau, W, N, conf);
+            __armas_set_unsafe(V, 0, 0, -1.0);
+        } else {
+            __armas_copy(V, A, conf);
+            __armas_lqbuild(V, &tau, W, M, conf);
+            __armas_set_unsafe(U,  0, 0, -1.0);
+        }
+        return 0;
+    }
+
+    // use __bdsvd2x2 functions 
+    d0 = __armas_get_unsafe(A, 0, 0);
+    d1 = __armas_get_unsafe(A, 1, 1);
+    // upper bidiagonal if M > N and get [0, 1] otherwise get [1, 0]
+    e0 = __armas_get_unsafe(A, (M >= N ? 0 : 1), (M >= N ? 1 : 0));
+
+    if (flags & (ARMAS_WANTU|ARMAS_WANTV)) {
+        __bdsvd2x2_vec(&smin, &smax, &cosl, &sinl, &cosr, &sinr, d0, e0, d1);
+        if (flags & ARMAS_WANTU) {
+            // generate Q matrix, tall M-by-2 
+            if (M >= N) {
+                __armas_mcopy(U, A);
+                if (__armas_qrbuild(U, &tau, W, N, conf) != 0)
+                    return -3;
+            } else {
+                // otherwise V is 2-by-2
+                __armas_set_unsafe(U, 0, 0, __ONE);
+                __armas_set_unsafe(U, 1, 1, __ONE);
+                __armas_set_unsafe(U, 0, 1, __ZERO);
+                __armas_set_unsafe(U, 1, 0, __ZERO);
+            }
+            if (M >= N) {
+                __armas_gvright(U, cosl, sinl, 0, 1, 0, M);
+            } else {
+                __armas_gvright(U, cosr, sinr, 0, 1, 0, M);
+            }
+        }
+        if (flags & ARMAS_WANTV) {
+            if (N > M) {
+                // generate Q matrix, wide 2-by-N
+                __armas_mcopy(V, A);
+                if (__armas_lqbuild(V, &tau, W, M, conf) != 0)
+                    return -4;
+            } else {
+                // otherwise V is 2-by-2
+                __armas_set_unsafe(V, 0, 0, __ONE);
+                __armas_set_unsafe(V, 1, 1, __ONE);
+                __armas_set_unsafe(V, 0, 1, __ZERO);
+                __armas_set_unsafe(V, 1, 0, __ZERO);
+            }
+            if (N > M) {
+                __armas_gvleft(V, cosl, sinl, 0, 1, 0, N);
+            } else {
+                __armas_gvleft(V, cosr, sinr, 0, 1, 0, N);
+            }
+        }
+    } else {
+        __bdsvd2x2(&smin, &smax, d0, e0, d1);
+    }
+    __armas_set_at_unsafe(S, 0, __ABS(smax));
+    __armas_set_at_unsafe(S, 1, __ABS(smin));
+
+    return 0;
+}
+
+
 /*
  * Compute for a matrix with M >= N
  *
@@ -402,9 +494,17 @@ int __armas_svd(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V,
     }
 
     if (tall) {
-        err = __armas_svd_tall(S, U, V, A, W, flags, conf);
+        if (A->cols <= 2) {
+            err = __armas_svd_small(S, U, V, A, W, flags, conf);
+        } else {
+            err = __armas_svd_tall(S, U, V, A, W, flags, conf);
+        }
     } else {
-        err = __armas_svd_wide(S, U, V, A, W, flags, conf);
+        if (A->rows <= 2) {
+            err = __armas_svd_small(S, U, V, A, W, flags, conf);
+        } else {
+            err = __armas_svd_wide(S, U, V, A, W, flags, conf);
+        }
     }
     return err;
 }
