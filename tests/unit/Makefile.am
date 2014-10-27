@@ -9,7 +9,7 @@ noinst_HEADERS = ../helper.h
 DOUBLE = dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dgemv dger dtrmv dtrsv diag
 
 LAPACK =  \
-	gesvd secular \
+	evd gesvd secular \
 	trdevd bdsvd givens trdred \
 	bidiag chol hess lu ldl \
 	qrfact qrbld qrmult qrsol \
@@ -33,6 +33,7 @@ dtrsv_SOURCES  = trsv.c ../helper.c
 diag_SOURCES   = diag.c ../helper.c
 
 ## LAPACK
+evd_SOURCES    = evd.c ../helper.c
 gesvd_SOURCES  = gesvd.c ../helper.c
 secular_SOURCES = secular.c ../helper.c
 trdevd_SOURCES = trdevd.c ../helper.c
