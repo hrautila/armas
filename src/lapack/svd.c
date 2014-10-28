@@ -85,15 +85,19 @@ int __armas_svd_small(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V
         if (flags & ARMAS_WANTU) {
             // generate Q matrix, tall M-by-2 
             if (M >= N) {
-                __armas_mcopy(U, A);
-                if (__armas_qrbuild(U, &tau, W, N, conf) != 0)
-                    return -3;
+                if (U->cols == A->cols) {
+                    __armas_mcopy(U, A);
+                    if (__armas_qrbuild(U, &tau, W, N, conf) != 0)
+                        return -3;
+                } else {
+                    // U is M-by-M
+                    __armas_set_values(U, zeros, ARMAS_SYMM|ARMAS_UNIT);
+                    if (__armas_qrmult(U, A, &tau, W, ARMAS_RIGHT, conf) != 0)
+                        return -3;
+                }
             } else {
                 // otherwise V is 2-by-2
-                __armas_set_unsafe(U, 0, 0, __ONE);
-                __armas_set_unsafe(U, 1, 1, __ONE);
-                __armas_set_unsafe(U, 0, 1, __ZERO);
-                __armas_set_unsafe(U, 1, 0, __ZERO);
+                __armas_set_values(U, zeros, ARMAS_SYMM|ARMAS_UNIT);
             }
             if (M >= N) {
                 __armas_gvright(U, cosl, sinl, 0, 1, 0, M);
@@ -103,16 +107,20 @@ int __armas_svd_small(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V
         }
         if (flags & ARMAS_WANTV) {
             if (N > M) {
-                // generate Q matrix, wide 2-by-N
-                __armas_mcopy(V, A);
-                if (__armas_lqbuild(V, &tau, W, M, conf) != 0)
-                    return -4;
+                if (V->rows == A->rows) {
+                    // generate Q matrix, wide 2-by-N
+                    __armas_mcopy(V, A);
+                    if (__armas_lqbuild(V, &tau, W, M, conf) != 0)
+                        return -4;
+                } else {
+                    // V is N-by-N
+                    __armas_set_values(V, zeros, ARMAS_SYMM|ARMAS_UNIT);
+                    if (__armas_lqmult(V, A, &tau, W, ARMAS_RIGHT, conf) != 0)
+                        return -3;
+                }
             } else {
                 // otherwise V is 2-by-2
-                __armas_set_unsafe(V, 0, 0, __ONE);
-                __armas_set_unsafe(V, 1, 1, __ONE);
-                __armas_set_unsafe(V, 0, 1, __ZERO);
-                __armas_set_unsafe(V, 1, 0, __ZERO);
+                __armas_set_values(V, zeros, ARMAS_SYMM|ARMAS_UNIT);
             }
             if (N > M) {
                 __armas_gvleft(V, cosl, sinl, 0, 1, 0, N);
@@ -125,6 +133,17 @@ int __armas_svd_small(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V
     }
     __armas_set_at_unsafe(S, 0, __ABS(smax));
     __armas_set_at_unsafe(S, 1, __ABS(smin));
+
+    if (flags & ARMAS_WANTV) {
+        if (smax < __ZERO) {
+            __armas_row(&tau, V, 0);
+            __armas_scale(&tau, -1.0, conf);
+        }
+        if (smin < __ZERO) {
+            __armas_row(&tau, V, 1);
+            __armas_scale(&tau, -1.0, conf);
+        }
+    }
 
     return 0;
 }
