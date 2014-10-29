@@ -2,7 +2,7 @@
 
 
 Simple column major matrix package and basic linear algebra subroutine (BLAS) implementation
-with selected functionality from LAPACK linear algebra package. (LAPACK part upcoming)
+with selected functionality from LAPACK linear algebra package. 
 
 Support for double precision real numbers. Double precision complex support upcoming.
 
@@ -389,4 +389,28 @@ Multiplying general matrix with orthogonal matrix Q from tridiagonal reduction (
 ```c
    armas_d_trdmult(C, A, tau, W, flags, conf)
 ```
+Eigenvalues and eigenvectors of tridiagonal symmetric matrix (lapack.DSTEQR)
+```c
+   armas_d_trdeigen(D, E, V, A, W, flags, conf)
+```
+Eigenvalues and eigenvectors of symmetric matrix (lapack.DSYEV)
+```c
+   armas_d_eigen_sym(D, A, W, flags, conf)
+```
+Singular values of bidiagonal matrix (lapack.DBDSQR)
+```c
+   armas_d_bdsvd(D, E, U, V, A, W, flags, conf)
+```
+Singular values and singular vectors of general matrix (lapack.GESVD)
+```c
+   armas_d_svd(S, U, V, A, W, flags, conf)
+```
+Functions for computing and applying Givens rotations
+```c
+   armas_d_gvcompute(&cos, &sin, &r, a, b)
+   armas_d_gvrotate(&v0, &v1, cos, sin, y0, y1)
+   armas_d_gvleft(A, cos, sin, row1, row2, col, ncol)
+   armas_d_gvright(A, cos, sin, col1, col2, row, nrow)
+```
+
 
