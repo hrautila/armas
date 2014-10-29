@@ -88,6 +88,14 @@ typedef double ABSTYPE;
 #define __armas_scale_plus    armas_z_scale_plus
 #define __armas_isvector      armas_z_isvector
 
+#define __armas_submatrix_unsafe  armas_z_submatrix_unsafe
+#define __armas_subvector_unsafe  armas_z_subvector_unsafe
+#define __armas_diag_unsafe       armas_z_diag_unsafe
+#define __armas_get_unsafe        armas_z_get_unsafe
+#define __armas_set_unsafe        armas_z_set_unsafe
+#define __armas_get_at_unsafe     armas_z_get_at_unsafe
+#define __armas_set_at_unsafe     armas_z_set_at_unsafe
+
 #define __armas_index_valid  __armas_z_index_valid
 #define __armas_real_index   __armas_z_real_index
 
@@ -177,6 +185,8 @@ typedef double ABSTYPE;
 #define __ABSONE  (double)1.0
 #define __ZERO    (double)0.0
 #define __ONE     (double)1.0
+#define __TWO     (double)2.0
+#define __HALF    0.5L
 
 #define __DATA_FORMAT "%8.1e"
 #define __PRINTABLE(a) (a)
@@ -186,6 +196,7 @@ typedef double ABSTYPE;
 #define __SQRT sqrt
 #define __HYPOT hypot
 #define __SIGN  signbit
+#define __COPYSIGN copysign
 
 // internally available functions
 #define __blk_add      __d_blk_add
@@ -250,6 +261,7 @@ typedef double ABSTYPE;
 #define __armas_column        armas_d_column
 #define __armas_row           armas_d_row
 #define __armas_submatrix     armas_d_submatrix
+#define __armas_subvector     armas_d_subvector
 #define __armas_submatrix_ext armas_d_submatrix_ext
 #define __armas_diag          armas_d_diag
 #define __armas_get           armas_d_get
@@ -273,6 +285,14 @@ typedef double ABSTYPE;
 #define __armas_make_trm      armas_d_make_trm
 #define __armas_scale_plus    armas_d_scale_plus
 #define __armas_isvector      armas_d_isvector
+
+#define __armas_submatrix_unsafe  armas_d_submatrix_unsafe
+#define __armas_subvector_unsafe  armas_d_subvector_unsafe
+#define __armas_diag_unsafe       armas_d_diag_unsafe
+#define __armas_get_unsafe        armas_d_get_unsafe
+#define __armas_set_unsafe        armas_d_set_unsafe
+#define __armas_get_at_unsafe     armas_d_get_at_unsafe
+#define __armas_set_at_unsafe     armas_d_set_at_unsafe
 
 #define __armas_index_valid  __armas_d_index_valid
 #define __armas_real_index   __armas_d_real_index
@@ -320,6 +340,7 @@ typedef double ABSTYPE;
 #define __armas_sum      armas_d_sum
 #define __armas_amax     armas_d_amax
 #define __armas_add      armas_d_add
+#define __armas_iamin    armas_d_iamin
 
 #endif  /* FLOAT64 */
 

@@ -24,7 +24,8 @@ static armas_conf_t __default_conf = {
   .maxproc = 1, // max processors
   .wb = 480,    // WB (scheduler blocking size)
   .error = 0,   // last error
-  .optflags = 0 // opt flags
+  .optflags = 0, // opt flags
+  .tolmult = 10   // error tolerance multiplier (tolerance = tolmult*EPSILON)
 };
 
 static armas_scheduler_t __default_sched = {
@@ -198,12 +199,13 @@ void armas_parse_scheduling(char *str, cpu_set_t *cpus, armas_conf_t *conf)
 #define ENV_ARMAS_CONFIG "ARMAS_CONFIG"
 #define ENV_ARMAS_SCHED  "ARMAS_SCHED"
 
-/*! \brief Initialize library configuration variables
+/*!
+ * \brief Initialize library configuration variables
  *
  * Reads configurations from environment variables ARMAS_CONFIG and ARMAS_SCHED.
  *
  * ARMAS_CONFIG defines default blocking configuration and has format:
- * "MB,NB,KB,LB,WB,NPROC".
+ * "MB,NB,KB,LB,WB,NPROC,TOLMULT".
  *
  * ARMAS_SCHED scheduling policy and list of available CPUs. It's format is
  * "[SCHEDSPEC,]CPUSPEC,CPUSPEC,..". SCHED is two character encoding of <TYPE> and <POLICY>.
@@ -233,7 +235,7 @@ void armas_init()
   //armas_init_cpuset();
 
   cstr = getenv(ENV_ARMAS_CONFIG);
-  // parse string: "MB,NB,KB,LB,WB,NPROC"
+  // parse string: "MB,NB,KB,LB,WB,NPROC,TOLMULT"
   for (n = 0, tok = strsep(&cstr, ","); tok; tok = strsep(&cstr, ","), n++) {
     //printf("n: %d, tok: '%s', cstr: '%s'\n", n, tok, cstr);
     val = atoi(tok);
@@ -265,6 +267,8 @@ void armas_init()
       __default_conf.maxproc = val > nproc ? nproc : val;
       break;
     case 6:
+      __default_conf.tolmult = val;
+      break;
     default:
       break;
     }

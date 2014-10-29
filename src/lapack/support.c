@@ -45,6 +45,63 @@ int compute_lb(int M, int N, int wsz, WSSIZE worksize)
   return lb < 0 ? 0 : lb;
 }
 
+#if defined(__eigen_sort) && defined(__armas_iamax) && defined(__armas_swap)
+/*
+ * \brief Sort eigenvalues to decreasing order.
+ *
+ * Sorts eigenvalues (or singular values) in vector D to decreasing order and
+ * rearrangens optional left and right eigenvector (singular vectors) to
+ * corresponding order.
+ *
+ * \param[in,out] D
+ *      Eigenvalue (singular value) vector
+ * \param[in,out] U, V
+ *      Left and right eigenvectors (singular vectors)
+ * \param[in,out] C
+ *      Optional matrix present in value U*C
+ *
+ */
+int __eigen_sort(__armas_dense_t *D, __armas_dense_t *U,
+                  __armas_dense_t *V, __armas_dense_t *C, armas_conf_t *conf)
+{
+    DTYPE t0;
+    int k, pk, N = __armas_size(D);
+    __armas_dense_t sD, m0, m1;
+
+    if (! __armas_isvector(D)) {
+        return -1;
+    }
+
+    // This is simple insertion sort - find index to largest value
+    // in remaining subvector and swap that with value in current index.
+    for (k = 0; k < N-1; k++) {
+        __armas_subvector(&sD, D, k, N-k);
+        pk = __armas_iamax(&sD, (armas_conf_t*)0);
+        if (pk != 0) {
+            t0 = __armas_get_at_unsafe(D, k);
+            __armas_set_at_unsafe(D, k, __armas_get_at_unsafe(D, k+pk));
+            __armas_set_at_unsafe(D, pk+k, t0);
+            if (U) {
+                __armas_column(&m0, U, k);
+                __armas_column(&m1, U, k+pk);
+                __armas_swap(&m1, &m0, conf);
+            }
+            if (C) {
+                __armas_column(&m0, C, k);
+                __armas_column(&m1, C, k+pk);
+                __armas_swap(&m1, &m0, conf);
+            }
+            if (V) {
+                __armas_row(&m0, V, k);
+                __armas_row(&m1, V, k+pk);
+                __armas_swap(&m1, &m0, conf);
+            }
+        }
+    }
+    return 0;
+}
+#endif // defined(__eigen_sort)
+
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
 // Local Variables:

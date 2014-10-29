@@ -6,14 +6,16 @@ LDADD = ../../src/libarmasd.la
 
 noinst_HEADERS = ../helper.h
 
-DOUBLE = dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dgemv dger dtrmv dtrsv
+DOUBLE = dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dgemv dger dtrmv dtrsv diag
 
 LAPACK =  \
-   trdred bidiag chol hess lu ldl \
-   qrfact qrbld qrmult qrsol \
-   lqfact lqbld lqmult lqsol \
-   qlfact qlbld qlmult \
-   rqfact rqbld rqmult
+	evd gesvd secular \
+	trdevd bdsvd givens trdred \
+	bidiag chol hess lu ldl \
+	qrfact qrbld qrmult qrsol \
+	lqfact lqbld lqmult lqsol \
+	qlfact qlbld qlmult \
+	rqfact rqbld rqmult
 
 check_PROGRAMS = $(DOUBLE) $(LAPACK)
 
@@ -28,8 +30,15 @@ dgemv_SOURCES  = gemv.c ../helper.c
 dger_SOURCES   = ger.c ../helper.c
 dtrmv_SOURCES  = trmv.c ../helper.c
 dtrsv_SOURCES  = trsv.c ../helper.c
+diag_SOURCES   = diag.c ../helper.c
 
 ## LAPACK
+evd_SOURCES    = evd.c ../helper.c
+gesvd_SOURCES  = gesvd.c ../helper.c
+secular_SOURCES = secular.c ../helper.c
+trdevd_SOURCES = trdevd.c ../helper.c
+bdsvd_SOURCES  = bdsvd.c ../helper.c
+givens_SOURCES = givens.c ../helper.c
 bidiag_SOURCES = bidiag.c ../helper.c
 chol_SOURCES   = chol.c ../helper.c
 lu_SOURCES     = lu.c ../helper.c

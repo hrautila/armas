@@ -393,6 +393,10 @@ int __armas_lqmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   if (!conf)
     conf = armas_conf_default();
 
+  // default to multiplication from left is nothing defined
+  if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))
+    flags |= ARMAS_LEFT;
+
   if (flags & ARMAS_RIGHT) {
     ok = C->cols == A->cols;
     wsizer = __ws_lqmult_right;
@@ -419,7 +423,7 @@ int __armas_lqmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
     lb = min(lb, conf->lb);
   }
 
-  if (lb == 0 || A->cols <= lb) {
+  if (lb == 0 || A->rows <= lb) {
     // unblocked 
     if (flags & ARMAS_LEFT) {
       __unblk_lqmult_left(C, A, tau, W, flags, conf);

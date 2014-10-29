@@ -46,7 +46,7 @@ int __armas_bdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
     if (__armas_size(A) == 0)
         return 0;
 
-    if (A->rows >= A->cols) {
+    if (A->rows > A->cols || (A->rows == A->cols && !(flags & ARMAS_LOWER))) {
         switch (flags & (ARMAS_WANTQ|ARMAS_WANTP)) {
         case ARMAS_WANTQ:
             __armas_submatrix(&tauh, tau, 0, 0, A->cols, 1);
@@ -76,6 +76,7 @@ int __armas_bdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
             break;
         }
     } else {
+        // here A->rows < A-cols || (A->rows == A->cols && flags&ARMAS_LOWER)
         switch (flags & (ARMAS_WANTQ|ARMAS_WANTP)) {
         case ARMAS_WANTQ:
             // shift Q matrix embedded in A right and fill first column and

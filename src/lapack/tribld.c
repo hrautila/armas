@@ -27,7 +27,7 @@
 #include "matrix.h"
 #include "internal_lapack.h"
 
-/*
+/**
  * @brief Generate orthogonal matrix Q for tridiagonally reduced matrix.
  *
  * @param A [in,out]
@@ -58,6 +58,10 @@ int __armas_trdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
 
     if (__armas_size(A) == 0)
         return 0;
+
+  // default to lower triangular if uplo not defined
+  if (!(flags & (ARMAS_LOWER|ARMAS_UPPER)))
+    flags |= ARMAS_LOWER;
 
     if (K > A->rows - 1)
         K = A->rows - 1;

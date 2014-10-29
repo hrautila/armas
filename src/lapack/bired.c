@@ -879,6 +879,10 @@ int __armas_bdmult(__armas_dense_t *C, __armas_dense_t *A,
   __armas_dense_t Qh, Ch, Ph, tauh;
   int err, ok;
 
+  // default to multiplication from left
+  if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))
+    flags |= ARMAS_LEFT;
+
   // to be done!
   switch (flags & (ARMAS_MULTQ|ARMAS_MULTP|ARMAS_LEFT|ARMAS_RIGHT)) {
   case ARMAS_MULTQ|ARMAS_LEFT:
@@ -899,7 +903,7 @@ int __armas_bdmult(__armas_dense_t *C, __armas_dense_t *A,
     flags = flags & ARMAS_TRANS ? flags^ARMAS_TRANS : flags|ARMAS_TRANS;
   } 
 
-  if (A->rows >= A->cols) {
+  if (A->rows > A->cols || (A->rows == A->cols && !(flags & ARMAS_LOWER))) {
     // M >= N
     switch (flags & (ARMAS_MULTQ|ARMAS_MULTP)) {
     case ARMAS_MULTQ:

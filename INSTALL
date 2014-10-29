@@ -1,9 +1,9 @@
-A Rewrite of Matrix Algebra Subroutines
----------------------------------------
+Another Rewrite of Matrix Algebra Subroutines
+---------------------------------------------
 
 ## Installation
 
-   $ ./configure
+   $ ./configure CFLAGS=-O3
    $ make
    $ sudo make install
 
@@ -17,7 +17,7 @@ A Rewrite of Matrix Algebra Subroutines
    $ autoconf
    $ autoheader
    $ automake --add-missing
-   $ ./configure
+   $ ./configure CFLAGS=-O3
    $ make
    $ sudo make install
 

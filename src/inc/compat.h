@@ -71,7 +71,7 @@ enum cblas_const {
 // lapack
 #endif
 
-#if define(COMPAT_CBLAS)
+#if defined(COMPAT_CBLAS)
 #define __cblas_gemm   cblas_dgemm
 #define __cblas_symm   cblas_dsymm
 #endif

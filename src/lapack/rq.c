@@ -388,7 +388,7 @@ int __armas_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
     lb = compute_lb(A->rows, A->cols, __armas_size(W), __ws_rqfactor);
     lb = min(lb, conf->lb);
   }
-  if (lb == 0 || A->cols <= lb) {
+  if (lb == 0 || A->rows <= lb) {
     __unblk_rqfactor(A, tau, W, conf);
   } else {
     __armas_dense_t T, Wrk;
