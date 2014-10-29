@@ -32,11 +32,14 @@ int test1(int M, int N, int verbose)
     
     armas_d_set_values(&A, unitrand, ARMAS_ANY);
     armas_d_mcopy(&A0, &A);
-    armas_d_init(&W, M*N, 1);
+    
+    armas_d_init(&W, (M*N < 100 ? 100 : M*N), 1);
     
     err = armas_d_svd(&D, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
     if (err) {
-        printf("error[%d]: %d\n", err, conf.error);
+        printf("%s [M=%d, N=%d, err=%d,%d]: A == U*S*V.T, U=[m,n], V=[n,n] \n",
+               PASS(0), M, N, err, conf.error);
+        printf("Work needed: %d\n", armas_d_svd_work(&A, ARMAS_WANTU|ARMAS_WANTV, &conf));
         return 0;
     }
 
@@ -57,7 +60,7 @@ int test1(int M, int N, int verbose)
     armas_d_mult(&A0, &U, &V, -1.0, 1.0, ARMAS_NONE, &conf);
     n2 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
 
-    ok = isOK(n2, M);
+    ok = isOK(n2, 10*M);
     printf("%s [M=%d, N=%d]: A == U*S*V.T, U=[m,n], V=[n,n] \n", PASS(ok), M, N);
 
     if (verbose > 0) {
@@ -101,7 +104,7 @@ int test2(int M, int N, int verbose)
     armas_d_set_values(&A, unitrand, ARMAS_ANY);
     armas_d_set_values(&Sg, zero, ARMAS_ANY);
     armas_d_mcopy(&A0, &A);
-    armas_d_init(&W, M*N, 1);
+    armas_d_init(&W, (M*N < 100 ? 100 : M*N), 1);
     
     err = armas_d_svd(&S, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
     if (err) {
@@ -131,7 +134,7 @@ int test2(int M, int N, int verbose)
     armas_d_mult(&A0, &A1, &V, -1.0, 1.0, ARMAS_NONE, &conf);
     n2 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
 
-    ok = isOK(n2, M);
+    ok = isOK(n2, 10*M);
     printf("%s [M=%d, N=%d]: A == U*S*V.T, U=[m,m], V=[n,n] \n", PASS(ok), M, N);
     if (verbose > 0) {
         printf("  ||A - U*S*V.T||_1: %e [%ld]\n", n2, (long)(n2/DBL_EPSILON));
@@ -175,7 +178,7 @@ int test3(int M, int N, int verbose)
     
     armas_d_set_values(&A, unitrand, ARMAS_ANY);
     armas_d_mcopy(&A0, &A);
-    armas_d_init(&W, M*N, 1);
+    armas_d_init(&W, (M*N < 100 ? 100 : N*M), 1);
     
     err = armas_d_svd(&D, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
     if (err) {
@@ -245,7 +248,7 @@ int test4(int M, int N, int verbose)
     armas_d_set_values(&A, unitrand, ARMAS_ANY);
     armas_d_set_values(&Sg, zero, ARMAS_ANY);
     armas_d_mcopy(&A0, &A);
-    armas_d_init(&W, M*N, 1);
+    armas_d_init(&W, (M*N < 100 ? 100 : M*N), 1);
     
     err = armas_d_svd(&S, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
     if (err) {
@@ -349,17 +352,20 @@ main(int argc, char **argv)
     if (! test2(Mbig, Nsmall, verbose))
         fails++;
 
-    printf("Test: M < N\n");
-    if (! test3(N, M, verbose))
-        fails++;
-    if (! test4(N, M, verbose))
-        fails++;
+    if (M != N) {
+        // these only if M, N not equal
+        printf("Test: M < N\n");
+        if (! test3(N, M, verbose))
+            fails++;
+        if (! test4(N, M, verbose))
+            fails++;
 
-    printf("Test: M << N\n");
-    if (! test3(Nsmall, Mbig, verbose))
-        fails++;
-    if (! test4(Nsmall, Mbig, verbose))
-        fails++;
+        printf("Test: M << N\n");
+        if (! test3(Nsmall, Mbig, verbose))
+            fails++;
+        if (! test4(Nsmall, Mbig, verbose))
+            fails++;
+    }
 
     exit(fails);
 }
