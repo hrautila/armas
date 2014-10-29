@@ -27,6 +27,35 @@
 #include "internal_lapack.h"
 
 /*
+ * \brief Eigenvalues and vectors of 2x2 matrix
+ */
+int __eigen_sym_small(__armas_dense_t *D, __armas_dense_t *A,
+                      __armas_dense_t *W, int flags, armas_conf_t *conf)
+{
+    DTYPE d0, b0, d1, e0, e1, cs, sn;
+
+    d0 = __armas_get_unsafe(A, 0, 0);
+    d1 = __armas_get_unsafe(A, 1, 1);
+    if (flags & ARMAS_UPPER) {
+        b0 = __armas_get_unsafe(A, 0, 1);
+    } else {
+        b0 = __armas_get_unsafe(A, 1, 0);
+    }
+    __sym_eigen2x2vec(&e0, &e1, &cs, &sn, d0, b0, d1);
+    __armas_set_at_unsafe(D, 0, e0);
+    __armas_set_at_unsafe(D, 1, e1);
+
+    if (flags & ARMAS_WANTV) {
+        __armas_set_unsafe(A, 0, 0, __ONE);
+        __armas_set_unsafe(A, 1, 1, __ONE);
+        __armas_set_unsafe(A, 0, 1, __ZERO);
+        __armas_set_unsafe(A, 1, 0, __ZERO);
+        __armas_gvright(A, cs, sn, 0, 1, 0, A->rows);
+    }
+    return 0;
+}
+
+/*
  * \brief Compute eigenvalue decomposition of symmetric N-by-N matrix
  *
  * \param[out] D
@@ -59,6 +88,18 @@ int __armas_eigen_sym(__armas_dense_t *D, __armas_dense_t *A,
         conf->error = ARMAS_ESIZE;
         return -1;
     }
+    if (N == 1) {
+        __armas_set_at_unsafe(D, 0, __armas_get_unsafe(A, 0, 0));
+        if (flags & ARMAS_WANTV) {
+            __armas_set_unsafe(A, 0, 0, __ONE);
+        }
+        return 0;
+    }
+    if (N == 2) {
+        __eigen_sym_small(D, A, W, flags, conf);
+        return 0;
+    }
+
     if ((flags & ARMAS_WANTV) && __armas_size(W) < 3*N) {
         conf->error = ARMAS_EWORK;
         return -1;
