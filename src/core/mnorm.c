@@ -25,17 +25,60 @@
 #include "internal.h"
 #include "matrix.h"
 
+static 
+void __sum_of_sq(ABSTYPE *ssum, ABSTYPE *scale, __armas_dense_t *X, ABSTYPE sum, ABSTYPE scl)
+{
+  register int i, k;
+  register ABSTYPE a0;
 
+  for (i = 0; i < __armas_size(X); i += 1) {
+    a0 = __armas_get_at_unsafe(X, i);
+    if (a0 != __ZERO) {
+      a0 = __ABS(a0);
+      if (a0 > scl) {
+        sum = __ONE + sum * ((scl/a0)*(scl/a0));
+        scl = a0;
+      } else {
+        sum = sum + (a0/scl)*(a0/scl);
+      }
+    }
+  }    
+  *ssum = sum;
+  *scale = scl;
+}
+
+/*
+ * Frobenius-norm is the square root of sum of the squares of the matrix elements.
+ */
 static
-ABSTYPE __armas_matrix_norm_one(const __armas_dense_t *x, armas_conf_t *conf)
+ABSTYPE __matrix_norm_frb(const __armas_dense_t *x, armas_conf_t *conf)
+{
+  int k;
+  __armas_dense_t v;
+  ABSTYPE ssum, scale;
+
+  ssum = __ABSONE;
+  scale = __ABSZERO;
+  for (k = 0; k < x->cols; k++) {
+    __armas_column(&v, x, k);
+    __sum_of_sq(&ssum, &scale, &v, ssum, scale);
+  }
+  return scale*__SQRT(ssum);
+}
+
+/*
+ * 1-norm is the maximum of the column sums.
+ */
+static
+ABSTYPE __matrix_norm_one(const __armas_dense_t *x, armas_conf_t *conf)
 {
   int k;
   __armas_dense_t v;
   ABSTYPE cmax, amax = __ABSZERO;
 
   for (k = 0; k < x->cols; k++) {
-    __armas_submatrix(&v, x, 0, k, x->rows, 1);
-    cmax = __ABS(__armas_amax(&v, conf));
+    __armas_column(&v, x, k);
+    cmax = __ABS(__armas_asum(&v, conf));
     if (cmax > amax) {
       amax = cmax;
     }
@@ -43,16 +86,19 @@ ABSTYPE __armas_matrix_norm_one(const __armas_dense_t *x, armas_conf_t *conf)
   return amax;
 }
 
+/*
+ * inf-norm is the maximum of the row sums.
+ */
 static
-ABSTYPE __armas_matrix_norm_inf(const __armas_dense_t *x, armas_conf_t *conf)
+ABSTYPE __matrix_norm_inf(const __armas_dense_t *x, armas_conf_t *conf)
 {
   int k;
   __armas_dense_t v;
   ABSTYPE cmax, amax = __ABSZERO;
 
   for (k = 0; k < x->rows; k++) {
-    __armas_submatrix(&v, x, k, 0, 1, x->cols);
-    cmax = __ABS(__armas_amax(&v, conf));
+    __armas_row(&v, x, k);
+    cmax = __ABS(__armas_asum(&v, conf));
     if (cmax > amax) {
       amax = cmax;
     }
@@ -77,7 +123,7 @@ ABSTYPE __armas_mnorm(const __armas_dense_t *x, int which, armas_conf_t *conf)
     if (is_vector) {
       normval = __armas_asum(x, conf);
     } else {
-      normval = __armas_matrix_norm_one(x, conf);
+      normval = __matrix_norm_one(x, conf);
     }
     break;
   case ARMAS_NORM_TWO:
@@ -92,7 +138,14 @@ ABSTYPE __armas_mnorm(const __armas_dense_t *x, int which, armas_conf_t *conf)
     if (is_vector) {
       normval = __ABS(__armas_amax(x, conf));
     } else {
-      normval = __armas_matrix_norm_inf(x, conf);
+      normval = __matrix_norm_inf(x, conf);
+    }
+    break;
+  case ARMAS_NORM_FRB:
+    if (is_vector) {
+      normval = __armas_nrm2(x, conf);
+    } else {
+      normval = __matrix_norm_frb(x, conf);
     }
     break;
   default:
@@ -101,6 +154,141 @@ ABSTYPE __armas_mnorm(const __armas_dense_t *x, int which, armas_conf_t *conf)
   }
   return normval;
 }
+
+#if 0
+
+static
+ABSTYPE __trm_norm_one(const __armas_dense_t *A, int flags, armas_conf_t *conf)
+{
+  __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a10, a11, a12, a21, A22, *Acol;
+  ABSTYPE aval, cmax = ___ABSZERO;
+
+  Acol = flags & ARMAS_UPPER ? &a01 : &a21;
+
+  __partition_2x2(&ATL, &ATR,
+                  &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
+
+  while (ABR.rows > 0 && ABR.cols > 0) {
+    __repartition_2x2to3x3(&ATL,
+                           &A00,  &a01, __nil,
+                           __nil, &a11, __nil,
+                           __nil, &a21, &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
+    // ---------------------------------------------------------------------------
+
+    aval = flags & ARMAS_UNIT
+      ? __ABSONE
+      : __ABS(__armas_get_at_unsafe(&a11, 0));
+    aval += __armas_asum(Acol, conf);
+    if (aval > cmax)
+      cmax = aval;
+    
+    // ---------------------------------------------------------------------------
+    __continue_3x3to2x2(&ATL, &ATR,
+                        &ABL, &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
+  }
+  return cmax;
+}
+
+static
+ABSTYPE __trm_norm_inf(__armas_dense_t *A, int flags, armas_conf_t *conf)
+{
+  __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a10, a11, a12, a21, A22, *Arow;
+  ABSTYPE aval, cmax = ___ABSZERO;
+
+  Arow = flags & ARMAS_UPPER ? &a12 : &a10;
+
+  __partition_2x2(&ATL, &ATR,
+                  &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
+
+  while (ABR.rows > 0 && ABR.cols > 0) {
+    __repartition_2x2to3x3(&ATL,
+                           &A00,  __nil, __nil,
+                           &a10,  &a11,  &a12,
+                           __nil, __nil, &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
+    // ---------------------------------------------------------------------------
+
+    aval = flags & ARMAS_UNIT
+      ? __ABSONE
+      : __ABS(__armas_get_at_unsafe(&a11, 0));
+    aval += __armas_asum(Arow, conf);
+    if (aval > cmax)
+      cmax = aval;
+    
+    // ---------------------------------------------------------------------------
+    __continue_3x3to2x2(&ATL, &ATR,
+                        &ABL, &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
+  }
+  return cmax;
+}
+
+static
+ABSTYPE __trm_norm_frb(__armas_dense_t *A, int flags, armas_conf_t *conf)
+{
+  __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a10, a11, a12, a21, A22, *Acol;
+    DTYPE aval, cmax = ___ABSZERO;
+    ABSTYPE ssum, scale;
+
+    ssum = __ABSONE;
+    scale = __ABSZERO;
+
+    Acol = flags & ARMAS_UPPER ? &a01 : &a21;
+
+    __partition_2x2(&ATL, &ATR,
+                    &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
+
+    while (ABR.rows > 0 && ABR.cols > 0) {
+        __repartition_2x2to3x3(&ATL,
+                               &A00,  &a01, __nil,
+                               __nil, &a11, __nil,
+                               __nil, &a21, &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
+        // ---------------------------------------------------------------------------
+        if (flags & ARMAS_UNIT) {
+          ssum += __ABSONE;
+        } else {
+          __sum_of_sq(&ssum, &scale, &a11, ssum, scale);
+        }
+        __sum_of_sq(&ssum, &scale, Acol, ssum, scale);
+        // ---------------------------------------------------------------------------
+        __continue_3x3to2x2(&ATL, &ATR,
+                            &ABL, &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
+    }
+    return scale*__SQRT(ssum);
+}
+
+ABSTYPE __armas_norm(const __armas_dense_t *A, int which, int flags, armas_conf_t *conf)
+{
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (! x || __armas_size(x) == 0)
+    return __ABSZERO;
+
+  if (!(flags & (ARMAS_LOWER|ARMAS_UPPER))) {
+    return __armas_mnorm(A, which, conf);
+  }
+  // triangular/trapezoidial matrices here
+  switch (which) {
+  case ARMAS_NORM_ONE:
+    normval = __trm_norm_one(A, flags, conf);
+    break;
+  case ARMAS_NORM_TWO:
+    conf->error = ARMAS_EIMP;
+    normval = __ABSZERO;
+    break;
+  case ARMAS_NORM_INF:
+    normval = __trm_norm_inf(A, flags, conf);
+    break;
+  case ARMAS_NORM_FRB:
+    normval = __trm_norm_frb(A, flags, conf);
+    break;
+  default:
+    conf->error = ARMAS_EINVAL;
+    break;
+  }
+  return normval;
+  
+}
+#endif
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
