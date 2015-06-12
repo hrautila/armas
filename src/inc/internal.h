@@ -59,6 +59,9 @@ typedef struct cache_buffer {
   int KB;
   int NB;
   int MB;
+  // for extended precision versions
+  mdata_t *C0;
+  mdata_t *dC;
 } cache_t;
 
 // parameter block for kernel function invocation
@@ -190,6 +193,48 @@ mvec_t *__colvec(mvec_t *X, const mdata_t *A, int r, int c)
   X->md = &A->md[r + c*A->step];
   X->inc = 1;
   return X;
+}
+
+// return A[r, c];
+static inline
+DTYPE __get(const mdata_t *A, int r, int c)
+{
+  return A->md[r+c*A->step];
+}
+
+// set A[r, c] = v;
+static inline
+void __set(mdata_t *A, int r, int c, DTYPE v)
+{
+  A->md[r+c*A->step] = v;
+}
+
+// A[r, c] += v;
+static inline
+void __add(mdata_t *A, int r, int c, DTYPE v)
+{
+  A->md[r+c*A->step] += v;
+}
+
+// A[k]
+static inline
+DTYPE __get_at(mvec_t *A, int k)
+{
+    return A->md[k*A->inc];
+}
+
+// A[k] = v
+static inline
+void __set_at(mvec_t *A, int k, DTYPE v)
+{
+    A->md[k*A->inc] = v;
+}
+
+// A[k] += v
+static inline
+void __add_at(mvec_t *A, int k, DTYPE v)
+{
+    A->md[k*A->inc] += v;
 }
 
 #ifdef DEBUG
