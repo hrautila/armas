@@ -8,6 +8,10 @@
 #ifndef __DTYPE_H
 #define __DTYPE_H 1
 
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
+
 #include <math.h>
 #include <complex.h>
 
@@ -230,6 +234,31 @@ typedef double ABSTYPE;
 #define __update_ger_unb         __d_update_ger_unb
 #define __update_ger_recursive   __d_update_ger_recursive
 
+// extended precision functions
+#define __vec_axpy_ext           __d_vec_axpy_ext
+#define __vec_axpby_ext          __d_vec_axpby_ext
+#define __vec_dot_ext            __d_vec_dot_ext
+#define __vec_sum_ext            __d_vec_sum_ext
+#define __vec_asum_ext           __d_vec_asum_ext
+#define __gemv_ext_unb           __d_gemv_ext_unb
+#define __gemv_update_ext_unb    __d_gemv_update_ext_unb
+#define __symv_ext_unb           __d_symv_ext_unb
+#define __trsv_ext_unb           __d_trsv_ext_unb
+#define __trmv_ext_unb           __d_trmv_ext_unb
+#define __update_ger_ext_unb     __d_update_ger_ext_unb
+#define __update_trmv_ext_unb    __d_update_trmv_ext_unb
+#define __update2_symv_ext_unb   __d_update2_symv_ext_unb
+#define __kernel_ext_colblk_inner    __d_kernel_ext_colblk_inner
+#define __kernel_ext_panel_inner     __d_kernel_ext_panel_inner
+#define __kernel_ext_colwise_inner_no_scale  __d_kernel_ext_colwise_inner_no_scale
+#define __kernel_ext_colwise_inner_scale_c   __d_kernel_ext_colwise_inner_scale_c
+#define __kernel_ext_symm         __d_kernel_ext_symm
+#define __kernel_inner_ext        __d_kernel_inner_ext
+#define __trmm_ext_blk            __d_trmm_ext_blk
+#define __solve_ext_blk           __d_solve_ext_blk
+#define __solve_ext_unb           __d_solve_ext_unb
+#define __solve_ext               __d_solve_ext
+
 // internal matrix block routines
 #define __partition_2x1           __d_partition_2x1
 #define __repartition_2x1to3x1    __d_repartition_2x1to3x1
@@ -347,5 +376,32 @@ typedef double ABSTYPE;
 #if defined(__armas_blas1) && defined(__armas_blas2) && defined(__armas_blas3)
 #define __armas_blas 1
 #endif
+
+#if EXT_PRECISION
+
+// If <flag> expression TRUE, call <func> and return with it's return value
+#define IF_EXPR(flag, func)			\
+  do {						\
+    if (flag) {					\
+      return func;				\
+    }						\
+  } while(0)
+
+// If <flag> expression TRUE, call <func> and return with it's return value
+#define IF_EXPR2(flag, rval, func)		\
+  do {						\
+    if (flag) {					\
+      func; return rval;			\
+    }						\
+  } while(0)
+
+#else
+
+#define IF_EXPR(flag, func) 
+
+#define IF_EXPR2(flag, rval func) 
+
+#endif
+
 
 #endif  /* DTYPE_H */
