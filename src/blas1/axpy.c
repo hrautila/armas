@@ -22,6 +22,11 @@
 #include "internal.h"
 #include "matrix.h"
 
+#if EXT_PRECISION && defined(__vec_axpy_ext) && defined(__vec_axpby_vec)
+#define WITH_EXT_PREC 1
+int __vec_axpy_ext(mvec_t *Y,  const mvec_t *X, DTYPE alpha, int N);
+int __vec_axpby_ext(mvec_t *Y,  const mvec_t *X, DTYPE alpha, DTYPE beta, int N);
+#endif
 
 static inline
 void __vec_axpy(mvec_t *Y,  const mvec_t *X, DTYPE alpha, int N)
@@ -146,6 +151,11 @@ int __armas_axpy(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, arma
   const mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
   mvec_t Y       = {y->elems, (y->rows == 1 ? y->step : 1)};
 
+#if defined(WITH_EXT_PREC)
+  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
+          __vec_axpy_ext(&Y, &X, alpha, __armas_size(y)));
+#endif
+  
   __vec_axpy(&Y, &X, alpha, __armas_size(y));
   return 0;
 }
@@ -187,6 +197,11 @@ int __armas_axpby(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, DTY
   const mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
   mvec_t Y       = {y->elems, (y->rows == 1 ? y->step : 1)};
 
+#if defined(WITH_EXT_PREC)
+  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
+          __vec_axpby_ext(&Y, &X, alpha, beta, __armas_size(y)));
+#endif
+  
   __vec_axpby(&Y, &X, alpha, beta, __armas_size(y));
   return 0;
 }
