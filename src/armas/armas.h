@@ -51,7 +51,7 @@ enum armas_flags {
 
 enum armas_sort {
   ARMAS_ASC  = 1,       ///< Sort to ascending order
-  ARMSA_DESC = -1       ///< Sort to descending order
+  ARMAS_DESC = -1       ///< Sort to descending order
 };
 
 enum armas_opts {
@@ -68,7 +68,22 @@ enum armas_opts {
   ARMAS_SCHED_TWO = 0x200,      ///< scheduling in power-of-two fashion
   ARMAS_BSVD_GOLUB = 0x400,     ///< use Golub algorithm in bidiagonal SVD
   ARMAS_BSVD_DEMMEL = 0x800,    ///< use Demmel-Kahan algorithm in bidiagonal SVD
-  ARMAS_ABSTOL = 0x1000         ///< compute using absolute tolerance
+  ARMAS_ABSTOL = 0x1000,        ///< compute using absolute tolerance
+  // renamed versions
+  ARMAS_ONAIVE    = 0x1,
+  ARMAS_OKAHAN     = 0x2,
+  ARMAS_OPAIRWISE  = 0x4,
+  ARMAS_ORECURSIVE = 0x8,
+  ARMAS_OBLAS_RECURSIVE = 0x10,  ///< recursive parallel threading
+  ARMAS_OBLAS_BLOCKED = 0x20,    ///< parallel threading with variable blocksize
+  ARMAS_OBLAS_TILED = 0x40,      ///< parallel threading with fixed blocksize
+  ARMAS_OSCHED_ROUNDROBIN = 0x80,///< round-robin scheduling to workers
+  ARMAS_OSCHED_RANDOM = 0x100,   ///< scheduling to random workers
+  ARMAS_OSCHED_TWO = 0x200,      ///< scheduling in power-of-two fashion
+  ARMAS_OBSVD_GOLUB = 0x400,     ///< use Golub algorithm in bidiagonal SVD
+  ARMAS_OBSVD_DEMMEL = 0x800,    ///< use Demmel-Kahan algorithm in bidiagonal SVD
+  ARMAS_OABSTOL = 0x1000,        ///< compute using absolute tolerance
+  ARMAS_OEXTPREC = 0x2000        ///< compute using extended precission
 };
 
 /**
