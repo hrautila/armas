@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012-2014
+// Copyright (c) Harri Rautila, 2012-2015
 
 // This file is part of github.com/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -255,11 +255,6 @@ void __kernel_inner(mdata_t *C, const mdata_t *A, const mdata_t *B,
   cache_t cache;
   DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
 
-  Aa.md = Abuf;
-  Aa.step = MAX_KB;
-  Ba.md = Bbuf;
-  Ba.step = MAX_KB;
-
   if (L-S <= 0 || E-R <= 0) {
     // nothing to do, zero columns or rows
     return;
@@ -291,7 +286,7 @@ void __kernel_inner(mdata_t *C, const mdata_t *A, const mdata_t *B,
   // setup cache area
   Aa = (mdata_t){Abuf, MAX_KB};
   Ba = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Aa, &Ba, KB, NB, MB};
+  cache = (cache_t){&Aa, &Ba, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
 
   // update C using A as inner most matrix
   __kernel_colwise_inner_scale_c(C, A, B, alpha, beta, flags,
