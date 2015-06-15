@@ -1,9 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2015
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
-// any later version. See the COPYING tile included in this archive.
+// any later version. See the COPYING file included in this archive.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -279,7 +279,7 @@ void __solve_blocked(mdata_t *B, const mdata_t *A, DTYPE alpha,
   // setup cache area
   Acpy = (mdata_t){Abuf, MAX_KB};
   Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
+  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
   
   switch (flags&(ARMAS_UPPER|ARMAS_LOWER|ARMAS_RIGHT|ARMAS_TRANSA)) {
   case ARMAS_RIGHT|ARMAS_UPPER:

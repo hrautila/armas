@@ -31,30 +31,44 @@
 #include "matrix.h"
 #include "scheduler.h"
 
+#if EXT_PRECISION && defined(__solve_ext)
+extern int 
+__solve_ext(mdata_t *B, const mdata_t *A, DTYPE alpha,
+            int flags, int N, int S, int E, int KB, int NB, int MB, int optflags);
+
+#endif
+
 // ------------------------------------------------------------------------------
 
 static
 void *__compute_block(void *arg) {
   kernel_param_t *kp = (kernel_param_t *)arg;
-    switch (kp->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-    case ARMAS_SNAIVE:
-      if (kp->flags & ARMAS_RIGHT) {
-        __solve_right_unb(kp->C, kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
-      } else {
-        __solve_left_unb(kp->C, kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
-      }
-      break;
 
-    case ARMAS_RECURSIVE:
-      __solve_recursive(kp->C, kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E,
-                        kp->KB, kp->NB, kp->MB);
-      break;
+#if defined(__solve_ext)
+    // if extended precision enabled and requested
+  IF_EXPR2(kp->optflags&ARMAS_OEXTPREC, arg,
+           __solve_ext(kp->C, kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB, kp->optflags));
+#endif
 
-    default:
-      __solve_blocked(kp->C, kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E,
-                      kp->KB, kp->NB, kp->MB); 
-      break;
+  switch (kp->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
+  case ARMAS_SNAIVE:
+    if (kp->flags & ARMAS_RIGHT) {
+      __solve_right_unb(kp->C, kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
+    } else {
+      __solve_left_unb(kp->C, kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
     }
+    break;
+
+  case ARMAS_RECURSIVE:
+    __solve_recursive(kp->C, kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E,
+                      kp->KB, kp->NB, kp->MB);
+    break;
+
+  default:
+    __solve_blocked(kp->C, kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E,
+                    kp->KB, kp->NB, kp->MB); 
+    break;
+  }
   return arg;
 }
 
@@ -84,6 +98,14 @@ int __solve_trm_threaded(int blknum, int nblk,
   }
 
   if (blknum == nblk-1) {
+
+#if defined(__solve_ext)
+    // if extended precision enabled and requested
+    IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
+            __solve_ext(_B, _A, alpha, flags, A->cols, ir, ie, conf->kb, conf->nb, conf->mb, conf->optflags));
+#endif
+
+    // normal precision here
     switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
     case ARMAS_SNAIVE:
       if (flags & ARMAS_RIGHT) {
@@ -252,6 +274,14 @@ int __armas_solve_trm(__armas_dense_t *B, const __armas_dense_t *A,
 
   if (nproc == 1) {
     ie = flags & ARMAS_RIGHT ? B->rows : B->cols;
+
+#if defined(__solve_ext)
+    // if extended precision enabled and requested
+    IF_EXPR2(conf->optflags&ARMAS_OEXTPREC, 0, 
+             __solve_ext(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb, conf->optflags));
+#endif
+
+    // normal precision here
     switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
     case ARMAS_SNAIVE:
       //printf("__armas_solve_trm2 naive ...\n");

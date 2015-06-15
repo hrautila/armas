@@ -1,9 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright (c) Harri Rautila, 2012-2015
 
 // This file is part of github.com/hrautila/matops package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
-// any later version. See the COPYING tile included in this archive.
+// any later version. See the COPYING file included in this archive.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -103,7 +103,7 @@ void __kernel_symm_left(mdata_t *C, const mdata_t *A, const mdata_t *B,
   // setup cache area
   Acpy  = (mdata_t){Abuf, MAX_KB};
   Bcpy  = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
+  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
 
   flags1 = 0;
   flags2 = 0;
@@ -196,7 +196,7 @@ void __kernel_symm_right(mdata_t *C, const mdata_t *A, const mdata_t *B,
   // setup cache area
   Acpy  = (mdata_t){Abuf, MAX_KB};
   Bcpy  = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
+  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
 
   flags1 = 0;
   flags2 = 0;

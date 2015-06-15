@@ -30,6 +30,10 @@
 //#include "mvec_nosimd.h"
 #include "scheduler.h"
 
+#if EXT_PRECISION && defined(__trmm_ext_blk)
+extern void __trmm_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
+                           int N, int S, int E, int KB, int NB, int MB);
+#endif
 
 // Functions here implement various versions of TRMM operation.
 
@@ -79,6 +83,14 @@ int __mult_trm_threaded(int blknum, int nblk,
   }
 
   if (blknum == nblk-1) {
+
+#if defined(__trmm_ext_blk)
+    // if extended precision enabled and requested
+    IF_EXPR2(conf->optflags&ARMAS_OEXTPREC, 0, 
+             __trmm_ext_blk(_B, _A, alpha, flags, A->cols, ir, ie, conf->kb, conf->nb, conf->mb));
+#endif
+
+    // normal precision
     switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
     case ARMAS_SNAIVE:
       __trmm_unb(_B, _A, alpha, flags, A->cols, ir, ie);
@@ -238,6 +250,14 @@ int __armas_mult_trm(__armas_dense_t *B, const __armas_dense_t *A,
 
   if (nproc == 1) {
     ie = flags & ARMAS_RIGHT ? B->rows : B->cols;
+
+#if defined(__trmm_ext_blk)
+    // if extended precision enabled and requested
+    IF_EXPR2(conf->optflags&ARMAS_OEXTPREC, 0, 
+             __trmm_ext_blk(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb));
+#endif
+
+    // normal precision here
     switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
     case ARMAS_SNAIVE:
       __trmm_unb(_B, _A, alpha, flags, A->cols, 0, ie);
