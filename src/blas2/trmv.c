@@ -3,7 +3,7 @@
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
-// any later version. See the COPYING tile included in this archive.
+// any later version. See the COPYING file included in this archive.
 
 #include <stdio.h>
 #include <stdint.h>
@@ -25,6 +25,11 @@
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
+
+#if EXT_PRECISION && defined(__trmv_ext_unb)
+#define WITH_EXT_PREC 1
+extern int __trmv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N);
+#endif
 
 /*
  *  LEFT-UPPER
@@ -280,6 +285,12 @@ int __armas_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A,
   x = (mvec_t){X->elems, (X->rows == 1 ? X->step : 1)};
   A0 = (mdata_t){A->elems, A->step};
 
+#if defined(WITH_EXT_PREC)
+  // if extended precision enabled and requested
+  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
+          __trmv_ext_unb(&x, &A0, alpha, flags, nx));
+#endif
+  // normal precision here
   switch (conf->optflags) {
   case ARMAS_RECURSIVE:
     switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {

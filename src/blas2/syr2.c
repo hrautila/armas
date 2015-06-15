@@ -28,6 +28,11 @@
 #include "matrix.h"
 #include "mvec_nosimd.h"
 
+#if EXT_PRECISION && defined(__update2_symv_ext_unb)
+#define WITH_EXT_PREC 1
+extern int __update2_symv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
+                                  DTYPE alpha, int flags, int N);
+#endif
 
 static
 void __update_syr2_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
@@ -134,6 +139,13 @@ int __armas_mvupdate2_sym(__armas_dense_t *A,
   y = (mvec_t){Y->elems, (Y->rows == 1 ? Y->step : 1)};
   A0 = (mdata_t){A->elems, A->step};
 
+#if defined(WITH_EXT_PREC)
+  // if extended precision enable and requested
+  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
+          __update2_symv_ext_unb(&A0, &x, &y, alpha, flags, nx));
+#endif
+
+  // default precision here
   switch (conf->optflags) {
   case ARMAS_RECURSIVE:
     __update_syr2_recursive(&A0, &x, &y, alpha, flags, nx);

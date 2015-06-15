@@ -31,6 +31,11 @@
 #include "matrix.h"
 #include "mvec_nosimd.h"
 
+#if EXT_PRECISION && defined(__symv_ext_unb)
+#define WITH_EXT_PREC 1
+extern int __symv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
+                          DTYPE alpha, DTYPE beta, int flags, int N);
+#endif
 
 /*
  * Objective: read matrix A in memory order, along columns.
@@ -213,6 +218,12 @@ int __armas_mvmult_sym(__armas_dense_t *Y, const __armas_dense_t *A, const __arm
   y = (mvec_t){Y->elems, (Y->rows == 1 ? Y->step : 1)};
   A0 = (mdata_t){A->elems, A->step};
 
+#if defined(WITH_EXT_PREC)
+  // if extended precision enabled and requested
+  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
+          __symv_ext_unb(&y, &A0, &x, alpha, beta, flags, nx));          
+#endif
+  // normal precision here
   if (beta != 1.0) {
     __armas_scale(Y, beta, conf);
   }
