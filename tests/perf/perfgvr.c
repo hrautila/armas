@@ -26,6 +26,16 @@ void gvright(armas_d_dense_t *A, double c, double s, int c1, int c2, int row, in
     }
 }
 
+int test_gvright(armas_d_dense_t *A, double c, double s)
+{
+  int k;
+  for (k = 0; k < A->cols-1; k++) {
+    gvright(A, c, s, k, k+1, 0, A->rows);
+  }
+  return 0;
+}
+
+#ifdef __AVX__
 static inline
 void gvright_avx(armas_d_dense_t *A, double c, double s, int c1, int c2, int row, int nrow)
 {
@@ -62,23 +72,21 @@ void gvright_avx(armas_d_dense_t *A, double c, double s, int c1, int c2, int row
         y0[k] = t0;
     }
 }
+#endif
 
-int test_gvright(armas_d_dense_t *A, double c, double s)
-{
-  int k;
-  for (k = 0; k < A->cols-1; k++) {
-    gvright(A, c, s, k, k+1, 0, A->rows);
-  }
-  return 0;
-}
 
 int test_gvright_avx(armas_d_dense_t *A, double c, double s)
 {
+#ifdef __AVX__
   int k;
   for (k = 0; k < A->cols-1; k++) {
     gvright_avx(A, c, s, k, k+1, 0, A->rows);
   }
   return 0;
+#else
+  printf("AVX instruction set not supported.\n");
+  return 0;
+#endif
 }
 
 // ------------------------------------------------------------------------------
@@ -107,6 +115,7 @@ int test_gvleft(armas_d_dense_t *A, double c, double s)
   return 0;
 }
 
+#ifdef __AVX__
 void gvleft_avx(armas_d_dense_t *A, double c, double s, int r1, int r2, int col, int ncol)
 {
     register __m256d V0, V1, V2, V3, T0, T1, T2, T3, X0, X1, X2, X3, COS, SIN, Z;
@@ -149,15 +158,22 @@ void gvleft_avx(armas_d_dense_t *A, double c, double s, int r1, int r2, int col,
         y0[n0] = t0;
     }
 }
+#endif
 
 int test_gvleft_avx(armas_d_dense_t *A, double c, double s)
 {
+#ifdef __AVX__
   int k;
   for (k = 0; k < A->rows-1; k++) {
     gvleft_avx(A, c, s, k, k+1, 0, A->cols);
   }
   return 0;
+#else
+  printf("AVX instruction set not supported.\n");
+  return 0;
+#endif
 }
+
 // ------------------------------------------------------------------------------
 
 main(int argc, char **argv) {

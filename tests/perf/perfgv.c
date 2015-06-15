@@ -43,6 +43,7 @@ void gvrotg(double *c, double *s, double *r, double a, double b)
     }
 }
 
+#ifdef __AVX__
 void gvrotg_avx(double *c, double *s, double *r, double a, double b)
 {
     register __m256d x0, x1, t0, t2, u0, u1, one, b0, b1;
@@ -89,6 +90,7 @@ void gvrotg_avx(double *c, double *s, double *r, double a, double b)
       *s = b1[1];
     }
 }
+#endif
 
 void gvrotg_fma(double *c, double *s, double *r, double a, double b)
 {
@@ -140,6 +142,7 @@ void gvrotg_fma(double *c, double *s, double *r, double a, double b)
 
 int test_gvcomp_avx(double a, double b, long N)
 {
+#if defined(__AVX__)
   double c, s, r, t0;
   long k;
 
@@ -147,6 +150,10 @@ int test_gvcomp_avx(double a, double b, long N)
     gvrotg_avx(&c, &s, &r, a, b);
   }
   return (c > 0.0 && s > 0.0 && r > 0.0) ? 1 : 0;
+#else
+  printf("AVX instruction set not supported...\n");
+  return 0;
+#endif
 }
 
 int test_gvcomp_fma(double a, double b, long N)
