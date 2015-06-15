@@ -143,6 +143,13 @@ DTYPE __MAX(DTYPE a, DTYPE b) {
 #define __update_qr_left        __d_update_qr_left
 #define __update_qr_right       __d_update_qr_right
 #define __unblk_qr_reflector    __d_unblk_qr_reflector
+#define __unblk_qrfactor        __d_unblk_qrfactor
+
+// QRT functions
+#define __armas_qrtfactor       armas_d_qrtfactor
+#define __armas_qrtfactor_work  armas_d_qrtfactor_work
+#define __armas_qrtmult         armas_d_qrtmult
+#define __armas_qrtmult_work    armas_d_qrtmult_work
 
 // RQ functions
 #define __armas_rqbuild         armas_d_rqbuild
@@ -183,6 +190,7 @@ DTYPE __MAX(DTYPE a, DTYPE b) {
 // Bidiagonal SVD
 #define __armas_bdsvd           armas_d_bdsvd
 #define __armas_bdsvd_work      armas_d_bdsvd_work
+#define __armas_dqds            armas_d_dqds
 
 // internal 
 #define __bdsvd2x2              __d_bdsvd2x2
@@ -211,6 +219,7 @@ DTYPE __MAX(DTYPE a, DTYPE b) {
 #define __armas_discriminant    armas_d_discriminant
 #define __armas_mult_diag       armas_d_mult_diag
 #define __armas_solve_diag      armas_d_solve_diag
+#define __armas_scale_to        armas_d_scale_to
 
 #endif /* FLOAT64 */
 
