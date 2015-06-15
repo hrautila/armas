@@ -21,6 +21,8 @@ extern int __armas_scale_plus(__armas_dense_t *A, const __armas_dense_t *B,
                               DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
 extern ABSTYPE __armas_mnorm(const __armas_dense_t *A, int norm, armas_conf_t *conf);
 
+extern int     __armas_scale_to(__armas_dense_t *A, DTYPE from, DTYPE to, int flags, armas_conf_t *conf);
+
 // Blas level 1 functions
 extern int     __armas_iamax(const __armas_dense_t *X, armas_conf_t *conf);
 extern ABSTYPE __armas_amax(const __armas_dense_t *X, armas_conf_t *conf);
@@ -36,6 +38,7 @@ extern DTYPE   __armas_sum(const __armas_dense_t *X, armas_conf_t *conf);
 extern int     __armas_scale(const __armas_dense_t *X, const DTYPE alpha, armas_conf_t *conf);
 extern int     __armas_invscale(const __armas_dense_t *X, const DTYPE alpha, armas_conf_t *conf);
 extern int     __armas_add(const __armas_dense_t *X, const DTYPE alpha, armas_conf_t *conf);
+
 
 // Blas level 2 functions
 extern int __armas_mvmult(__armas_dense_t *Y,
@@ -172,6 +175,9 @@ extern int __armas_qrfactor_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_qrmult_work(__armas_dense_t *C, int flags, armas_conf_t *conf);
 extern int __armas_qrsolve_work(__armas_dense_t *B, armas_conf_t *conf);
 
+extern int __armas_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W, armas_conf_t *conf);
+extern int __armas_qrtmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *T,
+			   __armas_dense_t *W, int flags, armas_conf_t *conf);
 
 // RQ functions
 extern int __armas_rqbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
@@ -227,6 +233,9 @@ extern int __armas_bdsvd_work(__armas_dense_t *D, armas_conf_t *conf);
 extern int __armas_svd(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V, __armas_dense_t *A,
                        __armas_dense_t *W, int flags, armas_conf_t *conf);
 extern int __armas_svd_work(__armas_dense_t *D, int flags, armas_conf_t *conf);
+
+  // DQDS
+extern int __armas_dqds(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *W, armas_conf_t *conf);
 
 // additional
 extern int __armas_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c);
