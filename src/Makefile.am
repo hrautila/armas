@@ -61,6 +61,11 @@ BLAS1 = \
 	blas1/scal.c \
 	blas1/swap.c
 
+XBLAS1 = \
+	blas1/asum_ext.c \
+	blas1/dot_ext.c \
+	blas1/axpy_ext.c
+
 BLAS2 = \
 	blas2/gemv.c \
 	blas2/symv.c \
@@ -70,6 +75,13 @@ BLAS2 = \
 	blas2/trmv.c \
 	blas2/trsv.c \
 	blas2/updtrmv.c 
+
+XBLAS2 = \
+	blas2/gemv_ext.c \
+	blas2/symv_ext.c \
+	blas2/trsv_ext.c \
+	blas2/trmv_ext.c \
+	blas2/update_ext.c
 
 BLAS3 = \
 	blas3/gemm.c \
@@ -86,7 +98,15 @@ BLAS3 = \
 	blas3/trsm_unb.c \
 	blas3/updtrmm.c
 
+XBLAS3 = \
+	blas3/kernel_ext.c \
+	blas3/symm_ext.c \
+	blas3/trmm_ext.c \
+	blas3/trsm_ext.c
+
 LAPACK = \
+	lapack/dqds.c \
+	lapack/qrt.c \
 	lapack/evd.c \
 	lapack/svd.c \
 	lapack/trdsec.c \
@@ -142,7 +162,7 @@ COMPAT = \
 	compat/symm.c \
 	compat/potrf.c 
 
-noinst_LTLIBRARIES = libd.la libz.la libx.la libdcompat.la
+noinst_LTLIBRARIES = libd.la libz.la libx.la libdext.la libdcompat.la
 
 # common to all 
 libx_la_SOURCES = $(COMMON)
@@ -150,6 +170,10 @@ libx_la_SOURCES = $(COMMON)
 # double precision
 libd_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
 libd_la_CPPFLAGS = -DFLOAT64 -DWITH_AVX
+
+# extended precision
+libdext_la_SOURCES = $(XBLAS1) $(XBLAS2) $(XBLAS3)
+libdext_la_CPPFLAGS = -DFLOAT64 -DWITH_AVX
 
 # double precision compability
 libdcompat_la_SOURCES = $(COMPAT)
@@ -160,8 +184,9 @@ libz_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2)
 libz_la_CPPFLAGS = -DCOMPLEX128
 
 lib_LTLIBRARIES = libarmasd.la libarmasz.la
+
 libarmasd_la_SOURCES = 
-libarmasd_la_LIBADD = libx.la libd.la libdcompat.la
+libarmasd_la_LIBADD = libx.la libd.la libdext.la libdcompat.la
 
 libarmasz_la_SOURCES = 
 libarmasz_la_LIBADD = libx.la libz.la
