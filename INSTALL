@@ -21,9 +21,25 @@ Another Rewrite of Matrix Algebra Subroutines
    $ make
    $ sudo make install
 
-   Manual installation is something like following 
+## Configuration options
 
-   $ cd src
-   $ make -f makefile.test all
-   $ cp .lib/libarmasd.a /usr/local/lib
-   $ cp -a armas /usr/local/include
+   --enable-threads         
+        Multi-threaded version. Enabled by default, requires linux/futex.h and pthreads.h
+   --enable-ext-precision   
+        Extended precison BLAS functionality. Enabled by default
+   --enable-float32         
+        Compile single precision version, disabled by default. Not tested
+   --enable-float64
+        Compile double precision version, enabled by default. Tested.
+   --enable-complex64
+        Compile single precision complex version, disabled by default. Not tested
+   --enable-complex128
+        Compile double precision complex version, disabled by default. Not tested
+
+## SIMD optimizations
+
+   SIMD accelerated versions of internal kernel functions exist for Intel SSE, AVX and FMA
+   instruction sets. These exist only for double precision real versions. Currently these are
+   automatically enabled when library is compiled (GCC option -march=native)
+   
+   
