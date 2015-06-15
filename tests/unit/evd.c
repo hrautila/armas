@@ -50,7 +50,8 @@ int test_1(int N, int flags, int verbose)
         printf("A - V*D*V.T:\n"); armas_d_printf(stdout, "%6.3f", &A0);
     }        
     n1 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
-    ok = isOK(n1, 10*N);
+    // OK if average element error less than multiple of EPSILON
+    ok = isOK(n1/N, N);
 
     printf("%s [N=%d, uplo='%s']: A == V*D*V.T\n", PASS(ok), N, uplo);
     if (verbose > 0) {
