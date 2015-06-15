@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2015
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -112,7 +112,7 @@ void __rank_blk(mdata_t *C, const mdata_t *A,
   // setup cache area
   Acpy = (mdata_t){Abuf, MAX_KB};
   Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
+  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
 
   if (flags & ARMAS_TRANSA) {
     for (i = S; i < E; i += NB) {

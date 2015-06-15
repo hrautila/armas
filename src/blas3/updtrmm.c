@@ -1,9 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2015
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
-// any later version. See the COPYING tile included in this archive.
+// any later version. See the COPYING file included in this archive.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -117,7 +117,7 @@ void __update_trm_naive(mdata_t *C, const mdata_t *A, const mdata_t *B,
   // setup cache area
   Acpy = (mdata_t){Abuf, MAX_KB};
   Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
+  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
 
   __update_trm_diag(C, A, B, alpha, beta, flags, P, L-S, E-R, &cache);
 }
@@ -261,7 +261,7 @@ void __update_trm_recursive(mdata_t *C, const mdata_t *A, const mdata_t *B,
   // setup cache area
   Acpy = (mdata_t){Abuf, MAX_KB};
   Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
+  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
 
   if (flags & ARMAS_UPPER) {
     __update_upper_recursive(C, A, B, alpha, beta, flags, P, L-S, E-R, &cache);
@@ -324,7 +324,7 @@ void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
   // setup cache area
   Acpy = (mdata_t){Abuf, MAX_KB};
   Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
+  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
 
   if ( S != R && (S <= E || R <= L)) {
     // inconsistent update configuration

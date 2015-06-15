@@ -79,7 +79,7 @@ void __rank2_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
   // setup cache area
   Acpy = (mdata_t){Abuf, MAX_KB};
   Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
+  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
 
   if (flags & ARMAS_TRANSA) {
     //   C = alpha*A.T*B + alpha*B.T*A + beta*C 
