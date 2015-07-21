@@ -20,7 +20,7 @@ static inline int min(int a, int b)
 }
 
 #define FLUSH_SIZE 2048*2048
-void flush() {
+double flush() {
   static double *data = (double *)0;
   int i;
   double t = 0.0;
@@ -37,6 +37,7 @@ void flush() {
   if (t < 10.0) {
     t = 0.0;
   }
+  return t;
 }
 
 double time_msec() {
@@ -84,6 +85,23 @@ double unitrand(int i, int j) {
   return drand48();
 }
 
+// std random variable from unit random with box-muller transformation
+double stdrand(int i, int j)
+{ 
+  double s, u, v;
+  static int init = 0;
+  if (!init) {
+    srand48((long)time(0));
+    init = 1;
+  }
+  do {
+    u = 2.0*drand48() - 1.0;
+    v = 2.0*drand48() - 1.0;
+    s = u*u + v*v;
+  } while (s == 0.0 || s >= 1.0);
+  return u * sqrt(-2.0*log(s)/s);
+}
+
 int isOK(double nrm, int N)
 {
   int nk = (int64_t)(fabs(nrm/DBL_EPSILON));
@@ -108,6 +126,23 @@ int in_tolerance(double a, double b)
     printf("a=%.7f b=%.7f, df= %.3e, ref=%.3e\n", a, b, df, ref);
   }
   return df <= ref;
+}
+
+// Compute relative error: ||computed - expected||/||expected||
+// Returns norm ||computed - exptected|| in dnorm. 
+// Note: contents of computed is destroyed.
+double rel_error(double *dnorm, armas_d_dense_t *computed,
+		 armas_d_dense_t *expected, int norm, int flags, armas_conf_t *conf)
+{
+    double cnrm, enrm;
+    // computed = computed - expected
+    armas_d_scale_plus(computed, expected, 1.0, -1.0, flags, conf);
+    // ||computed - expected||
+    cnrm = armas_d_mnorm(computed, norm, conf);
+    *dnorm = cnrm;
+    // ||expected||
+    enrm = armas_d_mnorm(expected, norm, conf);
+    return cnrm/enrm;
 }
 
 // search from top-left
