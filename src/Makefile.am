@@ -10,10 +10,13 @@ noinst_HEADERS = \
 	inc/internal.h \
 	inc/internal_lapack.h \
 	inc/scheduler.h \
+	inc/eft.h \
+	inc/eft_x86_64.h \
 	inc/sync.h \
 	inc/chan.h \
 	inc/compat.h \
 	inc/kernel.h \
+	inc/kernel_ext.h \
 	inc/matrix.h \
 	inc/mult.h \
 	inc/mult_nosimd.h \
@@ -31,7 +34,9 @@ noinst_HEADERS = \
 	inc/mult_fma_f32.h \
 	inc/mult_sse_c128.h \
 	inc/mult_sse_c64.h \
-	inc/mult_sse_f32.h 
+	inc/mult_sse_f32.h \
+	inc/mult_ext_avx_f64.h \
+	inc/mult_ext_nosimd.h
 
 
 COMMON = \
@@ -40,7 +45,6 @@ COMMON = \
 	core/pivot_ext.c
 
 CORE = \
-	core/kernel.c \
 	core/matrix.c \
 	core/matrix_ext.c \
 	core/mnorm.c \
@@ -84,6 +88,7 @@ XBLAS2 = \
 	blas2/update_ext.c
 
 BLAS3 = \
+	blas3/kernel.c \
 	blas3/gemm.c \
 	blas3/symm.c \
 	blas3/syr2k.c \
@@ -162,44 +167,92 @@ COMPAT = \
 	compat/symm.c \
 	compat/potrf.c 
 
-noinst_LTLIBRARIES = libd.la libz.la libx.la libdext.la libdcompat.la
+##noinst_LTLIBRARIES = libd.la libz.la libx.la libdext.la libdcompat.la
+noinst_LTLIBRARIES = 
 
 # common to all 
+lib_LTLIBRARIES = 
+
 libx_la_SOURCES = $(COMMON)
+BUILT_SOURCES =
+
+## ----------------- double precission -------------------------
+if ENABLE_FLOAT64
+
+lib_LTLIBRARIES += libarmasd.la
+noinst_LTLIBRARIES += libd.la 
+libarmasd_la_SOURCES = 
+libarmasd_la_LIBADD = libx.la libd.la
+
 
 # double precision
 libd_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
 libd_la_CPPFLAGS = -DFLOAT64 -DWITH_AVX
 
+if ENABLE_EXT_PRECISION
 # extended precision
 libdext_la_SOURCES = $(XBLAS1) $(XBLAS2) $(XBLAS3)
 libdext_la_CPPFLAGS = -DFLOAT64 -DWITH_AVX
+noinst_LTLIBRARIES += libdext.la
+libarmasd_la_LIBADD += libdext.la
+endif
 
 # double precision compability
 libdcompat_la_SOURCES = $(COMPAT)
 libdcompat_la_CPPFLAGS = -DFLOAT64 -DCOMPAT
+noinst_LTLIBRARIES += libdcompat.la
+libarmasd_la_LIBADD += libdcompat.la
+
+BUILT_SOURCES += armas/dmatrix.h armas/linalgd.h
+
+endif
+
+## ----------------- single precission -------------------------
+if ENABLE_FLOAT32
+noinst_LTLIBRARIES += libs.la 
+
+# double precision
+libs_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3)
+libs_la_CPPFLAGS = -DFLOAT32 -DWITH_AVX
+
+endif
+
+
+## ----------------- complex double precission -------------------------
+if ENABLE_COMPLEX128
+
+noinst_LTLIBRARIES += libx.la libz.la
+lib_LTLIBRARIES += libarmasz.la
 
 # complex support
 libz_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2)
 libz_la_CPPFLAGS = -DCOMPLEX128
 
-lib_LTLIBRARIES = libarmasd.la libarmasz.la
-
-libarmasd_la_SOURCES = 
-libarmasd_la_LIBADD = libx.la libd.la libdext.la libdcompat.la
-
 libarmasz_la_SOURCES = 
 libarmasz_la_LIBADD = libx.la libz.la
 
 
-BUILT_SOURCES = armas/dmatrix.h armas/zmatrix.h armas/linalgd.h
-CLEANFILES = armas/dmatrix.h armas/zmatrix.h armas/linalgd.h
+BUILT_SOURCES += armas/zmatrix.h armas/libalgz.h
+
+endif
+
+nobase_include_HEADERS = $(BUILT_SOURCES)
+
+CLEANFILES = $(BUILT_SOURCES)
 
 armas/dmatrix.h: inc/matrix.h
 	sed 's/__armas_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
 
 armas/linalgd.h: inc/linalg.h
 	sed 's/__armas_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s:"matrix.h":<armas/dmatrix.h>:;s/_LINALG_/_LINALGD_/;' $< > $@
+
+
+armas/smatrix.h: inc/matrix.h
+	sed 's/__armas_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
+
+armas/linalgs.h: inc/linalg.h
+	sed 's/__armas_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s:"matrix.h":<armas/smatrix.h>:;s/_LINALG_/_LINALGD_/;' $< > $@
+
 
 # comples types
 
