@@ -29,7 +29,8 @@
 #include "matrix.h"
 #include "mvec_nosimd.h"
 
-#if EXT_PRECISION
+#if EXT_PRECISION && defined(__update_trmv_ext_unb)
+#define WITH_EXT_PREC 1
 extern int __update_trmv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
                                  DTYPE alpha, int flags, int N, int M);
 #endif
@@ -177,7 +178,7 @@ int __armas_mvupdate_trm(__armas_dense_t *A,
   y = (mvec_t){Y->elems, (Y->rows == 1 ? Y->step : 1)};
   A0 = (mdata_t){A->elems, A->step};
 
-#if defined(__update_trmv_ext_unb)
+#if defined(WITH_EXT_PREC)
   // if extended precision enabled and requested
   IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
           __update_trmv_ext_unb(&A0, &x, &y, alpha, flags, ny, nx));
