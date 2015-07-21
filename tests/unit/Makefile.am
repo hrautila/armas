@@ -1,6 +1,6 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -I../ -I../../src
+AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -I../ -I../../src -I../../src/inc
 
 LDADD = ../../src/libarmasd.la
 
@@ -17,7 +17,20 @@ LAPACK =  \
 	qlfact qlbld qlmult \
 	rqfact rqbld rqmult
 
-check_PROGRAMS = $(DOUBLE) $(LAPACK)
+if HAVE_GMP_MPFR
+EXT = ext_gemm ext_trmm ext_trsm
+
+# EXT PRECISION
+ext_gemm_SOURCES = ext_gemm.c ../helper.c ext_prec.c
+ext_gemm_LDFLAGS = -lmpfr -lgmp
+ext_trmm_SOURCES = ext_trmm.c ../helper.c ext_prec.c
+ext_trmm_LDFLAGS = -lmpfr -lgmp
+ext_trsm_SOURCES = ext_trsm.c ../helper.c ext_prec.c
+ext_trsm_LDFLAGS = -lmpfr -lgmp
+endif
+
+
+check_PROGRAMS = $(DOUBLE) $(LAPACK) $(EXT)
 
 # BLAS
 dgemm_SOURCES  = gemm.c ../helper.c
@@ -31,6 +44,7 @@ dger_SOURCES   = ger.c ../helper.c
 dtrmv_SOURCES  = trmv.c ../helper.c
 dtrsv_SOURCES  = trsv.c ../helper.c
 diag_SOURCES   = diag.c ../helper.c
+
 
 ## LAPACK
 evd_SOURCES    = evd.c ../helper.c
