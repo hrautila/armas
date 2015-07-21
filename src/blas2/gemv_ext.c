@@ -89,7 +89,7 @@ int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  * If sign is non-zero computes Y + dY = Y + dY - A*x, otherwise Y + dY = Y + dY + A*x
  */
 int __gemv_update_ext_unb(mvec_t *Y, mvec_t *dY, const mdata_t *A, const mvec_t *X,
-                          int sign, int flags, int nX, int nY)
+                          int flags, int nX, int nY)
 {
     int i, j;
     DTYPE y0, c0, s0, x0, p0;
@@ -99,46 +99,30 @@ int __gemv_update_ext_unb(mvec_t *Y, mvec_t *dY, const mdata_t *A, const mvec_t 
     if (flags & ARMAS_TRANS) {
         // here were proceed matrix A column wise and elements are close to each other
         for (i = 0; i < nY; i++) {
-            y0 = Y->md[i*Y->inc];
-            s0 = dY->md[i*dY->inc];
-            if (sign) {
-                // we will compute -Y + A*x
-                y0 = -y0; s0 = -s0;
-            }
+            y0 = __get_at(Y, i);
+            s0 = __get_at(dY, i);
             for (j = 0; j < nX; j++) {
-                twoprod(&x0, &p0, A->md[j+(i+0)*A->step], X->md[j*X->inc]);
+                twoprod(&x0, &p0, __get(A, j, i), __get_at(X, j));
                 twosum(&y0, &c0, y0, x0);
                 s0 += c0 + p0;
             }
-            if (sign) {
-                // negate to get Y - A*x
-                y0 = -y0; s0 = -s0;
-            }
-            Y->md[(i+0)*Y->inc] = y0;
-            dY->md[i*dY->inc] = s0;
+            __set_at(Y,  i, y0);
+            __set_at(dY, i, s0);
         }
         return 0;
     }
 
     // A not transposed; here were proceed matrix A rowwise and elements are at distance
     for (i = 0; i < nY; i++) {
-        y0 = Y->md[i*Y->inc];
-        s0 = dY->md[i*dY->inc];
-        if (sign) {
-            // we will compute -Y + A*x
-            y0 = -y0; s0 = -s0;
-        }
+        y0 = __get_at(Y, i);
+        s0 = __get_at(dY, i);
         for (j = 0; j < nX; j++) {
-            twoprod(&x0, &p0, A->md[(i+0)+j*A->step], X->md[j*X->inc]);
+            twoprod(&x0, &p0, __get(A, i, j), __get_at(X, j));
             twosum(&y0, &c0, y0, x0);
             s0 += c0 + p0;
         }
-        if (sign) {
-            // negate to get Y - A*x
-            y0 = -y0; s0 = -s0;
-        }
-        Y->md[(i+0)*Y->inc] = y0;
-        dY->md[i*dY->inc] = s0;
+        __set_at(Y,  i, y0);
+        __set_at(dY, i, s0);
     }
     return 0;
 }
