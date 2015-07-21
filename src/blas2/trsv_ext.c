@@ -265,10 +265,20 @@ void __trsv_ext_unb_lut(mvec_t *X, mvec_t *dX, const mdata_t *Ac, DTYPE alpha, i
 
 int __trsv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N)
 {
-    DTYPE dbuf[MAX_EPREC_IBUF];
+    DTYPE dbuf[MAX_NB];
+    DTYPE *dp = (DTYPE *)0;
     mvec_t dX = (mvec_t){dbuf, 1};
     int unit = flags & ARMAS_UNIT ? 1 : 0;
-    int nD = sizeof(dbuf)/sizeof(DTYPE);
+    int nD = MAX_NB;
+
+    if (N > MAX_NB) {
+      dp = calloc(N, sizeof(DTYPE));
+      if (!dp)
+        return -1;
+      dX.md = dp;
+    } else {
+      memset(dbuf, 0, sizeof(dbuf));
+    }
 
     switch (flags & (ARMAS_TRANS|ARMAS_UPPER|ARMAS_LOWER)){
     case ARMAS_UPPER|ARMAS_TRANS:
@@ -285,6 +295,8 @@ int __trsv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N)
         __trsv_ext_unb_ll(X, &dX, A, alpha, unit, N, nD);
         break;
     }
+    if (dp)
+      free(dp);
     return 0;
 }
 
