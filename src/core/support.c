@@ -105,6 +105,9 @@ void armas_parse_scheduling(char *str, cpu_set_t *cpus, armas_conf_t *conf)
   long nproc = sysconf(_SC_NPROCESSORS_ONLN);;
   unsigned long bits;
 
+  if (!str)
+    return;
+
   // starts with alp
   if (isalpha(*str)) {
     switch (toupper(*str)) {
