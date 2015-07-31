@@ -2,6 +2,8 @@
 #ifndef __TEST_HELPER_H
 #define __TEST_HELPER_H
 
+#include <math.h>
+
 extern double zero(int i, int j);
 extern double one(int i, int j);
 extern double zeromean(int i, int j);
@@ -24,6 +26,10 @@ extern void matrix_printf(FILE *out, const char *efmt, const armas_d_dense_t *m,
 
 #define PASS(exp) ((exp) ? "PASS" : "FAIL")
 
+static inline int ndigits(double err)
+{
+  return err != 0.0 ? (int)(ceil(log10(1.0/err))) : -1;
+}
 static inline int imin(int a, int b)
 {
   return a < b ? a : b;
