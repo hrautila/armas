@@ -218,7 +218,7 @@ void __add(mdata_t *A, int r, int c, DTYPE v)
 
 // A[k]
 static inline
-DTYPE __get_at(mvec_t *A, int k)
+DTYPE __get_at(const mvec_t *A, int k)
 {
     return A->md[k*A->inc];
 }
