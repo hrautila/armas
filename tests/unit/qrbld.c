@@ -20,7 +20,7 @@ int test_qrbuild(int M, int N, int K, int lb, int verbose)
 {
   char ct = N == K ? 'N' : 'K';
   armas_d_dense_t A0, A1, C0, tau0, W;
-  int wsize;
+  int wsize, ok;
   double n0, n1;
   int wchange = lb > 8 ? 2*M : 0;
   armas_conf_t conf = *armas_conf_default();
@@ -55,20 +55,18 @@ int test_qrbuild(int M, int N, int K, int lb, int verbose)
     printf("  blk.Q(qr(A)):\n"); armas_d_printf(stdout, "%9.2e", &A1);
   }
 
-  // A1 = A1 - A0
-  armas_d_scale_plus(&A1, &A0, 1.0, -1.0, ARMAS_NONE, &conf);
-  n0 = armas_d_mnorm(&A1, ARMAS_NORM_ONE, &conf);
-
-  printf("%s: unblk.Q(qr(A),%c) == blk.Q(qr(A),%c)\n", PASS(isOK(n0, N)), ct, ct);
+  n0 = rel_error((double *)0, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isOK(n0, N);
+  printf("%s: unblk.Q(qr(A),%c) == blk.Q(qr(A),%c)\n", PASS(ok), ct, ct);
   if (verbose > 0) {
-    printf("  || error ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
+    printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
 
   armas_d_release(&A0);
   armas_d_release(&A1);
   armas_d_release(&tau0);
 
-  return isOK(n0, N);
+  return ok;
 }
 
 /*  -----------------------------------------------------------------------------------
@@ -79,14 +77,18 @@ int test_qrbuild_identity(int M, int N, int K, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
   char ct = N == K ? 'N' : 'K';
-  armas_d_dense_t A0, C0, tau0, D, W;
-  int wsize;
+  armas_d_dense_t A0, C0, C1, tau0, D, W;
+  int wsize, ok;
   double n0, n1;
   armas_conf_t conf = *armas_conf_default();
   
   armas_d_init(&A0, M, N);
   armas_d_init(&C0, N, N);
+  armas_d_init(&C1, N, N);
   armas_d_init(&tau0, imin(M, N), 1);
+  armas_d_set_values(&C1, zero, ARMAS_ANY);
+  armas_d_diag(&D, &C1, 0);
+  armas_d_add(&D, 1.0, &conf);
 
   // set source data
   armas_d_set_values(&A0, unitrand, ARMAS_ANY);
@@ -104,22 +106,21 @@ int test_qrbuild_identity(int M, int N, int K, int lb, int verbose)
   conf.lb = lb;
   armas_d_qrbuild(&A0, &tau0, &W, K, &conf);
 
-  // C0 = Q.T*Q - I
+  // C0 = Q.T*Q 
   armas_d_mult(&C0, &A0, &A0, 1.0, 0.0, ARMAS_TRANSA, &conf);
-  armas_d_diag(&D, &C0, 0);
-  armas_d_add(&D, -1.0, &conf);
 
-  n0 = armas_d_mnorm(&C0, ARMAS_NORM_ONE, &conf);
-
-  printf("%s: %s Q(qr(A),%c).T * Q(qr(A),%c) == I\n", PASS(isOK(n0, N)), blk, ct, ct);
+  n0 = rel_error((double *)0, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isOK(n0, N);
+  printf("%s: %s Q(qr(A),%c).T * Q(qr(A),%c) == I\n", PASS(ok), blk, ct, ct);
   if (verbose > 0) {
-    printf("  || error ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
+    printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
   armas_d_release(&A0);
   armas_d_release(&C0);
+  armas_d_release(&C1);
   armas_d_release(&tau0);
 
-  return isOK(n0, N);
+  return ok;
 }
 
 main(int argc, char **argv)

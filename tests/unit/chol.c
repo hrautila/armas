@@ -17,8 +17,9 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   armas_d_dense_t B0, X0;
   armas_conf_t conf = *armas_conf_default();
   int ok;
-  double nrm;
+  double nrm, nrm0;
   char *uplo = flags & ARMAS_UPPER ? "Upper" : "Lower";
+  char *blk = lb != 0 ? "  blk" : "unblk";
 
   armas_d_init(&A0, N, N);
   armas_d_init(&A1, N, N);
@@ -31,6 +32,7 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   armas_d_mcopy(&A0, &A1);
 
   armas_d_set_values(&B0, unitrand, ARMAS_ANY);
+  nrm0 = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
   armas_d_mcopy(&X0, &B0);
 
   conf.lb = lb;
@@ -41,13 +43,12 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
 
   // X0 = A*X0 - B0
   armas_d_mult(&B0, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
-  nrm = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+  nrm = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
   ok = isFINE(nrm, N*1e-9);
 
-  printf("%s: A*(CHOLsolve(A, B, %s)) == B\n", PASS(ok), uplo);
+  printf("%s: A*(%s.CHOLsolve(A, B, %s)) == B\n", PASS(ok), blk, uplo);
   if (verbose > 0) {
-    printf("   %s.||B - A*(A.-1*B)||: %e [%ld]\n",
-           uplo, nrm, (int64_t)(nrm/DBL_EPSILON));
+    printf("   || rel error ||: %e [%d]\n",  nrm, ndigits(nrm));
   }
 
   armas_d_release(&A0);
@@ -79,14 +80,18 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
   conf.lb = lb;
   armas_d_cholfactor(&A1, flags,  &conf);
 
+#if 0
   armas_d_scale_plus(&A0, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
   nrm = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
   ok = isFINE(nrm, N*1e-9);
+#endif
+
+  nrm = rel_error((double *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isOK(nrm, N);
 
   printf("%s: unblk.CHOL(A,%c) == blk.CHOL(A,%c)\n", PASS(ok), uplo, uplo);
   if (verbose > 0) {
-    printf("   ||unblk.CHOL(A,%c) - blk.CHOL(A,%c)||: %e [%ld]\n",
-           uplo, uplo, nrm, (int64_t)(nrm/DBL_EPSILON));
+    printf("   || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
   armas_d_release(&A0);
@@ -144,6 +149,12 @@ main(int argc, char **argv)
     fails++;
 
   if (! test_solve(M, N, LB, verbose, ARMAS_UPPER))
+    fails++;
+
+  if (! test_solve(M, N, 0, verbose, ARMAS_LOWER))
+    fails++;
+
+  if (! test_solve(M, N, 0, verbose, ARMAS_UPPER))
     fails++;
 
   exit(fails);
