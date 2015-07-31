@@ -139,7 +139,8 @@ double rel_error(double *dnorm, armas_d_dense_t *computed,
     armas_d_scale_plus(computed, expected, 1.0, -1.0, flags, conf);
     // ||computed - expected||
     cnrm = armas_d_mnorm(computed, norm, conf);
-    *dnorm = cnrm;
+    if (dnorm)
+      *dnorm = cnrm;
     // ||expected||
     enrm = armas_d_mnorm(expected, norm, conf);
     return cnrm/enrm;
