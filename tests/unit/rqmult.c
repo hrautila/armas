@@ -20,7 +20,7 @@ int test_mult_identity(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
   armas_d_dense_t A0, C, tau0, W, D;
-  int wsize;
+  int wsize, ok;
   double n0, n1;
   int wchange = lb > 8 ? 2*M : 0;
   armas_conf_t conf = *armas_conf_default();
@@ -55,14 +55,15 @@ int test_mult_identity(int M, int N, int lb, int verbose)
   armas_d_add(&D, -1.0, &conf);
   n0 = armas_d_mnorm(&C, ARMAS_NORM_ONE, &conf);
 
-  printf("%s: %s Q.T*Q == I\n", PASS(isOK(n0, N)), blk);
+  ok = isOK(n0, N);
+  printf("%s: %s Q.T*Q == I\n", PASS(ok), blk);
   if (verbose > 0) {
-    printf("  || error ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
+    printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
   armas_d_release(&A0);
   armas_d_release(&C);
   armas_d_release(&tau0);
-  return isOK(n0, N);
+  return ok;
 }
 
 /*  ----------------------------------------------------------------------------
@@ -73,7 +74,7 @@ int test_mult_left(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
   armas_d_dense_t A0, C1, C0, tau0, W, W0;
-  int wsize, wtmp;
+  int wsize, wtmp, ok;
   double n0, n1;
   armas_conf_t conf = *armas_conf_default();
   
@@ -104,13 +105,11 @@ int test_mult_left(int M, int N, int lb, int verbose)
   err = armas_d_rqmult(&C0, &A0, &tau0, &W, ARMAS_LEFT, &conf);
   err = armas_d_rqmult(&C0, &A0, &tau0, &W, ARMAS_LEFT|ARMAS_TRANS, &conf);
 
-  // C1 = C1 - C0
-  armas_d_scale_plus(&C1, &C0, 1.0, -1.0, ARMAS_NONE, &conf);
-  n0 = armas_d_mnorm(&C1, ARMAS_NORM_ONE, &conf);
-
-  printf("%s: %s Q.T*Q*C == C\n", PASS(isOK(n0, N)), blk);
+  n0 = rel_error((double *)0, &C1, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isOK(n0, N);
+  printf("%s: %s Q.T*Q*C == C\n", PASS(ok), blk);
   if (verbose > 0) {
-    printf("  || error ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
+    printf("  || error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
 
   armas_d_release(&A0);
@@ -118,7 +117,7 @@ int test_mult_left(int M, int N, int lb, int verbose)
   armas_d_release(&C1);
   armas_d_release(&W);
   armas_d_release(&tau0);
-  return isOK(n0, N);
+  return ok;
 }
 
 
@@ -130,7 +129,7 @@ int test_mult_right(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
   armas_d_dense_t A0, C1, C0, tau0, W;
-  int wsize;
+  int wsize, ok;
   double n0, n1;
   armas_conf_t conf = *armas_conf_default();
   
@@ -161,20 +160,18 @@ int test_mult_right(int M, int N, int lb, int verbose)
   err = armas_d_rqmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT|ARMAS_TRANS, &conf);
   err = armas_d_rqmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT, &conf);
 
-  // C1 = C1 - C0
-  armas_d_scale_plus(&C1, &C0, 1.0, -1.0, ARMAS_NONE, &conf);
-  n0 = armas_d_mnorm(&C1, ARMAS_NORM_ONE, &conf);
-
-  printf("%s: %s C*Q.T*Q == C\n", PASS(isOK(n0, N)), blk);
+  n0 = rel_error((double *)0, &C1, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isOK(n0, N);
+  printf("%s: %s C*Q.T*Q == C\n", PASS(ok), blk);
   if (verbose > 0)
-    printf("  || error ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
+    printf("  || error ||_1: %e [%d]\n", n0, ndigits(n0));
 
   armas_d_release(&A0);
   armas_d_release(&C0);
   armas_d_release(&C1);
   armas_d_release(&W);
   armas_d_release(&tau0);
-  return isOK(n0, N);
+  return ok;
 }
 
 main(int argc, char **argv)

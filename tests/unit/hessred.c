@@ -17,7 +17,7 @@ int test_reduce(int M, int N, int lb, int verbose)
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
   int wchange = lb > 8 ? 2*M : 0;
-  double nrm;
+  double n0, n1;
 
   armas_d_init(&A0, N, N);
   armas_d_init(&A1, N, N);
@@ -40,13 +40,15 @@ int test_reduce(int M, int N, int lb, int verbose)
   conf.lb = lb;
   armas_d_hessreduce(&A1, &tau1, &W, &conf);
 
-  armas_d_scale_plus(&A0, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
-  nrm = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
 
-  ok = isFINE(nrm, N*1e-12);
+  n0 = rel_error((double *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n1 = rel_error((double *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+  ok = isFINE(n0, N*1e-14);
+
   printf("%s: unblk.Hess(A) == blk.Hess(A)\n", PASS(ok));
   if (verbose > 0) {
-    printf("  ||unblk.Hess(A) - blk.Hess(A)||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+    printf("  || error.Hess ||: %e [%d]\n", n0, ndigits(n0));
+    printf("  || error.tau  ||: %e [%d]\n", n1, ndigits(n1));
   }
 
   armas_d_release(&A0);
@@ -95,12 +97,11 @@ int test_mult(int M, int N, int lb, int verbose)
   armas_d_hessmult(&B, &A0, &tau0, &W, ARMAS_RIGHT|ARMAS_TRANS, &conf);
 
   // B == A1?
-  armas_d_scale_plus(&B, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
-  nrm = armas_d_mnorm(&B, ARMAS_NORM_ONE, &conf);
+  nrm = rel_error((double *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, N);
   printf("%s: Q*Hess(A)*Q.T == A\n", PASS(ok));
   if (verbose > 0) {
-    printf("  ||A - Q*Hess(A)*Q.T||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+    printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
   armas_d_release(&A0);

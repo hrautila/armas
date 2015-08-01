@@ -21,7 +21,7 @@ int test_lss(int M, int N, int K, int lb, int verbose)
   armas_d_dense_t B0, X0, W, X;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
-  double nrm;
+  double nrm, nrm0;
 
   armas_d_init(&A0, M, N);
   armas_d_init(&B0, M, K);
@@ -48,12 +48,16 @@ int test_lss(int M, int N, int K, int lb, int verbose)
 
   // X0 = X0 - A.-1*B0
   armas_d_submatrix(&X, &B0, 0, 0, N, K);
+#if 0
   armas_d_scale_plus(&X0, &X, 1.0, -1.0, ARMAS_NONE, &conf);
   nrm = armas_d_mnorm(&X0, ARMAS_NORM_ONE, &conf);
   ok = isFINE(nrm, M*1e-12);
+#endif
+  nrm = rel_error(&nrm0, &X, &X0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isOK(nrm, M);
   printf("%s: min || B - A*X ||\n", PASS(ok));
   if (verbose > 0) {
-    printf("  || B - A*X ||: %e [%ld]\n", nrm, (int64_t)(nrm/DBL_EPSILON));
+    printf("  || B - A*X ||: %e [%d]\n", nrm, ndigits(nrm));
   }
   return ok;
 }
@@ -66,7 +70,7 @@ int test_min(int M, int N, int K, int lb, int verbose)
   armas_d_dense_t B0, X0, B1, W, B;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
-  double nrm;
+  double nrm, nrm0;
 
   armas_d_init(&A0, M, N);
   armas_d_init(&A1, M, N);
@@ -94,12 +98,14 @@ int test_min(int M, int N, int K, int lb, int verbose)
 
   // B = B - A.T*X
   armas_d_submatrix(&B, &B0, 0, 0, N, K);
+  nrm0 = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
   armas_d_mult(&B, &A1, &X0, -1.0, 1.0, ARMAS_TRANSA, &conf);
-  nrm = armas_d_mnorm(&B, ARMAS_NORM_ONE, &conf);
-  ok = isFINE(nrm, M*1e-12);
+  nrm = armas_d_mnorm(&B, ARMAS_NORM_ONE, &conf) / nrm0;
+  //ok = isFINE(nrm, M*1e-12);
+  ok = isOK(nrm, M);
   printf("%s: min || X || s.t. A.T*X = B\n", PASS(ok));
   if (verbose > 0) {
-    printf("  || B - A.T*X ||: %e [%ld]\n", nrm, (int64_t)(nrm/DBL_EPSILON));
+    printf("  || B - A.T*X ||: %e [%d]\n", nrm, ndigits(nrm));
   }
   return ok;
 }

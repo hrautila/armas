@@ -19,7 +19,7 @@ int test_build(int M, int N, int K, int lb, int verbose)
 {
   char ct = N == K ? 'N' : 'K';
   armas_d_dense_t A0, A1, C0, tau0, W;
-  int wsize;
+  int wsize, ok;
   int wchange = lb > 0 ? 2*M : 0;
   double n0, n1;
   armas_conf_t conf = *armas_conf_default();
@@ -47,13 +47,11 @@ int test_build(int M, int N, int K, int lb, int verbose)
   conf.lb = lb;
   armas_d_lqbuild(&A1, &tau0, &W, K, &conf);
 
-  // A1 = A1 - A0
-  armas_d_scale_plus(&A1, &A0, 1.0, -1.0, ARMAS_NONE, &conf);
-  n0 = armas_d_mnorm(&A1, ARMAS_NORM_ONE, &conf);
-
-  printf("%s: unblk.Q(qr(A),%c) == blk.Q(qr(A),%c)\n", PASS(isOK(n0, N)), ct, ct);
+  n0 = rel_error((double *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isOK(n0, N);
+  printf("%s: unblk.Q(qr(A),%c) == blk.Q(qr(A),%c)\n", PASS(ok), ct, ct);
   if (verbose > 0) {
-    printf("  || error ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
+    printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
 
   armas_d_release(&A0);
@@ -61,7 +59,7 @@ int test_build(int M, int N, int K, int lb, int verbose)
   armas_d_release(&W);
   armas_d_release(&tau0);
 
-  return isOK(n0, N);
+  return ok;
 }
 
 /*  -----------------------------------------------------------------------------------
@@ -73,7 +71,7 @@ int test_build_identity(int M, int N, int K, int lb, int verbose)
   char *blk = lb > 0 ? "  blk" : "unblk";
   char ct = M == K ? 'M' : 'K';
   armas_d_dense_t A0, C0, tau0, D, W;
-  int wsize;
+  int wsize, ok;
   double n0, n1;
   armas_conf_t conf = *armas_conf_default();
   int wchange = lb > 0 ? 2*M : 0;
@@ -105,15 +103,16 @@ int test_build_identity(int M, int N, int K, int lb, int verbose)
 
   n0 = armas_d_mnorm(&C0, ARMAS_NORM_ONE, &conf);
 
-  printf("%s: %s Q(qr(A),%c).T * Q(qr(A),%c) == I\n", PASS(isOK(n0, N)), blk, ct, ct);
+  ok = isOK(n0, N);
+  printf("%s: %s Q(qr(A),%c).T * Q(qr(A),%c) == I\n", PASS(ok), blk, ct, ct);
   if (verbose > 0) {
-    printf("  || error ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
+    printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
-  //armas_d_release(&A0);
+  armas_d_release(&A0);
   armas_d_release(&C0);
   armas_d_release(&tau0);
 
-  return isOK(n0, N);
+  return ok;
 }
 
 main(int argc, char **argv)

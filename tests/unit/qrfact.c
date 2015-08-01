@@ -55,7 +55,7 @@ int test_factor(int M, int N, int lb, int verbose)
   }
 
   n0 = rel_error((double *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  n1 = rel_error((double *)0, &tau0, &tau1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n1 = rel_error((double *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
 
   printf("%s: unblk.QR(A) == blk.QR(A)\n", PASS(isOK(n0, N) && isOK(n1, N)));
   if (verbose > 0) {

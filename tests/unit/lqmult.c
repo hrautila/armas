@@ -57,7 +57,7 @@ int test_mult_identity(int M, int N, int lb, int verbose)
 
   printf("%s: %s Q.T*Q == I\n", PASS(isOK(n0, N)), blk);
   if (verbose > 0) {
-    printf("  || error ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
+    printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
   armas_d_release(&A0);
   armas_d_release(&C);
@@ -85,7 +85,7 @@ int test_mult_left(int M, int N, int lb, int verbose)
   // set source data
   armas_d_set_values(&A0, unitrand, ARMAS_ANY);
 
-  // C is first N columns of identity matrix
+  // set C 
   armas_d_set_values(&C0, unitrand, ARMAS_ANY);
   armas_d_mcopy(&C1, &C0);
 
@@ -104,13 +104,11 @@ int test_mult_left(int M, int N, int lb, int verbose)
   err = armas_d_lqmult(&C0, &A0, &tau0, &W, ARMAS_LEFT, &conf);
   err = armas_d_lqmult(&C0, &A0, &tau0, &W, ARMAS_LEFT|ARMAS_TRANS, &conf);
 
-  // C1 = C1 - C0
-  armas_d_scale_plus(&C1, &C0, 1.0, -1.0, ARMAS_NONE, &conf);
-  n0 = armas_d_mnorm(&C1, ARMAS_NORM_ONE, &conf);
+  n0 = rel_error((double *)0, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
 
   printf("%s: %s Q.T*Q*C == C\n", PASS(isOK(n0, N)), blk);
   if (verbose > 0) {
-    printf("  || error ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
+    printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
 
   armas_d_release(&A0);
@@ -161,13 +159,10 @@ int test_mult_right(int M, int N, int lb, int verbose)
   err = armas_d_lqmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT|ARMAS_TRANS, &conf);
   err = armas_d_lqmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT, &conf);
 
-  // C1 = C1 - C0
-  armas_d_scale_plus(&C1, &C0, 1.0, -1.0, ARMAS_NONE, &conf);
-  n0 = armas_d_mnorm(&C1, ARMAS_NORM_ONE, &conf);
-
+  n0 = rel_error((double *)0, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   printf("%s: %s C*Q.T*Q == C\n", PASS(isOK(n0, N)), blk);
   if (verbose > 0)
-    printf("  || error ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
+    printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
 
   armas_d_release(&A0);
   armas_d_release(&C0);

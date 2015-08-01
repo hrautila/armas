@@ -47,17 +47,13 @@ int test_factor(int M, int N, int lb, int verbose)
   conf.lb = lb;
   armas_d_rqfactor(&A1, &tau1, &W, &conf);
 
-  // A0 = A0 - A1
-  armas_d_scale_plus(&A0, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
-  n0 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
-  // tau0 = tau0 - tau1
-  armas_d_axpy(&tau0, &tau1, -1.0, &conf);
-  n1 = armas_d_nrm2(&tau0, &conf);
+  n0 = rel_error((double *)0, &A1,   &A0,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n1 = rel_error((double *)0, &tau1, &tau0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
 
   printf("%s: unblk.RQ(A) == blk.RQ(A)\n", PASS(isOK(n0, N) && isOK(n1, N)));
   if (verbose > 0) {
-    printf("  || error.RQ  ||_1: %e [%ld]\n", n0, (int64_t)(n0/DBL_EPSILON));
-    printf("  || error.tau ||_2: %e [%ld]\n", n1, (int64_t)(n1/DBL_EPSILON));
+    printf("  || error.RQ  ||_1: %e [%d]\n", n0, ndigits(n0));
+    printf("  || error.tau ||_2: %e [%d]\n", n1, ndigits(n1));
   }
   
   armas_d_release(&A0);

@@ -21,7 +21,7 @@ int test_lss(int M, int N, int K, int lb, int verbose)
   armas_d_dense_t B0, X0, W, X;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
-  double nrm;
+  double nrm, nrm0;
 
   armas_d_init(&A0, M, N);
   armas_d_init(&B0, N, K);
@@ -33,6 +33,7 @@ int test_lss(int M, int N, int K, int lb, int verbose)
 
   // set initial X
   armas_d_set_values(&X0, unitrand, ARMAS_ANY);
+
   // compute: B0 = A0.T*X0
   armas_d_mult(&B0, &A0, &X0, 1.0, 0.0, ARMAS_TRANSA, &conf);
 
@@ -48,12 +49,16 @@ int test_lss(int M, int N, int K, int lb, int verbose)
 
   // X0 = X0 - A.-1*B0
   armas_d_submatrix(&X, &B0, 0, 0, M, K);
+
+#if 0
   armas_d_scale_plus(&X0, &X, 1.0, -1.0, ARMAS_NONE, &conf);
   nrm = armas_d_mnorm(&X0, ARMAS_NORM_ONE, &conf);
+#endif
+  nrm = rel_error((double *)0, &X, &X0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, N);
   printf("%s: min || B - A.T*X ||\n", PASS(ok));
   if (verbose > 0) {
-    printf("  ||B - A.T*X||: %e [%ld]\n", nrm, (int64_t)(nrm/DBL_EPSILON));
+    printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
   return ok;
 }
@@ -65,7 +70,7 @@ int test_min(int M, int N, int K, int lb, int verbose)
   armas_d_dense_t B0, X0, B1, W, B;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
-  double nrm;
+  double nrm, nrm0;
 
   armas_d_init(&A0, M, N);
   armas_d_init(&A1, M, N);
@@ -79,6 +84,7 @@ int test_min(int M, int N, int K, int lb, int verbose)
 
   // set B0
   armas_d_set_values(&B0, unitrand, ARMAS_ANY);
+  nrm0 = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
 
   conf.lb = lb;
   wsize = armas_d_qrfactor_work(&A0, &conf);
@@ -95,11 +101,11 @@ int test_min(int M, int N, int K, int lb, int verbose)
   armas_d_submatrix(&B, &B0, 0, 0, M, K);
   armas_d_mult(&B, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
 
-  nrm = armas_d_mnorm(&B, ARMAS_NORM_ONE, &conf);
+  nrm = armas_d_mnorm(&B, ARMAS_NORM_ONE, &conf) / nrm0;
   ok = isOK(nrm, N);
   printf("%s: min || X || s.t. A*X = B\n", PASS(ok));
   if (verbose > 0) {
-    printf("  ||B - A*X|| : %e [%ld]\n", nrm, (int64_t)(nrm/DBL_EPSILON));
+    printf("  || rel error || : %e [%d]\n", nrm, ndigits(nrm));
   }
   return ok;
 }

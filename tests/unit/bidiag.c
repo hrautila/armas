@@ -42,19 +42,15 @@ int test_reduce(int M, int N, int lb, int verbose)
   conf.lb = lb;
   armas_d_bdreduce(&A1, &tauq1, &taup1, &W, &conf);
 
-  armas_d_scale_plus(&A0, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
-  nrm = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
-
+  nrm = rel_error((double *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isFINE(nrm, N*1e-12);
   printf("%s: %s unblk.BD(A) == blk.BD(A)\n", PASS(ok), mbyn);
   if (verbose > 0) {
-    printf("  ||unblk.BD(A) - blk.BD(A)||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
-    armas_d_axpy(&tauq0, &tauq1, -1.0, &conf);
-    nrm = armas_d_nrm2(&tauq0, &conf);
-    printf("  ||unblk.BD.tauq - blk.BD.tauq||: %e\n", nrm);
-    armas_d_axpy(&taup0, &taup1, -1.0, &conf);
-    nrm = armas_d_nrm2(&taup0, &conf);
-    printf("  ||unblk.BD.taup - blk.BD.taup||: %e\n", nrm);
+    printf("  ||  error.BD(A)  ||: %e [%d]\n", nrm, ndigits(nrm));
+    nrm = rel_error((double *)0, &tauq0, &tauq1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+    printf("  || error.BD.tauq ||: %e [%d]\n", nrm, ndigits(nrm));
+    nrm = rel_error((double *)0, &taup0, &taup1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+    printf("  || error.BD.taup ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
   armas_d_release(&A0);
@@ -117,14 +113,17 @@ int test_mult_qpt(int M, int N, int lb, int verbose)
   armas_d_bdmult(&B, &A0, &tauq0, &W, ARMAS_LEFT|ARMAS_MULTQ, &conf);
   armas_d_bdmult(&B, &A0, &taup0, &W, ARMAS_RIGHT|ARMAS_TRANS|ARMAS_MULTP, &conf);
 
+#if 0
   // B == A1?
   armas_d_scale_plus(&B, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
   nrm = armas_d_mnorm(&B, ARMAS_NORM_ONE, &conf);
+#endif
 
-  ok = isFINE(nrm, N*1e-12);
+  nrm = rel_error((double *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isFINE(nrm, N*1e-14);
   printf("%s: %s  Q*B*P.T == A\n", PASS(ok), mbyn);
   if (verbose > 0) {
-    printf("  ||A - Q*B*P.T||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+    printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
   armas_d_release(&A0);
@@ -184,14 +183,16 @@ int test_mult_qtp(int M, int N, int lb, int verbose)
   armas_d_bdmult(&A1, &A0, &tauq0, &W, ARMAS_LEFT|ARMAS_MULTQ|ARMAS_TRANS, &conf);
   armas_d_bdmult(&A1, &A0, &taup0, &W, ARMAS_RIGHT|ARMAS_MULTP, &conf);
 
+#if 0
   // B == A1?
   armas_d_scale_plus(&B, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
   nrm = armas_d_mnorm(&B, ARMAS_NORM_ONE, &conf);
-
+#endif
+  nrm = rel_error((double *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isFINE(nrm, N*1e-12);
   printf("%s: %s  B == Q.T*A*P\n", PASS(ok), mbyn);
   if (verbose > 0) {
-    printf("  ||B - Q.T*B*P||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+    printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
   armas_d_release(&A0);
@@ -246,7 +247,7 @@ int test_build_qp(int M, int N, int lb, int K, int flags, int verbose)
     ok = isFINE(nrm, N*1e-12);
     printf("%s: %s  I == Q.T*Q\n", PASS(ok), mbyn);
     if (verbose > 0) {
-      printf("  ||I - Q.T*Q||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+      printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
     }
   } else {
     // P matrix
@@ -268,7 +269,7 @@ int test_build_qp(int M, int N, int lb, int K, int flags, int verbose)
     ok = isFINE(nrm, N*1e-12);
     printf("%s: %s  I == P*P.T\n", PASS(ok), mbyn);
     if (verbose > 0) {
-      printf("  ||I - P*P.T||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+      printf("  ||  rel error ||: %e [%d]\n", nrm, ndigits(nrm));
     }
   }
 
