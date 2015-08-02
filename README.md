@@ -34,9 +34,10 @@ Currently tested only for double precision real numbers.
 
 ### Installation
 
-From source package (not yet available). 
+For compiling and installing from GitHub tree.
 ```sh
-  $ ./configure
+  @ ./bootstrap.sh
+  $ ./configure CFLAGS=-O3
   $ make
   $ sudo make install
 ```
@@ -44,7 +45,6 @@ To run some tests
 ```sh
   $ make check
 ```
-For compiling and installing from GitHub tree see INSTALLATION.
 
 ###  Some numbers
 
