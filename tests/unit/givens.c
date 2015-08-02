@@ -16,7 +16,7 @@ int test_qr(int M, int N, int verbose)
 {
   armas_d_dense_t A0, A1, Qt, d;
   int i, j, ok, n, m;
-  double c, s, r, nrm, y0, y1;
+  double c, s, r, nrm, nrm_A, y0, y1;
   armas_conf_t *conf = armas_conf_default();
 
   armas_d_init(&A0, M, N);
@@ -27,7 +27,8 @@ int test_qr(int M, int N, int verbose)
   armas_d_mcopy(&A1, &A0);
   armas_d_diag(&d, &Qt, 0);
   armas_d_madd(&d, 1.0, 0);
-  
+  nrm_A = armas_d_mnorm(&A1, ARMAS_NORM_ONE, conf);
+
   // R = G(n)...G(2)G(1)*A; Q = G(1)*G(2)...G(n) ;  Q.T = G(n)...G(2)G(1)
   for (j = 0; j < N; j++) {
     // .. zero elements below diagonal, starting from bottom
@@ -47,9 +48,11 @@ int test_qr(int M, int N, int verbose)
   armas_d_mult(&A1, &Qt, &A0, -1.0, 1.0, ARMAS_TRANSA, conf);
 
   nrm = armas_d_mnorm(&A1, ARMAS_NORM_ONE, conf);
+  nrm /= nrm_A;
+
   ok = isOK(nrm, N);
   printf("%s:  A == Q*R\n", PASS(ok));
-  printf("  M=%d, N=%d ||A - Q*R||_1: %e [%d]\n", M, N, nrm, (int)(nrm/DBL_EPSILON));
+  printf("  M=%d, N=%d || rel error ||_1: %e [%d]\n", M, N, nrm, ndigits(nrm));
   return ok;
 }
 
@@ -59,7 +62,7 @@ int test_lq(int M, int N, int verbose)
 {
   armas_d_dense_t A0, A1, Qt, d;
   int i, j, ok, n, m;
-  double c, s, r, nrm, y0, y1;
+  double c, s, r, nrm, nrm_A, y0, y1;
   armas_conf_t *conf = armas_conf_default();
 
   armas_d_init(&A0, M, N);
@@ -70,6 +73,7 @@ int test_lq(int M, int N, int verbose)
   armas_d_mcopy(&A1, &A0);
   armas_d_diag(&d, &Qt, 0);
   armas_d_madd(&d, 1.0, 0);
+  nrm_A = armas_d_mnorm(&A1, ARMAS_NORM_ONE, conf);
   
   // R = G(n)...G(2)G(1)*A; Q = G(1)*G(2)...G(n) ;  Q.T = G(n)...G(2)G(1)
   n = 0; m = 0;
@@ -91,9 +95,10 @@ int test_lq(int M, int N, int verbose)
   armas_d_mult(&A1, &A0, &Qt, -1.0, 1.0, ARMAS_TRANSB, conf);
 
   nrm = armas_d_mnorm(&A1, ARMAS_NORM_ONE, conf);
+  nrm /= nrm_A;
   ok = isOK(nrm, N);
   printf("%s:  A == L*Q\n", PASS(ok));
-  printf("  M=%d, N=%d ||A - L*Q||_1: %e [%d]\n", M, N, nrm, (int)(nrm/DBL_EPSILON));
+  printf("  M=%d, N=%d || rel error ||_1: %e [%d]\n", M, N, nrm, ndigits(nrm));
   return ok;
 }
 

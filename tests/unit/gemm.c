@@ -33,20 +33,18 @@ main(int argc, char **argv) {
   int N = 633;
   int M = 653;
   int K = 337;
-  int nproc = 1;
+  int verbose = 0;
   int fails = 0;
   int e0, e1;
-  double m_inf, m_one;
-  uint64_t pschedule[] = {6*6, 10*10, 600*600, 800*800};
-  int nsched = 4;
+  double m_inf, m_one, n0, n1;
 
-  while ((opt = getopt(argc, argv, "P:B:p:")) != -1) {
+  while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
-    case 'P':
-      nproc = atoi(optarg);
+    case 'v':
+      verbose += 1;
       break;
     default:
-      fprintf(stderr, "usage: test_symm [-P nproc] [size]\n");
+      fprintf(stderr, "usage: test_symm [-v] [size]\n");
       exit(1);
     }
   }
@@ -54,11 +52,7 @@ main(int argc, char **argv) {
   if (optind < argc)
     N = atoi(argv[optind]);
 
-  conf.mb = 64;
-  conf.nb = 96;
-  conf.kb = 160;
-  conf.maxproc = nproc;
-  conf.optflags = 0;
+  conf = *armas_conf_default();
 
   armas_d_init(&C, M, N);
   armas_d_init(&Ct, N, M);
@@ -76,12 +70,15 @@ main(int argc, char **argv) {
   e0 = armas_d_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
   e1 = armas_d_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
   armas_d_transpose(&T, &Ct);
-  ok = armas_d_allclose(&C, &T) && e0 == 0 && e1 == 0;
-  armas_d_scale_plus(&T, &C, 1.0, -1.0, ARMAS_NONE, &conf);
-  m_inf = armas_d_mnorm(&T, ARMAS_NORM_INF, &conf);
-  m_one = armas_d_mnorm(&T, ARMAS_NORM_ONE, &conf);
-  printf("%6s: gemm(A, B)   == transpose(gemm(B.T, A.T)) [_inf=%.3e, _one=%.3e]\n",
-         ok ? "OK" : "FAILED", m_inf, m_one);
+
+  n0 = rel_error(&n1, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+
+  // accept zero error
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  printf("%6s: gemm(A, B)   == transpose(gemm(B.T, A.T))\n", PASS(ok));
+  if (verbose > 0) {
+    printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
+  }
   fails += 1 - ok;
 
   // test 2: M != N == K
@@ -96,12 +93,14 @@ main(int argc, char **argv) {
   e0 = armas_d_mult(&C,  &A, &B, 1.0, 0.0, ARMAS_TRANSB, &conf);
   e1 = armas_d_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSB, &conf);
   armas_d_transpose(&T, &Ct);
-  ok = armas_d_allclose(&C, &T) && e0 == 0 && e1 == 0;
-  armas_d_scale_plus(&T, &C, 1.0, -1.0, ARMAS_NONE, &conf);
-  m_inf = armas_d_mnorm(&T, ARMAS_NORM_INF, &conf);
-  m_one = armas_d_mnorm(&T, ARMAS_NORM_ONE, &conf);
-  printf("%6s: gemm(A, B.T) == transpose(gemm(B, A.T))   [_inf=%.3e, _one=%.3e]\n",
-         ok ? "OK" : "FAILED", m_inf, m_one);
+
+  n0 = rel_error((double *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  printf("%6s: gemm(A, B.T)   == transpose(gemm(B, A.T))\n", PASS(ok));
+  if (verbose > 0) {
+    printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
+  }
   fails += 1 - ok;
 
   // test 3: M == K != N
@@ -116,12 +115,14 @@ main(int argc, char **argv) {
   e0 = armas_d_mult(&C,  &A, &B, 1.0, 0.0, ARMAS_TRANSA, &conf);
   e1 = armas_d_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA, &conf);
   armas_d_transpose(&T, &Ct);
-  ok = armas_d_allclose(&C, &T) && e0 == 0 && e1 == 0;
-  armas_d_scale_plus(&T, &C, 1.0, -1.0, ARMAS_NONE, &conf);
-  m_inf = armas_d_mnorm(&T, ARMAS_NORM_INF, &conf);
-  m_one = armas_d_mnorm(&T, ARMAS_NORM_ONE, &conf);
-  printf("%6s: gemm(A.T, B) == transpose(gemm(B.T, A))   [_inf=%.3e, _one=%.3e]\n",
-         ok ? "OK" : "FAILED", m_inf, m_one);
+
+  n0 = rel_error((double *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  printf("%6s: gemm(A.T, B)   == transpose(gemm(B.T, A))\n", PASS(ok));
+  if (verbose > 0) {
+    printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
+  }
   fails += 1 - ok;
 
   exit(fails);
