@@ -46,14 +46,13 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
   if (verbose > 1 && conf.error != 0)
     printf("1. error=%d\n", conf.error);
 
-  armas_d_scale_plus(&A0, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
-  nrm = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
-  ok = isFINE(nrm, N*1e-12);
+  nrm = rel_error((double *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isOK(nrm, N);
+
   
   printf("%s: unblk.LDL(A,%c) == blk.LDL(A,%c)\n", PASS(ok), uplo, uplo);
   if (verbose > 0) {
-    printf("  ||unblk.LDL(A, '%c') - blk.LDL(A, '%c')||: %e [%ld]\n",
-           uplo, uplo, nrm, (int64_t)(nrm/DBL_EPSILON));
+    printf("  || error.LDL(A, '%c') ||: %e [%d]\n", uplo, nrm, ndigits(nrm));
   }
 
   armas_d_release(&A0);
@@ -74,7 +73,7 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   armas_conf_t conf = *armas_conf_default();
   char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
   int ok, wsize;
-  double nrm;
+  double nrm, nrm_A;
 
   armas_d_init(&A0, N, N);
   armas_d_init(&A1, N, N);
@@ -88,6 +87,7 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
 
   armas_d_set_values(&B0, unitrand, ARMAS_ANY);
   armas_d_mcopy(&X0, &B0);
+  nrm_A = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
 
   conf.lb = lb;
   wsize = armas_d_bkfactor_work(&A0, &conf);
@@ -100,12 +100,13 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   // B0 = B0 - A*X0
   armas_d_mult_sym(&B0, &A1, &X0, -1.0, 1.0, ARMAS_LEFT|flags, &conf);
   nrm = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+  nrm /= nrm_A;
 
-  ok = isFINE(nrm, N*1e-12);
+  ok = isFINE(nrm, N*1e-13);
   
   printf("%s: LDL(%c)  A*(A.-1*B) == B\n", PASS(ok), uplo);
   if (verbose > 0) {
-    printf(" ||B - A*(A.-1*B)||: %e [%ld]\n", nrm, (int64_t)(nrm/DBL_EPSILON));
+    printf(" || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
   return ok;
 }
