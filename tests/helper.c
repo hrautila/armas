@@ -135,8 +135,12 @@ double rel_error(double *dnorm, armas_d_dense_t *computed,
 		 armas_d_dense_t *expected, int norm, int flags, armas_conf_t *conf)
 {
     double cnrm, enrm;
-    // computed = computed - expected
-    armas_d_scale_plus(computed, expected, 1.0, -1.0, flags, conf);
+    if (armas_d_isvector(computed)) {
+      armas_d_axpy(computed, expected, -1.0, conf);
+    } else {
+      // computed = computed - expected
+      armas_d_scale_plus(computed, expected, 1.0, -1.0, flags, conf);
+    }
     // ||computed - expected||
     cnrm = armas_d_mnorm(computed, norm, conf);
     if (dnorm)
