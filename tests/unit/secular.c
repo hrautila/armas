@@ -75,7 +75,7 @@ int test1(int N, double beta, int verbose) {
     ok = isOK(nrm, N);
     printf("%s: I == Q.T*Q\n", PASS(ok));
     if (verbose > 0)
-        printf("  N=%d, beta=%13e ||I - Q.T*Q||_1: %e\n", N, beta, nrm);
+        printf("  N=%d, beta=%13e || rel error ||_1: %e [%d]\n", N, beta, nrm, ndigits(nrm));
     if (!ok)
         fails++;
 

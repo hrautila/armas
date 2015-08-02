@@ -17,7 +17,7 @@ int test_reduce(int M, int N, int lb, int verbose, int flags)
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
   char uplo = flags & ARMAS_LOWER ? 'L' : 'U';
-  double nrm;
+  double nrm, n0, n1;
 
   armas_d_init(&A0, N, N);
   armas_d_init(&A1, N, N);
@@ -38,18 +38,22 @@ int test_reduce(int M, int N, int lb, int verbose, int flags)
   conf.lb = lb;
   armas_d_trdreduce(&A1, &tau1, &W, flags, &conf);
 
+#if 0
   armas_d_scale_plus(&A0, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
   armas_d_axpy(&tau0, &tau1, -1.0, &conf);
   nrm = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
   ok = isFINE(nrm, N*1e-12);
+#endif
+
+  n0 = rel_error((double *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n1 = rel_error((double *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+  ok = isFINE(n0, N*1e-15);
 
   printf("%s: unblk.TRD(A,%c) == blk.TRD(A,%c)\n", PASS(ok), uplo, uplo);
   if (verbose > 0) {
-    printf("  ||unblk.TRD(A,%c) - blk.TRD(A,%c)||: %e [%d]\n",
-           uplo, uplo, nrm, (int)(nrm/DBL_EPSILON));
+    printf("  || error.TRD(A,%c)||: %e [%d]\n", uplo, n0, ndigits(n0));
 
-    nrm = armas_d_nrm2(&tau0, &conf);
-    printf("  ||unblk.tau - blk.tau||: %e\n", nrm);
+    printf("  || error.tau||      : %e [%d]\n", n1, ndigits(n1));
   }
   armas_d_release(&A0);
   armas_d_release(&A1);
@@ -109,13 +113,11 @@ int test_mult_trd(int M, int N, int lb, int verbose, int flags)
 
   // make result triangular (original matrix)
   armas_d_make_trm(&T0, flags);
-  armas_d_scale_plus(&T0, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
-
-  nrm = armas_d_mnorm(&T0, ARMAS_NORM_ONE, &conf);
-  ok = isFINE(nrm, N*1e-12);
+  nrm = rel_error((double *)0, &T0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isFINE(nrm, N*1e-15);
   printf("%s: [%s] Q*T*Q.T == A\n", PASS(ok), uplo);
   if (verbose > 0) {
-    printf("  ||A - Q*T*Q.T||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+    printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
   return ok;
 }
@@ -168,13 +170,15 @@ int test_mult_a(int M, int N, int lb, int verbose, int flags)
   armas_d_trdmult(&A1, &A0, &tau0, &W, flags|ARMAS_LEFT|ARMAS_TRANS, &conf);
   armas_d_trdmult(&A1, &A0, &tau0, &W, flags|ARMAS_RIGHT, &conf);
 
+#if 0
   armas_d_scale_plus(&T0, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
   nrm = armas_d_mnorm(&T0, ARMAS_NORM_ONE, &conf);
-
+#endif
+  nrm = rel_error((double *)0, &T0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isFINE(nrm, N*1e-12);
   printf("%s: [%s] Q.T*A*Q == T\n", PASS(ok), uplo);
   if (verbose > 0) {
-    printf("  ||T - Q.T*A*Q||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+    printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
   return ok;
 }
@@ -215,7 +219,7 @@ int test_build(int M, int N, int lb, int K, int verbose, int flags)
   ok = isFINE(nrm, N*1e-12);
   printf("%s: [%s] I == Q*Q.T\n", PASS(ok), uplo);
   if (verbose > 0) {
-    printf("  ||I - Q*Q.T||: %e [%d]\n", nrm, (int)(nrm/DBL_EPSILON));
+    printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
   //------------------------------------------------------
   armas_d_release(&A0);

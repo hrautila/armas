@@ -114,11 +114,11 @@ int test_eigen(int N, int type, double coeff, int verbose)
     // compute ||V.T*A*V - S|| (D is column vector, sD is row vector)
     armas_d_diag(&sD, &A0, 0);
     armas_d_axpy(&sD, &D, -1.0, &conf);
-    nrm = armas_d_mnorm(&sD, ARMAS_NORM_ONE, &conf);
+    nrm = armas_d_mnorm(&sD, ARMAS_NORM_TWO, &conf);
     ok = isFINE(nrm, N*1e-10);
     printf("%s: [%s] V.T*A*V == eigen(A)\n", PASS(ok), desc);
     if (verbose > 0)
-        printf("  N=%d ||V.T*A*V - eigen(A)||_1: %e\n", N, nrm);
+        printf("  N=%d || rel error ||_1: %e [%d]\n", N, nrm, ndigits(nrm));
 
     if (!ok)
         fails++;
@@ -132,7 +132,7 @@ int test_eigen(int N, int type, double coeff, int verbose)
     ok = isFINE(nrm, N*1e-15);
     printf("%s: I == V*V.T\n", PASS(ok));
     if (verbose > 0)
-        printf("  N=%d ||I - V*V.T||_1: %e\n", N, nrm);
+        printf("  N=%d || rel error ||_1: %e [%d]\n", N, nrm, ndigits(nrm));
     if (!ok)
         fails++;
 
