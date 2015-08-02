@@ -70,12 +70,13 @@ int test_tall(int M, int N, int flags, int type, int verbose)
 {
     armas_d_dense_t A0, At, U, V, D, E, sD, sE, C, W;
     armas_conf_t conf = *armas_conf_default();
-    double nrm;
+    double nrm, nrm_A;
     int ok, fails = 0;
     char *desc = flags & ARMAS_LOWER ? "lower" : "upper";
 
     armas_d_init(&A0, M, N);
     set_diagonals(&A0, flags, type);
+    nrm_A = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
     armas_d_submatrix(&At, &A0, 0, 0, N, N);
 
     armas_d_init(&D, N, 1);
@@ -111,11 +112,11 @@ int test_tall(int M, int N, int flags, int type, int verbose)
     // compute ||U.T*A*V - S|| (D is column vector, sD is row vector)
     armas_d_diag(&sD, &At, 0);
     abs_minus(&sD, &D);
-    nrm = armas_d_mnorm(&sD, ARMAS_NORM_ONE, &conf);
+    nrm = armas_d_mnorm(&sD, ARMAS_NORM_ONE, &conf) / nrm_A;
     ok = isFINE(nrm, N*1e-10);
     printf("%s: [%s] U.T*A*V == S\n", PASS(ok), desc);
     if (verbose > 0)
-        printf("  M=%d, N=%d ||U.T*A*V - S||_1: %e\n", M, N, nrm);
+        printf("  M=%d, N=%d || rel error ||_1: %e [%d]\n", M, N, nrm, ndigits(nrm));
 
     if (!ok)
         fails++;
@@ -129,7 +130,7 @@ int test_tall(int M, int N, int flags, int type, int verbose)
     ok = isFINE(nrm, N*1e-15);
     printf("%s: I == U.T*U\n", PASS(ok));
     if (verbose > 0)
-        printf("  M=%d, N=%d ||I - U.T*U||_1: %e\n", M, N, nrm);
+        printf("  M=%d, N=%d || rel error ||_1: %e [%d]\n", M, N, nrm, ndigits(nrm));
     if (!ok)
         fails++;
 
@@ -142,7 +143,7 @@ int test_tall(int M, int N, int flags, int type, int verbose)
     ok = isFINE(nrm, N*1e-15);
     printf("%s: I == V*V.T\n", PASS(ok));
     if (verbose > 0)
-        printf("  M=%d, N=%d ||I - V*V.T||_1: %e\n", M, N, nrm);
+        printf("  M=%d, N=%d || rel error ||_1: %e [%d]\n", M, N, nrm, ndigits(nrm));
     if (!ok)
         fails++;
 
