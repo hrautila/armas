@@ -1,0 +1,112 @@
+
+Error measuring as in LAPACK User Guide, section 4 (Accuracy and Stability), we compute
+relative error as ||A_orig - A_computed||_1/||A_orig||_1 and number of correct digits
+by ceil(log10(1.0/e_rel))
+
+In the following relative error is meant by ||A - B|| where A is the original and B
+computed value.
+
+QR-family of factorization:
+
+   1. ||unblk.QR - blk.QR|| ~ eps
+      Factoring: unblocked and blocked version are equal
+
+   2. ||I - Q.T*Q*I|| ~ eps
+      Multiplication from left: matrix Q orthogonal
+
+   3. ||C - Q.T*Q*C|| ~ eps
+      Multiplication from left: matrix Q orthogonal
+
+   4. ||C - C*Q.T*Q|| ~ eps
+      Multiplication from right: matrix Q orthogonal
+
+   5. ||I - Q.T*Q|| ~ eps, where Q = buildQ(qr(A))
+      Reconstruction Q; is orthogonal
+
+   6. ||I - Q*Q.T|| ~ eps, where Q = buildQ(qr(A))
+      Reconstruction Q; is orthogonal
+
+
+QR, LQ solvers:
+
+   7. least squares - min ||B - A*X||
+      compute || X0 - A.-1*(A*X0) || ~ 0
+
+   8. min ||X|| s.t A.T*X = B
+      compute || B - A.T*(A.-T*B) || ~ 0
+
+      
+CHOLESKY factorization:
+
+   1. ||unblk.CHOL - blk.CHOL|| ~ eps
+      Factoring: unblocked and blocked version results same
+
+   2. || B - A*(A.-1*B) ||
+      Solving: error to original
+
+
+LU factorization:
+
+   1. ||unblk.LU - blk.LU|| ~ eps
+      Factoring: unblocked and blocked version results same
+
+   2. || B - A*(A.-1*B) ||
+      Solving: error to original
+
+LDL factorization
+
+   1. ||unblk.LDL - blk.LDL|| ~ eps
+      Factoring: unblocked and blocked version results same
+
+   2. || B - A*(A.-1*B) ||
+      Solving: error to original
+
+Bidiagonal Reduction
+
+   1. ||unblk.BDRED - blk.BDRED|| ~ eps
+      Factoring: unblocked and blocked version results same
+
+   2. ||I - Q.T*Q|| ~ eps and ||I - P*P.T|| ~ eps
+      Product of orthogonal matrices is identity
+
+   3. || B - Q.T*A.P || ~ eps
+      Multipling original with orthogonal matrices produces bidiagonal
+
+Tridiagonal Reduction
+
+   1. ||unblk.TRDRED - blk.TRDRED|| ~ eps
+      Factoring: unblocked and blocked version results same
+
+   2. ||I - Q.T*Q|| ~ eps
+      Product of orthogonal matrix is identity
+
+   3. || T - Q.T*A.Q || ~ eps
+      Multipling original with orthogonal matrix produces tridiagonal
+
+Symmetric Eigenvalue:
+
+   1. ||V.T*A*V - S|| ~ eps
+      Constructing eigenvalues; multiplying A with eigenvectors	produces eigenvalues
+      
+   2. ||I - V*V.T|| ~ eps
+      Eigenvectors are orthogonal
+
+Singular value decomposition
+
+   1. ||A - U*S*V.T|| ~ eps
+      Product of singular values and singular vectors equals original matrix
+
+   2. ||I - U.T*U|| ~ eps
+      Left singular vectors are orthogonal
+
+   3. ||I - V*V.T|| ~ eps
+      Right singular vectors are orthogonal
+
+
+Matrix-matrix multiplication
+   1. ||A*B - (B.T*A.T).T|| ~ 0
+      Direct product and product of transposes are equal      
+
+   2. ||A.T*B - (B.T*A).T|| ~ 0
+      Direct product and product of transposes are equal      
+     
