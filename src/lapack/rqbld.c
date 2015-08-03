@@ -219,6 +219,7 @@ int __armas_rqbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
 
     __blk_rqbuild(A, tau, &T, &Wrk, K, lb, conf);
   }
+  return 0;
 }
 
 

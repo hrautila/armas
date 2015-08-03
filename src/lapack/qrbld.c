@@ -230,6 +230,7 @@ int __armas_qrbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
 
     __blk_qrbuild(A, tau, &T, &Wrk, K, lb, conf);
   }
+  return 0;
 }
 
 

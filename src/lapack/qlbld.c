@@ -226,6 +226,7 @@ int __armas_qlbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
 
     __blk_qlbuild(A, tau, &T, &Wrk, K, lb, conf);
   }
+  return 0;
 }
 
 
