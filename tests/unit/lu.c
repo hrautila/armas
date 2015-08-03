@@ -50,7 +50,7 @@ int test_solve(int M, int N, int lb, int verbose)
   // B0 = B0 - A*X0
   armas_d_mult(&B0, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
   nrm = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
-  ok = isFINE(nrm, N*1e-14);
+  ok = isFINE(nrm, N*1e-12);
 
   printf("%s: A*(%s.LU(A).1*B) == B\n", PASS(ok), blk);
   if (verbose > 0) {
