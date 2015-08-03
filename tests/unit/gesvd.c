@@ -16,7 +16,8 @@ int test1(int M, int N, int verbose)
 {
     armas_d_dense_t A, D, S1, E, U, U1, V, V1, W, A0, A1, sD;
     armas_conf_t conf = *armas_conf_default();
-    double n0, n1, n2;
+    double n0, n1, n2, nrm_A;
+    long nwrk;
     int err, ok;
 
     if (M < N) {
@@ -32,8 +33,10 @@ int test1(int M, int N, int verbose)
     
     armas_d_set_values(&A, unitrand, ARMAS_ANY);
     armas_d_mcopy(&A0, &A);
-    
-    armas_d_init(&W, (M*N < 100 ? 100 : M*N), 1);
+    nrm_A = armas_d_mnorm(&A, ARMAS_NORM_ONE, &conf);
+
+    nwrk = armas_d_svd_work(&A, ARMAS_WANTU|ARMAS_WANTV, &conf);
+    armas_d_init(&W, nwrk, 1);
     
     err = armas_d_svd(&D, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
     if (err) {
@@ -58,15 +61,15 @@ int test1(int M, int N, int verbose)
     armas_d_diag(&sD, &A0, 0);
     armas_d_mult_diag(&U, &D, ARMAS_RIGHT, &conf);
     armas_d_mult(&A0, &U, &V, -1.0, 1.0, ARMAS_NONE, &conf);
-    n2 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
+    n2 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
     ok = isOK(n2, 10*M);
     printf("%s [M=%d, N=%d]: A == U*S*V.T, U=[m,n], V=[n,n] \n", PASS(ok), M, N);
 
     if (verbose > 0) {
-        printf("  ||A - U*S*V.T||_1: %e [%ld]\n", n2, (long)(n2/DBL_EPSILON));
-        printf("  ||I - U.T*U||_1  : %e [%ld]\n", n0, (long)(n0/DBL_EPSILON));
-        printf("  ||I - V*V.T||_1  : %e [%ld]\n", n1, (long)(n1/DBL_EPSILON));
+        printf("  ||A - U*S*V.T||_1: %e [%d]\n", n2, ndigits(n2));
+        printf("  ||I - U.T*U||_1  : %e [%d]\n", n0, ndigits(n0));
+        printf("  ||I - V*V.T||_1  : %e [%d]\n", n1, ndigits(n1));
     }
 
     armas_d_release(&A);
@@ -84,7 +87,7 @@ int test2(int M, int N, int verbose)
 {
     armas_d_dense_t A, S, Sg, E, U, U1, V, V1, W, A0, A1, sD;
     armas_conf_t conf = *armas_conf_default();
-    double n0, n1, n2;
+    double n0, n1, n2, nrm_A;
     int err, ok;
 
     if (M < N) {
@@ -104,6 +107,8 @@ int test2(int M, int N, int verbose)
     armas_d_set_values(&A, unitrand, ARMAS_ANY);
     armas_d_set_values(&Sg, zero, ARMAS_ANY);
     armas_d_mcopy(&A0, &A);
+    nrm_A = armas_d_mnorm(&A, ARMAS_NORM_ONE, &conf);
+
     armas_d_init(&W, (M*N < 100 ? 100 : M*N), 1);
     
     err = armas_d_svd(&S, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
@@ -132,14 +137,14 @@ int test2(int M, int N, int verbose)
 
     armas_d_mult(&A1, &U, &Sg, 1.0, 0.0, ARMAS_NONE, &conf);
     armas_d_mult(&A0, &A1, &V, -1.0, 1.0, ARMAS_NONE, &conf);
-    n2 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
+    n2 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
     ok = isOK(n2, 10*M);
     printf("%s [M=%d, N=%d]: A == U*S*V.T, U=[m,m], V=[n,n] \n", PASS(ok), M, N);
     if (verbose > 0) {
-        printf("  ||A - U*S*V.T||_1: %e [%ld]\n", n2, (long)(n2/DBL_EPSILON));
-        printf("  ||I - U.T*U||_1  : %e [%ld]\n", n0, (long)(n0/DBL_EPSILON));
-        printf("  ||I - V*V.T||_1  : %e [%ld]\n", n1, (long)(n1/DBL_EPSILON));
+        printf("  ||A - U*S*V.T||_1: %e [%d]\n", n2, ndigits(n2));
+        printf("  ||I - U.T*U||_1  : %e [%d]\n", n0, ndigits(n0));
+        printf("  ||I - V*V.T||_1  : %e [%d]\n", n1, ndigits(n1));
     }
 
     armas_d_release(&A);
@@ -160,7 +165,7 @@ int test3(int M, int N, int verbose)
 {
     armas_d_dense_t A, D, S1, E, U, U1, V, V1, W, A0, A1, sD;
     armas_conf_t conf = *armas_conf_default();
-    double n0, n1, n2;
+    double n0, n1, n2, nrm_A;
     int err, ok;
 
     if (M >= N) {
@@ -178,6 +183,8 @@ int test3(int M, int N, int verbose)
     
     armas_d_set_values(&A, unitrand, ARMAS_ANY);
     armas_d_mcopy(&A0, &A);
+    nrm_A = armas_d_mnorm(&A, ARMAS_NORM_ONE, &conf);
+
     armas_d_init(&W, (M*N < 100 ? 100 : N*M), 1);
     
     err = armas_d_svd(&D, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
@@ -202,14 +209,14 @@ int test3(int M, int N, int verbose)
     armas_d_diag(&sD, &A0, 0);
     armas_d_mult_diag(&V, &D, ARMAS_LEFT, &conf);
     armas_d_mult(&A0, &U, &V, -1.0, 1.0, ARMAS_NONE, &conf);
-    n2 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
+    n2 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
     ok = isOK(n2, 10*N);
     printf("%s [M=%d, N=%d]: A == U*S*V.T, U=[m,m], V=[m,n] \n", PASS(ok), M, N);
     if (verbose > 0) {
-        printf("  ||A - U*S*V.T||_1: %e [%ld]\n", n2, (long)(n2/DBL_EPSILON));
-        printf("  ||I - U.T*U||_1  : %e [%ld]\n", n0, (long)(n0/DBL_EPSILON));
-        printf("  ||I - V*V.T||_1  : %e [%ld]\n", n1, (long)(n1/DBL_EPSILON));
+        printf("  ||A - U*S*V.T||_1: %e [%d]\n", n2, ndigits(n2));
+        printf("  ||I - U.T*U||_1  : %e [%d]\n", n0, ndigits(n0));
+        printf("  ||I - V*V.T||_1  : %e [%d]\n", n1, ndigits(n1));
     }
 
     armas_d_release(&A);
@@ -228,7 +235,7 @@ int test4(int M, int N, int verbose)
 {
     armas_d_dense_t A, S, Sg, E, U, U1, V, V1, W, A0, A1, sD;
     armas_conf_t conf = *armas_conf_default();
-    double n0, n1, n2;
+    double n0, n1, n2, nrm_A;
     int err, ok;
 
     if (M > N) {
@@ -246,6 +253,8 @@ int test4(int M, int N, int verbose)
     armas_d_init(&Sg, M, N);
     
     armas_d_set_values(&A, unitrand, ARMAS_ANY);
+    nrm_A = armas_d_mnorm(&A, ARMAS_NORM_ONE, &conf);
+
     armas_d_set_values(&Sg, zero, ARMAS_ANY);
     armas_d_mcopy(&A0, &A);
     armas_d_init(&W, (M*N < 100 ? 100 : M*N), 1);
@@ -275,14 +284,14 @@ int test4(int M, int N, int verbose)
 
     armas_d_mult(&A1, &Sg, &V, 1.0, 0.0, ARMAS_NONE, &conf);
     armas_d_mult(&A0, &U, &A1, -1.0, 1.0, ARMAS_NONE, &conf);
-    n2 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
+    n2 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
     ok = isOK(n2, 10*N);
     printf("%s [M=%d, N=%d]: A == U*S*V.T, U=[m,m], V=[n,n] \n", PASS(ok), M, N);
     if (verbose > 0) {
-        printf("  ||A - U*S*V.T||_1: %e [%ld]\n", n2, (long)(n2/DBL_EPSILON));
-        printf("  ||I - U.T*U||_1  : %e [%ld]\n", n0, (long)(n0/DBL_EPSILON));
-        printf("  ||I - V*V.T||_1  : %e [%ld]\n", n1, (long)(n1/DBL_EPSILON));
+        printf("  ||A - U*S*V.T||_1: %e [%d]\n", n2, ndigits(n2));
+        printf("  ||I - U.T*U||_1  : %e [%d]\n", n0, ndigits(n0));
+        printf("  ||I - V*V.T||_1  : %e [%d]\n", n1, ndigits(n1));
     }
 
     armas_d_release(&A);
@@ -366,7 +375,6 @@ main(int argc, char **argv)
         if (! test4(Nsmall, Mbig, verbose))
             fails++;
     }
-
     exit(fails);
 }
 
