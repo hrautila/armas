@@ -15,7 +15,7 @@ int test_1(int N, int flags, int verbose)
 {
     armas_d_dense_t A, A0, D, W, I, sD, V, T;
     armas_conf_t conf = *armas_conf_default();
-    double n0, n1;
+    double n0, n1, nrm_A;
     int err, ok;
     char *uplo = flags & ARMAS_LOWER ? "L" : "U";
     
@@ -28,7 +28,8 @@ int test_1(int N, int flags, int verbose)
 
     armas_d_set_values(&A, unitrand, ARMAS_SYMM);
     armas_d_mcopy(&A0, &A);
-
+    nrm_A = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
+    
     err = armas_d_eigen_sym(&D, &A, &W, flags|ARMAS_WANTV, &conf);
     if (err) {
         printf("err = %d, %d\n", err, conf.error);
@@ -50,13 +51,13 @@ int test_1(int N, int flags, int verbose)
         printf("A - V*D*V.T:\n"); armas_d_printf(stdout, "%6.3f", &A0);
     }        
     n1 = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
-    // OK if average element error less than multiple of EPSILON
-    ok = isOK(n1/N, N);
+    n1 /= nrm_A;
+    ok = isOK(n1, N);
 
     printf("%s [N=%d, uplo='%s']: A == V*D*V.T\n", PASS(ok), N, uplo);
     if (verbose > 0) {
-        printf("  ||A - V*D*V.T||_1: %e [%ld]\n", n1, (long)(n1/DBL_EPSILON));
-        printf("  ||I - V.T*V||_1  : %e [%ld]\n", n0, (long)(n0/DBL_EPSILON));
+        printf("  ||A - V*D*V.T||_1: %e [%d]\n", n1, ndigits(n1));
+        printf("  ||I - V.T*V||_1  : %e [%d]\n", n0, ndigits(n0));
     }
     return ok;
 }
@@ -70,7 +71,7 @@ main(int argc, char **argv)
     int M = 313;
     int N = 313;
     int ok = 0;
-    int verbose = 0;
+    int verbose = 1;
 
     while ((opt = getopt(argc, argv, "v")) != -1) {
         switch (opt) {
