@@ -1,22 +1,11 @@
 Another Rewrite of Matrix Algebra Subroutines
 ---------------------------------------------
 
-## Installation
-
-   $ ./configure CFLAGS=-O3
-   $ make
-   $ sudo make install
-
-
 ## Building from GIT sources.
 
    Need autoconf, automake and libtool packages.
 
-   $ libtoolize
-   $ aclocal
-   $ autoconf
-   $ autoheader
-   $ automake --add-missing
+   $ ./bootstrap.sh
    $ ./configure CFLAGS=-O3
    $ make
    $ sudo make install
@@ -35,6 +24,9 @@ Another Rewrite of Matrix Algebra Subroutines
         Compile single precision complex version, disabled by default. Not tested
    --enable-complex128
         Compile double precision complex version, disabled by default. Not tested
+   --enable-compat
+        Add compability layer; fortran and cblas functions, disabled by default
+	(Proof of concept and not tested)
 
 ## SIMD optimizations
 
