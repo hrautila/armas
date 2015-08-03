@@ -253,24 +253,25 @@ int __blk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int lb, armas_conf_t *c
  */
 int __armas_lufactor(__armas_dense_t *A, armas_pivot_t *P, armas_conf_t *conf)
 {
-  int lb;
+  int lb, err = 0;
   if (!conf)
     conf = armas_conf_default();
 
   lb = conf->lb;
   if (lb == 0 || A->cols <= lb || A->rows <= lb) {
     if (P) {
-      __unblk_lufactor(A, P, 0, conf);
+      err = __unblk_lufactor(A, P, 0, conf);
     } else {
-      __unblk_lufactor_nopiv(A, conf);
+      err = __unblk_lufactor_nopiv(A, conf);
     }
   } else {
     if (P) {
-      __blk_lufactor(A, P, lb, conf);
+      err = __blk_lufactor(A, P, lb, conf);
     } else {
-      __blk_lufactor_nopiv(A, lb, conf);
+      err = __blk_lufactor_nopiv(A, lb, conf);
     }
   }
+  return err;
 }
 
 /*

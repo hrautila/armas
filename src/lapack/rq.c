@@ -399,6 +399,7 @@ int __armas_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
 
     __blk_rqfactor(A, tau, &T, &Wrk, lb, conf);
   }
+  return 0;
 }
 
 /*

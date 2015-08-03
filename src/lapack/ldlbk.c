@@ -155,6 +155,7 @@ int __armas_bkfactor_work(__armas_dense_t *A, armas_conf_t *conf)
 int __armas_bksolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *W,
                     armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
+  int err = 0;
   if (!conf)
     conf = armas_conf_default();
 
@@ -164,16 +165,19 @@ int __armas_bksolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *W,
   }
   if (flags & ARMAS_LOWER) {
     // first part: Z = D.-1*(L.-1*B)
-    __unblk_bksolve_lower(B, A, P, 1, conf);
+    if ((err = __unblk_bksolve_lower(B, A, P, 1, conf)) < 0)
+      return err;
     // second part: X = L.-T*Z
-    __unblk_bksolve_lower(B, A, P, 2, conf);
+    err = __unblk_bksolve_lower(B, A, P, 2, conf);
   }
   else {
     // first part: Z = D.-1*(U.-1*B)
-    __unblk_bksolve_upper(B, A, P, 1, conf);
+    if ((err = __unblk_bksolve_upper(B, A, P, 1, conf)) < 0)
+      return err;
     // second part: X = U.-T*Z
-    __unblk_bksolve_upper(B, A, P, 2, conf);
+    err =__unblk_bksolve_upper(B, A, P, 2, conf);
   }
+  return err;
 }
 
 

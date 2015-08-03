@@ -403,6 +403,7 @@ int __armas_qlfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
 
     __blk_qlfactor(A, tau, &T, &Wrk, lb, conf);
   }
+  return 0;
 }
 
 /*
