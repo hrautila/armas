@@ -63,7 +63,6 @@ void __solve_left_forward(mdata_t *B, const mdata_t *A, DTYPE alpha,
                           int flags, int N, int S, int E, cache_t *cache)
 {
   mdata_t b0, b1, a0;
-  mdata_t *Acpy, *Bcpy;
 
   if (N < MIN_MBLOCK_SIZE) {
     //printf("__solve_left_forward: direct ..\n");
@@ -112,7 +111,6 @@ void __solve_left_backward(mdata_t *B, const mdata_t *A, DTYPE alpha,
                            int flags, int N, int S, int E, cache_t *cache)
 {
   mdata_t b0, b1, a0;
-  mdata_t *Acpy, *Bcpy;
 
   //printf("__solve_left_backward: N=%d, S= %d, E=%d\n", N, S, E);
   if (N < MIN_MBLOCK_SIZE) {
@@ -185,7 +183,6 @@ void __solve_right_backward(mdata_t *B, const mdata_t *A, DTYPE alpha,
                            int flags, int N, int S, int E, cache_t *cache)
 {
   mdata_t b0, b1, a0;
-  mdata_t *Acpy, *Bcpy;
   int ops;
 
   //printf("__solve_right_backward: N=%d, S= %d, E=%d\n", N, S, E);

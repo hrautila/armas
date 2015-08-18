@@ -86,7 +86,7 @@ void __rank_blk(mdata_t *C, const mdata_t *A,
                 DTYPE alpha, DTYPE beta,
                 int flags,  int P, int S, int E, int KB, int NB, int MB)
 {
-  register int i, j, nI, nC;
+  register int i, nI, nC;
   mdata_t Cd, Ad, Bd;
   mdata_t Acpy, Bcpy;
   cache_t cache;
@@ -209,7 +209,7 @@ int __armas_update_sym(__armas_dense_t *C,  const __armas_dense_t *A,
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   long nproc;
-  int K, ir, ie, mb, ok, n;
+  int K, ok;
   mdata_t *_C;
   const mdata_t *_A;
 

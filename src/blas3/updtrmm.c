@@ -29,6 +29,7 @@
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
+#include "scheduler.h"
 
 /*
  * update diagonal block
@@ -43,7 +44,7 @@
                         DTYPE alpha, DTYPE beta,
                         int flags,  int P, int nC, int nR, cache_t *cache)
 {
-  register int i, incA, incB, transA, transB;
+  register int i, incA, incB;
   mdata_t A0, B0, C0;
 
   incA = flags & ARMAS_TRANSA ? A->step : 1;
@@ -296,7 +297,7 @@ void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
                       DTYPE alpha, DTYPE beta, int flags,
                       int P, int S, int L, int R, int E, int KB, int NB, int MB)
 {
-  register int i, j, nI, ar, ac, br, bc, N, M;
+  register int i, nI, ar, ac, br, bc, N, M;
   mdata_t Cd, Ad, Bd;
   mdata_t Acpy, Bcpy;
   cache_t cache;
@@ -518,7 +519,7 @@ int __armas_update_trm(__armas_dense_t *C,
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   long nproc;
-  int K, ir, ie, mb, ok, n;
+  int K, ok;
   mdata_t *_C;
   const mdata_t *_A, *_B;
 

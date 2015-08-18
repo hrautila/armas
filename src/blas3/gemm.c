@@ -67,8 +67,7 @@ int __mult_threaded(int blknum, int nblk, int colwise,
 {
   mdata_t *_C;
   const mdata_t *_A, *_B;
-  int ie, ir, K, err, cpuid;
-  cpu_set_t cpuset;
+  int ie, ir, K, err;
   pthread_t th;
   kernel_param_t kp;
 
@@ -222,7 +221,7 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
   armas_counter_wait(&ready);
   // 1. check that task worker count is zero on all tasks
   int refcnt;
-  for (k = 0; i < 50; k) {
+  for (k = 0; k < 50; k++) {
     refcnt = 0;
     for (i = 0; i < nT; i++) {
       refcnt += tasks[i].t.wcnt;
@@ -266,7 +265,7 @@ int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_den
                  DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   long nproc;
-  int K, ir, ie, mb, ok, n;
+  int K, ok;
   mdata_t *_C;
   const mdata_t *_A, *_B;
   

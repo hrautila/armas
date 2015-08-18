@@ -37,7 +37,7 @@ void __mult_symm_diag(mdata_t *C, const mdata_t *A, const mdata_t *B,
                       int nP, int nSL, int nRE, cache_t *cache)
 {
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-  int nA, nB, nAC;
+  int nAC;
 
   if (nP == 0)
     return;
@@ -469,7 +469,7 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
                       DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   long nproc;
-  int K, ir, ie, ok, empty;
+  int K, ok;
   mdata_t *_C;
   const mdata_t *_A, *_B;
 
@@ -489,7 +489,6 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
   case ARMAS_LEFT:
   default:
     ok = C->rows == A->rows && C->cols == B->cols && A->cols == B->rows && A->rows == A->cols;
-    empty = A->rows == 0 || B->cols == 0;
     break;
   }
   if (! ok) {

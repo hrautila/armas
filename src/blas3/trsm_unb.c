@@ -34,7 +34,7 @@ void __y1_sub0_dotax(DTYPE *y, int incy,
                      const DTYPE *b, int incb, int nR)
 {
   register int k;
-  register DTYPE d0, s0, c0, y0, t0;
+  register DTYPE s0, c0, y0, t0;
 
   s0 = c0 = __ZERO;
   for (k = 0; k < nR; k += 1) {
@@ -52,7 +52,7 @@ void __y1_sub_dotax(DTYPE *y, int incy,
                     const DTYPE *b, int incb, int nR)
 {
   register int k;
-  register DTYPE d0, d1, d2, d3, t;
+  register DTYPE d0, d1, d2, d3;
 
   d0 = d1 = d2 = d3 = __ZERO;
   for (k = 0; k < nR-3; k += 4) {
@@ -145,8 +145,7 @@ void __solve_unb_lu(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags,
                   int ldB, int ldA, int nRE, int nB)
 {
   // backward substitution
-  register int i, j, k;
-  DTYPE b0, b1, d0, d1;
+  register int i, j;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
 
   // update with A bottom-right element
@@ -223,7 +222,7 @@ static
 void __solve_unb_ll(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags, 
                     int ldB, int ldA, int nRE, int nB)
 {
-  register int i, j, k;
+  register int i, j;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
 
   // top-left
@@ -371,7 +370,6 @@ void __solve_unb_rl(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags,
                     int ldB, int ldA, int nRE, int nB)
 {
   register int i, j;
-  DTYPE *b0;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
 
   if (!unit) {
@@ -407,9 +405,6 @@ void __solve_unb_rlt(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags,
                      int ldB, int ldA, int nRE, int nB)
 {
   register int i, j;
-  register DTYPE *b1, *b2, *Bcl;
-  register const DTYPE *a11, *a21, *Acl;
-  DTYPE btmp;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
 
   if (!unit) {

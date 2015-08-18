@@ -54,7 +54,7 @@ static
 void __solve_blk_lu_llt(mdata_t *B, const mdata_t *A, const  DTYPE alpha, int flags,
                         int N, int S, int E, cache_t *cache)
 {
-  register int i, j, nI, nJ, cI, cJ, nA, nB;
+  register int i, j, nI, nJ, cI, cJ;
   mdata_t A0, A1, B0, B1;
   int NB = cache->NB;
 
@@ -218,7 +218,7 @@ static
 void __solve_blk_rut_rl(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
                         int N, int S, int E, cache_t *cache)
 {
-  register int i, j, nI, nJ, cI, cJ, nA, nB;
+  register int i, j, nI, nJ, cI, cJ;
   mdata_t A0, A1, B0, B1;
   int NB = cache->NB;
   int transB = flags & ARMAS_TRANSA ? ARMAS_TRANSB : ARMAS_NULL;

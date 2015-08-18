@@ -153,7 +153,7 @@ int __solve_trm_schedule(int nblk,
                          __armas_dense_t *B, const __armas_dense_t *A, 
                          DTYPE alpha, int flags, armas_conf_t *conf)
 {
-  int ir, ie, err, nT, k, j;
+  int ir, ie, nT, k, j;
   mdata_t *_B;
   const mdata_t *_A;
   blas_task_t *tasks;
@@ -200,6 +200,7 @@ int __solve_trm_schedule(int nblk,
   assert(refcnt == 0);
   // release task memory
   free(tasks);
+  return 0;
 }
 
 
@@ -234,7 +235,7 @@ int __armas_solve_trm(__armas_dense_t *B, const __armas_dense_t *A,
                       DTYPE alpha, int flags, armas_conf_t *conf)
 {
   long nproc;
-  int K, ir, ie, ok, opts;
+  int ie, ok, opts;
   mdata_t *_B;
   const mdata_t *_A;
 

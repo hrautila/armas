@@ -48,7 +48,6 @@ void __mult_left_forward(mdata_t *B, const mdata_t *A, DTYPE alpha,
                          int flags, int N, int S, int E, cache_t *cache)
 {
   mdata_t b0, b1, a0, a1;
-  mdata_t *Acpy, *Bcpy;
 
   if (N < MIN_MBLOCK_SIZE) {
     __trmm_unb(B, A, alpha, flags, N, S, E);
@@ -147,7 +146,7 @@ void __mult_right_forward(mdata_t *B, const mdata_t *A, DTYPE alpha,
                           int flags, int N, int S, int E, cache_t *cache)
 {
   mdata_t b0, b1, a0, a1;
-  int ar, ac, ops;
+  int ops;
 
   if (N < MIN_MBLOCK_SIZE) {
     __trmm_unb(B, A, alpha, flags, N, S, E);

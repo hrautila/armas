@@ -132,7 +132,7 @@ void __kernel_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mdata_t
                                      int P, int nSL, int nRE,
                                      cache_t *cache)
 {
-  int i, j, k, ip, jp, kp, nP, nI, nJ;
+  int j, ip, jp, kp, nP, nI, nJ;
   mdata_t Ca;
   Ca.step = C->step;
 
@@ -185,7 +185,7 @@ void __kernel_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdata_t 
                                     DTYPE alpha, DTYPE beta, int flags,
                                     int P, int S, int L, int R, int E, cache_t *cache)
 {
-  int i, j, k, ip, jp, kp, nP, nI, nJ;
+  int j, ip, jp, kp, nP, nI, nJ;
   mdata_t Ca;
   int KB, NB, MB;
   mdata_t *Acpy, *Bcpy;
