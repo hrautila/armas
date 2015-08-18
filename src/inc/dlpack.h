@@ -127,7 +127,7 @@ DTYPE __MAX(DTYPE a, DTYPE b) {
 // internal QL related function available for others
 #define __update_ql_left        __d_update_ql_left
 #define __update_ql_right       __d_update_ql_right
-#define __unblk_ql_reflector    __d_unblk_ql_reflectorm
+#define __unblk_ql_reflector    __d_unblk_ql_reflector
 
 // QR functions
 #define __armas_qrfactor        armas_d_qrfactor
