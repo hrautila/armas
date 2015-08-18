@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 
 #include <armas/armas.h>
 #include "scheduler.h"
@@ -30,7 +31,7 @@ static armas_conf_t __default_conf = {
 
 static armas_scheduler_t __default_sched = {
  .workers = NULL,  // no workers;
- .cpus    = ARMAS_EMPTY_CPUSET,     // 
+ .cpus    = {}, //ARMAS_EMPTY_CPUSET,     // 
  .opts    = 0,
  .nworker = 0,     // no workers
  .rrindex = 0,
@@ -152,6 +153,7 @@ void armas_parse_scheduling(char *str, cpu_set_t *cpus, armas_conf_t *conf)
   }
 
   cstr = str;
+  CPU_ZERO(&__default_sched.cpus);
   // parse cpu reservations
   for (n = 0, tok = strsep(&cstr, ","); tok; tok = strsep(&cstr, ","), n++) {
     // empty token
