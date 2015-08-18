@@ -256,7 +256,8 @@ int __armas_set_values(__armas_dense_t *m, VALUEFUNC value, int flags)
  * @param flags[in] flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
  *
  */
-void __armas_make_trm(__armas_dense_t *m, int flags) {
+void __armas_make_trm(__armas_dense_t *m, int flags)
+{
   int i, j;
   if (flags & ARMAS_UPPER) {
     // clear lower triangular/trapezoidial part
@@ -271,7 +272,7 @@ void __armas_make_trm(__armas_dense_t *m, int flags) {
   else if (flags & ARMAS_LOWER) {
     // clear upper triangular/trapezoidial part
     for (j = 0; j < m->cols; j++) {
-      for (i = 0; i < m->rows & i < j; i++) {
+      for (i = 0; i < m->rows && i < j; i++) {
         m->elems[i + j*m->step] = __ZERO;
       }
       if (flags & ARMAS_UNIT && j < m->rows)
