@@ -42,7 +42,6 @@ void *worker_thread(void *arg)
 {
     armas_worker_t *W = (armas_worker_t *)arg;
     armas_task_t *T;
-    int c;
     W->running = 1;
 
     while (1) {
@@ -71,6 +70,7 @@ void *worker_thread(void *arg)
         atomic_dec(&T->wcnt);
     }
     W->running = 0;
+    return (void *)0;
 }
 
 static inline
