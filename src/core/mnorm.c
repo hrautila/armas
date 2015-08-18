@@ -28,7 +28,7 @@
 static 
 void __sum_of_sq(ABSTYPE *ssum, ABSTYPE *scale, __armas_dense_t *X, ABSTYPE sum, ABSTYPE scl)
 {
-  register int i, k;
+  register int i;
   register ABSTYPE a0;
 
   for (i = 0; i < __armas_size(X); i += 1) {
@@ -109,7 +109,7 @@ ABSTYPE __matrix_norm_inf(const __armas_dense_t *x, armas_conf_t *conf)
 
 ABSTYPE __armas_mnorm(const __armas_dense_t *x, int which, armas_conf_t *conf)
 {
-  ABSTYPE normval;
+  ABSTYPE normval = __ABSZERO;
 
   if (!conf)
     conf = armas_conf_default();

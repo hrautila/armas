@@ -140,7 +140,7 @@ int __pivot_index(__armas_dense_t *A, armas_conf_t *conf)
  */
 int __pivot_sort(__armas_dense_t *D, armas_pivot_t *P, int direction)
 {
-    int k, ni, j, nk, pi, pk, pj;
+    int k, j, pk, pj;
     DTYPE cval, tmpval;
 
     if (! __armas_isvector(D)) {
