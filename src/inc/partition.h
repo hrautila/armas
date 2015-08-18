@@ -33,12 +33,13 @@ void __partition_2x1(__armas_dense_t *AT, __armas_dense_t *AB,
 
   switch (side) {
   case ARMAS_PTOP:
-    __armas_submatrix(AT, A, 0,  0, nb, A->cols);
-    __armas_submatrix(AB, A, nb, 0, A->rows-nb, A->cols);
+    __armas_submatrix_unsafe(AT, A, 0,  0, nb, A->cols);
+    __armas_submatrix_unsafe(AB, A, nb, 0, A->rows-nb, A->cols);
     break;
   case ARMAS_PBOTTOM:
-    __armas_submatrix(AT, A, 0, 0, A->rows-nb,  A->cols);
-    __armas_submatrix(AB, A, A->rows-nb, 0, nb, A->cols);
+  default:
+    __armas_submatrix_unsafe(AT, A, 0, 0, A->rows-nb,  A->cols);
+    __armas_submatrix_unsafe(AB, A, A->rows-nb, 0, nb, A->cols);
     break;
   }
 }
@@ -62,17 +63,18 @@ void __repartition_2x1to3x1(__armas_dense_t *AT, __armas_dense_t *A0,
     if (nb + AT->rows > A->rows) {
       nb = A->rows - AT->rows;
     }
-    __armas_submatrix(A0, A, 0, 0, AT->rows, A->cols);
-    __armas_submatrix(A1, A, AT->rows, 0, nb, A->cols);
-    __armas_submatrix(A2, A, AT->rows+nb, 0, A->rows-AT->rows-nb, A->cols);
+    __armas_submatrix_unsafe(A0, A, 0, 0, AT->rows, A->cols);
+    __armas_submatrix_unsafe(A1, A, AT->rows, 0, nb, A->cols);
+    __armas_submatrix_unsafe(A2, A, AT->rows+nb, 0, A->rows-AT->rows-nb, A->cols);
     break;
   case ARMAS_PTOP:
+  default:
     if (AT->rows < nb) {
       nb = AT->rows;
     }
-    __armas_submatrix(A0, A, 0, 0, AT->rows-nb,  A->cols);
-    __armas_submatrix(A1, A, AT->rows-nb, 0, nb, A->cols);
-    __armas_submatrix(A2, A, AT->rows, 0, A->rows-AT->rows, A->cols);
+    __armas_submatrix_unsafe(A0, A, 0, 0, AT->rows-nb,  A->cols);
+    __armas_submatrix_unsafe(A1, A, AT->rows-nb, 0, nb, A->cols);
+    __armas_submatrix_unsafe(A2, A, AT->rows, 0, A->rows-AT->rows, A->cols);
     break;
   }
 }
@@ -98,6 +100,7 @@ void __continue_3x1to2x1(__armas_dense_t *AT, __armas_dense_t *AB,
     __armas_submatrix(AB, A, nr0+nr1, 0, A->rows-nr0-nr1, A->cols);
     break;
   case ARMAS_PTOP:
+  default:
     __armas_submatrix(AT, A, 0, 0,   nr0,  A->cols);
     __armas_submatrix(AB, A, nr0, 0, A->rows-nr0, A->cols);
     break;
@@ -124,6 +127,7 @@ void __partition_1x2(__armas_dense_t *AL, __armas_dense_t *AR,
     __armas_submatrix(AR, A, 0, nb, A->rows, A->cols-nb);
     break;
   case ARMAS_PRIGHT:
+  default:
     __armas_submatrix(AL, A, 0, 0,  A->rows, A->cols-nb);
     __armas_submatrix(AR, A, 0, A->cols-nb,  A->rows, nb);
     break;
@@ -153,6 +157,7 @@ void __repartition_1x2to1x3(__armas_dense_t *AL, __armas_dense_t *A0,
     __armas_submatrix(A2, A, 0, AL->cols,    A->rows, A->cols-AL->cols);
     break;
   case ARMAS_PRIGHT:
+  default:
     if (AL->cols + nb > A->cols) {
       nb = A->cols - AL->cols;
     }
@@ -206,20 +211,21 @@ void __partition_2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
 {
   switch (side) {
   case ARMAS_PTOPLEFT:
-    __armas_submatrix(ATL, A, 0, 0, mb, nb);
+    __armas_submatrix_unsafe(ATL, A, 0, 0, mb, nb);
     if (ATR)
       __armas_submatrix(ATR, A, 0, nb, mb, A->cols-nb);
     if (ABL)
       __armas_submatrix(ABL, A, mb, 0, A->rows-mb, nb);
-    __armas_submatrix(ABR, A, mb, nb, -1, -1);
+    __armas_submatrix_unsafe(ABR, A, mb, nb, A->rows-mb, A->cols-nb);
     break;
   case ARMAS_PBOTTOMRIGHT:
+  default:
     __armas_submatrix(ATL, A, 0, 0, A->rows-mb, A->cols-nb);
     if (ATR)
       __armas_submatrix(ATR, A, 0, A->cols-nb, A->rows-mb, nb);
     if (ABL)
       __armas_submatrix(ABL, A, A->rows-mb, 0, mb, A->cols-nb);
-    __armas_submatrix(ABR, A, A->rows-mb, A->cols-nb, -1, -1);
+    __armas_submatrix_unsafe(ABR, A, A->rows-mb, A->cols-nb, mb, nb);
     break;
   }
 }
@@ -270,6 +276,7 @@ void __repartition_2x2to3x3(__armas_dense_t *ATL,
     __armas_submatrix(A22, A, kr+nb, kc+nb, -1, -1);
     break;
   case ARMAS_PTOPLEFT:
+  default:
     // move towards top left corner
     if (nb > kc)
       nb = kc;
@@ -311,7 +318,7 @@ void __continue_3x3to2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
                          __armas_dense_t *A00, __armas_dense_t *A11, __armas_dense_t *A22,
                          __armas_dense_t *A, int direction)
 {
-  int nk = A00->rows;
+  //int nk = A00->rows;
   int mb = A11->cols;
   int kr = A00->rows;
   int kc = A00->cols;
@@ -325,6 +332,7 @@ void __continue_3x3to2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
     __armas_submatrix(ABR, A, kr+mb, kc+mb, -1, -1);
     break;
   case ARMAS_PTOPLEFT:
+  default:
     __armas_submatrix(ATL, A, 0, 0,  kr, kc);
     if (ATR)
       __armas_submatrix(ATR, A, 0, kc, kr, A->cols-kc);
