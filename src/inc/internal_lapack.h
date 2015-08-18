@@ -8,6 +8,8 @@
 #ifndef __ARMAS_INTERNAL_LAPACK_H
 #define __ARMAS_INTERNAL_LAPACK_H 1
 
+#include "partition.h"
+
 // internal declarations for lapack functionality.
 
 #ifndef TRUE
@@ -29,6 +31,23 @@ enum pivot_dir {
 #define ONERROR(exp) \
   do { if ( (exp) ) return -1; } while (0)
 
+// "empty" matrix;
+#define __EMPTY (__armas_dense_t ){                   \
+    .elems = (DTYPE *)0,                              \
+    .step = 0,                                        \
+    .rows = 0,                                        \
+    .cols = 0,                                        \
+    .__data = (void *)0,                              \
+    .__nbytes = 0}
+
+ 
+
+#if __GNUC__
+// macro to initialize matrix to "empty" to avoid GCC "maybe-uninitialized" errors
+#define EMPTY(A) A = __EMPTY
+#else
+#define EMPTY(A)
+#endif
 
 extern int compute_lb(int M, int N, int wsize, WSSIZE wsizer);
 
@@ -160,10 +179,17 @@ __unblk_rq_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t *ta
 		     armas_conf_t *conf);
 
 // internal Bidiagonal SVD
-extern DTYPE __bsvd2x2(DTYPE *smin, DTYPE *smax, DTYPE f, DTYPE g, DTYPE h);
-extern void __bsvd2x2_vec(DTYPE *ssmin, DTYPE *ssmax,
-			  DTYPE *cosl, DTYPE *sinl, DTYPE *cosr, DTYPE *sinr,
-			  DTYPE f, DTYPE g, DTYPE h);
+extern DTYPE __bdsvd2x2(DTYPE *smin, DTYPE *smax, DTYPE f, DTYPE g, DTYPE h);
+extern void __bdsvd2x2_vec(DTYPE *ssmin, DTYPE *ssmax,
+			   DTYPE *cosl, DTYPE *sinl, DTYPE *cosr, DTYPE *sinr,
+			   DTYPE f, DTYPE g, DTYPE h);
+extern int __bdsvd_golub(__armas_dense_t *D, __armas_dense_t *E,
+			 __armas_dense_t *U, __armas_dense_t *V,
+			 __armas_dense_t *CS, DTYPE tol, armas_conf_t *conf);
+extern int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
+			  __armas_dense_t *U, __armas_dense_t *V,
+			  __armas_dense_t *CS, DTYPE tol, armas_conf_t *conf);
+
 // tridiagonal EVD
 extern void __sym_eigen2x2(DTYPE *z1, DTYPE *z2, DTYPE a, DTYPE b, DTYPE c);
 extern void __sym_eigen2x2vec(DTYPE *z1, DTYPE *z2, DTYPE *cs, DTYPE *sn, DTYPE a, DTYPE b, DTYPE c);
