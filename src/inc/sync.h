@@ -9,6 +9,7 @@
 #define __ARMAS_SYNC_H 1
 
 #include <linux/futex.h>
+#include <unistd.h>
 #include <sys/syscall.h>
 #include <sys/time.h>
 #include <limits.h>
