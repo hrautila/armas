@@ -124,8 +124,7 @@ void __scale_plus(mdata_t *A, const mdata_t *B,
 int __armas_scale_plus(__armas_dense_t *A, const __armas_dense_t *B,
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
-  long nproc;
-  int K, ir, ie, mb, ok, n;
+  int ok;
   mdata_t *_A;
   const mdata_t *_B;
 
