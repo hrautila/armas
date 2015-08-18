@@ -10,6 +10,8 @@
 #ifndef __ARMAS_INTERNAL_H
 #define __ARMAS_INTERNAL_H
 
+#include <string.h>
+
 // maximum sizes
 
 #ifndef MAX_KB
@@ -243,6 +245,42 @@ void __add_at(mvec_t *A, int k, DTYPE v)
 #define __DEBUG(a)
 #endif
 
+static inline
+void __blk_merge_ext(mdata_t *C, mdata_t *C0, mdata_t *dC, int nR, int nC)
+{
+    int i, j;
+  for (j = 0; j < nC; j++) {
+    for (i = 0; i < nR-1; i += 2) {
+      C->md[(i+0)+j*C->step] = C0->md[(i+0)+j*C0->step] + dC->md[(i+0)+j*dC->step];
+      C->md[(i+1)+j*C->step] = C0->md[(i+1)+j*C0->step] + dC->md[(i+1)+j*dC->step];
+    }
+    if (i != nR) {
+      C->md[(i+0)+j*C->step] = C0->md[(i+0)+j*C0->step] + dC->md[(i+0)+j*dC->step];
+    }
+  }
+}
+
+static inline
+void clear_blk(mdata_t *A, int nR, int nC)
+{
+  int j;
+  for (j = 0; j < nC; j++) {
+    memset(&A->md[j*A->step], 0, nR*sizeof(DTYPE));
+  }
+}
+
+static inline
+void ext_merge(mdata_t *A, mdata_t *B, int nR, int nC)
+{
+  int i, j;
+  for (j = 0; j < nC; j++) {
+    for (i = 0; i < nR; i++) {
+      A->md[i+j*A->step] += B->md[i+j*B->step];
+    }
+  }
+}
+
+
 // forward declarations of some element type dependent functions
 //extern void __SCALE(DTYPE *X, int ldX, const DTYPE beta, int M, int N);
 //extern void __tile_add(DTYPE *X, int ldX, const DTYPE beta, int M, int N);
@@ -251,6 +289,9 @@ extern void __blk_scale(mdata_t *X, const DTYPE beta, int M, int N);
 extern void __blk_add(mdata_t *X, const DTYPE beta, int M, int N);
 extern void __blk_print(const mdata_t *X, int M, int N, const char *s, const char *fmt);
 extern void __vec_print(const mvec_t *X, int N, const char *s, const char *fmt);
+
+extern
+void __blk_scale_ext(mdata_t *C0, mdata_t *dC, const mdata_t *A, DTYPE beta, int nR, int nC);
 
 extern
 void __kernel_colblk_inner(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
@@ -265,6 +306,11 @@ extern
 void __kernel_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdata_t *B,
                                     DTYPE alpha, DTYPE beta, int flags,
                                     int P, int S, int L, int R, int E, cache_t *cache);
+
+extern
+void __kernel_inner(mdata_t *C, const mdata_t *A, const mdata_t *B,
+                    DTYPE alpha, DTYPE beta, int flags,
+                    int P, int S, int L, int R, int E, int KB, int NB, int MB);
 
 extern
 void __rank_diag(mdata_t *C, const mdata_t *A, const mdata_t *B, 
@@ -319,6 +365,42 @@ extern
 void __update_trmv_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
                              DTYPE alpha, int flags, int N, int M);
 
+extern
+void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
+                      DTYPE alpha, DTYPE beta, int flags, int S, int L, int R, int E);
+
+
+extern
+int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
+                   DTYPE alpha, DTYPE beta, int flags, int nX, int nY);
+
+extern
+void __gemv_update_ext_unb(mvec_t *Y, mvec_t *dY, const mdata_t *A, const mvec_t *X,
+                           const mvec_t *dX, int sign, int flags, int nX, int nY);
+
+
+extern 
+void __kernel_ext_colblk_inner(mdata_t *Cblk, mdata_t *dC, const mdata_t *Ablk, 
+                               const mdata_t *Bblk, DTYPE alpha, int nJ, int nR, int nP);
+
+extern
+void __kernel_ext_panel_inner(mdata_t *C, mdata_t *dC, const mdata_t *A, const mdata_t *B,
+                              DTYPE alpha, int flags, int nJ, int nR, int nP, cache_t *cache);
+
+extern
+void __kernel_ext_panel_inner_dA(mdata_t *C, mdata_t *dC,
+                                 const mdata_t *A, const mdata_t *dA, const mdata_t *B,
+                                 DTYPE alpha, int flags, int nJ, int nR, int nP, cache_t *cache);
+
+extern 
+void __kernel_ext_panel_inner_dB(mdata_t *C, mdata_t *dC,
+                                   const mdata_t *A, const mdata_t *B, const mdata_t *dB,
+                                   DTYPE alpha, int flags, int nJ, int nR, int nP, cache_t *cache);
+
+extern
+void __kernel_ext_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mdata_t *B,
+                                           DTYPE alpha, int flags, int P, int nSL, int nRE,
+                                           cache_t *cache);
 
 #endif
 
