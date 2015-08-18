@@ -112,6 +112,7 @@ int __bd_qrsweep(__armas_dense_t *D, __armas_dense_t *E,
     DTYPE d1, e1, d2, e2, f, g,  cosr, cosl, sinr, sinl, r;
     int k, N = __armas_size(D);
 
+    d2 = e2 = __ZERO;
     d1 = __armas_get_at_unsafe(D, 0);
     e1 = __armas_get_at_unsafe(E, 0);
     f = f0;
@@ -174,7 +175,9 @@ int __bd_qrzero(__armas_dense_t *D, __armas_dense_t *E,
     DTYPE d1, e1, d2, cosr, cosl, sinr, sinl, r;
     int k, N = __armas_size(D);
 
+    d2 = __ZERO;
     d1 = __armas_get_at_unsafe(D, 0);
+    sinl = __ONE;
     cosr = __ONE;
     cosl = __ONE;
     for (k = 0; k < N-1; k++) {
@@ -210,6 +213,7 @@ int __bd_qlsweep(__armas_dense_t *D, __armas_dense_t *E,
     DTYPE d1, e1, d2, e2, f, g,  cosr, cosl, sinr, sinl, r;
     int k, n, N = __armas_size(D);
 
+    d1 = e2 = __ZERO;
     d1 = __armas_get_at_unsafe(D, N-1);
     e1 = __armas_get_at_unsafe(E, N-2);
     f = f0;
@@ -266,6 +270,7 @@ int __bd_qlzero(__armas_dense_t *D, __armas_dense_t *E,
     DTYPE d1, e1, d2, cosr, cosl, sinr, sinl, r;
     int k, n, N = __armas_size(D);
 
+    sinl = __ONE;
     d1 = __armas_get_at_unsafe(D, N-1);
     cosr = __ONE;
     cosl = __ONE;
@@ -306,6 +311,8 @@ int __trd_qlsweep(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *Cr,
     DTYPE cosr, sinr, r, d0, d1, e0, e1, e0r, e0c, w0, f, g; 
     int k;
     int N = __armas_size(D);
+
+    e0c = w0 = e1 = __ZERO;
 
     f = f0; g = g0;
     d0 = __armas_get_at_unsafe(D, N-1);
@@ -361,6 +368,7 @@ int __trd_qrsweep(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *Cr,
     int k;
     int N = __armas_size(D);
 
+    e0r = e1 = w0 = __ZERO;
     f = f0; g = g0;
     d0 = __armas_get_at_unsafe(D, 0);
     e0 = __armas_get_at_unsafe(E, 0);
@@ -458,12 +466,10 @@ void __gvright(__armas_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int row, in
 static inline
 DTYPE __wilkinson(DTYPE tn1, DTYPE tnn1, DTYPE tn)
 {
-    DTYPE d, tsq, sign;
+    DTYPE d, tsq;
     d = (tn1 - tn)/2.0;
     tsq = __HYPOT(d, tnn1);
     return tn - __COPYSIGN((tnn1/(__ABS(d) + tsq))*tnn1, d);
-    //sign = __SIGN(d) ? -1.0 : 1.0;
-    //return tn - sign*tnn1*tnn1/(__ABS(d) + tsq);
 }
 
 

@@ -138,7 +138,7 @@ void __mult1c4(DTYPE *c0, DTYPE *c1, DTYPE *c2, DTYPE *c3,
     y2 += a[k]*b2[k];
     y3 += a[k]*b3[k];
   }
-update:
+
   c0[0] += y0*alpha;
   c1[0] += y1*alpha;
   c2[0] += y2*alpha;
@@ -166,7 +166,7 @@ void __mult2c4(DTYPE *c0, DTYPE *c1, DTYPE *c2, DTYPE *c3,
     y6 += a1[k]*b2[k];
     y7 += a1[k]*b3[k];
   }
-update:
+
   c0[0] += y0*alpha;
   c1[0] += y1*alpha;
   c2[0] += y2*alpha;
@@ -194,7 +194,7 @@ void __mult4c1(DTYPE *c0,
     y2 += b0[k]*a2[k];
     y3 += b0[k]*a3[k];
   }
-update:
+
   c0[0] += y0*alpha;
   c0[1] += y1*alpha;
   c0[2] += y2*alpha;
@@ -223,7 +223,7 @@ void __mult4c2(DTYPE *c0, DTYPE *c1,
     y6 += b1[k]*a3[k];
 
   }
-update:
+
   c0[0] += y0*alpha;
   c0[1] += y1*alpha;
   c0[2] += y2*alpha;

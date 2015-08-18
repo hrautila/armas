@@ -43,7 +43,7 @@
     q  = _mm256_sub_pd(z, q);				\
   } while (0)
 
-// error free horizontal summation of vector 4 doubles
+// error free horizontal summation of vector 4 doubles (TODO: fix this, error free summation
 static
 void hsum_m256d(double *sum, double *err, __m256d S, __m256d C)
 {
@@ -64,8 +64,8 @@ void hsum_m256d(double *sum, double *err, __m256d S, __m256d C)
   S0 = S;                                 // cheating optimizer; extra assignment 
   TWOSUM(S, R, S0, P, /**/ A1, B1);       // S[0] = sum S
   
-  *err = C[0] + Q[0] + R[0];
-  *sum = S[0];
+  *err += C[0] + Q[0] + R[0];
+  *sum += S[0];
 }
 
 
@@ -74,7 +74,7 @@ static
 void __mult1c1_ext(DTYPE *c, DTYPE *d, const DTYPE *a, const DTYPE *b, DTYPE alpha, int nR)
 {
   register int k;
-  register __m256d y0, c0, A, A0, A1, B, B0, B1;
+  register __m256d A, A0, A1, B, B0, B1;
   register __m256d S, C, P, Q, R, Z, F, S0;
 
   F = _mm256_set1_pd(__FACTOR);
@@ -139,8 +139,8 @@ void __mult1c2_ext(DTYPE *c0, DTYPE *c1, DTYPE *d0, DTYPE *d1,
                    const DTYPE *b0, const DTYPE *b1, DTYPE alpha, int nR)
 {
   register int k;
-  register __m256d y0, c0, A, A0, A1, B0, B1, Bx, Bz;
-  register __m256d S0, S1, C0, C1, P0, P1, Q0, Q1, R0, R1, Z, F, Sx, Sz;
+  register __m256d A, A0, A1, B0, B1, Bx, Bz;
+  register __m256d S0, S1, C0, C1, P0, P1, Q0, Q1, R0, R1, Z, F, Sx;
 
   F = _mm256_set1_pd(__FACTOR);
   // sum registers

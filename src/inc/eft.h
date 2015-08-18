@@ -157,7 +157,7 @@ void approx_twodiv(DTYPE *x, DTYPE *y, DTYPE a, DTYPE b)
 
 // Algorithm 4.1 int (1); cascaded summation 
 static inline
-DTYPE __eft_sum2s(DTYPE *s, DTYPE *c, DTYPE *a, int N, DTYPE s0, DTYPE c0)
+void __eft_sum2s(DTYPE *s, DTYPE *c, DTYPE *a, int N, DTYPE s0, DTYPE c0)
 {
     DTYPE st, ct, p;
     int k;
@@ -173,7 +173,7 @@ DTYPE __eft_sum2s(DTYPE *s, DTYPE *c, DTYPE *a, int N, DTYPE s0, DTYPE c0)
     *c = ct;
 }
 
-static
+static inline
 DTYPE sum2s(DTYPE *a, int N)
 {
     DTYPE s, c;
@@ -184,7 +184,7 @@ DTYPE sum2s(DTYPE *a, int N)
 
 // Algorithm 4.3 in (1); error-free vector transformation for summation
 // Also called "distillation algorithm".
-static 
+static inline
 DTYPE vecsum(DTYPE *p, int N)
 {
     DTYPE c;
@@ -200,7 +200,7 @@ DTYPE vecsum(DTYPE *p, int N)
 
 // Algorithm 4.8 in (1); Summation in K-fold precission by (K-1)-fold error-free
 // vector transformation
-static 
+static inline
 DTYPE sumK(DTYPE *p, int N, int K)
 {
     DTYPE s;
@@ -240,7 +240,7 @@ void __eft_dot2s(DTYPE *p, DTYPE *c, DTYPE *a, DTYPE *b, int N, DTYPE p0, DTYPE 
     *c = s1;
 }
 
-static
+static inline
 DTYPE dot2s(DTYPE *a, DTYPE *b, int N)
 {
     DTYPE p, s;
@@ -249,7 +249,7 @@ DTYPE dot2s(DTYPE *a, DTYPE *b, int N)
 }
 
 #if 0
-static
+static inline
 DTYPE dot2s(DTYPE *a, DTYPE *b, int N)
 {
     DTYPE p, s, h, q, r;
@@ -269,7 +269,7 @@ DTYPE dot2s(DTYPE *a, DTYPE *b, int N)
 #endif
 
 // Algorithm 5.10 in (1); Dot product in K-fold precission
-static
+static inline
 DTYPE dotK(DTYPE *x, DTYPE *y, int N, int K)
 {
     DTYPE p, h, s, *r;

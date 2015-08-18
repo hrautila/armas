@@ -15,7 +15,7 @@ static inline
 void __mult1c1_ext(DTYPE *c, DTYPE *d, const DTYPE *a, const DTYPE *b, DTYPE alpha, int nR)
 {
   register int k;
-  DTYPE y0, y1, q0, q1, p0, p1, r0, r1, e0, e1;
+  DTYPE y0, q0, p0, r0, e0;
 
   twoprod(&y0, &e0, a[0], b[0]);
   for (k = 1; k < nR; k++) {

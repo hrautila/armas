@@ -142,7 +142,7 @@ void extract_scalar(DTYPE *x, DTYPE *y, DTYPE r, DTYPE p)
 static inline
 void twoprod(DTYPE *x, DTYPE *y, DTYPE a, DTYPE b)
 {
-  register __m128d x0, y0, a0, b0;
+  register __m128d x0, a0, b0;
   a0 = _mm_set_sd(a);
   b0 = _mm_set_sd(b);
   x0 = _mm_mul_sd(a0, b0);

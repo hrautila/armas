@@ -333,7 +333,7 @@ void __mult2c1(double *c0,
                const double *b0, double alpha, int nR)
 {
   register int k;
-  register __m128d y0, y1, y2, y3, B0, ALPHA, Z;
+  register __m128d y0, y1, B0, ALPHA, Z;
 
   y0 = _mm_set1_pd(0.0);
   y1 = y0;
