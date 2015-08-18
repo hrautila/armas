@@ -63,6 +63,8 @@ extern __armas_dense_t *__armas_mcopy(__armas_dense_t *d, __armas_dense_t *s);
 extern __armas_dense_t *__armas_newcopy(__armas_dense_t *s);
 extern __armas_dense_t *__armas_transpose(__armas_dense_t *d, __armas_dense_t *s);
 
+extern void __armas_make_trm(__armas_dense_t *m, int flags);
+
 extern int __armas_mscale(__armas_dense_t *d, DTYPE alpha, int flags);
 extern int __armas_madd(__armas_dense_t *d, DTYPE alpha, int flags);
 
@@ -93,6 +95,9 @@ extern int     __armas_add(const __armas_dense_t *X, const DTYPE alpha, armas_co
 extern int __armas_mvmult(__armas_dense_t *Y,
                           const __armas_dense_t *A, const __armas_dense_t *X,
                           DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
+extern int __armas_mvmult_sym(__armas_dense_t *Y,
+                              const __armas_dense_t *A, const __armas_dense_t *X,
+                              DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
 extern int __armas_mvupdate(__armas_dense_t *A,
                             const __armas_dense_t *X,  const __armas_dense_t *Y,  
                             DTYPE alpha, armas_conf_t *conf);
@@ -396,6 +401,7 @@ __armas_dense_t *__armas_make(__armas_dense_t *m, int r, int c, int s, DTYPE *el
   m->elems = elems;
   m->__data = (void *)0;
   m->__nbytes = 0;
+  return m;
 }
 
 
