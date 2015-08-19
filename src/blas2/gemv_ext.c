@@ -40,13 +40,12 @@ int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 {
     int i, j;
     DTYPE y0, c0, s0, x0, p0;
-    DTYPE y1, c1, s1, x1, p1;
 
     // A transposed
     if (flags & ARMAS_TRANS) {
         // here were proceed matrix A column wise and elements are close to each other
         for (i = 0; i < nY; i++) {
-            y0 = 0.0; s0 = 0.0; y1 = 0.0; s1 = 0.0;
+            y0 = 0.0; s0 = 0.0; 
             for (j = 0; j < nX; j++) {
                 twoprod(&x0, &p0, A->md[j+(i+0)*A->step], X->md[j*X->inc]);
                 twosum(&y0, &c0, y0, x0);
@@ -65,7 +64,7 @@ int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 
     // A not transposed; here were proceed matrix A rowwise and elements are at distance
     for (i = 0; i < nY; i++) {
-        y0 = 0.0; s0 = 0.0; y1 = 0.0; s1 = 0.0;
+        y0 = 0.0; s0 = 0.0; 
         for (j = 0; j < nX; j++) {
             twoprod(&x0, &p0, A->md[(i+0)+j*A->step], X->md[j*X->inc]);
             twosum(&y0, &c0, y0, x0);
@@ -84,16 +83,19 @@ int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 
 
 /*
- * Compute error free translation Y + dY = Y + dY +/- A*X
+ * Compute error free translation Y + dY = Y + dY +/- A*(X + dX)
  *
- * If sign is non-zero computes Y + dY = Y + dY - A*x, otherwise Y + dY = Y + dY + A*x
+ * If sign is < zero computes
+ *    Y + dY = Y + dY - A*X - A*dX,
+ * otherwise
+ *    Y + dY = Y + dY + A*X + A*dX
  */
-int __gemv_update_ext_unb(mvec_t *Y, mvec_t *dY, const mdata_t *A, const mvec_t *X,
-                          int flags, int nX, int nY)
+void __gemv_update_ext_unb(mvec_t *Y, mvec_t *dY,
+                          const mdata_t *A, const mvec_t *X, const mvec_t *dX,
+                          int sign, int flags, int nX, int nY)
 {
     int i, j;
     DTYPE y0, c0, s0, x0, p0;
-    DTYPE y1, c1, s1, x1, p1;
 
     // A transposed
     if (flags & ARMAS_TRANS) {
@@ -101,30 +103,45 @@ int __gemv_update_ext_unb(mvec_t *Y, mvec_t *dY, const mdata_t *A, const mvec_t 
         for (i = 0; i < nY; i++) {
             y0 = __get_at(Y, i);
             s0 = __get_at(dY, i);
-            for (j = 0; j < nX; j++) {
-                twoprod(&x0, &p0, __get(A, j, i), __get_at(X, j));
-                twosum(&y0, &c0, y0, x0);
-                s0 += c0 + p0;
+            if (sign < 0) {
+                for (j = 0; j < nX; j++) {
+                    twoprod(&x0, &p0, __get(A, j, i), __get_at(X, j));
+                    twosum(&y0, &c0, y0, -x0);
+                    s0 += c0 - p0 - __get(A, j, i)*__get_at(dX, j);
+                }
+            } else {
+                for (j = 0; j < nX; j++) {
+                    twoprod(&x0, &p0, __get(A, j, i), __get_at(X, j));
+                    twosum(&y0, &c0, y0, x0);
+                    s0 += c0 + p0 + __get(A, j, i)*__get_at(dX, j);
+                }
             }
             __set_at(Y,  i, y0);
             __set_at(dY, i, s0);
         }
-        return 0;
+        return;
     }
 
     // A not transposed; here were proceed matrix A rowwise and elements are at distance
     for (i = 0; i < nY; i++) {
         y0 = __get_at(Y, i);
         s0 = __get_at(dY, i);
-        for (j = 0; j < nX; j++) {
-            twoprod(&x0, &p0, __get(A, i, j), __get_at(X, j));
-            twosum(&y0, &c0, y0, x0);
-            s0 += c0 + p0;
+        if (sign < 0) {
+            for (j = 0; j < nX; j++) {
+                twoprod(&x0, &p0, __get(A, i, j), __get_at(X, j));
+                twosum(&y0, &c0, y0, -x0);
+                s0 += c0 - p0 - __get(A, i, j)*__get_at(dX, j);
+            }
+        } else {
+            for (j = 0; j < nX; j++) {
+                twoprod(&x0, &p0, __get(A, i, j), __get_at(X, j));
+                twosum(&y0, &c0, y0, x0);
+                s0 += c0 + p0 + __get(A, i, j)*__get_at(dX, j);
+            }
         }
         __set_at(Y,  i, y0);
         __set_at(dY, i, s0);
     }
-    return 0;
 }
 
 #if 0
