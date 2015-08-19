@@ -9,18 +9,18 @@
 #include "helper.h"
 
 /*
- *  Generate set matrices such that C = A * B
+ *  Generate set matrices such that Y = A * X
  *
- *   (D0 D0 D0)    (q0 q1 q2 q3)  (z0 z0 z0)
- *   (z1 z1 z1) =  ( 0  1  0  0)  (z1 z1 z1)
- *   (z2 z2 z2)    ( 0  0  1  0)  (z2 z2 z2)
- *   (z3 z3 z3)    ( 0  0  0  1)  (z3 z3 z3)
+ *   (D0)    (q0 q1 q2 q3)  (z0)
+ *   (z1) =  ( 0  1  0  0)  (z1)
+ *   (z2)    ( 0  0  1  0)  (z2)
+ *   (z3)    ( 0  0  0  1)  (z3)
  *
  *   D0 = (q0 q1 q2 q3)*(z0 z1 z2 z3).T   (dot product)
  */
 // C = A*B  => B = A.-1*C
-void ep_gentrsm(double *dot, double *tcond,
-                armas_d_dense_t *A, armas_d_dense_t *B, armas_d_dense_t *C,
+void ep_gentrsv(double *dot, double *tcond,
+                armas_d_dense_t *A, armas_d_dense_t *X, armas_d_dense_t *Y,
                 double cond, int flags)
 {
     armas_d_dense_t R0, C0, R1, C1, D;
@@ -32,34 +32,18 @@ void ep_gentrsm(double *dot, double *tcond,
     armas_d_diag(&D, A, 0);
     armas_d_set_values(&D, one, 0);
     
-    switch (flags & (ARMAS_RIGHT|ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {
-    case ARMAS_LOWER|ARMAS_RIGHT:
-        armas_d_column(&R0, A, 0);
-        tk = 0;
-        break;
+    switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {
     case ARMAS_LOWER|ARMAS_TRANS:
         armas_d_column(&R0, A, 0);
         tk = 0;
         break;
-    case ARMAS_LOWER|ARMAS_TRANS|ARMAS_RIGHT:
-        armas_d_row(&R0, A, A->rows-1);
-        tk = B->cols - 1;
-        break;
     case ARMAS_LOWER:
         armas_d_row(&R0, A, A->rows-1);
-        tk = B->rows - 1;
+        tk = X->rows - 1;
         break;
     case ARMAS_UPPER|ARMAS_TRANS:
         armas_d_column(&R0, A, A->cols-1);
-        tk = B->rows - 1;
-        break;
-    case ARMAS_UPPER|ARMAS_TRANS|ARMAS_RIGHT:
-        armas_d_row(&R0, A, 0);
-        tk = 0;
-        break;
-    case ARMAS_UPPER|ARMAS_RIGHT:
-        armas_d_column(&R0, A, A->cols-1);
-        tk = B->cols - 1;
+        tk = X->rows - 1;
         break;
     case ARMAS_UPPER:
     default:
@@ -68,36 +52,12 @@ void ep_gentrsm(double *dot, double *tcond,
         break;
     }
 
-    if (right) {
-        armas_d_row(&C0, B, 0);
-    } else {
-        armas_d_column(&C0, B, 0);
-    }
     // generate dot product ...
-    ep_gendot(dot, tcond, &R0, &C0, cond);
+    ep_gendot(dot, tcond, &R0, X, cond);
 
-     // make rest of rows/columns copies of first row/column.
-    for (k = 1; k < (right ? B->rows : B->cols); k++) {
-        if (right) {
-            armas_d_row(&C1, B, k);
-        } else {
-            armas_d_column(&C1, B, k);
-        }
-        armas_d_mcopy(&C1, &C0);
-    }
-
-    // create result matrix C; C = A*B where elements row/column at index tk
-    // have the value of dot product.
-    armas_d_mcopy(C, B);
-    if (right) {
-      armas_d_column(&C1, C, tk);
-    } else {
-      armas_d_row(&C1, C, tk);
-    }
-    //printf("..gentrsm tk=%d, dot=%13e, C1=[%ld]\n", tk, *dot, armas_d_size(&C1));
-    for (k = 0; k < armas_d_size(&C1); k++) {
-      armas_d_set_at(&C1, k, *dot);
-    }
+    // make result vector
+    armas_d_mcopy(Y, X);
+    armas_d_set_at(Y, tk, *dot);
 }
 
 // ne = norm1 of exact; re = ||exact-result||/||exact||
@@ -109,7 +69,7 @@ void compute(double *ne, double *re,
 
 
   // B = A*B
-  armas_d_solve_trm(B, A, 1.0, flags, conf);
+  armas_d_mvsolve_trm(B, A, 1.0, flags, conf);
   if (verbose > 1 && A->rows < 10) {
     //printf("exc(A*B):\n"); armas_d_printf(stdout, "%13e", C);
     printf("A.-1*B:\n"); armas_d_printf(stdout, "%13e", B);
@@ -125,17 +85,11 @@ int test(char *name, int N, int K, int flags, int verbose, int prec, double cwan
 
 
   armas_d_init(&A, N, N);
-  if (flags & ARMAS_RIGHT) {
-    armas_d_init(&Ce, K, N);
-    armas_d_init(&B, K, N);
-    armas_d_init(&B0, K, N);
-  } else {
-    armas_d_init(&Ce, N, K);
-    armas_d_init(&B, N, K);
-    armas_d_init(&B0, N, K);
-  }
+  armas_d_init(&Ce, N, 1);
+  armas_d_init(&B, N, 1);
+  armas_d_init(&B0, N, 1);
   
-  ep_gentrsm(&dot, &cond, &A, &B0, &B, cwant, flags);
+  ep_gentrsv(&dot, &cond, &A, &B0, &B, cwant, flags);
 
   if (verbose > 1 && N < 10) {
     printf("A:\n"); armas_d_printf(stdout, "%13e", &A);
@@ -253,14 +207,6 @@ main(int argc, char **argv) {
     ok = test("u(A.T)*B", N, K, ARMAS_UPPER|ARMAS_TRANS, verbose, prec, cwant, &conf);
     fails += 1 - ok;
     ok = test("l(A.T)*B", N, K, ARMAS_LOWER|ARMAS_TRANS, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-    ok = test("B*u(A)  ", N, K, ARMAS_RIGHT|ARMAS_UPPER, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-    ok = test("B*l(A)  ", N, K, ARMAS_RIGHT|ARMAS_LOWER, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-    ok = test("B*u(A.T)", N, K, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANS, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-    ok = test("B*l(A.T)", N, K, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANS, verbose, prec, cwant, &conf);
     fails += 1 - ok;
   }
 

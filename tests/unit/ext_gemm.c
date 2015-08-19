@@ -37,15 +37,19 @@ main(int argc, char **argv) {
   int fails = 0;
   int normal_prec = 0;
   int e0, e1;
+  int debug = 0;
   int prec = 200;
   int verbose = 0;
   double cwant = 1e14; // wanted condition number
   double dot, cond, m_one_t, m_one, m_c;
 
-  while ((opt = getopt(argc, argv, "C:p:vS")) != -1) {
+  while ((opt = getopt(argc, argv, "C:p:vSD")) != -1) {
     switch (opt) {
     case 'C':
       cwant = strtod(optarg, (char **)0);
+      break;
+    case 'D':
+      debug = 1;
       break;
     case 'p':
       prec = atoi(optarg);
@@ -67,7 +71,7 @@ main(int argc, char **argv) {
     M = K = N;
   }
   
-  conf.optflags = ARMAS_OEXTPREC;
+  conf = *armas_conf_default();
 
   armas_d_init(&C, M, N);
   armas_d_init(&Ct, N, M);
@@ -80,16 +84,29 @@ main(int argc, char **argv) {
   armas_d_init(&A, M, K);
   armas_d_init(&B, K, N);
   
-  ep_genmat(&dot, &cond, &A, &B, cwant);
-  ep_gemm(&Ce, &A, &B, 1.0, 0.0, prec, ARMAS_NULL);
-
+  if (debug) {
+    printf("conf .mb, .nb, .kb: %d, %d, %d\n", conf.mb, conf.nb, conf.kb);
+    armas_d_set_values(&A, one, ARMAS_NULL);
+    armas_d_set_values(&B, one, ARMAS_NULL);
+    armas_d_mult(&Ce, &A, &B, 1.0, 0.0, 0, &conf);
+  } else {
+    ep_genmat(&dot, &cond, &A, &B, cwant);
+    ep_gemm(&Ce, &A, &B, 1.0, 0.0, prec, ARMAS_NULL);
+  }
   m_c = armas_d_mnorm(&Ce, ARMAS_NORM_ONE, &conf);
 
   // extended precision computations
+  conf.optflags = ARMAS_OEXTPREC;
 
   // C = A*B; C.T = B.T*A.T
   armas_d_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
   armas_d_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+
+  if (verbose > 2 && N < 10) {
+    printf("C.exact:\n"); armas_d_printf(stdout, "%13e", &Ce);
+    printf("A*B:\n"); armas_d_printf(stdout, "%13e", &C);
+    printf("(B.T*A.T).T:\n"); armas_d_printf(stdout, "%13e", &Ct);
+  }
 
   armas_d_transpose(&T, &Ct);
   armas_d_scale_plus(&T, &Ce, 1.0, -1.0, ARMAS_NONE, &conf);

@@ -18,7 +18,7 @@ LAPACK =  \
 	rqfact rqbld rqmult
 
 if HAVE_GMP_MPFR
-EXT = ext_gemm ext_trmm ext_trsm
+EXT = ext_gemm ext_trmm ext_trsm ext_trsv
 
 # EXT PRECISION
 ext_gemm_SOURCES = ext_gemm.c ../helper.c ext_prec.c
@@ -27,6 +27,8 @@ ext_trmm_SOURCES = ext_trmm.c ../helper.c ext_prec.c
 ext_trmm_LDFLAGS = -lmpfr -lgmp
 ext_trsm_SOURCES = ext_trsm.c ../helper.c ext_prec.c
 ext_trsm_LDFLAGS = -lmpfr -lgmp
+ext_trsv_SOURCES = ext_trsv.c ../helper.c ext_prec.c
+ext_trsv_LDFLAGS = -lmpfr -lgmp
 endif
 
 
