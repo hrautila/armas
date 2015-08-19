@@ -258,8 +258,7 @@ void __trmv_recursive(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N
 int __armas_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A, 
                        DTYPE alpha, int flags, armas_conf_t *conf)
 {
-  int ok;
-  mvec_t x, y;
+  mvec_t x;
   mdata_t A0;
   int nx = __armas_size(X);
   

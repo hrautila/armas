@@ -63,7 +63,7 @@ static
 void __symv_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
                 DTYPE alpha, int flags, int N)
 {
-  int i, j;
+  int j;
   mvec_t yy, xx, aa;
   
   if ( N <= 0 )

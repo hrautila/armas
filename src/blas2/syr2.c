@@ -110,7 +110,6 @@ int __armas_mvupdate2_sym(__armas_dense_t *A,
                           const __armas_dense_t *X,  const __armas_dense_t *Y,  
                           DTYPE alpha, int flags, armas_conf_t *conf)
 {
-  int ok;
   mvec_t x, y;
   mdata_t A0;
   int nx = __armas_size(X);

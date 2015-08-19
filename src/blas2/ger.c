@@ -37,7 +37,6 @@ void __update4axpy(mdata_t *A, const mvec_t *X, const mvec_t *Y, DTYPE alpha, in
 {
   register int i;
   register DTYPE *a0, *a1, *a2, *a3;
-  const DTYPE *x;
   register DTYPE y0, y1, y2, y3;
 
   y0 = alpha*Y->md[0];
@@ -149,7 +148,6 @@ void __update_ger_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
 {
   mvec_t x0, y0;
   mdata_t A0;
-  int nd = min(M, N);
 
   if (M < MIN_MVEC_SIZE || N < MIN_MVEC_SIZE) {
     __update_ger_unb(A, X, Y, alpha, flags, N, M);
@@ -198,7 +196,6 @@ int __armas_mvupdate(__armas_dense_t *A,
                      const __armas_dense_t *X,  const __armas_dense_t *Y,  
                      DTYPE alpha, armas_conf_t *conf)
 {
-  int ok;
   mvec_t x, y;
   mdata_t A0;
   int nx = __armas_size(X);
