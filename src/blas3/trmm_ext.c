@@ -29,7 +29,7 @@
 #include "internal.h"
 #include "matrix.h"
 #include "eft.h"
-#include "kernel_ext.h"
+
 
 // Functions here implement various versions of TRMM operation.
 
@@ -77,10 +77,9 @@ void __trmm_ext_blk_upper(mdata_t *B, const mdata_t *A, const DTYPE alpha,
                           int flags, int N, int S, int L, cache_t *cache)
 {
   register int i, j, nI, nJ;
-  mdata_t A0, A1, B0, B1, *dB, *Bc;
+  mdata_t A0, A1, B0, B1, *dB;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
-  Bc = cache->C0;
   dB = cache->dC;
 
   for (i = 0; i < N; i += NB) {
@@ -90,13 +89,11 @@ void __trmm_ext_blk_upper(mdata_t *B, const mdata_t *A, const DTYPE alpha,
     // diagonal block
     __subblock(&A1, A, i, i);
 
-    //printf("__trmm_blk_u: A1 [%d,%d], A0: [%d,%d], nI=%d\n", i, i, i, i+nI, nI);
     for (j = S; j < L; j += NB) {
       nJ = L - j < NB ? L - j : NB;
       __subblock(&B1, B, i, j);
       __subblock(&B0, B, i+nI, j);
 
-      //__blk_scale_ext(Bc, dB, &B1, __ONE, nI, nJ);
       clear_blk(dB, nI, nJ);
 
       // update current part with diagonal
@@ -127,15 +124,14 @@ __trmm_ext_unb_u_trans(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha, i
       s0 = unit ? __get(B, i, j) : __ZERO;
       u0 = __ZERO;
       for (k = 0; k < i+(1-unit); k++) {
-        //twoprod(&p0, &r0, A->md[k+i*A->step], B->md[k+j*B->step]);
         twoprod(&p0, &r0, __get(A, k, i), __get(B, k, j));
         twosum(&s0, &c0, s0, p0);
         u0 += c0 + r0;
       }
       twoprod(&s0, &c0, alpha, s0);
       u0 *= alpha;
-      __set(B, i, j, s0); //->md[i+j*B->step] = s0;
-      __set(dB, i, j, u0+c0); //->md[i+j*dB->step] = u0 + c0;
+      __set(B, i, j, s0); 
+      __set(dB, i, j, u0+c0); 
     }
   }
 }
@@ -187,25 +183,23 @@ static void
 __trmm_ext_unb_lower(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha, int unit, int nRE, int nC)
 {
   register int i, j, k;
-  DTYPE s0, u0, p0, r0, c0, x0;
+  DTYPE s0, u0, p0, r0, c0;
 
   // for all columns in B
   for (j = 0; j < nC; j++) {
     // all rows in column of B
     for (i = nRE-1; i >= 0; i--) {
-      //s0 = unit ? B->md[i+j*B->step] : __ZERO;
       s0 = unit ? __get(B, i, j) : __ZERO;
       u0 = __ZERO;
       for (k = 0; k < i+(1-unit); k++) {
-        //twoprod(&p0, &r0, A->md[i+k*A->step], B->md[k+j*B->step]);
         twoprod(&p0, &r0, __get(A, i, k), __get(B, k, j));
         twosum(&s0, &c0, s0, p0);
         u0 += c0 + r0;
       }
       twoprod(&s0, &c0, alpha, s0);
       u0 *= alpha;
-      __set(B, i, j, s0); //->md[i+j*B->step] = s0;
-      __set(dB, i,j, u0+c0); //->md[i+j*dB->step] = u0 + c0;
+      __set(B, i, j, s0); 
+      __set(dB, i,j, u0+c0); 
     }
   }
 }
@@ -268,7 +262,6 @@ __trmm_ext_unb_l_trans(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha, i
       s0 = unit ? __get(B, i, j) : __ZERO;
       u0 = __ZERO;
       for (k = i+unit; k < nRE; k++) {
-        //twoprod(&p0, &r0, A->md[k+i*A->step], B->md[k+j*B->step]);
         twoprod(&p0, &r0, __get(A, k, i), __get(B, k, j));
         twosum(&s0, &c0, s0, p0);
         u0 += c0 + r0;
@@ -279,8 +272,8 @@ __trmm_ext_unb_l_trans(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha, i
         twoprod(&s0, &c0, alpha, s0);
         u0 *= alpha;
       }
-      __set(B, i, j, s0); //->md[i+j*B->step] = s0;
-      __set(dB, i, j, u0+c0); //->md[i+j*dB->step] = u0 + c0;
+      __set(B, i, j, s0); 
+      __set(dB, i, j, u0+c0);
     }
   }
 }
@@ -344,19 +337,17 @@ __trmm_ext_unb_r_upper(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha, i
 
   for (j = nC-1; j >= 0; j--) {
     for (i = nRE-1; i >= 0; i--) {
-      //s0 = unit ? B->md[j+i*B->step] : __ZERO;
       s0 = unit ? __get(B, j, i) : __ZERO;
       u0 = __ZERO;
       for (k = 0; k < i+(1-unit); k++) {
-        //twoprod(&p0, &r0, A->md[k+i*A->step], B->md[j+k*B->step]);
         twoprod(&p0, &r0, __get(A, k, i), __get(B, j, k));
         twosum(&s0, &c0, s0, p0);
         u0 += c0 + r0;
       }
       twoprod(&s0, &c0, alpha, s0);
       u0 *= alpha;
-      __set(B, j, i, s0); //->md[j+i*B->step] = s0;
-      __set(dB, j, i, u0+c0); //->md[j+i*dB->step] = u0 + c0;
+      __set(B, j, i, s0); 
+      __set(dB, j, i, u0+c0);
     }
   }
 }
@@ -421,15 +412,14 @@ __trmm_ext_unb_r_lower(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha, i
       s0 = unit ? __get(B, j, i) : __ZERO;
       u0 = __ZERO;
       for (k = i+unit; k < nRE; k++) {
-        //twoprod(&p0, &r0, A->md[k+i*A->step], B->md[j+k*B->step]);
         twoprod(&p0, &r0, __get(A, k, i), __get(B, j, k));
         twosum(&s0, &c0, s0, p0);
         u0 += c0 + r0;
       }
       twoprod(&s0, &c0, alpha, s0);
       u0 *= alpha;
-      __set(B, j, i, s0); //->md[j+i*B->step] = s0;
-      __set(dB, j, i, u0+c0); //->md[j+i*dB->step] = u0 + c0;
+      __set(B, j, i, s0);
+      __set(dB, j, i, u0+c0);
     }
   }
 }
@@ -492,19 +482,17 @@ __trmm_ext_unb_ru_trans(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha, 
   // nC is rows of B
   for (j = 0; j < nC; j++) {
     for (i = 0; i < nRE; i++) {
-      //s0 = unit ? B->md[j+i*B->step] : __ZERO;
       s0 = unit ? __get(B, j, i) : __ZERO;
       u0 = __ZERO;
       for (k = i+unit; k < nRE; k++) {
-        //twoprod(&p0, &r0, A->md[i+k*A->step], B->md[j+k*B->step]);
         twoprod(&p0, &r0, __get(A, i, k), __get(B, j, k));
         twosum(&s0, &c0, s0, p0);
         u0 += c0 + r0;
       }
       twoprod(&s0, &c0, s0, alpha);
       u0 *= alpha;
-      __set(B, j, i, s0); //->md[j+i*B->step] = s0;
-      __set(dB, j, i, u0+c0); //->md[j+i*dB->step] = u0 + c0;
+      __set(B, j, i, s0); 
+      __set(dB, j, i, u0+c0);
     }
   }
 }
@@ -565,19 +553,17 @@ __trmm_ext_unb_rl_trans(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha, 
   // nC is rows of B
   for (j = nC-1; j >= 0; j--) {
     for (i = nRE-1; i >= 0; i--) {
-      //s0 = unit ? B->md[j+i*B->step] : __ZERO;
       s0 = unit ? __get(B, j, i) : __ZERO;
       u0 = __ZERO;
       for (k = 0; k < i+(1-unit); k++) {
-        //twoprod(&p0, &r0, A->md[i+k*A->step], B->md[j+k*B->step]);
         twoprod(&p0, &r0, __get(A, i, k), __get(B, j, k));
         twosum(&s0, &c0, s0, p0);
         u0 += c0 + r0;
       }
       twoprod(&s0, &c0, alpha, s0);
       u0 *= alpha;
-      __set(B, j, i, s0); //->md[j+i*B->step] = s0;
-      __set(dB, j, i, u0+c0); //->md[j+i*dB->step] = u0 + c0;
+      __set(B, j, i, s0); 
+      __set(dB, j, i, u0+c0); 
     }
   }
 }
