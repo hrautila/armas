@@ -29,9 +29,6 @@
 #include "matrix.h"
 #include "matcpy.h"
 
-extern void __kernel_ext_panel_inner(mdata_t *C, mdata_t *dC,
-                                     const mdata_t *A, const mdata_t *B,
-                                     DTYPE alpha, int nJ, int nR, int nP, cache_t *cache);
 
 // C += A*B; A is the diagonal block
 static
