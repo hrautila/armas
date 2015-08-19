@@ -29,7 +29,6 @@ void __ger(int *m, int *n, DTYPE *alpha, DTYPE *X,
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t y, a, x;
-    int flags = 0;
 
     __armas_make(&a, *m, *n, *lda, A);
     if (*incy == 1) {
