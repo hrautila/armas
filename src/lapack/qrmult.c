@@ -65,6 +65,8 @@ __unblk_qrmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau
   int pAdir, pAstart, pStart, pDir;
   int mb, nb, tb;
 
+  EMPTY(A00); EMPTY(a11);
+
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PTOPLEFT;
     pAdir   = ARMAS_PBOTTOMRIGHT;
@@ -133,6 +135,9 @@ __blk_qrmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   __armas_dense_t CT, CB, C0, C1, C2;
   int pAdir, pAstart, pStart, pDir;
   int mb, nb, tb, transpose ;
+
+  // initialize to GCC "maybe-uninitialized" error
+  EMPTY(A00);
 
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PTOPLEFT;
@@ -221,6 +226,9 @@ __unblk_qrmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *ta
   int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
   int mb, nb, tb, cb;
 
+  EMPTY(A00); EMPTY(a11); 
+  EMPTY(C0); EMPTY(CL);
+
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PBOTTOMRIGHT;
     pAdir   = ARMAS_PTOPLEFT;
@@ -291,6 +299,10 @@ __blk_qrmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   __armas_dense_t CL, CR, C0, C1, C2;
   int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
   int mb, nb, cb, tb, transpose ;
+
+  // initialize to "empty" to avoid "maybe-uninitialized" errors
+  EMPTY(A00); EMPTY(A11); EMPTY(A22);
+  EMPTY(CL); EMPTY(CR); EMPTY(C0);
 
   if (flags & ARMAS_TRANS) {
     // from bottom-right to top-left to produce transpose sequence (C*Q.T)
@@ -425,6 +437,7 @@ int __armas_qrmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
     lb = __IMIN(lb, conf->lb);
   }
 
+  EMPTY(tauh);
   __armas_submatrix(&tauh, tau, 0, 0, A->cols, 1);
   if (lb == 0 || A->cols <= lb) {
     // unblocked 

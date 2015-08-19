@@ -100,7 +100,7 @@
  */
 DTYPE __bdsvd2x2(DTYPE *smin, DTYPE *smax, DTYPE f, DTYPE g, DTYPE h)
 {
-    DTYPE K, C, fa, ga, ha, fhmax, fhmin, gs, d, t;
+    DTYPE C, fa, ga, ha, fhmax, fhmin, gs, d, t;
 
     fa = __ABS(f);
     ha = __ABS(h);

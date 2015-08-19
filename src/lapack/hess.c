@@ -25,6 +25,7 @@
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+#include "partition.h"
 
 static inline
 int __ws_hess_reduce(int M, int N, int lb)
@@ -78,6 +79,9 @@ int __unblk_hess_gqvdg(__armas_dense_t *A, __armas_dense_t *tau,
   __armas_dense_t AL, AR, A0, a1, A2;
   __armas_dense_t tT, tB, t0, t1, t2, w12, v1;
   DTYPE tauval, beta;
+
+  EMPTY(A00); EMPTY(a11);
+  EMPTY(AL); EMPTY(A0); EMPTY(a1);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, row, 0, ARMAS_PTOPLEFT);
@@ -198,6 +202,11 @@ int __unblk_build_hess_gqvdg(__armas_dense_t *A, __armas_dense_t *T,
   __armas_dense_t VL, VR, V0, v1, V2, Y0;
   __armas_dense_t TTL, TBR, T00, t01, t11, T22;
   DTYPE beta, tauval;
+
+  EMPTY(a11);
+  EMPTY(VR); EMPTY(VL); EMPTY(AL); 
+
+  beta = __ZERO;
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -327,6 +336,9 @@ int __blk_hess_gqvdg(__armas_dense_t *A, __armas_dense_t *tau,
   __armas_dense_t VT, VB, Y1, Y2, W0;
   __armas_dense_t tT, tB, t0, t1, t2, td;
   DTYPE beta;
+
+  EMPTY(A12); EMPTY(A00); EMPTY(A11); EMPTY(A22);
+  EMPTY(ATR);
 
   __partition_2x2(&ATL,  &ATR,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);

@@ -172,7 +172,6 @@ int __apply_householder2x1(__armas_dense_t *tau, __armas_dense_t *v,
                            __armas_dense_t *a1,  __armas_dense_t *A2,
                            __armas_dense_t *w1,  int flags, armas_conf_t *conf)
 {
-  __armas_dense_t row;
   DTYPE tval;
   tval = __armas_get(tau, 0, 0);
   if (tval == 0.0) {

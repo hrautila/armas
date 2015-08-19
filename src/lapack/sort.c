@@ -166,6 +166,8 @@ int __sort_eigenvec(__armas_dense_t *D, __armas_dense_t *U,
     int k, pk, N = __armas_size(D);
     __armas_dense_t sD, m0, m1;
 
+    EMPTY(sD);
+
     if (! __armas_isvector(D)) {
         return -1;
     }

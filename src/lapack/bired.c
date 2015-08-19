@@ -102,6 +102,8 @@ int __unblk_bdreduce_left(__armas_dense_t *A, __armas_dense_t *tauq,
   __armas_dense_t tpT, tpB, tp0, tp1, tp2, z21;
   DTYPE v0, beta, tauqv, taupv;
 
+  EMPTY(A00);
+
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
   __partition_2x1(&tqT,
@@ -164,6 +166,7 @@ int __unblk_bdreduce_left(__armas_dense_t *A, __armas_dense_t *tauq,
     __continue_3x1to2x1(&tpT,
                         &tpB, /**/  &tp0, &tp1,  /**/ taup, ARMAS_PBOTTOM);
   }
+  return 0;
 }
 
 /*
@@ -183,8 +186,11 @@ int __unblk_bdbuild_left(__armas_dense_t *A, __armas_dense_t *tauq,
   __armas_dense_t ZTL, ZBR, Z00, z10, z11, Z20, z21, Z22;
   __armas_dense_t tqT, tqB, tq0, tq1, tq2;
   __armas_dense_t tpT, tpB, tp0, tp1, tp2, w00;
-  DTYPE v0, beta, tauqv, taupv, aa;
+  DTYPE beta, tauqv, taupv, aa, v0 = __ZERO;
   int k;
+
+  EMPTY(A00); EMPTY(ATR);
+  EMPTY(y11); EMPTY(z11);
 
   __partition_2x2(&ATL,  &ATR,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -302,13 +308,14 @@ int __blk_bdreduce_left(__armas_dense_t *A,
                         __armas_dense_t *tauq, __armas_dense_t *taup,
                         __armas_dense_t *W, int lb, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, A11, A12, A20, A21, A22;
+  __armas_dense_t ATL, ABR, A00, A11, A12, A21, A22;
   __armas_dense_t Y, YT, YB, Y0, Y1, Y2;
   __armas_dense_t Z, ZT, ZB, Z0, Z1, Z2;
   __armas_dense_t tqT, tqB, tq0, tq1, tq2;
-  __armas_dense_t tpT, tpB, tp0, tp1, tp2, w00;
+  __armas_dense_t tpT, tpB, tp0, tp1, tp2;
   DTYPE v0;
-  int k;
+
+  EMPTY(A00); EMPTY(A11);
 
   __armas_make(&Z, A->rows, lb, A->rows, __armas_data(W));
   __armas_make(&Y, A->cols, lb, A->cols, &__armas_data(W)[__armas_size(&Z)]);
@@ -434,7 +441,9 @@ int __unblk_bdreduce_right(__armas_dense_t *A, __armas_dense_t *tauq,
   __armas_dense_t ATL, ABR, A00, a11, a12, a21, A22;
   __armas_dense_t tqT, tqB, tq0, tq1, tq2, y21;
   __armas_dense_t tpT, tpB, tp0, tp1, tp2, z21;
-  DTYPE v0, beta, tauqv, taupv, aa;
+  DTYPE v0, beta, tauqv, taupv;
+
+  EMPTY(A00);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -499,6 +508,7 @@ int __unblk_bdreduce_right(__armas_dense_t *A, __armas_dense_t *tauq,
     __continue_3x1to2x1(&tpT,
                         &tpB, /**/  &tp0, &tp1,  /**/ taup, ARMAS_PBOTTOM);
   }
+  return 0;
 }
 
 
@@ -529,8 +539,11 @@ int __unblk_bdbuild_right(__armas_dense_t *A, __armas_dense_t *tauq,
   __armas_dense_t ZTL, ZBR, Z00, z10, z11, Z20, z21, Z22;
   __armas_dense_t tqT, tqB, tq0, tq1, tq2;
   __armas_dense_t tpT, tpB, tp0, tp1, tp2, w00;
-  DTYPE v0, beta, tauqv, taupv, aa;
+  DTYPE beta, tauqv, taupv, aa, v0 = __ZERO;
   int k;
+
+  EMPTY(A00); EMPTY(ABL);
+  EMPTY(y11); EMPTY(z11);
 
   __partition_2x2(&ATL,  __nil,
                   &ABL,  &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -647,12 +660,14 @@ int __blk_bdreduce_right(__armas_dense_t *A, __armas_dense_t *tauq,
                          __armas_dense_t *taup, __armas_dense_t *W,
                          int lb, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, A11, A12, A20, A21, A22;
+  __armas_dense_t ATL, ABR, A00, A11, A12, A21, A22;
   __armas_dense_t Y, YT, YB, Y0, Y1, Y2;
   __armas_dense_t Z, ZT, ZB, Z0, Z1, Z2;
   __armas_dense_t tqT, tqB, tq0, tq1, tq2;
-  __armas_dense_t tpT, tpB, tp0, tp1, tp2, w00;
+  __armas_dense_t tpT, tpB, tp0, tp1, tp2;
   DTYPE v0;
+
+  EMPTY(A00); EMPTY(A11);
 
   __armas_make(&Z, A->cols, lb, A->cols, __armas_data(W));
   __armas_make(&Y, A->rows, lb, A->rows, &__armas_data(W)[__armas_size(&Z)]);
@@ -877,7 +892,7 @@ int __armas_bdmult(__armas_dense_t *C, __armas_dense_t *A,
                    int flags, armas_conf_t *conf)
 {
   __armas_dense_t Qh, Ch, Ph, tauh;
-  int err, ok;
+  int err;
 
   // default to multiplication from left
   if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))

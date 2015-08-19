@@ -108,7 +108,7 @@ void __armas_gvrotate(DTYPE *v0, DTYPE *v1, DTYPE c, DTYPE s, DTYPE y0, DTYPE y1
  */
 void __armas_gvleft(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int col, int ncol)
 {
-    DTYPE v0, v1, t0, t1;
+    DTYPE v0;
     int k, lastc;
 
     if (col >= A->cols)
@@ -147,7 +147,7 @@ void __armas_gvleft(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int co
  */
 void __armas_gvright(__armas_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int row, int nrow)
 {
-    DTYPE v0, v1, t0, t1;
+    DTYPE v0;
     int k, lastr;
 
     if (row >= A->rows)

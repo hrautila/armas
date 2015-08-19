@@ -69,7 +69,7 @@ int __armas_qrsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau
                     __armas_dense_t *W, int flags, armas_conf_t *conf)
 {
   __armas_dense_t R, BT, BB;
-  int wsmin, lb, err, ok;
+  int wsmin, ok;
 
   if (!conf)
     conf = armas_conf_default();
@@ -80,7 +80,6 @@ int __armas_qrsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau
     return -1;
   }
 
-  lb = conf->lb;
   wsmin = __ws_qrsolve(B->rows, B->cols, 0);
   if (! W || __armas_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;

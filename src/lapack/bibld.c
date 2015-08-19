@@ -38,7 +38,7 @@ int __armas_bdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
                     int K, int flags, armas_conf_t *conf)
 {
     __armas_dense_t Qh, Ph, tauh, d, s;
-    int j, err;
+    int j, err = 0;
 
     if (!conf)
         conf = armas_conf_default();

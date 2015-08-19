@@ -26,6 +26,32 @@
 #include "matrix.h"
 #include "internal_lapack.h"
 
+// template function with matrix partitioning from top-left to bottom-right
+static
+int __local(__armas_dense_t *A, int flags, armas_conf_t *conf)
+{
+    // full partitioning; diagonal elements are required, others only as needed
+    // (replace with __nil if not needed)
+    __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, A02, a10, a11, a12, A20, a21, A22;
+    int err = 0;
+    DTYPE a11val;
+
+    __partition_2x2(&ATL, &ATR,
+                    &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
+
+    while (ABR.rows > 0 && ABR.cols > 0) {
+        __repartition_2x2to3x3(&ATL,
+                               &A00, &a01, &A02,
+                               &a10, &a11, &a12,
+                               &A20, &a21, &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
+        // ---------------------------------------------------------------------------
+
+        // ---------------------------------------------------------------------------
+        __continue_3x3to2x2(&ATL, &ATR,
+                            &ABL, &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
+    }
+    return err;
+}
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 

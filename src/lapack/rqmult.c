@@ -56,12 +56,13 @@ static int
 __unblk_rqmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                     __armas_dense_t *W, int flags, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, a10, a11, a12, a21, A22, *Aref;
+  __armas_dense_t ATL, ABR, A00, a10, a11, A22, *Aref;
   __armas_dense_t tT, tB, t0, t1, t2, w12;
   __armas_dense_t CT, CB, C0, c1, C2;
   int pAdir, pAstart, pStart, pDir;
   int mb, nb, tb, cb;
-  int nerr, k;
+
+  EMPTY(A00); EMPTY(a11);
 
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PTOPLEFT;
@@ -121,11 +122,13 @@ static int
 __blk_rqmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                   __armas_dense_t *T, __armas_dense_t *W, int flags, int lb, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, A10, A11, A12, A22, AL, *Aref;
+  __armas_dense_t ATL, ABR, A00, A10, A11, A22, AL, *Aref;
   __armas_dense_t tT, tB, t0, t1, t2, Tcur, Wrk;
   __armas_dense_t CT, CB, C0, C1, C2;
   int pAdir, pAstart, pStart, pDir;
   int mb, nb, tb, cb, transpose ;
+
+  EMPTY(A00);
 
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PTOPLEFT;
@@ -210,6 +213,9 @@ __unblk_rqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *ta
   int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
   int mb, nb, tb, cb;
 
+  EMPTY(A00); EMPTY(a11);
+  EMPTY(CL);
+
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PBOTTOMRIGHT;
     pAdir   = ARMAS_PTOPLEFT;
@@ -276,11 +282,14 @@ static int
 __blk_rqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                    __armas_dense_t *T, __armas_dense_t *W, int flags, int lb, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, A10, A11, A21, A22, AL, *Aref;
+  __armas_dense_t ATL, ABR, A00, A10, A11, A22, AL, *Aref;
   __armas_dense_t tT, tB, t0, t1, t2, Tcur, Wrk;
   __armas_dense_t CL, CR, C0, C1, C2;
   int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
   int mb, nb, cb, tb, transpose ;
+
+  EMPTY(A00);
+  EMPTY(CL);
 
   if (flags & ARMAS_TRANS) {
     // from bottom-right to top-left to produce normal sequence (C*Q)

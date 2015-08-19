@@ -56,12 +56,13 @@ static int
 __unblk_lqmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                     __armas_dense_t *W, int flags, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, a11, a12, a21, A22, *Aref;
+  __armas_dense_t ATL, ABR, A00, a11, a12, A22, *Aref;
   __armas_dense_t tT, tB, t0, t1, t2, w12;
   __armas_dense_t CT, CB, C0, c1, C2;
   int pAdir, pAstart, pStart, pDir;
   int mb, nb, tb, cb;
-  int nerr, k;
+
+  EMPTY(A00); EMPTY(a11);
 
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PBOTTOMRIGHT;
@@ -126,6 +127,8 @@ __blk_lqmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   __armas_dense_t CT, CB, C0, C1, C2;
   int pAdir, pAstart, pStart, pDir;
   int mb, nb, tb, cb, transpose ;
+
+  EMPTY(A00); EMPTY(C0); 
 
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PBOTTOMRIGHT;
@@ -214,6 +217,8 @@ __unblk_lqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *ta
   int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
   int mb, nb, tb, cb;
 
+  EMPTY(C0); EMPTY(CL); EMPTY(A00); EMPTY(a11); 
+
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PTOPLEFT;
     pAdir   = ARMAS_PBOTTOMRIGHT;
@@ -285,6 +290,8 @@ __blk_lqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   __armas_dense_t CL, CR, C0, C1, C2;
   int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
   int mb, nb, cb, tb, transpose ;
+
+  EMPTY(A00); EMPTY(C0); EMPTY(CL);
 
   if (flags & ARMAS_TRANS) {
     // from top-left to bottom-right to produce transpose sequence (C*Q.T)

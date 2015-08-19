@@ -25,6 +25,7 @@
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+#include "partition.h"
 
 static
 int __unblk_cholfactor_lower(__armas_dense_t *A, armas_conf_t *conf)
@@ -32,6 +33,8 @@ int __unblk_cholfactor_lower(__armas_dense_t *A, armas_conf_t *conf)
   __armas_dense_t ATL, ABR, A00, a11, a21, A22;
   int err = 0;
   DTYPE a11val;
+
+  EMPTY(A00); EMPTY(a11);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -74,6 +77,8 @@ int __blk_cholfactor_lower(__armas_dense_t *A, int lb, armas_conf_t *conf)
   __armas_dense_t ATL, ABR, A00, A11, A21, A22;
   int err = 0;
 
+  EMPTY(A00);
+
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
 
@@ -114,6 +119,8 @@ int __unblk_cholfactor_upper(__armas_dense_t *A, armas_conf_t *conf)
   __armas_dense_t ATL, ABR, A00, a11, a12, A22;
   int err = 0;
   DTYPE a11val;
+
+  EMPTY(A00); EMPTY(a11);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -156,6 +163,7 @@ int __blk_cholfactor_upper(__armas_dense_t *A, int lb, armas_conf_t *conf)
   __armas_dense_t ATL, ABR, A00, A11, A12, A22;
   int err = 0;
 
+  EMPTY(A00); 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
 
@@ -255,7 +263,7 @@ int __armas_cholfactor(__armas_dense_t *A, int flags, armas_conf_t *conf)
 int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A,
                       int flags, armas_conf_t *conf)
 {
-  int lb, ok;
+  int ok;
   if (!conf)
     conf = armas_conf_default();
   

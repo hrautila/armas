@@ -51,6 +51,8 @@ __unblk_qlmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau
   int pAdir, pAstart, pStart, pDir;
   int mb, nb, tb;
 
+  EMPTY(A00); EMPTY(a11);
+
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PBOTTOMRIGHT;
     pAdir   = ARMAS_PTOPLEFT;
@@ -110,10 +112,12 @@ __blk_qlmult_left(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                   __armas_dense_t *T, __armas_dense_t *W, int flags, int lb, armas_conf_t *conf)
 {
   __armas_dense_t ATL, ABR, A00, A01, A11, A22, *Aref, AT;
-  __armas_dense_t tT, tB, t0, t1, t2, w12, Tcur, Wrk;
+  __armas_dense_t tT, tB, t0, t1, t2, Tcur, Wrk;
   __armas_dense_t CT, CB, C0, C1, C2;
   int pAdir, pAstart, pStart, pDir;
   int mb, nb, tb, transpose;
+
+  EMPTY(A00);
 
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PBOTTOMRIGHT;
@@ -191,6 +195,9 @@ __unblk_qlmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *ta
   int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
   int mb, nb, tb, cb;
 
+  EMPTY(A00); EMPTY(a11);
+  EMPTY(CL); 
+
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PTOPLEFT;
     pAdir   = ARMAS_PBOTTOMRIGHT;
@@ -255,6 +262,9 @@ __blk_qlmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   __armas_dense_t CL, CR, C0, C1, C2;
   int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
   int mb, nb, tb, cb, transpose;
+
+  EMPTY(A00);
+  EMPTY(CL);
 
   if (flags & ARMAS_TRANS) {
     pAstart = ARMAS_PTOPLEFT;

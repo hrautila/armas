@@ -38,7 +38,7 @@ void bdmake_upper(__armas_dense_t *D, __armas_dense_t *E,
 {
     __armas_dense_t Cl, Sl;
     DTYPE cosl, sinl, r, d0, e0, d1;
-    int nrot, saves, k, N = __armas_size(D);
+    int saves, k, N = __armas_size(D);
 
     saves = 0;
     if (U || C) {

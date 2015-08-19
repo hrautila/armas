@@ -80,10 +80,11 @@ int __unblk_trdreduce_lower(__armas_dense_t *A, __armas_dense_t *tauq,
   __armas_dense_t ATL, ABR, A00, a11, a21, A22;
   __armas_dense_t tT, tB, tq0, tq1, tq2, y21;
   DTYPE v0, beta, tauval;
-  int err;
+
+  EMPTY(A00); EMPTY(a11);
 
   if (__armas_size(tauq) == 0)
-    return;
+    return 0;
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -118,7 +119,7 @@ int __unblk_trdreduce_lower(__armas_dense_t *A, __armas_dense_t *tauq,
     // y21 := y21 - 0.5*beta*a21
     __armas_axpy(&y21, &a21, -0.5*beta, conf);
     // A22 := A22 - a21*y21.T - y21*a21.T
-    err = __armas_mvupdate2_sym(&A22, &a21, &y21, -1.0, ARMAS_LOWER, conf);
+    __armas_mvupdate2_sym(&A22, &a21, &y21, -1.0, ARMAS_LOWER, conf);
     // restore subdiagonal
     __armas_set(&a21, 0, 0, v0);
 
@@ -128,6 +129,7 @@ int __unblk_trdreduce_lower(__armas_dense_t *A, __armas_dense_t *tauq,
     __continue_3x1to2x1(&tT,
                         &tB, /**/  &tq0, &tq1,  /**/ tauq, ARMAS_PBOTTOM);
   }
+  return 0;
 }
 
 /*
@@ -140,8 +142,11 @@ int __unblk_trdbuild_lower(__armas_dense_t *A, __armas_dense_t *tauq,
   __armas_dense_t ATL, ABR, A00, a10, a11, A20, a21, A22;
   __armas_dense_t YTL, YBR, Y00, y10, y11, Y20, y21, Y22;
   __armas_dense_t tT, tB, tq0, tq1, tq2, w12;
-  DTYPE v0, beta, tauval, aa;
+  DTYPE beta, tauval, aa, v0 = __ZERO;
   int k, err = 0;
+
+  EMPTY(A00); EMPTY(a11);
+  EMPTY(Y00); EMPTY(y11);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -226,9 +231,11 @@ int __blk_trdreduce_lower(__armas_dense_t *A, __armas_dense_t *tauq,
 {
   __armas_dense_t ATL, ABR, A00, A11, A21, A22;
   __armas_dense_t YT, YB, Y0, Y1, Y2;
-  __armas_dense_t tT, tB, tq0, tq1, tq2, y21;
-  DTYPE v0;
+  __armas_dense_t tT, tB, tq0, tq1, tq2;
+  DTYPE v0 = __ZERO;
   int err = 0;
+
+  EMPTY(A00); EMPTY(A11);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -301,8 +308,11 @@ int __unblk_trdreduce_upper(__armas_dense_t *A, __armas_dense_t *tauq,
   int toff;
   DTYPE v0, beta, tauval;
 
+  EMPTY(ATL);
+  v0 = __ZERO;
+
   if (__armas_size(tauq) == 0)
-    return;
+    return 0;
 
   toff = tail ? 0 : 1;
 
@@ -311,7 +321,6 @@ int __unblk_trdreduce_upper(__armas_dense_t *A, __armas_dense_t *tauq,
   __partition_2x1(&tT,
                   &tB,   /**/  tauq, toff, ARMAS_PBOTTOM);
 
-  int k = 0;
   while (ATL.cols > 0) {
     __repartition_2x2to3x3(&ATL,
                            &A00,  &a01,  __nil,
@@ -350,6 +359,7 @@ int __unblk_trdreduce_upper(__armas_dense_t *A, __armas_dense_t *tauq,
     __continue_3x1to2x1(&tT,
                         &tB, /**/  &tq0, &tq1,  /**/ tauq, ARMAS_PTOP);
   }
+  return 0;
 }
 
 
@@ -365,6 +375,10 @@ int __unblk_trdbuild_upper(__armas_dense_t *A, __armas_dense_t *tauq,
   __armas_dense_t tT, tB, tq0, tq1, tq2, w12;
   DTYPE v0, beta, tauval, aa;
   int k, err = 0;
+
+  v0 = __ZERO;
+  EMPTY(ATL); EMPTY(a11);
+  EMPTY(YTL);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);
@@ -450,7 +464,7 @@ int __blk_trdreduce_upper(__armas_dense_t *A, __armas_dense_t *tauq,
 {
   __armas_dense_t ATL, ABR, A00, A01, A11, A22;
   __armas_dense_t YT, YB, Y0, Y1, Y2;
-  __armas_dense_t tT, tB, tq0, tq1, tq2, y21;
+  __armas_dense_t tT, tB, tq0, tq1, tq2;
   DTYPE v0;
   int err = 0;
 

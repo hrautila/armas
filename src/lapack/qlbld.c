@@ -55,6 +55,8 @@ int __unblk_qlbuild(__armas_dense_t *A, __armas_dense_t *tau,
   __armas_dense_t tT, tB, t0, t1, t2, w12, D;
   DTYPE tauval;
 
+  EMPTY(a11);
+
   // (mk, nk) = (rows, columns) of upper left partition
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR,   /**/  A, mk, nk, ARMAS_PTOPLEFT);
@@ -114,7 +116,7 @@ int __blk_qlbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *T,
                   __armas_dense_t *W, int K, int lb, armas_conf_t *conf)
 {
   __armas_dense_t ATL, ABL, ATR, ABR, A00, A01, A10, A11, A21, A22, AT;
-  __armas_dense_t tT, tB, t0, t1, t2, w12, D, Tcur, Wrk;
+  __armas_dense_t tT, tB, t0, t1, t2, D, Tcur, Wrk;
   int mk, nk, uk;
 
   nk = A->cols - K;

@@ -24,6 +24,7 @@
 
 #include "internal.h"
 #include "matrix.h"
+#include "pivot.h"
 #include "internal_lapack.h"
 
 /*
@@ -159,7 +160,9 @@ int __unblk_bkfactor_lower(__armas_dense_t *A, __armas_dense_t *W,
   armas_pivot_t pT, pB, p0, p1, p2;
   DTYPE t, a11val, a, b, d, scale;
   DTYPE abuf[4];
-  int nc, r, np, err, pi;
+  int nc, r, np, pi;
+
+  EMPTY(A00); EMPTY(a11);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR, /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -277,7 +280,7 @@ int __build_bkpivot_lower(__armas_dense_t *AL, __armas_dense_t *AR,
 {
   __armas_dense_t rcol, qrow, src, wk, wkp1, wkr, wrow;
   int r, q;
-  DTYPE amax, rmax, qmax, qmax2, p1;
+  DTYPE amax, rmax, qmax, p1;
   
   // Copy AR column 0 to WR column 0 and update with WL[0:,]
   __armas_submatrix(&src, AR, 0, 0, AR->rows, 1);
@@ -369,8 +372,10 @@ int __unblk_bkbounded_lower(__armas_dense_t *A, __armas_dense_t *W,
   __armas_dense_t a11inv, cwrk, w00, w10, w11;
   armas_pivot_t pT, pB, p0, p1, p2;
   DTYPE t1, tr, a11val, a, b, d, scale;
-  DTYPE abuf[4];
-  int nc, r, np, err, pi;
+  //DTYPE abuf[4];
+  int nc, r, np, pi;
+
+  EMPTY(A00); EMPTY(a11);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR, /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -484,6 +489,8 @@ int __blk_bkfactor_lower(__armas_dense_t *A, __armas_dense_t *W,
   armas_pivot_t pT, pB, p0, p1, p2;
   int nblk, k, r, r1, rlen, n;
 
+  EMPTY(A00); EMPTY(A11);
+
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR, /**/  A, 0, 0, ARMAS_PTOPLEFT);
   __pivot_2x1(&pT,
@@ -563,8 +570,10 @@ int __unblk_bksolve_lower(__armas_dense_t *B, __armas_dense_t *A,
   __armas_dense_t *Aref;
   armas_pivot_t pT, pB, p0, p1, p2;
   int aStart, aDir, bStart, bDir;
-  int nc, r, np, err, pi, pr, k;
+  int nc, r, np, pr, k;
   DTYPE b, apb, dpb, scale, s0, s1;
+
+  EMPTY(ATL); EMPTY(A00); EMPTY(a11);
 
   np = 0;
   if (phase == 1) {

@@ -27,6 +27,7 @@
 #include "internal_lapack.h"
 #include "partition.h"
 
+
 static inline
 int __ws_qrfactor(int M, int N, int lb)
 {
@@ -42,6 +43,10 @@ int __unblk_qrfactor(__armas_dense_t *A, __armas_dense_t *tau,
 {
   __armas_dense_t ATL, ABR, A00, a11, a12, a21, A22;
   __armas_dense_t tT, tB, t0, t1, t2, w12;
+
+  // initialize to "empty" to avoid "maybe-uninitialized" errors
+  EMPTY(ATL); EMPTY(ABR); EMPTY(A00); EMPTY(a11);
+  EMPTY(A22);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -81,7 +86,11 @@ int __blk_qrfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *Tw
                    __armas_dense_t *W, int lb, armas_conf_t *conf)
 {
   __armas_dense_t ATL, ABR, A00, A11, A12, A21, A22, AL;
-  __armas_dense_t tT, tB, t0, t1, t2, w1, Wrk, row;
+  __armas_dense_t tT, tB, t0, t1, t2, w1, Wrk;
+
+  // initialize to "empty" to avoid "maybe-uninitialized" errors
+  EMPTY(ATL); EMPTY(ABR);
+  EMPTY(A00); EMPTY(A11); EMPTY(A22);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -142,7 +151,6 @@ int __update_qr_left(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t *
                      __armas_dense_t *Y2, __armas_dense_t *T, __armas_dense_t *W,
                      int transpose, armas_conf_t *conf)
 {
-  int err;
   // W = C1.T
   ONERROR(__armas_scale_plus(W, C1, 0.0, 1.0, ARMAS_TRANSB, conf));
   // W = C1.T*Y1 = W*Y1
@@ -184,7 +192,6 @@ int __update_qr_right(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t 
                       __armas_dense_t *Y2, __armas_dense_t *T, __armas_dense_t *W,
                       int transpose, armas_conf_t *conf)
 {
-  int err;
   // W = C1
   ONERROR(__armas_scale_plus(W, C1, 0.0, 1.0, ARMAS_NONE, conf));
   // W = C1*Y1 = W*Y1
@@ -225,10 +232,16 @@ int __update_qr_right(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t 
 int __unblk_qr_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t *tau,
                          armas_conf_t *conf)
 {
-  double tauval;
+  DTYPE tauval;
   __armas_dense_t ATL, ABR, A00, a10, a11, A20, a21, A22;
   __armas_dense_t TTL, TBR, T00, t01, T02, t11, t12, T22;
-  __armas_dense_t tT, tB, t0, t1, t2, w1;
+  __armas_dense_t tT, tB, t0, t1, t2;
+
+  // initialize to "empty" to avoid "maybe-uninitialized" errors
+  EMPTY(ATL); EMPTY(ABR);
+  EMPTY(A00); EMPTY(a11); EMPTY(A22);
+  EMPTY(TTL); EMPTY(TBR);
+  EMPTY(T00); EMPTY(t11); EMPTY(T22);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);

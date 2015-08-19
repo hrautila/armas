@@ -44,6 +44,8 @@ int __unblk_qrtfactor(__armas_dense_t *A, __armas_dense_t *T,
   __armas_dense_t TTL, TTR, TBR, T00, t01, t11, T22, w12;
   DTYPE tauval;
 
+  EMPTY(A00);
+
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,  /**/  A, 0, 0, ARMAS_PTOPLEFT);
   __partition_2x2(&TTL,  &TTR,
@@ -89,8 +91,11 @@ static
 int __blk_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W, int lb, armas_conf_t *conf)
 {
   __armas_dense_t ATL, ABR, A00, A11, A12, A21, A22, AL;
-  __armas_dense_t TL, TR, TBR, T00, T01, T02, T11, T12, T22, w12;
-  __armas_dense_t tT, tB, t0, t1, t2, w1, Wrk, row;
+  __armas_dense_t TL, TR, T00, T01, T02;
+  __armas_dense_t w1, Wrk;
+
+  EMPTY(A00);
+  EMPTY(TL); EMPTY(TR); EMPTY(T00); EMPTY(w1);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,  /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -175,7 +180,7 @@ int __armas_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W
                       armas_conf_t *conf)
 {
   __armas_dense_t sT;
-  int wsmin, wsneed, lb;
+  int wsmin, lb;
   if (!conf)
     conf = armas_conf_default();
 

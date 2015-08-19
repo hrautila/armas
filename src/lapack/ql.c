@@ -77,6 +77,8 @@ int __unblk_qlfactor(__armas_dense_t *A, __armas_dense_t *tau,
   __armas_dense_t ATL, ABR, A00, a01, a10, a11, A22;
   __armas_dense_t tT, tB, t0, t1, t2, w12;
 
+  EMPTY(ATL);
+
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);
   __partition_2x1(&tT, 
@@ -182,7 +184,6 @@ int __update_ql_left(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t *
                      __armas_dense_t *Y2, __armas_dense_t *T, __armas_dense_t *W,
                      int transpose, armas_conf_t *conf)
 {
-  int err;
   // W = C1.T
   IFERROR(__armas_scale_plus(W, C1, 0.0, 1.0, ARMAS_TRANSB, conf));
   // W = C1.T*Y1 = W*Y1
@@ -265,8 +266,11 @@ int __unblk_ql_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t
 {
   double tauval;
   __armas_dense_t ATL, ABR, A00, a01, A02, a11, a12, A22;
-  __armas_dense_t TTL, TBR, T00, t11, t12, t21, T22;
-  __armas_dense_t tT, tB, t0, t1, t2, w1;
+  __armas_dense_t TTL, TBR, T00, t11, t21, T22;
+  __armas_dense_t tT, tB, t0, t1, t2;
+
+  EMPTY(ATL); EMPTY(A00);
+  EMPTY(TTL); EMPTY(T00); EMPTY(t11);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);

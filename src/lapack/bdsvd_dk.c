@@ -116,10 +116,13 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
                    __armas_dense_t *U, __armas_dense_t *V,
                    __armas_dense_t *CS, DTYPE tol, armas_conf_t *conf)
 {
-    int N, work, maxit, i, n, k, nrot, ip, iq, zero, saves, newip, newiq, abstol, forwards;
+    int N, work, maxit, i, n, k, nrot, ip, iq, zero, saves, abstol, forwards;
     int ipold, iqold;
-    DTYPE e0, e1, d0, d1, dp, f0, g0, c, s, r, ushift, slow, shigh, threshold, mu;
+    DTYPE e0, e1, d0, d1, dp, f0, g0, r, ushift, slow, shigh, threshold, mu;
     __armas_dense_t sD, sE, Cr, Sr, Cl, Sl;
+
+    EMPTY(sD); EMPTY(sE);
+    forwards = 1; zero = 0;
 
     N = __armas_size(D);
     maxit = 6*N*N;

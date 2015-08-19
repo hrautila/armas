@@ -37,10 +37,12 @@
 int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
                 __armas_dense_t *V, __armas_dense_t *CS, ABSTYPE tol, armas_conf_t *conf)
 {
-    int ip, iq, iqold, ipold, k, N, i, n, maxiter, nrot;
+    int ip, iq, iqold, ipold, k, N, n, maxiter, nrot;
     int forwards = 1, stop = 0, saves = 0;
     ABSTYPE e0, e1, d0, d1, f0, g0, ushift;
-    __armas_dense_t Cr, Sr, sD, sE, t;
+    __armas_dense_t Cr, Sr, sD, sE;
+
+    EMPTY(sD); EMPTY(sE);
 
     N = __armas_size(D);
     if (V) {
@@ -50,7 +52,7 @@ int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
     }
 
     maxiter = 6*N;
-    iq = N; ip = 0;
+    iq = iqold = N; ip = ipold = 0;
     for (stop = 0, n = 0; !stop && maxiter > 0 && iq > 0; maxiter--, n++) {
         // 1. deflate off-diagonal entries if they are small
         d0 = __ABS(__armas_get_at_unsafe(D, iq-1));

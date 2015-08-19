@@ -24,6 +24,7 @@
 
 #include "internal.h"
 #include "matrix.h"
+#include "pivot.h"
 #include "internal_lapack.h"
 
 /*
@@ -142,12 +143,14 @@ int __find_bkpivot_upper(__armas_dense_t *A, int *nr, int *np, armas_conf_t *con
 int __unblk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
                            armas_pivot_t *P, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ATR, ABR, A00, a01, A02, a11, a12, A22;
+  __armas_dense_t ATL, ATR, ABR, A00, a01, a11, A22;
   __armas_dense_t a11inv, cwrk;
   armas_pivot_t pT, pB, p0, p1, p2;
   DTYPE t, a11val, a, b, d, scale;
   DTYPE abuf[4];
-  int nc, r, np, nr, err, pi;
+  int nc, r, np, nr, pi;
+
+  EMPTY(A00); EMPTY(a11);
 
   __partition_2x2(&ATL,  &ATR,
                   __nil, &ABR, /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);
@@ -263,7 +266,7 @@ int __build_bkpivot_upper(__armas_dense_t *AL, __armas_dense_t *AR,
 {
   __armas_dense_t rcol, qrow, src, wk, wkp1, wkr, wrow;
   int r, q, lc, wc, lr;
-  DTYPE amax, rmax, qmax, qmax2, p1;
+  DTYPE amax, rmax, qmax, p1;
   
   lc = AL->cols - 1;
   wc = WL->cols - 1;
@@ -362,7 +365,9 @@ int __unblk_bkbounded_upper(__armas_dense_t *A, __armas_dense_t *W,
   __armas_dense_t a11inv, cwrk, w00, w01, w11;
   armas_pivot_t pT, pB, p0, p1, p2;
   DTYPE t1, tr, a11val, a, b, d, scale;
-  int nc, r, np, err, pi;
+  int nc, r, np, pi;
+
+  EMPTY(A00); EMPTY(a11); EMPTY(w00);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR, /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);
@@ -477,7 +482,9 @@ int __blk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
   __armas_dense_t ATL, ATR, ABL, ABR, A00, A01, A02, A11, A12, A22;
   __armas_dense_t cwrk, s, d;
   armas_pivot_t pT, pB, p0, p1, p2;
-  int nblk, k, r, r1, rlen, np, colno, n;
+  int nblk, k, r, r1, rlen, np, colno;
+
+  EMPTY(ATL);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR, /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);
@@ -547,8 +554,10 @@ int __unblk_bksolve_upper(__armas_dense_t *B, __armas_dense_t *A,
   __armas_dense_t *Aref;
   armas_pivot_t pT, pB, p0, p1, p2;
   int aStart, aDir, bStart, bDir;
-  int nc, r, np, err, pi, k, pr;
+  int nc, r, np, k, pr;
   DTYPE b, apb, dpb, scale, s0, s1;
+
+  EMPTY(ATL); EMPTY(A00); EMPTY(a11);
 
   np = 0;
   if (phase == 2) {

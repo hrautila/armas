@@ -61,6 +61,28 @@ typedef struct dmin_data {
     int   nfail;
 } dmin_data_t;
 
+#if __GNUC__
+#define __DMIN_INIT(dm)                         \
+    dm = (dmin_data_t){                         \
+        .dmin = __ZERO,                         \
+        .dmin1 = __ZERO,                        \
+        .dmin2 = __ZERO,                        \
+        .dn = __ZERO,                           \
+        .dn1 = __ZERO,                          \
+        .dn2 = __ZERO,                          \
+        .emin = __ZERO,                         \
+        .qmax = __ZERO,                         \
+        .g = __ZERO,                            \
+        .tau = __ZERO,                          \
+        .cterm = __ZERO,                        \
+        .imin = 0,                              \
+        .ttype = 0,                             \
+        .niter = 0,                             \
+        .nfail = 0 }
+#else
+#define __DMIN_INIT(dm)
+#endif
+
 /*
  * \brief Error-free transformation x + y = a + b and x = fl(a+b)
  *
@@ -84,7 +106,7 @@ int __dqds_sweep(__armas_dense_t *dq, __armas_dense_t *de,
                  int N, DTYPE tau, dmin_data_t *dm)
 {
     int k;
-    register DTYPE t, d, qk, qk1, ek, thresh, emin;
+    register DTYPE t, d, qk, qk1, ek, emin;
 
     if (N <= 1) {
         return 0;
@@ -222,7 +244,7 @@ static
 void __dqds_shift(DTYPE *tau, __armas_dense_t *q, __armas_dense_t *e,
                   __armas_dense_t *q0, __armas_dense_t *e0, int N, int neigen, dmin_data_t *dm)
 {
-    DTYPE qn, qn1, qn2, en1, en2, en3, an, an1, bn1, bn2;
+    DTYPE qn, qn1, en1, en2, an, an1, bn1, bn2;
     DTYPE gap1, gap2, x1, x2, stau, gamma, phi, rho;
     int ie;
 
@@ -420,8 +442,7 @@ void __dqds_shift(DTYPE *tau, __armas_dense_t *q, __armas_dense_t *e,
         break;
     }
 
- finish:
-    *tau = stau;
+     *tau = stau;
     dm->tau = stau;
     return;
 }
@@ -461,7 +482,7 @@ void __dqds2x2_plain(DTYPE *r1, DTYPE *r2, DTYPE q1, DTYPE e1, DTYPE q2)
     *r2 = q2;
 }
 
-static
+static inline
 void __dqds2x2(DTYPE *r1, DTYPE *r2, DTYPE q1, DTYPE e1, DTYPE q2, DTYPE sigma)
 {
     __dqds2x2_plain(r1, r2, q1, e1, q2);
@@ -481,8 +502,8 @@ void __dqds2x2(DTYPE *r1, DTYPE *r2, DTYPE q1, DTYPE e1, DTYPE q2, DTYPE sigma)
 static
 int __dqds_neglible(__armas_dense_t *Z, int N, int ping, DTYPE sigma)
 {
-    int nnew, k, neglible, qrow, erow, qqrow, eerow;
-    DTYPE q0, q1, qn, qn1, qn2, en1, en2, en1p, en2p, r1, r2;
+    int qrow, erow, qqrow, eerow;
+    DTYPE qn, qn1, qn2, en1, en2, en1p, en2p, r1, r2;
 
     qrow  = ping;
     qqrow = 1 - ping;
@@ -574,8 +595,10 @@ static
 int __dqds_goodstep(DTYPE *ssum, __armas_dense_t *Z, int N, int pp, dmin_data_t *dmind)
 {
     __armas_dense_t sq, dq, se, de;
-    int n, k, t, ncnt, idk, nfail, newseg;
-    DTYPE x, y, q0, q1, qn, qn1, qn2, en1, en2, r1, r2, sigma, tau, tau0;
+    int n, ncnt, nfail, newseg;
+    DTYPE x, y, q0, q1, sigma, tau;
+
+    EMPTY(de); EMPTY(dq); EMPTY(se); EMPTY(sq);
 
     sigma = *ssum;
     newseg = __SIGN(dmind->dmin);
@@ -589,8 +612,6 @@ int __dqds_goodstep(DTYPE *ssum, __armas_dense_t *Z, int N, int pp, dmin_data_t 
 
     dmind->niter++;
     if (N == 1) {
-        DTYPE t0;
-        t0 = __armas_get_at_unsafe(&sq, 0);
         __armas_set_unsafe(Z, 0, 0, __armas_get_at_unsafe(&sq, 0)+(sigma+dmind->cterm));
         //printf("..[goodstep] deflated single valued vector eig=%9.6f\n", __SQRT(__armas_get_unsafe(Z, 0, 0)));
         return 1;
@@ -625,7 +646,7 @@ int __dqds_goodstep(DTYPE *ssum, __armas_dense_t *Z, int N, int pp, dmin_data_t 
     // 4.  run dqds until dmin > 0
     nfail = 0;
     do {
-        idk = __dqds_sweep(&dq, &de, &sq, &se, N-ncnt, tau, dmind);
+        __dqds_sweep(&dq, &de, &sq, &se, N-ncnt, tau, dmind);
         if (dmind->dmin < __ZERO) {
             // failure here
             DTYPE en1 = __armas_get_at_unsafe(&de, N-ncnt-2);
@@ -660,7 +681,7 @@ int __dqds_goodstep(DTYPE *ssum, __armas_dense_t *Z, int N, int pp, dmin_data_t 
     //    use cascaded summation from (2), algorithm 4.1
     //    this here is one step of the algorithm, error term
     //    is summated to dmind->cterm
- update:
+ 
     twosum(&x, &y, *ssum, tau);
     //printf("..[goodstep] 2sum x=%13e, y=%13e, a=%13e, b=%13e\n", x, y, *ssum, tau);
     *ssum = x;
@@ -677,9 +698,8 @@ int __dqds_goodstep(DTYPE *ssum, __armas_dense_t *Z, int N, int pp, dmin_data_t 
 static
 int __dqds_segment(__armas_dense_t *Z, int N, DTYPE sigma, DTYPE dmin, dmin_data_t *dmind, int level)
 {
-    __armas_dense_t sZ, Ztail;
-    DTYPE emins[2], emax, qmin, qmax, emin, q0, e0, e1, old_dmin, cterm;
-    int ip, iq, ping, neigen, maxiter, niter, k, j, taillen;
+    __armas_dense_t sZ;
+    int ip, iq, ping, neigen, maxiter, niter;
 
     //printf("\n** segment %d start [N=%d, sigma=%e, dmin=%e, qmax=%e, emin=%e] **\n",
     //     level, N, sigma, dmind->dmin, dmind->qmax, dmind->emin);
@@ -694,7 +714,7 @@ int __dqds_segment(__armas_dense_t *Z, int N, DTYPE sigma, DTYPE dmin, dmin_data
     }
 
     maxiter = 30*(iq - ip);
-    qmax = dmind->qmax;
+    //qmax = dmind->qmax;
     for (niter = 0; niter < maxiter && iq > ip; niter++) {
 
         //printf("\n-- segment loop: niter=%d/%d, N=%d %d:%d dmin=%e --\n", niter, maxiter, iq-ip, ip, iq, dmind->dmin);
@@ -702,18 +722,20 @@ int __dqds_segment(__armas_dense_t *Z, int N, DTYPE sigma, DTYPE dmin, dmin_data
         __armas_submatrix(&sZ, Z, 0, ip, 4, iq-ip);
         neigen = __dqds_goodstep(&sigma, &sZ, iq-ip, ping, dmind);
         ping = PONG - ping;
-        emins[ping] = dmind->emin;
         if (neigen > 0) {
             //printf("..[segment]: goodstep deflated %d values\n", neigen);
             iq -= neigen;
         }
 
 #if 0
+        DTYPE emins[2], qmax;
+        emins[ping] = dmind->emin;
         /*
          * This is part of (1) that checks for splitting after one PING-PONG transfomations.
          * Could not make work correctly and it is here just to remind that something could
          * be done.
          */
+        DTYPE emax, emin, qmin, cterm, q0, e0, e1, cterm;
         if (ping == PING && (iq-ip) > 2) {
             // emins[0] current emin from ZZ->Z (PONG) phase,
             // emins[1] old emin from Z -> ZZ (PING) phase
@@ -772,11 +794,13 @@ int __dqds_segment(__armas_dense_t *Z, int N, DTYPE sigma, DTYPE dmin, dmin_data
  * \brief Run Li's test from (1), section 3.3
  */ 
 static
-int __dqds_li_test(int ping, __armas_dense_t *Z, int N, DTYPE *emin, DTYPE *qmax)
+void __dqds_li_test(int ping, __armas_dense_t *Z, int N, DTYPE *emin, DTYPE *qmax)
 {
     __armas_dense_t sq, se, dq, de;
-    DTYPE qk, qk1, ek, d, t, emn, qmx;
+    DTYPE qk, qk1, ek, d, emn, qmx;
     int k;
+
+    EMPTY(de); EMPTY(dq); EMPTY(se); EMPTY(sq);
 
     armas_d_row(&sq, Z, ping);
     armas_d_row(&dq, Z, 1 - ping);
@@ -810,7 +834,8 @@ int __dqds_li_test(int ping, __armas_dense_t *Z, int N, DTYPE *emin, DTYPE *qmax
             qk = d;
             ek = __ZERO;
             d  = qk1;
-#if 0   // this commented out as it seemed to true most of the time, even without any appearent underflow
+#if 0
+            // this commented out as it seemed to true most of the time, even without any appearent underflow
         } else if (__SAFEMIN*qk1 <= qk && __SAFEMIN*qk <= qk1) {
             // test for underflow from (1) page 7
             //printf("..[li] underflow qk=%13e [%13e], qk1=%13e [%13e]\n", qk, __SAFEMIN*qk, qk1, __SAFEMIN*qk1);
@@ -840,10 +865,12 @@ int __dqds_li_test(int ping, __armas_dense_t *Z, int N, DTYPE *emin, DTYPE *qmax
 static
 int __dqds_main(__armas_dense_t *Z, int N)
 {
-    __armas_dense_t z0, z1, sZ, sq, se;
+    __armas_dense_t sZ, sq, se;
     dmin_data_t dmind;
-    DTYPE q0, q1, e0, e1, emin, emax, qmin, qmax, sigma, dmin, cterm;
+    DTYPE q0, q1, e0, emin, emax, qmin, qmax, sigma, dmin, cterm;
     int ip, iq, niter, maxiter, ncnt;
+
+    EMPTY(sZ); EMPTY(se); EMPTY(sq);
 
     // test flipping 1.5*q(0) < q(N-1)
     q0 = __armas_get_unsafe(Z, 0, 0);
@@ -861,6 +888,7 @@ int __dqds_main(__armas_dense_t *Z, int N)
     __armas_row(&se, Z, 1);
 
     // find unreduce block and run dqds on the segment
+    __DMIN_INIT(dmind);
     ip = 0; iq = N;
     maxiter = 10*N;
     dmind.cterm = __ZERO;
@@ -978,8 +1006,13 @@ int __armas_scale_to(__armas_dense_t *A, DTYPE from, DTYPE to, int flags)
 int __armas_dqds(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t* W, armas_conf_t *conf)
 {
     __armas_dense_t sq, se, Z;
-    int k, n, N, err, ok;
-    DTYPE dmax, emax, di, ei, qmax, scalemax;
+    int k, N, err;
+    DTYPE dmax, emax, di, ei;
+#if defined(__DQDS_SCALING)
+    DTYPE qmax, scalemax;
+#endif
+
+    EMPTY(sq); EMPTY(se); EMPTY(Z);
 
     N = __armas_size(D);
     if (!conf)
@@ -1018,13 +1051,14 @@ int __armas_dqds(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t* W, arm
         // already diagonal
         return 0;
     }
+#if defined(__DQDS_SCALING)
     qmax     = __MAX(dmax, emax);
     scalemax = __SQRT(__EPS/__SAFEMIN);
     // scale values from QMAX to SCALEMAX
     /* missing */
-    //__armas_scale_to(&sq, qmax, scalemax, ARMAS_ANY);
-    //__armas_scale_to(&se, qmax, scalemax, ARMAS_ANY);
-
+    __armas_scale_to(&sq, qmax, scalemax, ARMAS_ANY);
+    __armas_scale_to(&se, qmax, scalemax, ARMAS_ANY);
+#endif
     // square scaled elements
     for (k = 0; k < N-1; k++) {
         di = __armas_get_at_unsafe(&sq, k);
@@ -1042,9 +1076,10 @@ int __armas_dqds(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t* W, arm
             di = __SQRT(__armas_get_at_unsafe(&sq, k));
             __armas_set_at_unsafe(D, k, di);
         }
+#if defined(__DQDS_SCALING)      
         // rescale from SCALEMAX to QMAX
-        //__armas_scale_to(D, scalemax, qmax, ARMAS_ANY);
-
+        __armas_scale_to(D, scalemax, qmax, ARMAS_ANY);
+#endif
         // and sort elements
         __sort_eigenvec(D, __nil, __nil, __nil, ARMAS_DESC);
     } else {

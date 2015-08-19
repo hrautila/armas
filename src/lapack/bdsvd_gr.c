@@ -55,6 +55,7 @@ int find_diagonal_blocks(int *ip, int *iq, __armas_dense_t *D, __armas_dense_t *
     int ipold = *ip, iqold = *iq;
     DTYPE v;
 
+    p = 0;
     q = __armas_size(D);
     for (k = __armas_size(E); k > 0; k--) {
         v = __armas_get_at(E, k-1);
@@ -96,7 +97,7 @@ int find_diagonal_blocks(int *ip, int *iq, __armas_dense_t *D, __armas_dense_t *
 static
 DTYPE compute_bsvd_shift(DTYPE e, DTYPE f, DTYPE g, DTYPE h)
 {
-    DTYPE e1, e2, ha, a, b, c, T, D;
+    DTYPE e1, e2, a, b, c, T, D;
     a = f*f+e*e;
     b = g*f;
     c = h*h+g*g;
@@ -122,6 +123,8 @@ int __bdsvd_golub(__armas_dense_t *D, __armas_dense_t *E,
     int N, work, lc, i, n, nrot, ip, iq, zeros, saves;
     DTYPE e0, e1, d0, d1, dp, c, s, r, ushift;
     __armas_dense_t sD, sE, Cr, Sr, Cl, Sl;
+
+    EMPTY(sD); EMPTY(sE);
 
     N = __armas_size(D);
     lc = 6*N*N;

@@ -45,7 +45,7 @@ int __armas_svd_small(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V
 {
     __armas_dense_t tau;
     int M, N, K;
-    DTYPE d0, d1, e0, smin, smax, cosr, sinr, cosl, sinl, r;
+    DTYPE d0, d1, e0, smin, smax, cosr, sinr, cosl, sinl;
     DTYPE buf[2];
 
     M = A->rows; N = A->cols;
@@ -193,7 +193,7 @@ int __armas_svd_tall(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V,
                      __armas_dense_t *A, __armas_dense_t *W, int flags, armas_conf_t *conf)
 {
     __armas_dense_t tauq, taup, Wred, sD, sE, R, Un, *uu, *vv;
-    int M, N, err, wr_len;
+    int M, N, wr_len;
     
     M = A->rows; N = A->cols;
     uu = __nil;
@@ -316,8 +316,8 @@ static
 int __armas_svd_wide(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V,
                      __armas_dense_t *A, __armas_dense_t *W, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t tauq, taup, Wred, sD, sE, Vm, L, t, *uu, *vv;
-    int M, N, err, wr_len;
+    __armas_dense_t tauq, taup, Wred, sD, sE, Vm, L, *uu, *vv;
+    int M, N, wr_len;
 
     M = A->rows; N = A->cols;
     uu = __nil;
@@ -476,7 +476,7 @@ int __armas_svd_wide(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V,
 int __armas_svd(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V,
                 __armas_dense_t *A, __armas_dense_t *W, int flags, armas_conf_t *conf)
 {
-    int err, tq_len, tp_len;
+    int err; //, tq_len, tp_len;
     int tall = A->rows >= A->cols;
 
     if (tall && __armas_size(S) < A->cols) {
@@ -487,8 +487,8 @@ int __armas_svd(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V,
         return -1;
     }
 
-    tq_len = tall ? A->cols : A->rows - 1;
-    tp_len = tall ? A->cols - 1 : A->cols;
+    //tq_len = tall ? A->cols : A->rows - 1;
+    //tp_len = tall ? A->cols - 1 : A->cols;
 
     if (flags & ARMAS_WANTU) {
         if (!U) {

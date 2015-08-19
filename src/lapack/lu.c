@@ -25,12 +25,15 @@
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+#include "pivot.h"
 
 static
 int __unblk_lufactor_nopiv(__armas_dense_t *A, armas_conf_t *conf)
 {
   __armas_dense_t ATL, ABR, A00, a11, a12, a21, A22;
   DTYPE a11val;
+
+  EMPTY(A00); EMPTY(a11);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -57,7 +60,8 @@ static
 int __blk_lufactor_nopiv(__armas_dense_t *A, int lb, armas_conf_t *conf)
 {
   __armas_dense_t ATL, ABR, A00, A11, A12, A21, A22;
-  DTYPE a11val;
+
+  EMPTY(A00);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -99,6 +103,8 @@ int __unblk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int offset, armas_con
   armas_pivot_t pT, pB, p0, p1, p2;
   int pi, err = 0;
   DTYPE a11val, aa;
+
+  EMPTY(a11); EMPTY(A0); EMPTY(AL);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -177,6 +183,8 @@ int __blk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int lb, armas_conf_t *c
   __armas_dense_t AL, AR, A0, A1, A2, AB0;
   armas_pivot_t pT, pB, p0, p1, p2;
   int k, pi, err = 0;
+
+  EMPTY(A0); EMPTY(AL); EMPTY(AB0);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -295,7 +303,7 @@ int __armas_lufactor(__armas_dense_t *A, armas_pivot_t *P, armas_conf_t *conf)
 int __armas_lusolve(__armas_dense_t *B, __armas_dense_t *A,
                     armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
-  int lb, ok;
+  int ok;
   if (!conf)
     conf = armas_conf_default();
   

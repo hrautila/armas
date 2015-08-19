@@ -51,9 +51,11 @@ int __unblk_rqbuild(__armas_dense_t *A, __armas_dense_t *tau,
                     __armas_dense_t *W, int mk, int nk, int mayclear, armas_conf_t *conf)
 {
   DTYPE tauval;
-  __armas_dense_t ATL, ABL, ATR, ABR, A00, a01, a10, a11, a12, a21, A22, D;
+  __armas_dense_t ATL, ABL, ATR, ABR, A00, a01, a10, a11, a12, A22, D;
   __armas_dense_t tT, tB, t0, t1, t2, w12;
 
+
+  EMPTY(a11);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR,   /**/  A, mk, nk, ARMAS_PTOPLEFT);
@@ -105,7 +107,7 @@ int __blk_rqbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *T,
                   __armas_dense_t *W, int K, int lb, armas_conf_t *conf)
 {
   __armas_dense_t ATL, ABL, ABR, ATR, A00, A01, A10, A11, A12, A22, AL, D;
-  __armas_dense_t tT, tB, t0, t1, t2, w12, Tcur, Wrk;
+  __armas_dense_t tT, tB, t0, t1, t2, Tcur, Wrk;
   int mk, nk, uk;
   
   mk = A->rows - K;

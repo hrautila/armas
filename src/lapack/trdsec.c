@@ -84,7 +84,7 @@ void rational_backward(DTYPE *val, DTYPE *dval,
 static inline
 void compute_delta(__armas_dense_t *delta, __armas_dense_t *D, int ik, DTYPE tau) {
     int i, nx, kx, n, k;
-    DTYPE d0, dval, *dp, *dk;
+    DTYPE d0, *dp, *dk;
     dp = __armas_data(delta);
     dk = __armas_data(D);
     nx = delta->rows == 1 ? delta->step : 1;
@@ -198,8 +198,8 @@ int __trdsec_initial_guess(DTYPE *tau, DTYPE *tau_low, DTYPE *tau_high,
                            __armas_dense_t *D, __armas_dense_t *Z,
                            __armas_dense_t *delta, int index, DTYPE rho)
 {
-    DTYPE H, dH, G, Hx, dG, F, dF, Fa, A, B, C, dd, tau0;
-    DTYPE w, d_k, d_k1, z_k, z_k1, mpoint, diff; 
+    DTYPE G, Hx, dG, F, A, B, C, dd;
+    DTYPE d_k, d_k1, z_k, z_k1, mpoint, diff; 
     int N, iK, iN, last = 0;
 
     N = __armas_size(D);
@@ -320,7 +320,7 @@ int __trdsec_root(DTYPE *lambda, __armas_dense_t *D, __armas_dense_t *Z,
     int iK, iK1, niter, maxiter, N;
 
     DTYPE H, dH, G, dG, F, dF, Fa, A, B, C, tau, tau_low, tau_high, eta, eta0, dd, edif;
-    DTYPE ertm, d_k, d_k1, delta_k, delta_k1, da_k, da_k1, etol; 
+    DTYPE delta_k, delta_k1, da_k, da_k1; 
 
     N    = __armas_size(D);
     tau  = __ZERO;
@@ -473,6 +473,8 @@ void __trdsec_update_vec_delta(__armas_dense_t *z, __armas_dense_t *Q,
     __armas_dense_t delta;
     DTYPE zk;
     int i;
+    EMPTY(delta);
+
     for (i = 0; i < __armas_size(z); i++) {
         __armas_column(&delta, Q, i);
         __update_vec_delta(&zk, d, &delta, i, rho);
@@ -522,8 +524,9 @@ static
 void __trdsec_eigen2_build(__armas_dense_t *Q, __armas_dense_t *z, __armas_dense_t *Q2)
 {
     __armas_dense_t qi, delta;
-    DTYPE lmbda;
     int k;
+    EMPTY(delta);
+
     for (k = 0; k < __armas_size(z); k++) {
         __armas_column(&qi, Q, k);
         __armas_row(&delta, Q2, k);

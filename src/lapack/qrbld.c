@@ -61,6 +61,8 @@ int __unblk_qrbuild(__armas_dense_t *A, __armas_dense_t *tau,
   __armas_dense_t tT, tB, t0, t1, t2, w12, D;
   DTYPE tauval;
 
+  EMPTY(ATL); EMPTY(A00); EMPTY(a11);
+
   __partition_2x2(&ATL,  &ATR,
                   __nil, &ABR,   /**/  A, mk, nk, ARMAS_PBOTTOMRIGHT);
   __partition_2x1(&tT, 
@@ -121,12 +123,14 @@ int __blk_qrbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *T,
                   __armas_dense_t *W, int K, int lb, armas_conf_t *conf)
 {
   __armas_dense_t ATL, ATR, ABR, A00, A01, A11, A12, A21, A22, AL;
-  __armas_dense_t tT, tB, t0, t1, t2, w12, D, Tcur, Wrk;
+  __armas_dense_t tT, tB, t0, t1, t2, D, Wrk;
   int nk, mk, uk;
 
   nk = A->cols - K;
   mk = A->rows - K;
   uk = K % lb;
+
+  EMPTY(ATL); EMPTY(A00); 
 
   __partition_2x2(&ATL,  &ATR,
                   __nil, &ABR,   /**/  A, mk+uk, nk+uk, ARMAS_PBOTTOMRIGHT);
