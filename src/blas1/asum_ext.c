@@ -29,8 +29,8 @@
 ABSTYPE __vec_asum_ext(const mvec_t *X,  int N)
 {
     register int i, k;
-    ABSTYPE c0, c1, c2, c3, z0, z1, z2, z3;
-    register ABSTYPE a0, a1, a2, a3;
+    ABSTYPE c0, c1, z0, z1; 
+    register ABSTYPE a0, a1;
 
     c0 = __ABS(X->md[0]);
     c1 = __ABS(X->md[1*X->inc]);

@@ -79,7 +79,7 @@ ABSTYPE __vec_nrm2(const mvec_t *X,  int N)
 static inline
 ABSTYPE __vec_nrm2_scaled(const mvec_t *X,  int N)
 {
-  register int i, k;
+  register int i;
   register ABSTYPE a0, sum, scale;
 
   sum = __ABSONE;

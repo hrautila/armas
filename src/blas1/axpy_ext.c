@@ -42,7 +42,7 @@ int __vec_axpy_ext(mvec_t *Y,  const mvec_t *X, DTYPE alpha, int N)
         Y->md[(i+1)*Y->inc] = (p1 + c1) + y1;
     }    
     if (i == N)
-        return;
+        return 0;
 
     kx = i*X->inc; ky = i*Y->inc;
     twoprod(&x0, &p0, X->md[kx], alpha);
@@ -75,7 +75,7 @@ int __vec_axpby_ext(mvec_t *Y,  const mvec_t *X, DTYPE alpha, DTYPE beta, int N)
         Y->md[(i+1)*Y->inc] = (p1 + c1) + y1;
     }    
     if (i == N)
-	return;
+	return 0;
 
     kx = i*X->inc; ky = i*Y->inc;
     twoprod(&x0, &p0, X->md[kx], alpha);
