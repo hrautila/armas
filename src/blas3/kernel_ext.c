@@ -54,23 +54,59 @@
 /* ---------------------------------------------------------------------------
  * Definitions for double precision floating types.
  */
-#include "mult_ext_nosimd.h"
 
-#if defined(__AVX__) //&& defined(WITH_AVX_C64)
-#include "mult_avx_c64.h"
-
-#elif defined(__SSE__) //&& defined(WITH_SSE_C64)
-#include "mult_sse_c64.h"
-
+#if defined(__AVX__) && defined(__SIMD_EFT) 
+// disabled for time the moment, SIMD version 
+#include "mult_ext_avx_f64.h"
+#include "mult_avx_f64.h"
 #else
+#include "mult_ext_nosimd.h"
 #include "mult_nosimd.h"
+#endif   // defined(__AVX__)
 
-#endif
 
 #endif
 
 #include "kernel_ext.h"
 #include "kernel.h"
+
+
+// scale block with constant (C + dC = beta*A)
+void __blk_scale_ext(mdata_t *C0, mdata_t *dC, const mdata_t *A, DTYPE beta, int nR, int nC)
+{
+  int i, j;
+  if (beta == __ZERO) {
+    for (j = 0; j < nC; j++) {
+      for (i = 0; i < nR; i++) {
+          C0->md[i+j*C0->step] = __ZERO;
+          dC->md[i+j*dC->step] = __ZERO;
+      }
+    }
+    return;
+  }
+  if (beta == __ONE) {
+    for (j = 0; j < nC; j++) {
+      for (i = 0; i < nR; i++) {
+        C0->md[i+j*C0->step] = A->md[i+j*A->step];
+        dC->md[i+j*dC->step] = __ZERO;
+      }
+    }
+    return;
+  }
+  for (j = 0; j < nC; j++) {
+    for (i = 0; i < nR-1; i += 2) {
+      twoprod(&C0->md[(i+0)+j*C0->step],
+              &dC->md[(i+0)+j*dC->step], beta, A->md[(i+0)+j*A->step]);
+      twoprod(&C0->md[(i+1)+j*C0->step],
+              &dC->md[(i+1)+j*dC->step], beta, A->md[(i+1)+j*A->step]);
+    }
+    if (i != nR) {
+      twoprod(&C0->md[(i+0)+j*C0->step],
+              &dC->md[(i+0)+j*dC->step], beta, A->md[(i+0)+j*A->step]);
+    }
+  }
+}
+
 
 // update C block defined by nR rows, nJ columns, nP is A, B common dimension
 // A, B data arranged for DOT operations, A matrix is the inner matrix block
@@ -173,7 +209,7 @@ void __kernel_ext_panel_inner_dA(mdata_t *C, mdata_t *dC,
       __CMULT2(dC, Acpy, Bcpy, alpha, j, nR, nK);
 
     }
-    if (j = nJ)
+    if (j == nJ)
       continue;
 
     // dC += dA*B
@@ -231,7 +267,7 @@ void __kernel_ext_panel_inner_dB(mdata_t *C, mdata_t *dC,
       __CMULT2(dC, Acpy, Bcpy, alpha, j, nR, nK);
     }
 
-    if (j = nJ)
+    if (j == nJ)
       continue;
 
     // dC += A*dB
@@ -245,7 +281,7 @@ void __kernel_ext_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mda
                                          DTYPE alpha, int flags, int P, int nSL, int nRE,
                                          cache_t *cache)
 {
-  int i, j, k, ip, jp, kp, nP, nI, nJ;
+  int j, ip, jp, kp, nP, nI, nJ;
   mdata_t Ca;
 
   int KB, NB, MB;
@@ -308,7 +344,7 @@ void __kernel_ext_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdat
                                         DTYPE alpha, DTYPE beta, int flags,
                                         int P, int S, int L, int R, int E, cache_t *cache)
 {
-  int i, j, k, ip, jp, kp, nP, nI, nJ;
+  int j, ip, jp, kp, nP, nI, nJ;
   mdata_t Ca;
   int KB, NB, MB;
   mdata_t *Acpy, *Bcpy, *C0, *dC;
@@ -360,7 +396,6 @@ void __kernel_ext_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdat
 
       // merge back to target
       __blk_merge_ext(&Ca, C0, dC, nI, nJ);
-      
     }
   }
 }
@@ -385,7 +420,7 @@ int __kernel_inner_ext(mdata_t *C, const mdata_t *A, const mdata_t *B,
 
   if (L-S <= 0 || E-R <= 0) {
     // nothing to do, zero columns or rows
-    return;
+    return 0;
   }
 
   // restrict block sizes as data is copied to aligned buffers of
@@ -403,7 +438,7 @@ int __kernel_inner_ext(mdata_t *C, const mdata_t *A, const mdata_t *B,
   if (alpha == 0.0) {
     __subblock(&Aa, C, R, S);
     __blk_scale(&Aa, beta, E-R, L-R);
-    return;
+    return 0;
   }
 
   // clear Abuf, Bbuf to avoid NaN values later
