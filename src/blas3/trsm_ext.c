@@ -30,7 +30,6 @@
 #include "internal.h"
 #include "matrix.h"
 #include "eft.h"
-#include "kernel_ext.h"
 
 // alignment to 256 bit boundary (256/8)
 #define __DTYPE_ALIGN_SIZE (32/sizeof(DTYPE))
@@ -41,44 +40,6 @@
 #define __ALIGNED_PTR(_T, _x)                                               \
   ((_T*)((unsigned long)( ((char *)(_x)) + __DTYPE_ALIGN_SIZE-1) & ~__DTYPE_ALIGN_MASK))
 
-typedef struct cache_buf {
-  DTYPE *data;  // pointer to data elements (aligned to 8bytes)
-  int nelems;   // size in elements
-  void *buf;    // allocated buffer; null if in-stack
-  int nbytes;   // size in bytes
-} cache_buf_t;
-
-static inline
-int cb_allocate(cache_buf_t *b, int nelems)
-{
-  b->buf = calloc(nelems+__DTYPE_ALIGN_SIZE, sizeof(DTYPE));
-  if (!b->buf)
-    return -1;
-  b->data = __ALIGNED_PTR(DTYPE, b->buf);
-  b->nbytes = (nelems+8)*sizeof(DTYPE);
-  b->nelems = nelems;
-  return 0;
-}
-
-static inline
-void cb_release(cache_buf_t *b)
-{
-  if (b->buf) {
-    free(b->buf);
-  }
-  b->data = (DTYPE *)0;
-  b->buf  = (void *)0;
-  b->nbytes = b->nelems = 0;
-}
-
-static inline
-void cb_make(cache_buf_t *b, DTYPE *elems, int nelems)
-{
-  b->buf = (void *)0;
-  b->nbytes = 0;
-  b->data = elems;
-  b->nelems = nelems;
-}
 
 // (1) Ph. Langlois, N. Louvet
 //     Solving Triangular Systems More Accurately and Efficiently
@@ -111,7 +72,7 @@ void __solve_ext_lu(mdata_t *Bc, mdata_t *dB, const mdata_t *Ac,
 {
   // backward substitution
   register int i, j, k;
-  DTYPE p0, q0, s0, r0, c0, u0, w0;
+  DTYPE p0, q0, s0, r0, u0;
 
   // assume dB holds valid initial cumulative values
   for (j = 0; j < nB; j++) {
@@ -153,7 +114,7 @@ static
 void __solve_ext_blk_lu(mdata_t *B, mdata_t *dB, const mdata_t *A, const  DTYPE alpha,
                         int flags, int N, int nES, cache_t *cache)
 {
-  register int i, j, nI, nJ, cI, cJ, nA, nB;
+  register int i, nI, cI;
   mdata_t A0, A1, B0, B1, dB0, dB1;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
@@ -208,7 +169,7 @@ void __solve_ext_lut(mdata_t *Bc, mdata_t *dB, const mdata_t *Ac,
                      int unit, int nRE, int nB)
 {
   register int i, j, k;
-  DTYPE p0, q0, s0, r0, c0, u0;
+  DTYPE p0, q0, s0, r0, u0;
 
   for (j = 0; j < nB; j++) {
     u0 = __ZERO;
@@ -248,7 +209,7 @@ static
 void __solve_ext_blk_lut(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha,
                         int flags,  int N, int nES, cache_t *cache)
 {
-  register int i, j, nI, nJ, cI, cJ;
+  register int i, nI, cI;
   mdata_t A0, A1, B0, B1, dB0, dB1;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
@@ -300,7 +261,7 @@ void __solve_ext_ll(mdata_t *Bc, mdata_t *dB, const mdata_t *Ac,
                     int unit, int nRE, int nB)
 {
   register int i, j, k;
-  DTYPE p0, q0, s0, r0, c0, u0;
+  DTYPE p0, q0, s0, r0, u0;
 
   // rest of the elements
   for (j = 0; j < nB; j++) {
@@ -339,7 +300,7 @@ static
 void __solve_ext_blk_ll(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha,
                         int flags,  int N, int nES, cache_t *cache)
 {
-  register int i, j, nI, nJ, cI, cJ;
+  register int i, nI, cI;
   mdata_t A0, A1, B0, B1, dB0, dB1;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
@@ -428,7 +389,7 @@ static
 void __solve_ext_blk_llt(mdata_t *B, mdata_t *dB, const mdata_t *A, const  DTYPE alpha,
                          int flags, int N, int nES, cache_t *cache)
 {
-  register int i, j, nI, nJ, cI, cJ, nA, nB;
+  register int i, nI, cI;
   mdata_t A0, A1, B0, B1, dB0, dB1;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
@@ -437,10 +398,10 @@ void __solve_ext_blk_llt(mdata_t *B, mdata_t *dB, const mdata_t *A, const  DTYPE
     nI = i < NB ? i : NB;
     cI = i < NB ? 0 : i-NB;
 
-    // off-diagonal block
-    __subblock(&A0, A, cI, 0);
+    // off-diagonal block; below diagonal block
+    __subblock(&A0, A, cI+nI, cI);
     // diagonal
-    __subblock(&A1, A, cI, cI);
+    __subblock(&A1, A, cI,    cI);
 
     // previous blocks below current block
     __subblock(&B0,   B, cI+nI,  0);
@@ -458,7 +419,7 @@ void __solve_ext_blk_llt(mdata_t *B, mdata_t *dB, const mdata_t *A, const  DTYPE
     
     // update current solution with old solutions
     __kernel_ext_panel_inner_dB(&B1, &dB1, &A0, &B0, &dB0,
-                                -1.0, ARMAS_TRANSA, nI, nJ, N-cI-nI, cache); 
+                                -1.0, ARMAS_TRANSA, nES, nI, N-cI-nI, cache); 
     // solve diagonal block
     __solve_ext_llt(&B1, &dB1, &A1, unit, nI, nES);
   }
@@ -520,7 +481,7 @@ static
 void __solve_ext_blk_ru(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha,
                         int flags,  int N, int nES, cache_t *cache)
 {
-  register int i, j, nI, nJ, cI, cJ;
+  register int i, nI, cI;
   mdata_t A0, A1, B0, B1, dB0, dB1;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
@@ -612,7 +573,7 @@ static
 void __solve_ext_blk_rut(mdata_t *B, mdata_t *dB, const mdata_t *A, const  DTYPE alpha,
                         int flags, int N, int nES, cache_t *cache)
 {
-  register int i, j, nI, nJ, cI, cJ, nA, nB;
+  register int i, nI, cI;
   mdata_t A0, A1, B0, B1, dB0, dB1;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
@@ -703,7 +664,7 @@ static
 void __solve_ext_blk_rl(mdata_t *B, mdata_t *dB, const mdata_t *A, const  DTYPE alpha,
                         int flags, int N, int nES, cache_t *cache)
 {
-  register int i, j, nI, nJ, cI, cJ, nA, nB;
+  register int i, nI, cI;
   mdata_t A0, A1, B0, B1, dB0, dB1;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
@@ -796,14 +757,14 @@ static
 void __solve_ext_blk_rlt(mdata_t *B, mdata_t *dB, const mdata_t *A, DTYPE alpha,
                         int flags,  int N, int nES, cache_t *cache)
 {
-  register int i, j, nI, nJ, cI, cJ;
+  register int i, nI; //, cI;
   mdata_t A0, A1, B0, B1, dB0, dB1;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
 
   for (i = 0; i < N; i += NB) {
     nI = i < N - NB ? NB : N - i;
-    cI = nI < NB ? N-nI : i;
+    //cI = nI < NB ? N-nI : i;
 
     // off-diagonal block; row panel
     __subblock(&A0, A, i, 0);
@@ -905,7 +866,7 @@ static
 void __solve_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha,
                      int flags, int N, int S, int E, cache_t *cache)
 {
-  int ib, nJ, cJ, nR, nC;
+  int ib, nJ;
   mdata_t B0;
   mdata_t *dB = cache->dC;
   int right = flags & ARMAS_RIGHT;
@@ -914,14 +875,11 @@ void __solve_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha,
   // nES (columns/rows in B) may be larger than N 
   for (ib = S; ib < E; ib += NB) {
     nJ = ib < E - NB ? NB : E - ib;
-    cJ = nJ < NB ? E - nJ : ib;
     
     if (right) {
       __subblock(&B0, B, ib, 0);
-      nR = nJ; nC = N;
     } else {
       __subblock(&B0, B, 0,  ib);
-      nR = N; nC = nJ;
     }
 
     // solve column or row panel;
@@ -965,10 +923,8 @@ int __solve_ext(mdata_t *B, const mdata_t *A, DTYPE alpha,
                 int flags, int N, int S, int E, int KB, int NB, int MB, int optflags)
 {
   DTYPE *dptr = (DTYPE *)0;
-  mdata_t *dB, B0;
-  mdata_t Aa, Ba, Ca, dC;
+  mdata_t Aa, Ba, B0, dC; //Ca;
   cache_t cache;
-  int nRE, nB;
   DTYPE /*Cbuf[MAX_MB*MAX_NB/4],*/ Dbuf[MAX_NB*MAX_NB/4] __attribute__((aligned(64)));
   DTYPE Abuf[MAX_NB*MAX_NB/4], Bbuf[MAX_NB*MAX_NB/4] __attribute__((aligned(64)));
   int right = flags & ARMAS_RIGHT ? 1 : 0;
@@ -1005,25 +961,21 @@ int __solve_ext(mdata_t *B, const mdata_t *A, DTYPE alpha,
 
 
   // we need working space N*NB elements for error terms
-  //if (N*NB > sizeof(Dbuf)/sizeof(DTYPE)) {
+  if (N*NB > sizeof(Dbuf)/sizeof(DTYPE)) {
     long nelem = N*NB + __DTYPE_ALIGN_SIZE;
     dptr = calloc(nelem, sizeof(DTYPE));
     dC = (mdata_t){__ALIGNED_PTR(DTYPE, dptr), (right ? NB : N)};
-#if 0
   } else {
     dC = (mdata_t){Dbuf, (right ? NB : N)};
   }
-#endif
 
   //Ca = (mdata_t){Cbuf, MAX_MB/2};
   cache = (cache_t){&Aa, &Ba, NB, NB, NB, (mdata_t *)0/*&Ca*/, &dC};
 
   if (flags & ARMAS_RIGHT) {
     __subblock(&B0, B, S, 0);
-    nRE = E-S; nB = N;
   } else {
     __subblock(&B0, B, 0, S);
-      nRE = N; nB = E-S;
   }
 
   if (optflags & ARMAS_ONAIVE || N <= NB) {
