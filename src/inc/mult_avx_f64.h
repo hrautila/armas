@@ -29,6 +29,7 @@
 #define mm_load_A _mm256_loadu_pd
 #endif
 
+#include "avxfuncs.h"
 #include "debug.h"
 
 // update 1x4 block of C; one row, four columns (mult4x1x1)
@@ -38,7 +39,7 @@ void __mult1c4(double *c0, double *c1, double *c2, double *c3,
                const double *b2, const double *b3, double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, y2, y3, A0, Z, ALPHA;
+  register __m256d y0, y1, y2, y3, A0, Z;
   y0 = _mm256_set1_pd(0.0);
   y1 = y2 = y3 = y0;
 
@@ -71,15 +72,10 @@ void __mult1c4(double *c0, double *c1, double *c2, double *c3,
   y3 += _mm256_mul_pd(A0, mm_load_B(&b3[k]));
 
 update:
-  ALPHA = _mm256_set1_pd(alpha);
-  y0 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y0, y0));
-  y1 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y1, y1));
-  y2 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y2, y2));
-  y3 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y3, y3));
-  c0[0] += y0[0] + y0[2];
-  c1[0] += y1[0] + y1[2];
-  c2[0] += y2[0] + y2[2];
-  c3[0] += y3[0] + y3[2];
+  c0[0] += alpha*hsum256_f64(y0);
+  c1[0] += alpha*hsum256_f64(y1);
+  c2[0] += alpha*hsum256_f64(y2);
+  c3[0] += alpha*hsum256_f64(y3);
 }
 
 
@@ -91,7 +87,7 @@ void __mult2c4(double *c0, double *c1, double *c2, double *c3,
                double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, y2, y3, y4, y5, y6, y7, A0, A1, Z, ALPHA;
+  register __m256d y0, y1, y2, y3, y4, y5, y6, y7, A0, A1, Z;
   y0 = _mm256_set1_pd(0.0);
   y1 = y2 = y3 = y4 = y5 = y6 = y7 = y0;
 
@@ -140,23 +136,14 @@ void __mult2c4(double *c0, double *c1, double *c2, double *c3,
   y7 += _mm256_mul_pd(A1, mm_load_B(&b3[k]));
 
 update:
-  ALPHA = _mm256_set1_pd(alpha);
-  y0 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y0, y0));
-  y1 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y1, y1));
-  y2 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y2, y2));
-  y3 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y3, y3));
-  y4 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y4, y4));
-  y5 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y5, y5));
-  y6 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y6, y6));
-  y7 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y7, y7));
-  c0[0] += y0[0] + y0[2];
-  c1[0] += y1[0] + y1[2];
-  c2[0] += y2[0] + y2[2];
-  c3[0] += y3[0] + y3[2];
-  c0[1] += y4[0] + y4[2];
-  c1[1] += y5[0] + y5[2];
-  c2[1] += y6[0] + y6[2];
-  c3[1] += y7[0] + y7[2];
+  c0[0] += alpha*hsum256_f64(y0);
+  c1[0] += alpha*hsum256_f64(y1);
+  c2[0] += alpha*hsum256_f64(y2);
+  c3[0] += alpha*hsum256_f64(y3);
+  c0[1] += alpha*hsum256_f64(y4);
+  c1[1] += alpha*hsum256_f64(y5);
+  c2[1] += alpha*hsum256_f64(y6);
+  c3[1] += alpha*hsum256_f64(y7);
 }
 
 
@@ -167,7 +154,7 @@ void __mult1c2(double *c0, double *c1,
                double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, A0, ALPHA, Z;
+  register __m256d y0, y1, A0, Z;
 
   y0 = _mm256_set1_pd(0.0);
   y1 = y0; 
@@ -197,11 +184,8 @@ void __mult1c2(double *c0, double *c1,
   y1 += _mm256_mul_pd(A0, mm_load_B(&b1[k]));
 
 update:
-  ALPHA = _mm256_set1_pd(alpha);
-  y0 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y0, y0));
-  y1 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y1, y1));
-  c0[0] += y0[0] + y0[2];
-  c1[0] += y1[0] + y1[2];
+  c0[0] += alpha*hsum256_f64(y0);
+  c1[0] += alpha*hsum256_f64(y1);
 }
 
 
@@ -213,7 +197,7 @@ void __mult2c2(double *c0, double *c1,
                double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, y2, y3, A0, A1, ALPHA, Z;
+  register __m256d y0, y1, y2, y3, A0, A1, Z;
 
   y0 = _mm256_set1_pd(0.0);
   y1 = y0; 
@@ -254,15 +238,10 @@ void __mult2c2(double *c0, double *c1,
   y3 += _mm256_mul_pd(A1, mm_load_B(&b1[k]));
 
 update:
-  ALPHA = _mm256_set1_pd(alpha);
-  y0 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y0, y0));
-  y1 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y1, y1));
-  y2 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y2, y2));
-  y3 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y3, y3));
-  c0[0] += y0[0] + y0[2];
-  c1[0] += y1[0] + y1[2];
-  c0[1] += y2[0] + y2[2];
-  c1[1] += y3[0] + y3[2];
+  c0[0] += alpha*hsum256_f64(y0);
+  c1[0] += alpha*hsum256_f64(y1);
+  c0[1] += alpha*hsum256_f64(y2);
+  c1[1] += alpha*hsum256_f64(y3);
 }
 
 // update single element of C; with inner product of A row and B column
@@ -270,7 +249,7 @@ static inline
 void __mult1c1(double *c, const double *a, const double *b, double alpha, int nR)
 {
   register int k;
-  register __m256d y0, A, ALPHA, Z;
+  register __m256d y0, A, Z;
   y0 = _mm256_set1_pd(0.0);
   for (k = 0; k < nR-3; k += 4) {
     A  = mm_load_A(&a[k]);
@@ -295,9 +274,7 @@ void __mult1c1(double *c, const double *a, const double *b, double alpha, int nR
   y0 += _mm256_mul_pd(A, mm_load_B(&b[k]));
 
 update:
-  ALPHA = _mm256_set1_pd(alpha);
-  y0 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y0, y0));
-  c[0] += y0[0] + y0[2];
+  c[0] += alpha*hsum256_f64(y0);
 }
 
 
@@ -312,7 +289,7 @@ void __mult4c1(double *c0,
                const double *b0, double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, y2, y3, B0, Z, ALPHA;
+  register __m256d y0, y1, y2, y3, B0, Z;
   y0 = _mm256_set1_pd(0.0);
   y1 = y2 = y3 = y0;
 
@@ -345,15 +322,10 @@ void __mult4c1(double *c0,
   y3 += _mm256_mul_pd(B0, mm_load_A(&a3[k]));
 
 update:
-  ALPHA = _mm256_set1_pd(alpha);
-  y0 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y0, y0));
-  y1 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y1, y1));
-  y2 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y2, y2));
-  y3 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y3, y3));
-  c0[0] += y0[0] + y0[2];
-  c0[1] += y1[0] + y1[2];
-  c0[2] += y2[0] + y2[2];
-  c0[3] += y3[0] + y3[2];
+  c0[0] += alpha*hsum256_f64(y0);
+  c0[1] += alpha*hsum256_f64(y1);
+  c0[2] += alpha*hsum256_f64(y2);
+  c0[3] += alpha*hsum256_f64(y3);
 }
 
 
@@ -365,7 +337,7 @@ void __mult4c2(double *c0, double *c1,
                const double *b0, const double *b1, double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, y2, y3, y4, y5, y6, y7, B0, B1, Z, ALPHA;
+  register __m256d y0, y1, y2, y3, y4, y5, y6, y7, B0, B1, Z;
   y0 = _mm256_set1_pd(0.0);
   y1 = y2 = y3 = y0;
   y4 = y5 = y6 = y7 = y0;
@@ -413,23 +385,14 @@ void __mult4c2(double *c0, double *c1,
   y7 += _mm256_mul_pd(B1, mm_load_A(&a3[k]));
 
 update:
-  ALPHA = _mm256_set1_pd(alpha);
-  y0 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y0, y0));
-  y1 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y1, y1));
-  y2 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y2, y2));
-  y3 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y3, y3));
-  y4 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y4, y4));
-  y5 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y5, y5));
-  y6 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y6, y6));
-  y7 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y7, y7));
-  c0[0] += y0[0] + y0[2];
-  c0[1] += y1[0] + y1[2];
-  c0[2] += y2[0] + y2[2];
-  c0[3] += y3[0] + y3[2];
-  c1[0] += y4[0] + y4[2];
-  c1[1] += y5[0] + y5[2];
-  c1[2] += y6[0] + y6[2];
-  c1[3] += y7[0] + y7[2];
+  c0[0] += alpha*hsum256_f64(y0);
+  c0[1] += alpha*hsum256_f64(y1);
+  c0[2] += alpha*hsum256_f64(y2);
+  c0[3] += alpha*hsum256_f64(y3);
+  c1[0] += alpha*hsum256_f64(y4);
+  c1[1] += alpha*hsum256_f64(y5);
+  c1[2] += alpha*hsum256_f64(y6);
+  c1[3] += alpha*hsum256_f64(y7);
 }
 
 
@@ -441,7 +404,7 @@ void __mult2c1(double *c0,
                const double *b0, double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, B0, ALPHA, Z;
+  register __m256d y0, y1, B0, Z;
 
   y0 = _mm256_set1_pd(0.0);
   y1 = y0; 
@@ -471,11 +434,8 @@ void __mult2c1(double *c0,
   y1 += _mm256_mul_pd(B0, mm_load_A(&a1[k]));
 
 update:
-  ALPHA = _mm256_set1_pd(alpha);
-  y0 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y0, y0));
-  y1 = _mm256_mul_pd(ALPHA, _mm256_hadd_pd(y1, y1));
-  c0[0] += y0[0] + y0[2];
-  c0[1] += y1[0] + y1[2];
+  c0[0] += alpha*hsum256_f64(y0);
+  c0[1] += alpha*hsum256_f64(y1);
 }
 
 
