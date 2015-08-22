@@ -47,7 +47,7 @@ int test_reduce(int M, int N, int lb, int verbose, int flags)
 
   n0 = rel_error((double *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   n1 = rel_error((double *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
-  ok = isFINE(n0, N*1e-15);
+  ok = isFINE(n0, N*1e-14);
 
   printf("%s: unblk.TRD(A,%c) == blk.TRD(A,%c)\n", PASS(ok), uplo, uplo);
   if (verbose > 0) {
