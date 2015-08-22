@@ -48,6 +48,7 @@ static
 void hsum_m256d(double *sum, double *err, __m256d S, __m256d C)
 {
   register __m256d A1, B1, R, Q, P, S0;
+  double res;
 
   Q = _mm256_permute2f128_pd(C, C, 1);    // Q = high(C), low(C)
   C = _mm256_add_pd(Q, C);                // low(C) == low(C) + high(C)
@@ -64,8 +65,8 @@ void hsum_m256d(double *sum, double *err, __m256d S, __m256d C)
   S0 = S;                                 // cheating optimizer; extra assignment 
   TWOSUM(S, R, S0, P, /**/ A1, B1);       // S[0] = sum S
   
-  *err += C[0] + Q[0] + R[0];
-  *sum += S[0];
+  twosum(sum, &res, *sum, S[0]);
+  *err += C[0] + Q[0] + R[0] + res;
 }
 
 
