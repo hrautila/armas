@@ -55,8 +55,7 @@
  * Definitions for double precision floating types.
  */
 
-#if defined(__AVX__) && defined(__SIMD_EFT) 
-// disabled for time the moment, SIMD version 
+#if defined(__AVX__) // && defined(__SIMD_EFT) 
 #include "mult_ext_avx_f64.h"
 #include "mult_avx_f64.h"
 #else
