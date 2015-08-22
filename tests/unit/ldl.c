@@ -102,7 +102,7 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   nrm = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
   nrm /= nrm_A;
 
-  ok = isFINE(nrm, N*1e-13);
+  ok = isFINE(nrm, N*1e-11);
   
   printf("%s: LDL(%c)  A*(A.-1*B) == B\n", PASS(ok), uplo);
   if (verbose > 0) {

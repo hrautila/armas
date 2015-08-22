@@ -44,7 +44,7 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   // X0 = A*X0 - B0
   armas_d_mult(&B0, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
   nrm = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
-  ok = isFINE(nrm, N*1e-9);
+  ok = isFINE(nrm, N*1e-8);
 
   printf("%s: A*(%s.CHOLsolve(A, B, %s)) == B\n", PASS(ok), blk, uplo);
   if (verbose > 0) {
