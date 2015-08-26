@@ -51,6 +51,8 @@ typedef int (*WSFUNC)(__armas_dense_t *, int);
 // function that returns workspace size 
 typedef int (*WSSIZE)(int, int, int);
 
+extern __armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c);
+
 extern void __armas_print(const __armas_dense_t *m, FILE *out);
 extern void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m);
 extern int __armas_set_consts(__armas_dense_t *m, CONSTFUNC func, int flags);
@@ -330,34 +332,6 @@ int __armas_index_valid(const __armas_dense_t *m, int64_t ix)
 }
 
 
-__INLINE
-__armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c)
-{
-  int doff;
-
-  if (r <= 0 || c <= 0) {
-    m->rows = 0; m->cols = 0;
-    m->step = 0;
-    m->elems = (DTYPE *)0;
-    m->__data = (void *)0;
-    m->__nbytes = 0;
-    return m;
-  }
-  m->__data = calloc(r*c+7, sizeof(DTYPE));
-  if ( !m->__data ) {
-    return (__armas_dense_t *)0;
-  }
-  m->__nbytes = (r*c+7)*sizeof(DTYPE);
-  m->rows = r;
-  m->cols = c;
-  m->step = r;
-  doff = 0;
-  if ((unsigned long)m->__data & 63) {
-    doff = 64 - (((unsigned long)m->__data) & 63);
-  }
-  m->elems = (DTYPE *)&((unsigned char *)m->__data)[doff];
-  return m;
-}
 
 __INLINE
 void __armas_release(__armas_dense_t *m)

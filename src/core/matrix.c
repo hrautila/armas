@@ -15,7 +15,59 @@
 #include "matcpy.h"
 #include "matrix.h"
   
+// CPU cache line size in bytes (CPU spesific)
+#define CACHELINE 64
+#define CLMASK (CACHELINE-1)
+
+// return adjusted size to allow alignement to cacheline
+#define ALIGNSIZE(n, T) (n + (CACHELINE/sizeof(T)-1))
+
+// return byte offset to first CPU cacheline aligned byte.
+#define ALIGNOFFSET(ptr) \
+  (((unsigned long)(ptr) & CLMASK) ? CACHELINE-((unsigned long)(ptr) & CLMASK) : 0)
+
 // non-inline functions
+
+/**
+ * Initialize matrix structure and allocate space for elements.
+ *
+ * @param [in/out] m
+ *    matrix
+ * @param [in] r
+ *    rows
+ * @param [in] c
+ *    columns
+ *
+ * Note: first element address is aligned with CPU cache entry
+ */
+__armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c)
+{
+  int doff;
+
+  if (r <= 0 || c <= 0) {
+    m->rows = 0; m->cols = 0;
+    m->step = 0;
+    m->elems = (DTYPE *)0;
+    m->__data = (void *)0;
+    m->__nbytes = 0;
+    return m;
+  }
+  // set first to adjusted element count
+  m->__nbytes = ALIGNSIZE(r*c, DTYPE);
+  m->__data = calloc(m->__nbytes, sizeof(DTYPE));
+  if ( !m->__data ) {
+    m->__nbytes = 0;
+    return (__armas_dense_t *)0;
+  }
+  // convert to number of bytes
+  m->__nbytes *= sizeof(DTYPE);
+  m->rows = r;
+  m->cols = c;
+  m->step = r;
+  doff = ALIGNOFFSET(m->__data);
+  m->elems = (DTYPE *)&((unsigned char *)m->__data)[doff];
+  return m;
+}
 
 /**
  * @brief Transpose matrix
