@@ -2,9 +2,18 @@
 ##DEBUG = -D__DEBUG__
 DEBUG =
 AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = -g -O3 -march=native -ffast-math -fomit-frame-pointer -pthread -Iinc $(DEBUG)
+
+if ENABLE_THREADS
+USE_PTHREAD=-pthread
+else
+USE_PTHREAD=
+endif
+
+AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall $(USE_PTHREAD) -Iinc $(DEBUG)
 
 noinst_HEADERS = \
+	inc/avxfuncs.h \
+	inc/cond.h \
 	inc/dtype.h \
 	inc/dlpack.h \
 	inc/internal.h \
@@ -153,11 +162,14 @@ LAPACK = \
 
 
 COMPAT = \
+	compat/asum.c \
 	compat/axpy.c \
 	compat/copy.c \
 	compat/dot.c \
+	compat/iamax.c \
 	compat/nrm2.c \
 	compat/swap.c \
+	compat/rot.c \
 	compat/gemv.c \
 	compat/symv.c \
 	compat/ger.c \
@@ -165,6 +177,8 @@ COMPAT = \
 	compat/syr2.c \
 	compat/gemm.c \
 	compat/symm.c \
+	compat/trmm.c \
+	compat/trsm.c \
 	compat/potrf.c 
 
 ##noinst_LTLIBRARIES = libd.la libz.la libx.la libdext.la libdcompat.la
@@ -187,12 +201,12 @@ libarmasd_la_LIBADD = libx.la libd.la
 
 # double precision
 libd_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
-libd_la_CPPFLAGS = -DFLOAT64 -DWITH_AVX
+libd_la_CPPFLAGS = -DFLOAT64 
 
 if ENABLE_EXT_PRECISION
 # extended precision
 libdext_la_SOURCES = $(XBLAS1) $(XBLAS2) $(XBLAS3)
-libdext_la_CPPFLAGS = -DFLOAT64 -DWITH_AVX
+libdext_la_CPPFLAGS = -DFLOAT64 
 noinst_LTLIBRARIES += libdext.la
 libarmasd_la_LIBADD += libdext.la
 endif
@@ -209,11 +223,22 @@ endif
 
 ## ----------------- single precission -------------------------
 if ENABLE_FLOAT32
-noinst_LTLIBRARIES += libs.la 
+lib_LTLIBRARIES += libarmass.la
+noinst_LTLIBRARIES += libx.la libs.la 
+libarmass_la_SOURCES =
+libarmass_la_LIBADD = libx.la libs.la
 
-# double precision
+# single precision
 libs_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3)
-libs_la_CPPFLAGS = -DFLOAT32 -DWITH_AVX
+libs_la_CPPFLAGS = -DFLOAT32 
+
+# single precision compability
+libscompat_la_SOURCES = $(COMPAT)
+libscompat_la_CPPFLAGS = -DFLOAT32 -DCOMPAT
+noinst_LTLIBRARIES += libscompat.la
+libarmass_la_LIBADD += libscompat.la
+
+BUILT_SOURCES += armas/smatrix.h armas/linalgs.h
 
 endif
 
@@ -240,18 +265,17 @@ nobase_include_HEADERS = $(BUILT_SOURCES)
 
 CLEANFILES = $(BUILT_SOURCES)
 
+armas/smatrix.h: inc/matrix.h
+	sed 's/__armas_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_SMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
+
+armas/linalgs.h: inc/linalg.h
+	sed 's/__armas_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_SMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s:"matrix.h":<armas/smatrix.h>:;s/_LINALG_/_LINALGS_/;' $< > $@
+
 armas/dmatrix.h: inc/matrix.h
 	sed 's/__armas_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
 
 armas/linalgd.h: inc/linalg.h
 	sed 's/__armas_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s:"matrix.h":<armas/dmatrix.h>:;s/_LINALG_/_LINALGD_/;' $< > $@
-
-
-armas/smatrix.h: inc/matrix.h
-	sed 's/__armas_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
-
-armas/linalgs.h: inc/linalg.h
-	sed 's/__armas_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s:"matrix.h":<armas/smatrix.h>:;s/_LINALG_/_LINALGD_/;' $< > $@
 
 
 # comples types
