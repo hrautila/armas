@@ -4,7 +4,30 @@
 #include <unistd.h>
 #include <time.h>
 
+#if defined(FLOAT32)
+#include <armas/smatrix.h>
+typedef armas_s_dense_t __Matrix ;
+typedef float __Dtype;
+
+#define matrix_init       armas_s_init
+#define matrix_set_values armas_s_set_values
+#define matrix_mult       armas_s_mult
+#define matrix_transpose  armas_s_transpose
+#define matrix_release    armas_s_release
+#define matrix_printf     armas_s_printf
+#else
 #include <armas/dmatrix.h>
+typedef armas_d_dense_t __Matrix ;
+typedef double __Dtype;
+
+#define matrix_init       armas_d_init
+#define matrix_set_values armas_d_set_values
+#define matrix_mult       armas_d_mult
+#define matrix_transpose  armas_d_transpose
+#define matrix_release    armas_d_release
+#define matrix_printf     armas_d_printf
+
+#endif
 #include "helper.h"
 /*
  * A = [M,K], B = [K,N] --> C = [M,N]
@@ -24,10 +47,11 @@
  *   b. compute C1 = B.T*A     : [N,K]*[M,K] = [N,M] if K == M
  *
  */
-main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
   armas_conf_t conf;
-  armas_d_dense_t C, Ct, T, C0, A, B;
+  __Matrix A, B, C, Ct, T; //, B, A;
 
   int ok, opt;
   int N = 633;
@@ -35,8 +59,7 @@ main(int argc, char **argv) {
   int K = 337;
   int verbose = 0;
   int fails = 0;
-  int e0, e1;
-  double m_inf, m_one, n0, n1;
+  __Dtype n0, n1;
 
   while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
@@ -49,27 +72,29 @@ main(int argc, char **argv) {
     }
   }
     
-  if (optind < argc)
+  if (optind < argc) {
     N = atoi(argv[optind]);
+  }
 
   conf = *armas_conf_default();
 
-  armas_d_init(&C, M, N);
-  armas_d_init(&Ct, N, M);
-  armas_d_init(&T, M, N);
-  armas_d_set_values(&C, zero, ARMAS_NULL);
-  armas_d_set_values(&Ct, zero, ARMAS_NULL);
+  matrix_init(&C, M, N);
+  matrix_init(&Ct, N, M);
+  matrix_init(&T, M, N);
+  matrix_set_values(&C, zero, ARMAS_NULL);
+  matrix_set_values(&Ct, zero, ARMAS_NULL);
 
   // test 1: M != N != K
-  armas_d_init(&A, M, K);
-  armas_d_init(&B, K, N);
-  armas_d_set_values(&A, unitrand, ARMAS_NULL);
-  armas_d_set_values(&B, unitrand, ARMAS_NULL);
+  matrix_init(&A, M, K);
+  matrix_init(&B, K, N);
+  matrix_set_values(&A, unitrand, ARMAS_NULL);
+  matrix_set_values(&B, unitrand, ARMAS_NULL);
 
   // C = A*B; C.T = B.T*A.T
-  e0 = armas_d_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
-  e1 = armas_d_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
-  armas_d_transpose(&T, &Ct);
+  matrix_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
+  matrix_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+
+  matrix_transpose(&T, &Ct);
 
   n0 = rel_error(&n1, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
 
@@ -82,19 +107,19 @@ main(int argc, char **argv) {
   fails += 1 - ok;
 
   // test 2: M != N == K
-  armas_d_set_values(&Ct, zero, ARMAS_NULL);
-  armas_d_release(&A);
-  armas_d_release(&B);
-  armas_d_init(&A, M, N);
-  armas_d_init(&B, N, N);
-  armas_d_set_values(&A, unitrand, ARMAS_NULL);
-  armas_d_set_values(&B, unitrand, ARMAS_NULL);
+  matrix_set_values(&Ct, zero, ARMAS_NULL);
+  matrix_release(&A);
+  matrix_release(&B);
+  matrix_init(&A, M, N);
+  matrix_init(&B, N, N);
+  matrix_set_values(&A, unitrand, ARMAS_NULL);
+  matrix_set_values(&B, unitrand, ARMAS_NULL);
   // C = A*B.T; Ct = B*A.T
-  e0 = armas_d_mult(&C,  &A, &B, 1.0, 0.0, ARMAS_TRANSB, &conf);
-  e1 = armas_d_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSB, &conf);
-  armas_d_transpose(&T, &Ct);
+  matrix_mult(&C,  &A, &B, 1.0, 0.0, ARMAS_TRANSB, &conf);
+  matrix_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSB, &conf);
+  matrix_transpose(&T, &Ct);
 
-  n0 = rel_error((double *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n0 = rel_error((__Dtype *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
 
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: gemm(A, B.T)   == transpose(gemm(B, A.T))\n", PASS(ok));
@@ -104,19 +129,19 @@ main(int argc, char **argv) {
   fails += 1 - ok;
 
   // test 3: M == K != N
-  armas_d_set_values(&Ct, zero, ARMAS_NULL);
-  armas_d_release(&A);
-  armas_d_release(&B);
-  armas_d_init(&A, M, M);
-  armas_d_init(&B, M, N);
-  armas_d_set_values(&A, unitrand, ARMAS_NULL);
-  armas_d_set_values(&B, unitrand, ARMAS_NULL);
+  matrix_set_values(&Ct, zero, ARMAS_NULL);
+  matrix_release(&A);
+  matrix_release(&B);
+  matrix_init(&A, M, M);
+  matrix_init(&B, M, N);
+  matrix_set_values(&A, unitrand, ARMAS_NULL);
+  matrix_set_values(&B, unitrand, ARMAS_NULL);
   // C = A.T*B; Ct = B.T*A
-  e0 = armas_d_mult(&C,  &A, &B, 1.0, 0.0, ARMAS_TRANSA, &conf);
-  e1 = armas_d_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA, &conf);
-  armas_d_transpose(&T, &Ct);
+  matrix_mult(&C,  &A, &B, 1.0, 0.0, ARMAS_TRANSA, &conf);
+  matrix_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA, &conf);
+  matrix_transpose(&T, &Ct);
 
-  n0 = rel_error((double *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n0 = rel_error((__Dtype *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
 
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: gemm(A.T, B)   == transpose(gemm(B.T, A))\n", PASS(ok));

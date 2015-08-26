@@ -1,14 +1,25 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -I../ -I../../src -I../../src/inc
+AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall -I../ -I../../src -I../../src/inc
 
-LDADD = ../../src/libarmasd.la
 
 noinst_HEADERS = ../helper.h
 
-DOUBLE = dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dgemv dger dtrmv dtrsv diag
+UNIT_TESTS =
 
-LAPACK =  \
+if ENABLE_FLOAT32
+LDADD = ../../src/libarmass.la
+
+UNIT_TESTS += sgemm ssymm strmm strsm strmrk ssyrk sgemv ##strmv strsv
+
+endif
+
+if ENABLE_FLOAT64
+LDADD = ../../src/libarmasd.la
+
+UNIT_TESTS += dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dgemv dger dtrmv dtrsv diag
+
+UNIT_TESTS +=  \
 	evd gesvd secular \
 	trdevd bdsvd givens trdred \
 	bidiag chol hess lu ldl \
@@ -17,24 +28,27 @@ LAPACK =  \
 	qlfact qlbld qlmult \
 	rqfact rqbld rqmult
 
+# GMP/MPFR libaries exits, can test extended precision
 if HAVE_GMP_MPFR
-EXT = ext_gemm ext_trmm ext_trsm ext_trsv
-
-# EXT PRECISION
-ext_gemm_SOURCES = ext_gemm.c ../helper.c ext_prec.c
-ext_gemm_LDFLAGS = -lmpfr -lgmp
-ext_trmm_SOURCES = ext_trmm.c ../helper.c ext_prec.c
-ext_trmm_LDFLAGS = -lmpfr -lgmp
-ext_trsm_SOURCES = ext_trsm.c ../helper.c ext_prec.c
-ext_trsm_LDFLAGS = -lmpfr -lgmp
-ext_trsv_SOURCES = ext_trsv.c ../helper.c ext_prec.c
-ext_trsv_LDFLAGS = -lmpfr -lgmp
+UNIT_TESTS += ext_dgemm ext_dtrmm ext_dtrsm ext_dtrsv
 endif
 
+endif
 
-check_PROGRAMS = $(DOUBLE) $(LAPACK) $(EXT)
+# EXT PRECISION (double precision)
+ext_dgemm_SOURCES = ext_gemm.c ../helper.c ext_prec.c
+ext_dgemm_LDFLAGS = -lmpfr -lgmp
+ext_dtrmm_SOURCES = ext_trmm.c ../helper.c ext_prec.c
+ext_dtrmm_LDFLAGS = -lmpfr -lgmp
+ext_dtrsm_SOURCES = ext_trsm.c ../helper.c ext_prec.c
+ext_dtrsm_LDFLAGS = -lmpfr -lgmp
+ext_dtrsv_SOURCES = ext_trsv.c ../helper.c ext_prec.c
+ext_dtrsv_LDFLAGS = -lmpfr -lgmp
 
-# BLAS
+
+check_PROGRAMS = $(UNIT_TESTS)
+
+# BLAS (double)
 dgemm_SOURCES  = gemm.c ../helper.c
 dsymm_SOURCES  = symm.c ../helper.c
 dtrmm_SOURCES  = trmm.c ../helper.c
@@ -47,6 +61,28 @@ dtrmv_SOURCES  = trmv.c ../helper.c
 dtrsv_SOURCES  = trsv.c ../helper.c
 diag_SOURCES   = diag.c ../helper.c
 
+# BLAS (single precision)
+sgemm_SOURCES  = gemm.c ../helper.c
+sgemm_CFLAGS   = -DFLOAT32 $(AM_CFLAGS)
+ssymm_SOURCES  = symm.c ../helper.c
+ssymm_CFLAGS   = -DFLOAT32 $(AM_CFLAGS)
+strmm_SOURCES  = trmm.c ../helper.c
+strmm_CFLAGS   = -DFLOAT32 $(AM_CFLAGS)
+strsm_SOURCES  = trsm.c ../helper.c
+strsm_CFLAGS   = -DFLOAT32 $(AM_CFLAGS)
+ssyrk_SOURCES  = syrk.c ../helper.c
+ssyrk_CFLAGS   = -DFLOAT32 $(AM_CFLAGS)
+strmrk_SOURCES = trmrk.c ../helper.c
+strmrk_CFLAGS   = -DFLOAT32 $(AM_CFLAGS)
+sgemv_SOURCES  = gemv.c ../helper.c
+sgemv_CFLAGS   = -DFLOAT32 $(AM_CFLAGS)
+#sger_SOURCES   = ger.c ../helper.c
+#strmv_SOURCES  = trmv.c ../helper.c
+#strmv_CFLAGS   = -DFLOAT32 $(AM_CFLAGS)
+#strsv_SOURCES  = trsv.c ../helper.c
+#strsv_CFLAGS   = -DFLOAT32 $(AM_CFLAGS)
+#sdiag_SOURCES   = diag.c ../helper.c
+#sdiag_CFLAGS   = -DFLOAT32 $(AM_CFLAGS)
 
 ## LAPACK
 evd_SOURCES    = evd.c ../helper.c

@@ -6,8 +6,36 @@
 #include <sys/time.h>
 #include <float.h>
 
-#include <armas/dmatrix.h>
+#if defined(FLOAT32)
+#include <armas/smatrix.h>
+typedef float __Dtype;
+typedef armas_s_dense_t __Matrix;
+#define EPSILON FLT_EPSILON
+#define FABS fabsf
+#define matrix_is_vector    armas_s_isvector
+#define matrix_axpy         armas_s_axpy
+#define matrix_scale_plus armas_s_scale_plus
+#define matrix_mnorm        armas_s_mnorm
+#define matrix_make         armas_s_make
+#define matrix_size         armas_s_size
+#define matrix_data         armas_s_data
 
+#else
+#include <armas/dmatrix.h>
+typedef double __Dtype;
+typedef armas_d_dense_t __Matrix;
+
+#define EPSILON DBL_EPSILON
+#define FABS fabs
+#define matrix_is_vector    armas_d_isvector
+#define matrix_axpy         armas_d_axpy
+#define matrix_scale_plus armas_d_scale_plus
+#define matrix_mnorm        armas_d_mnorm
+#define matrix_make         armas_d_make
+#define matrix_size         armas_d_size
+#define matrix_data         armas_d_data
+
+#endif
 
 static inline int max(int a, int b)
 {
@@ -51,42 +79,42 @@ double gflops(double ms, int64_t count)
   return (count/ms)*1e-6;
 }
 
-double zero(int i, int j) {
+__Dtype zero(int i, int j) {
   return 0.0;
 }
 
-double one(int i, int j) {
+__Dtype one(int i, int j) {
   return 1.0;
 }
 
-double rowno(int i, int j) {
+__Dtype rowno(int i, int j) {
   return (i+1)*1.0;
 }
 
-double colno(int i, int j) {
+__Dtype colno(int i, int j) {
   return (j+1)*1.0;
 }
 
-double zeromean(int i, int j) {
+__Dtype zeromean(int i, int j) {
   static int init = 0;
   if (!init) {
     srand48((long)time(0));
     init = 1;
   }
-  return drand48() - 0.5;
+  return (__Dtype)(drand48() - 0.5);
 }
 
-double unitrand(int i, int j) {
+__Dtype unitrand(int i, int j) {
   static int init = 0;
   if (!init) {
     srand48((long)time(0));
     init = 1;
   }
-  return drand48();
+  return (__Dtype)drand48();
 }
 
 // std random variable from unit random with box-muller transformation
-double stdrand(int i, int j)
+__Dtype stdrand(int i, int j)
 { 
   double s, u, v;
   static int init = 0;
@@ -99,20 +127,20 @@ double stdrand(int i, int j)
     v = 2.0*drand48() - 1.0;
     s = u*u + v*v;
   } while (s == 0.0 || s >= 1.0);
-  return u * sqrt(-2.0*log(s)/s);
+  return (__Dtype)(u * sqrt(-2.0*log(s)/s));
 }
 
-int isOK(double nrm, int N)
+int isOK(__Dtype nrm, int N)
 {
-  int nk = (int64_t)(fabs(nrm/DBL_EPSILON));
+  int nk = (int64_t)(FABS(nrm/EPSILON));
   // if exactly zero then something suspect
   return nrm != 0.0 && nk < (int64_t)N;
 }
 
-int isFINE(double nrm, double tol)
+int isFINE(__Dtype nrm, __Dtype tol)
 {
   // if exactly zero then something suspect
-  return nrm != 0.0 && fabs(nrm) < fabs(tol);
+  return nrm != 0.0 && FABS(nrm) < FABS(tol);
 }
 
 int in_tolerance(double a, double b)
@@ -131,25 +159,32 @@ int in_tolerance(double a, double b)
 // Compute relative error: ||computed - expected||/||expected||
 // Returns norm ||computed - exptected|| in dnorm. 
 // Note: contents of computed is destroyed.
-double rel_error(double *dnorm, armas_d_dense_t *computed,
-		 armas_d_dense_t *expected, int norm, int flags, armas_conf_t *conf)
+__Dtype rel_error(__Dtype *dnorm, __Matrix *computed,
+		  __Matrix *expected, int norm, int flags, armas_conf_t *conf)
 {
     double cnrm, enrm;
-    if (armas_d_isvector(computed)) {
-      armas_d_axpy(computed, expected, -1.0, conf);
+    if (matrix_is_vector(computed)) {
+      matrix_axpy(computed, expected, -1.0, conf);
     } else {
       // computed = computed - expected
-      armas_d_scale_plus(computed, expected, 1.0, -1.0, flags, conf);
+      matrix_scale_plus(computed, expected, 1.0, -1.0, flags, conf);
     }
     // ||computed - expected||
-    cnrm = armas_d_mnorm(computed, norm, conf);
+    cnrm = matrix_mnorm(computed, norm, conf);
     if (dnorm)
       *dnorm = cnrm;
     // ||expected||
-    enrm = armas_d_mnorm(expected, norm, conf);
+    enrm = matrix_mnorm(expected, norm, conf);
     return cnrm/enrm;
 }
 
+__Matrix *col_as_row(__Matrix *row, __Matrix *col)
+{
+  matrix_make(row, 1, matrix_size(col), 1, matrix_data(col));
+  return row;
+}
+
+#if !defined(FLOAT32)
 // search from top-left
 void find_from_bottom_right(armas_d_dense_t *a, armas_d_dense_t *b, int *row, int *col)
 {
@@ -257,12 +292,8 @@ void matrix_printf(FILE *out, const char *efmt, const armas_d_dense_t *m, int pa
     }
   }
 }
+#endif
 
-armas_d_dense_t *col_as_row(armas_d_dense_t *row, armas_d_dense_t *col)
-{
-  armas_d_make(row, 1, armas_d_size(col), 1, armas_d_data(col));
-  return row;
-}
 
 
 
