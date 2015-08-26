@@ -50,7 +50,7 @@ void __trsm(char *side, char *uplo, char *transa, char *diag,int *m, int *n,
     if (toupper(*diag) == 'U')
         flags |=  ARMAS_UNIT;
 
-    __armas_solve_trm(&b, &a, alpha, flags, conf);
+    __armas_solve_trm(&b, &a, *alpha, flags, conf);
 }
 #endif
 

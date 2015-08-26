@@ -53,6 +53,13 @@ enum cblas_const {
 #define __dot   ddot_
 #define __nrm2  dnrm2_
 #define __swap  dswap_
+#define __scal  dscal_
+#define __asum  dasum_
+#define __iamax idamax_
+#define __rot   drot_
+#define __rotg  drotg_
+#define __rotm  drotm_
+#define __rotmg drotmg_
 // blas2
 #define __gemv  dgemv_
 #define __ger   dger_
@@ -69,6 +76,7 @@ enum cblas_const {
 #define __trmm  dtrmm_
 #define __trsm  dtrsm_
 // lapack
+
 #endif
 
 #if defined(COMPAT_CBLAS)
