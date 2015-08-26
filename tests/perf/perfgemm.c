@@ -6,7 +6,34 @@
 #include <time.h>
 #include <sys/time.h>
 
+#if defined(FLOAT32)
+#include <armas/smatrix.h>
+typedef armas_s_dense_t __Matrix ;
+typedef float __Dtype;
+
+#define PREC "single"
+
+#define matrix_init       armas_s_init
+#define matrix_set_values armas_s_set_values
+#define matrix_mult       armas_s_mult
+#define matrix_transpose  armas_s_transpose
+#define matrix_release    armas_s_release
+#define matrix_printf     armas_s_printf
+#else
 #include <armas/dmatrix.h>
+typedef armas_d_dense_t __Matrix ;
+typedef double __Dtype;
+
+#define PREC "double"
+
+#define matrix_init       armas_d_init
+#define matrix_set_values armas_d_set_values
+#define matrix_mult       armas_d_mult
+#define matrix_transpose  armas_d_transpose
+#define matrix_release    armas_d_release
+#define matrix_printf     armas_d_printf
+
+#endif
 #include "helper.h"
 
 main(int argc, char **argv) {
@@ -18,12 +45,12 @@ main(int argc, char **argv) {
   int verbose = 0;
   double rt, min, max, avg;
   armas_conf_t conf;
-  armas_d_dense_t C, A, B;
+  __Matrix C, A, B;
 
   armas_init();
   conf = *armas_conf_default();
 
-  while ((opt = getopt(argc, argv, "vc:P:o")) != -1) {
+  while ((opt = getopt(argc, argv, "vc:P:oE")) != -1) {
     switch (opt) {
     case 'v':
       verbose = 1;
@@ -33,6 +60,9 @@ main(int argc, char **argv) {
       break;
     case 'P':
       nproc = atoi(optarg);
+      break;
+    case 'E':
+      conf.optflags |= ARMAS_OEXTPREC; // extended precision
       break;
     case 'o':
       conf.optflags |= ARMAS_BLAS_RECURSIVE;
@@ -48,17 +78,16 @@ main(int argc, char **argv) {
   long seed = (long)time(0);
   srand48(seed);
 
-  //conf.mb = 96; conf.nb = 128; conf.kb = 160;
   if (nproc > 0)
     conf.maxproc = nproc;
 
-  armas_d_init(&C, N, N);
-  armas_d_init(&A, N, N);
-  armas_d_init(&B, N, N);
+  matrix_init(&C, N, N);
+  matrix_init(&A, N, N);
+  matrix_init(&B, N, N);
   
-  armas_d_set_values(&C, zero, ARMAS_NULL);
-  armas_d_set_values(&A, unitrand, ARMAS_NULL);
-  armas_d_set_values(&B, unitrand, ARMAS_NULL);
+  matrix_set_values(&C, zero, ARMAS_NULL);
+  matrix_set_values(&A, unitrand, ARMAS_NULL);
+  matrix_set_values(&B, unitrand, ARMAS_NULL);
 
   // C = A*B
   min = max = avg = 0.0;
@@ -66,7 +95,7 @@ main(int argc, char **argv) {
     flush();
     rt = time_msec();
 
-    armas_d_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
+    matrix_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
     
     rt = time_msec() - rt;
 
