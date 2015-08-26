@@ -94,7 +94,7 @@ void __update_trm_naive(mdata_t *C, const mdata_t *A, const mdata_t *B,
 {
   mdata_t Acpy, Bcpy;
   cache_t cache;
-  double Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
 
   if (E-R <= 0 || L-S <=0 || P <= 0) {
     return;
@@ -238,7 +238,7 @@ void __update_trm_recursive(mdata_t *C, const mdata_t *A, const mdata_t *B,
 {
   mdata_t Acpy, Bcpy;
   cache_t cache;
-  double Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
 
   if (E-R <= 0 || L-S <= 0 || P <= 0) {
     return;
@@ -301,7 +301,7 @@ void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
   mdata_t Cd, Ad, Bd;
   mdata_t Acpy, Bcpy;
   cache_t cache;
-  double Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
 
   if (E-R <= 0 || L-S <= 0 || P <= 0) {
     return;
@@ -393,6 +393,8 @@ void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
     }
   }
 }
+
+#if defined(ENABLE_THREADS)
 
 static
 void *__start_thread(void *arg) {
@@ -487,6 +489,8 @@ int __update_trm_threaded(int blk, int nblk, __armas_dense_t *C,
   return err;
 }
 
+#endif   // ENABLE_THREADS
+
 
 /**
  * @brief Triangular or trapezoidial matrix rank-k update
@@ -572,7 +576,13 @@ int __armas_update_trm(__armas_dense_t *C,
     }
     return 0;
   }
+
+#if defined(ENABLE_THREADS)
   return __update_trm_threaded(0, nproc, C, A, B, alpha, beta, flags, conf);
+#else
+  conf->error = ARMAS_EIMP;
+  return -1;
+#endif
 }
 
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

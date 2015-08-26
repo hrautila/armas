@@ -41,6 +41,7 @@ static armas_scheduler_t __default_sched = {
 
 long armas_use_nproc(uint64_t nelems, armas_conf_t *conf)
 {
+#if defined(ENABLE_THREADS)
   int k;
   uint64_t bsize = conf->wb * conf->wb;
   long nproc = sysconf(_SC_NPROCESSORS_ONLN);
@@ -57,10 +58,14 @@ long armas_use_nproc(uint64_t nelems, armas_conf_t *conf)
   // divide to atmost nproc blocks
   k = (long)ceil((double)nelems/(double)bsize);
   return nproc < k ? nproc : k;
+#else
+  return 1;
+#endif  // ENABLE_THREADS
 }
 
 int armas_nblocks(uint64_t nelems, int wb, int maxproc, int flags)
 {
+#if defined(ENABLE_THREADS)
   int k;
   uint64_t bsize = wb * wb;
   long nproc = sysconf(_SC_NPROCESSORS_ONLN);
@@ -77,6 +82,9 @@ int armas_nblocks(uint64_t nelems, int wb, int maxproc, int flags)
   // divide to atmost nproc blocks
   k = (long)ceil((double)nelems/(double)bsize);
   return nproc < k ? nproc : k;
+#else
+  return 1;
+#endif
 }
 
 /*! \brief Get default configuration.
@@ -269,7 +277,12 @@ void armas_init()
       __default_conf.wb = val;
       break;
     case 5:
+#if defined(ENABLE_THREADS)
       __default_conf.maxproc = val > nproc ? nproc : val;
+#else
+      // use nproc to kill 'unused-variable' warning
+      __default_conf.maxproc = nproc != 1 ? 1 : 1;
+#endif
       break;
     case 6:
       __default_conf.tolmult = val;
@@ -279,6 +292,7 @@ void armas_init()
     }
   }
 
+#if defined(ENABLE_THREADS)
   if (__default_conf.maxproc > 1) {
     // read scheduling config
     cstr = getenv(ENV_ARMAS_SCHED);
@@ -287,7 +301,7 @@ void armas_init()
     // init scheduler
     armas_sched_init(&__default_sched, __default_conf.maxproc, 64);
   }
-
+#endif
   __armas_init_flag = 1;
 }
 

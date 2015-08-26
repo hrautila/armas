@@ -80,7 +80,7 @@ void __kernel_symm_left(mdata_t *C, const mdata_t *A, const mdata_t *B,
   int i, j, nI, nJ, flags1, flags2;
   mdata_t A0, B0, C0, Acpy, Bcpy;
   cache_t cache;
-  double Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
 
   if (L-S <= 0 || E-R <= 0) {
     return;
@@ -173,7 +173,7 @@ void __kernel_symm_right(mdata_t *C, const mdata_t *A, const mdata_t *B,
   register int nR, nC, ic, ir;
   mdata_t A0, B0, C0, Acpy, Bcpy;
   cache_t cache;
-  double Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
 
   if (L-S <= 0 || E-R <= 0) {
     return;
@@ -253,6 +253,9 @@ void __kernel_symm_right(mdata_t *C, const mdata_t *A, const mdata_t *B,
   }
 
 }
+
+#if defined(ENABLE_THREADS)
+// threading support
 
 static
 void *__compute_block(void *arg) {
@@ -434,6 +437,8 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
   return 0;
 }
 
+#endif // ENABLE_THREADS
+
 /**
  * @brief Symmetric matrix-matrix multiplication
  *
@@ -513,6 +518,7 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
     return 0;
   }
 
+#if defined(ENABLE_THREADS)
   int colwise = C->rows < C->cols;
   if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
     return __mult_sym_schedule(nproc, colwise,
@@ -522,6 +528,10 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
   // default is recursive scheduling of threads
   return __mult_sym_threaded(0, nproc, colwise,
                              C, A, B, alpha, beta, flags, conf);
+#else
+  conf->error = ARMAS_EIMP;
+  return -1;
+#endif
 }
 
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

@@ -33,9 +33,13 @@
 #if EXT_PRECISION && defined(__trmm_ext_blk)
 extern void __trmm_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
                            int N, int S, int E, int KB, int NB, int MB);
+#define HAVE_EXT_PRECISION 1
 #endif
 
+#include "cond.h"
+
 // Functions here implement various versions of TRMM operation.
+#if defined(ENABLE_THREADS)
 
 // ------------------------------------------------------------------------------
 
@@ -56,6 +60,7 @@ void *__compute_block(void *arg) {
     }
   return arg;
 }
+
 
 // ------------------------------------------------------------------------------
 // recursive thread scheduling
@@ -83,12 +88,10 @@ int __mult_trm_threaded(int blknum, int nblk,
   }
 
   if (blknum == nblk-1) {
-
-#if defined(__trmm_ext_blk)
     // if extended precision enabled and requested
-    IF_EXPR2(conf->optflags&ARMAS_OEXTPREC, 0, 
-             __trmm_ext_blk(_B, _A, alpha, flags, A->cols, ir, ie, conf->kb, conf->nb, conf->mb));
-#endif
+    IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
+                    __trmm_ext_blk(_B, _A, alpha, flags, A->cols, ir, ie,
+                                   conf->kb, conf->nb, conf->mb));
 
     // normal precision
     switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
@@ -181,6 +184,7 @@ int __mult_trm_schedule(int nblk,
   return 0;
 }
 
+#endif // ENABLE_THREADS
 
 /**
  * @brief Triangular matrix-matrix multiply
@@ -252,13 +256,12 @@ int __armas_mult_trm(__armas_dense_t *B, const __armas_dense_t *A,
   if (nproc == 1) {
     ie = flags & ARMAS_RIGHT ? B->rows : B->cols;
 
-#if defined(__trmm_ext_blk)
     // if extended precision enabled and requested
-    IF_EXPR2(conf->optflags&ARMAS_OEXTPREC, 0, 
-             __trmm_ext_blk(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb));
-#endif
+    IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
+                    __trmm_ext_blk(_B, _A, alpha, flags, A->cols, 0, ie,
+                                   conf->kb, conf->nb, conf->mb));
 
-    // normal precision here
+    // normal precision here; extended precision not enabled neither requested
     switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
     case ARMAS_SNAIVE:
       __trmm_unb(_B, _A, alpha, flags, A->cols, 0, ie);
@@ -273,10 +276,15 @@ int __armas_mult_trm(__armas_dense_t *B, const __armas_dense_t *A,
     return 0;
   }
 
+#if defined(ENABLE_THREADS)
   if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
     return __mult_trm_schedule(nproc, B, A, alpha, flags, conf);
   }
   return __mult_trm_threaded(0, nproc, B, A, alpha, flags, conf);
+#else
+  conf->error = ARMAS_EIMP;
+  return -1;
+#endif
 }
 
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

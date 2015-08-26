@@ -6,6 +6,9 @@
 // any later version. See the COPYING file included in this archive.
 
 
+#if defined(ENABLE_THREADS)
+// this is only if thread support requested
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -15,6 +18,7 @@
 #define __USE_GNU
 #include <sched.h>
 #include <pthread.h>
+
 
 #include <armas/armas.h>
 #include "sync.h"
@@ -201,6 +205,9 @@ void armas_schedule(armas_task_t *t)
 {
     armas_sched_schedule(armas_sched_default(), t);
 }
+
+
+#endif  // ENABLE_THREADS
 
 
 // Local Variables:

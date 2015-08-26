@@ -31,27 +31,31 @@
 #include "internal.h"
 #include "matrix.h"
 #include "scheduler.h"
-//#define __USE_GNU
-//#include <sched.h>
 
 #if EXT_PRECISION && defined(__kernel_inner_ext)
 extern int __kernel_inner_ext(mdata_t *C, const mdata_t *A, const mdata_t *B,
                               DTYPE alpha, DTYPE beta, int flags,
                               int P, int S, int L, int R, int E, 
                               int KB, int NB, int MB);
+#define HAVE_EXT_PRECISION 1
 #endif
+
+// include conditional code macros; 
+#include "cond.h"
+
+// code blocks for threaded execution
+#if defined(ENABLE_THREADS)
 
 static
 void *__compute_block(void *arg) {
   kernel_param_t *kp = (kernel_param_t *)arg;
-  //printf("__compute: [%d, %d] tid=%ld\n", kp->S, kp->R, pthread_self());
-#if defined(__kernel_inner_ext)
+
   // if extended precision enabled and requested
-  IF_EXPR(kp->optflags&ARMAS_OEXTPREC,
-          (void *)((long)__kernel_inner_ext(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
-                                            kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB)));
-#endif
-  // normal precision here
+  IF_EXTPREC_RVAL(kp->optflags&ARMAS_OEXTPREC, (void *)0, 
+                  __kernel_inner_ext(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
+                                     kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB));
+
+  // normal precision here; extended not enabled and not requested
   __kernel_inner(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
                  kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB);
   return 0;
@@ -82,24 +86,23 @@ int __mult_threaded(int blknum, int nblk, int colwise,
     if (colwise) {
       ir = __block_index4(blknum, nblk, C->cols);
       ie = __block_index4(blknum+1, nblk, C->cols);
-#if defined(__kernel_inner_ext)
       // if extended precision enabled and requested
-      IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
-              __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
-                                 conf->kb, conf->nb, conf->mb));
-#endif
+      IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
+                      __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
+                                         conf->kb, conf->nb, conf->mb));
+
       // normal precision here
       __kernel_inner(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
                      conf->kb, conf->nb, conf->mb);
     } else {
       ir = __block_index4(blknum,   nblk, C->rows);
       ie = __block_index4(blknum+1, nblk, C->rows);
-#if defined(__kernel_inner_ext)
       // if extended precision enabled and requested
-      IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
-              __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
-                                 conf->kb, conf->nb, conf->mb));
-#endif
+      IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
+                      __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
+                                         conf->kb, conf->nb, conf->mb));
+
+      // normal precision here
       __kernel_inner(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, ir, ie,
                      conf->kb, conf->nb, conf->mb);
     }
@@ -235,6 +238,8 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
   return 0;
 }
 
+#endif   // ENABLE_THREADS
+
 // ----------------------------------------------------------------------------------------
 // exported public functions
 
@@ -305,24 +310,29 @@ int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_den
   // if only one thread, just do it
   if (nproc == 1) {
     K = flags & ARMAS_TRANSA ? A->rows : A->cols;
-#if defined(__kernel_inner_ext)
     // if extended precision enabled and requested
-    IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
-            __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
-                               conf->kb, conf->nb, conf->mb));
-#endif
-    // normal precision here
+    IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0,
+                    __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
+                                       conf->kb, conf->nb, conf->mb));
+
+    // otherwise, normal precision here
     __kernel_inner(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
                    conf->kb, conf->nb, conf->mb);
     return 0;
   }
 
+#if defined(ENABLE_THREADS)
   int colwise = C->rows <= C->cols;
   if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
     return __mult_schedule(nproc, colwise, C, A, B, alpha, beta, flags, conf);
   }
   // default is recursive scheduling of threads
   return __mult_threaded(0, nproc, colwise, C, A, B, alpha, beta, flags, conf);
+#else
+  // no threading; we should not be here as nproc == 1 when threading not enabled.
+  conf->error = ARMAS_EIMP;
+  return -1;
+#endif
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
