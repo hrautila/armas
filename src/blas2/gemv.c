@@ -35,10 +35,12 @@
 #endif
 
 #if EXT_PRECISION && defined(__gemv_ext_unb)
-#define WITH_EXT_PREC 1
+#define HAVE_EXT_PRECSION 1
 extern int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
                           DTYPE alpha, DTYPE beta, int flags, int nX, int nY);
 #endif
+
+#include "cond.h"
 
 // Y = alpha*A*X + beta*Y for rows R:E, A is M*N and 0 < R < E <= M, Update
 // with S:L columns from A and correspoding elements from X.
@@ -251,10 +253,10 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enabled and requested
-#if defined(WITH_EXT_PREC)
-  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
-          __gemv_ext_unb(&y, &A0, &x, alpha, beta, flags, nx, ny));
-#endif
+
+  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
+                  __gemv_ext_unb(&y, &A0, &x, alpha, beta, flags, nx, ny));
+
   // single precision here
   if (beta != 1.0) {
     __armas_scale(Y, beta, conf);

@@ -29,10 +29,11 @@
 #include "mvec_nosimd.h"
 
 #if EXT_PRECISION && defined(__trsv_ext_unb)
-#define WITH_EXT_PREC 1
+#define HAVE_EXT_PRECISION 1
 extern int __trsv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N);
 #endif
 
+#include "cond.h"
 
 /*
  *  LEFT-UPPER
@@ -322,11 +323,10 @@ int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A,
   x = (mvec_t){X->elems, (X->rows == 1 ? X->step : 1)};
   A0 = (mdata_t){A->elems, A->step};
 
-#if defined(WITH_EXT_PREC)
   // if extended precision enabled and requested
-  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
-          __trsv_ext_unb(&x, &A0, alpha, flags, nx));
-#endif
+  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0,
+                  __trsv_ext_unb(&x, &A0, alpha, flags, nx));
+
   // normal precision here
   switch (conf->optflags) {
   case ARMAS_RECURSIVE:

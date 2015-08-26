@@ -32,10 +32,13 @@
 #endif
 
 #if EXT_PRECISION && defined(__vec_asum_ext) && defined(__vec_sum_ext)
-#define WITH_EXT_PREC 1
+#define HAVE_EXT_PRECISION 1
 extern ABSTYPE __vec_asum_ext(const mvec_t *X,  int N);
 extern DTYPE __vec_sum_ext(const mvec_t *X,  int N);
 #endif
+
+// include conditional code macros
+#include "cond.h"
 
 // return sum of absolute values
 static inline
@@ -258,10 +261,11 @@ ABSTYPE __armas_asum(const __armas_dense_t *x, armas_conf_t *conf)
 
   const mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
 
-#if defined(WITH_EXT_PREC)
-  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
-          __vec_asum_ext(&X, __armas_size(x)));
-#endif
+
+  // if extended precision enabled and requested
+  IF_EXTPREC(conf->optflags&ARMAS_OEXTPREC,
+             __vec_asum_ext(&X, __armas_size(x)));
+
   // this executed if extended precision not requested
   switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_KAHAN|ARMAS_RECURSIVE)) {
   case ARMAS_KAHAN:
@@ -294,10 +298,11 @@ DTYPE __armas_sum(const __armas_dense_t *x, armas_conf_t *conf)
 
   const mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
   
-#if defined(WITH_EXT_PREC)
-  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
-          __vec_sum_ext(&X, __armas_size(x)));
-#endif
+
+  // if extended precision enabled and requested
+  IF_EXTPREC(conf->optflags&ARMAS_OEXTPREC,
+             __vec_sum_ext(&X, __armas_size(x)));
+
   
   // this executed if extended precision not requested
   switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_KAHAN|ARMAS_RECURSIVE)) {

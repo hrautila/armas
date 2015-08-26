@@ -23,9 +23,12 @@
 #include "matrix.h"
 
 #if EXT_PRECISION && defined(__vec_dot_ext)
-#define WITH_EXT_PREC 1
+#define HAVE_EXT_PRECISION 1
 extern DTYPE __vec_dot_ext(const mvec_t *X,  const mvec_t *Y, int N);
 #endif
+
+#include "cond.h"
+
 
 static inline
 DTYPE __vec_dot(const mvec_t *X,  const mvec_t *Y, int N)
@@ -124,11 +127,9 @@ DTYPE __armas_dot(const __armas_dense_t *x, const __armas_dense_t *y, armas_conf
   const mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
   const mvec_t Y = {y->elems, (y->rows == 1 ? y->step : 1)};
 
-#if defined(WITH_EXT_PREC)
   // extended precision 
-  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
-          __vec_dot_ext(&Y, &X, __armas_size(y)));
-#endif
+  IF_EXTPREC(conf->optflags&ARMAS_OEXTPREC,
+             __vec_dot_ext(&Y, &X, __armas_size(y)));
   
   // single precision
   if (conf->optflags & ARMAS_SNAIVE)

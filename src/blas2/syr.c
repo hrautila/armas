@@ -28,10 +28,12 @@
 #include "mvec_nosimd.h"
 
 #if EXT_PRECISION && defined(__update_trmv_ext_unb)
-#define WITH_EXT_PREC 1
+#define HAVE_EXT_PRECISION 1
 extern int __update_trmv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
                                  DTYPE alpha, int flags, int N, int M);
 #endif
+
+#include "cond.h"
 
 /**
  * @brief Symmetric matrix rank-1 update.
@@ -78,11 +80,9 @@ int __armas_mvupdate_sym(__armas_dense_t *A,
   x = (mvec_t){X->elems, (X->rows == 1 ? X->step : 1)};
   A0 = (mdata_t){A->elems, A->step};
 
-#if defined(WITH_EXT_PREC)
   // if extended precision enable and requested
-  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
-          __update_trmv_ext_unb(&A0, &x, &x, alpha, flags, nx, nx));
-#endif
+  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
+                  __update_trmv_ext_unb(&A0, &x, &x, alpha, flags, nx, nx));
 
   // default precision
   switch (conf->optflags) {
