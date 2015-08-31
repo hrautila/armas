@@ -411,7 +411,7 @@ int __trd_qrsweep(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *Cr,
 static inline
 void __gvleft(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int col, int ncol)
 {
-    double t0, *y0, *y1;
+    DTYPE t0, *y0, *y1;
     int k, n;
 
     y0 = &A->elems[col*A->step+r1];
@@ -436,7 +436,7 @@ void __gvleft(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int col, int
 static inline
 void __gvright(__armas_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int row, int nrow)
 {
-    double t0, *y0, *y1;
+    DTYPE t0, *y0, *y1;
     int k;
 
     y0 = &A->elems[c1*A->step+row];
