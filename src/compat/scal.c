@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2015
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__nrm2)
+#if defined(COMPAT) && defined(__scal)
 void __scal(int *n, DTYPE *X, int *incx, DTYPE *alpha)
 {
     armas_conf_t *conf = armas_conf_default();

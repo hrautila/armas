@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2015
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -25,32 +25,48 @@
 #include <ctype.h>
 #include "matrix.h"
 
+#if defined(COMPAT) || defined(COMPAT_CBLAS)
+static
+void __rot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE c, DTYPE s)
+{
+    __armas_dense_t y, x;
+    int ix, iy, nx, ny, k, i;
+    DTYPE x0, y0;
+
+    ix = incx < 0 ? -incx : incx;
+    iy = incy < 0 ? -incy : incy;
+
+    if (ix == 1) {
+        __armas_make(&x, N, 1, N, X);
+    } else {
+        __armas_make(&x, 1, N, ix, X);
+    }
+    if (iy == 1) {
+        __armas_make(&y, N, 1, N, Y);
+    } else {
+        __armas_make(&y, 1, N, iy, Y);
+    }
+
+    ix = incx < 0 ? N - 1 : 0;
+    iy = incy < 0 ? N - 1 : 0;
+    nx = ix == 0 ? 1 : -1;
+    ny = iy == 0 ? 1 : -1;
+    for (i = 0; i < N; i++, iy += ny, ix += nx) {
+        __armas_gvrotate(&x0, &y0, c, s,
+                         __armas_get_at_unsafe(&x, ix), __armas_get_at_unsafe(&y, iy));
+        __armas_set_at_unsafe(&x, ix, x0);
+        __armas_set_at_unsafe(&y, iy, y0);
+    }
+}
+#endif  // rot
+
 #if defined(COMPAT)
 #if defined(__rot)
 void __rot(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy, DTYPE *c, DTYPE *s)
 {
-    int i;
-    DTYPE x0, y0;
-    __armas_dense_t y, x;
-
-    if (*incx == 1) {
-        __armas_make(&x, *n, 1, *n, X);
-    } else {
-        __armas_make(&x, 1, *n, *incx, X);
-    }
-    if (*incy == 1) {
-        __armas_make(&y, *n, 1, *n, Y);
-    } else {
-        __armas_make(&y, 1, *n, *incy, Y);
-    }
-    for (i = 0; i < *n; i++) {
-        __armas_gvrotate(&x0, &y0, *c, *s,
-                         __armas_get_at_unsafe(&x, i), __armas_get_at_unsafe(&y, i));
-        __armas_set_at_unsafe(&x, i, x0);
-        __armas_set_at_unsafe(&y, i, y0);
-    }
+    __rot_compat(*n, X, *incx, Y, *incy, *c, *s);
 }
-#endif  // rot
+#endif
 
 #if defined(__rotg)
 void __rotg(DTYPE *sa, DTYPE *sb, DTYPE *c, DTYPE *s)
@@ -59,23 +75,6 @@ void __rotg(DTYPE *sa, DTYPE *sb, DTYPE *c, DTYPE *s)
     __armas_gvcompute(c, s, &r, *sa, *sb);
 }
 #endif // rotg
-
-#if defined(__rotm)
-void __rotm(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy, DTYPE *dparm)
-{
-    //__armas_dense_t dh;
-    //__armas_make(&dh, 2, 2, 2, &dparm[1]);
-}
-#endif // rotm
-
-#if defined(__rotmg)
-// not implemented, yet
-void __rotmg(DTYPE *dd1, DTYPE *dd2, DTYPE *dx1, DTYPE *dy1, DTYPE *dparam)
-{
-    //__armas_dense_t dh;
-    //__armas_make(&dh, 2, 2, 2, &dparam[1]);
-}
-#endif // rotmg
 #endif // COMPAT
 
 #if defined(COMPAT_CBLAS) && defined(__cblas_rot)

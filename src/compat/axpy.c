@@ -1,7 +1,7 @@
 
 // Copyright (c) Harri Rautila, 2014
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -28,18 +28,36 @@ void __axpy(int *n, DTYPE *alpha, DTYPE *X, int *incx, DTYPE *Y, int *incy)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t y, x;
+    int ix, iy, nx, ny, k;
+    DTYPE xv, yv;
 
-    if (*incx == 1) {
+    ix = *incx < 0 ? - (*incx) : *incx;
+    iy = *incy < 0 ? - (*incy) : *incy;
+
+    if (ix == 1) {
         __armas_make(&x, *n, 1, *n, X);
     } else {
-        __armas_make(&x, 1, *n, *incx, X);
+        __armas_make(&x, 1, *n, ix, X);
     }
-    if (*incy == 1) {
+    if (iy == 1) {
         __armas_make(&y, *n, 1, *n, Y);
     } else {
-        __armas_make(&y, 1, *n, *incy, Y);
+        __armas_make(&y, 1, *n, iy, Y);
     }
-    __armas_axpy(&y, &x, *alpha, conf);
+    if ((*incx > 0 && *incy > 0) || (*incx < 0 && *incy < 0)) {
+        __armas_axpy(&y, &x, *alpha, conf);
+        return;
+    } 
+    // if not same sign then iteration direction is different (so clever)
+    ix = *incx < 0 ? *n - 1 : 0;
+    iy = *incy < 0 ? *n - 1 : 0;
+    nx = ix == 0 ? 1 : -1;
+    ny = iy == 0 ? 1 : -1;
+    for (k = 0; k < *n; ix += nx, iy += ny, k++) {
+        xv = __armas_get_at_unsafe(&x, ix);
+        yv = __armas_get_at_unsafe(&y, iy);
+        __armas_set_at_unsafe(&y, iy, yv + (*alpha)*xv);
+    }
 }
 #endif
 

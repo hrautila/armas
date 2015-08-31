@@ -27,6 +27,9 @@ enum cblas_const {
   CBLAS_RIGHT = 142
 };
 
+
+#if defined(COMPAT)
+
 #ifdef COMPLEX128
 /* ---------------------------------------------------------------------------
  * Definitions for double precision complex numbers.
@@ -41,12 +44,38 @@ enum cblas_const {
 /* ---------------------------------------------------------------------------
  * Definitions for single precision floating type.
  */
+// blas1
+#define __axpy  saxpy_
+#define __copy  scopy_
+#define __dot   sdot_
+#define __nrm2  snrm2_
+#define __swap  sswap_
+#define __scal  sscal_
+#define __asum  sasum_
+#define __iamax isamax_
+#define __rot   srot_
+#define __rotg  srotg_
+// blas2
+#define __gemv  sgemv_
+#define __ger   sger_
+#define __symv  ssymv_
+#define __syr2  ssyr2_
+#define __syr   ssyr_
+#define __trmv  strmv_
+#define __trsv  strsv_
+// blas3
+#define __gemm  sgemm_
+#define __symm  ssymm_
+#define __syr2k ssyrk2_
+#define __syrk  ssyrk_
+#define __trmm  strmm_
+#define __trsm  strsm_
+// lapack
 
 #else  // default is double precision float (FLOAT64)
 /* ---------------------------------------------------------------------------
  * Definitions for double precision floating types.
  */
-#if defined(COMPAT)
 // blas1
 #define __axpy  daxpy_
 #define __copy  dcopy_
@@ -58,8 +87,6 @@ enum cblas_const {
 #define __iamax idamax_
 #define __rot   drot_
 #define __rotg  drotg_
-#define __rotm  drotm_
-#define __rotmg drotmg_
 // blas2
 #define __gemv  dgemv_
 #define __ger   dger_
@@ -77,7 +104,6 @@ enum cblas_const {
 #define __trsm  dtrsm_
 // lapack
 
-#endif
 
 #if defined(COMPAT_CBLAS)
 #define __cblas_gemm   cblas_dgemm
@@ -85,6 +111,8 @@ enum cblas_const {
 #endif
 
 #endif  /* FLOAT64 */
+
+#endif  /* defined(COMPAT) */
 
 
 #endif  /* ARMAS_COMPAT_H */
