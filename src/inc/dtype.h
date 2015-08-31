@@ -171,8 +171,8 @@ typedef float ABSTYPE;
 #define __ABS   fabsf
 #define __SQRT  sqrtf
 #define __HYPOT hypotf
-#define __SIGN  signbitf
-#define __COPYSIGN  copybitf
+#define __SIGN  signbit
+#define __COPYSIGN  copysignf
 
 // internally available functions
 #define __blk_add      __s_blk_add
