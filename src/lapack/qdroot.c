@@ -27,7 +27,7 @@
  * This only works for double precision reals. (At the moment).
  */
 
-#if defined(__x86_64__) && defined(__FMA__)
+#if defined(__x86_64__) && defined(__FMA__) && defined(FLOAT64)
 
 #include <immintrin.h>
 
@@ -61,7 +61,11 @@ DTYPE discriminant(DTYPE a, DTYPE b, DTYPE c)
 
 // The PI security parameter in (1) round-off cancelation 
 #define ROUNDOFF_SEC_CONST 3
+#if defined(FLOAT32)
+#define BIG_CONST ((1 << 14) + 1)
+#else
 #define BIG_CONST ((1 << 27) + 1)
+#endif
 
 /*
  * Break 53 sig. bit DTYPE to two 26 sig. bit parts.
