@@ -119,47 +119,46 @@ XBLAS3 = \
 	blas3/trsm_ext.c
 
 LAPACK = \
-	lapack/dqds.c \
-	lapack/qrt.c \
-	lapack/evd.c \
-	lapack/svd.c \
-	lapack/trdsec.c \
-	lapack/trdevd.c \
+	lapack/house.c \
+	lapack/support.c \
+	lapack/qr.c \
+	lapack/qrmult.c \
+	lapack/qrbld.c  \
+	lapack/qrsolve.c  \
+	lapack/ql.c \
+	lapack/qlmult.c \
+	lapack/qlbld.c \
+	lapack/lq.c \
+	lapack/lqmult.c \
+	lapack/lqbld.c \
+	lapack/lqsolve.c \
+	lapack/rq.c \
+	lapack/rqmult.c \
+	lapack/rqbld.c \
+	lapack/ldlbk.c \
+	lapack/ldlbkl.c \
+	lapack/ldlbku.c \
+	lapack/lu.c \
+	lapack/chol.c \
+	lapack/givens.c \
+	lapack/qdroot.c \
+	lapack/diag.c \
 	lapack/sort.c \
+	lapack/bired.c \
+	lapack/bibld.c \
+	lapack/trired.c \
+	lapack/tribld.c \
+	lapack/hess.c \
 	lapack/bdsvd.c \
 	lapack/bdsvd_gr.c \
 	lapack/bdsvd_dk.c \
 	lapack/aux.c \
-	lapack/givens.c \
-	lapack/diag.c \
-	lapack/qdroot.c \
-	lapack/bired.c \
-	lapack/bibld.c \
-	lapack/chol.c \
-	lapack/hess.c \
-	lapack/house.c \
-	lapack/ldlbk.c \
-	lapack/ldlbkl.c \
-	lapack/ldlbku.c \
-	lapack/lq.c \
-	lapack/lqbld.c \
-	lapack/lqmult.c \
-	lapack/lqsolve.c \
-	lapack/lu.c \
-	lapack/qlbld.c \
-	lapack/ql.c \
-	lapack/qlmult.c \
-	lapack/qrbld.c \
-	lapack/qr.c \
-	lapack/qrmult.c \
-	lapack/qrsolve.c \
-	lapack/rqbld.c \
-	lapack/rq.c \
-	lapack/rqmult.c \
-	lapack/support.c \
-	lapack/trired.c \
-	lapack/tribld.c
-
+	lapack/trdsec.c \
+	lapack/trdevd.c \
+	lapack/evd.c \
+	lapack/svd.c \
+	lapack/qrt.c \
+	lapack/dqds.c
 
 COMPAT = \
 	compat/asum.c \
@@ -170,6 +169,7 @@ COMPAT = \
 	compat/nrm2.c \
 	compat/swap.c \
 	compat/rot.c \
+	compat/scal.c \
 	compat/gemv.c \
 	compat/symv.c \
 	compat/ger.c \
@@ -229,7 +229,7 @@ libarmass_la_SOURCES =
 libarmass_la_LIBADD = libx.la libs.la
 
 # single precision
-libs_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3)
+libs_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
 libs_la_CPPFLAGS = -DFLOAT32 
 
 # single precision compability
