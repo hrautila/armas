@@ -6,51 +6,50 @@
 #include <math.h>
 #include <float.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "testing.h"
 
 #define NAME "test"
-
-extern
-int netlib_dgetrf(armas_d_dense_t *A, armas_pivot_t *P);
-
-extern
-int netlib_dgetrs(armas_d_dense_t *B, armas_d_dense_t *A, armas_pivot_t *P, int flags);
+#if FLOAT32
+#define MAX_ERROR 8e-6
+#else
+#define MAX_ERRRO 1e-12
+#endif
 
 int test_solve(int M, int N, int lb, int verbose)
 {
-  armas_d_dense_t A0, A1;
-  armas_d_dense_t B0, X0;
+  __Matrix A0, A1;
+  __Matrix B0, X0;
   armas_pivot_t P0;
   armas_conf_t conf = *armas_conf_default();
   char *blk = lb == 0 ? "unblk" : "blk";
   int ok;
-  double nrm, nrm0;
+  __Dtype nrm, nrm0;
 
-  armas_d_init(&A0, N, N);
-  armas_d_init(&A1, N, N);
-  armas_d_init(&B0, N, M);
-  armas_d_init(&X0, N, M);
+  matrix_init(&A0, N, N);
+  matrix_init(&A1, N, N);
+  matrix_init(&B0, N, M);
+  matrix_init(&X0, N, M);
   armas_pivot_init(&P0, N);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
-  armas_d_mcopy(&A1, &A0);
+  matrix_set_values(&A0, unitrand, ARMAS_ANY);
+  matrix_mcopy(&A1, &A0);
 
-  armas_d_set_values(&B0, unitrand, ARMAS_ANY);
-  armas_d_mcopy(&X0, &B0);
-  nrm0 = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+  matrix_set_values(&B0, unitrand, ARMAS_ANY);
+  matrix_mcopy(&X0, &B0);
+  nrm0 = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf);
 
   conf.lb = lb;
-  armas_d_lufactor(&A0, &P0, &conf);
+  matrix_lufactor(&A0, &P0, &conf);
 
   // solve
-  armas_d_lusolve(&X0, &A0, &P0, ARMAS_NONE, &conf);
+  matrix_lusolve(&X0, &A0, &P0, ARMAS_NONE, &conf);
 
   // B0 = B0 - A*X0
-  armas_d_mult(&B0, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
-  nrm = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
-  ok = isFINE(nrm, N*1e-12);
+  matrix_mult(&B0, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
+  nrm = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
+
+  ok = isFINE(nrm, N*MAX_ERROR);
 
   printf("%s: A*(%s.LU(A).1*B) == B\n", PASS(ok), blk);
   if (verbose > 0) {
@@ -61,29 +60,28 @@ int test_solve(int M, int N, int lb, int verbose)
 
 int test_factor(int M, int N, int lb, int verbose)
 {
-  armas_d_dense_t A0, A1, A2;
-  armas_pivot_t P0, P1, P2;
-  armas_pivot_t *P = (armas_pivot_t *)0;
+  __Matrix A0, A1;
+  armas_pivot_t P0, P1;
   armas_conf_t conf = *armas_conf_default();
   int ok;
-  double nrm;
+  __Dtype nrm;
 
-  armas_d_init(&A0, M, N);
-  armas_d_init(&A1, M, N);
+  matrix_init(&A0, M, N);
+  matrix_init(&A1, M, N);
   armas_pivot_init(&P0, N);
   armas_pivot_init(&P1, N);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
-  armas_d_mcopy(&A1, &A0);
+  matrix_set_values(&A0, unitrand, ARMAS_ANY);
+  matrix_mcopy(&A1, &A0);
 
-  //armas_d_lufactor(&A0, &P0, &conf);
+  //matrix_lufactor(&A0, &P0, &conf);
   conf.lb = 0;
-  armas_d_lufactor(&A0, &P0, &conf);
+  matrix_lufactor(&A0, &P0, &conf);
   conf.lb = lb;
-  armas_d_lufactor(&A1, &P1,  &conf);
+  matrix_lufactor(&A1, &P1,  &conf);
 
-  nrm = rel_error((double *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  nrm = rel_error((__Dtype *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, N);
 
   printf("%s: unblk.LU(A) == blk.LU(A)\n", PASS(ok));
@@ -91,33 +89,23 @@ int test_factor(int M, int N, int lb, int verbose)
     printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
-  armas_d_release(&A0);
-  armas_d_release(&A1);
+  matrix_release(&A0);
+  matrix_release(&A1);
   armas_pivot_release(&P0);
   armas_pivot_release(&P1);
   return ok;
 }
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int opt;
   int M = 789;
   int N = 711;
-  int K = N;
   int LB = 36;
-  int ok = 0;
-  int nproc = 1;
   int verbose = 1;
-  int testno = 0;
 
-  while ((opt = getopt(argc, argv, "T:P:v")) != -1) {
+  while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
-    case 'P':
-      nproc = atoi(optarg);
-      break;
-    case 'T':
-      testno = atoi(optarg);
-      break;
     case 'v':
       verbose += 1;
       break;

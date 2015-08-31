@@ -6,87 +6,86 @@
 #include <math.h>
 #include <float.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "testing.h"
+
+#if FLOAT32
+#define __ERROR 8e-3
+#else
+#define __ERROR 1e-8
+#endif
 
 #define NAME "chol"
 
 int test_solve(int M, int N, int lb, int verbose, int flags)
 {
-  armas_d_dense_t A0, A1;
-  armas_d_dense_t B0, X0;
+  __Matrix A0, A1;
+  __Matrix B0, X0;
   armas_conf_t conf = *armas_conf_default();
   int ok;
-  double nrm, nrm0;
+  __Dtype nrm, nrm0;
   char *uplo = flags & ARMAS_UPPER ? "Upper" : "Lower";
   char *blk = lb != 0 ? "  blk" : "unblk";
 
-  armas_d_init(&A0, N, N);
-  armas_d_init(&A1, N, N);
-  armas_d_init(&B0, N, M);
-  armas_d_init(&X0, N, M);
+  matrix_init(&A0, N, N);
+  matrix_init(&A1, N, N);
+  matrix_init(&B0, N, M);
+  matrix_init(&X0, N, M);
 
-  // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
-  armas_d_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
-  armas_d_mcopy(&A0, &A1);
+  // set source data (A = A*A.T)
+  matrix_set_values(&A0, zeromean, ARMAS_ANY);
+  matrix_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+  matrix_mcopy(&A0, &A1);
 
-  armas_d_set_values(&B0, unitrand, ARMAS_ANY);
-  nrm0 = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
-  armas_d_mcopy(&X0, &B0);
+  matrix_set_values(&B0, unitrand, ARMAS_ANY);
+  nrm0 = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+  matrix_mcopy(&X0, &B0);
 
   conf.lb = lb;
-  armas_d_cholfactor(&A0, flags, &conf);
+  matrix_cholfactor(&A0, flags, &conf);
 
   // solve
-  armas_d_cholsolve(&X0, &A0, flags, &conf);
+  matrix_cholsolve(&X0, &A0, flags, &conf);
 
   // X0 = A*X0 - B0
-  armas_d_mult(&B0, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
-  nrm = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
-  ok = isFINE(nrm, N*1e-8);
+  matrix_mult(&B0, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
+  nrm = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
+  ok = isFINE(nrm, N*__ERROR);
 
   printf("%s: A*(%s.CHOLsolve(A, B, %s)) == B\n", PASS(ok), blk, uplo);
   if (verbose > 0) {
     printf("   || rel error ||: %e [%d]\n",  nrm, ndigits(nrm));
   }
 
-  armas_d_release(&A0);
-  armas_d_release(&A1);
-  armas_d_release(&B0);
-  armas_d_release(&X0);
+  matrix_release(&A0);
+  matrix_release(&A1);
+  matrix_release(&B0);
+  matrix_release(&X0);
 
   return ok;
 }
 
 int test_factor(int M, int N, int lb, int verbose, int flags)
 {
-  armas_d_dense_t A0, A1, A2;
+  __Matrix A0, A1;
   armas_conf_t conf = *armas_conf_default();
   int ok;
-  double nrm;
+  __Dtype nrm;
   char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
-  armas_d_init(&A0, N, N);
-  armas_d_init(&A1, N, N);
+  matrix_init(&A0, N, N);
+  matrix_init(&A1, N, N);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
+  matrix_set_values(&A0, unitrand, ARMAS_ANY);
   // A = A*A.T; positive semi-definite
-  armas_d_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
-  armas_d_mcopy(&A0, &A1);
+  matrix_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+  matrix_mcopy(&A0, &A1);
 
   conf.lb = 0; 
-  armas_d_cholfactor(&A0, flags, &conf);
+  matrix_cholfactor(&A0, flags, &conf);
   conf.lb = lb;
-  armas_d_cholfactor(&A1, flags,  &conf);
+  matrix_cholfactor(&A1, flags,  &conf);
 
-#if 0
-  armas_d_scale_plus(&A0, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
-  nrm = armas_d_mnorm(&A0, ARMAS_NORM_ONE, &conf);
-  ok = isFINE(nrm, N*1e-9);
-#endif
-
-  nrm = rel_error((double *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  nrm = rel_error((__Dtype *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, N);
 
   printf("%s: unblk.CHOL(A,%c) == blk.CHOL(A,%c)\n", PASS(ok), uplo, uplo);
@@ -94,28 +93,21 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
     printf("   || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
-  armas_d_release(&A0);
-  armas_d_release(&A1);
+  matrix_release(&A0);
+  matrix_release(&A1);
   return ok;
 }
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int opt;
   int M = 511;
   int N = 779;
-  int K = N;
   int LB = 36;
-  int ok = 0;
-  int nproc = 1;
   int verbose = 1;
-  int flags = ARMAS_LOWER;
 
-  while ((opt = getopt(argc, argv, "P:v")) != -1) {
+  while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
-    case 'P':
-      nproc = atoi(optarg);
-      break;
     case 'v':
       verbose += 1;
       break;

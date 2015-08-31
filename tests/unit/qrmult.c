@@ -6,8 +6,7 @@
 #include <math.h>
 #include <float.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "testing.h"
 
 #define NAME "qrmult"
 
@@ -19,47 +18,47 @@
 int test_mult_identity(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_d_dense_t A0, C, C1, tau0, W, D;
+  __Matrix A0, C, C1, tau0, W, D;
   int wsize, ok;
-  double n0, n1;
+  __Dtype n0, n1;
   armas_conf_t conf = *armas_conf_default();
   
-  armas_d_init(&A0, M, N);
-  armas_d_init(&C, M, N);
-  armas_d_init(&C1, M, N);
-  armas_d_init(&tau0, imin(M, N), 1);
+  matrix_init(&A0, M, N);
+  matrix_init(&C, M, N);
+  matrix_init(&C1, M, N);
+  matrix_init(&tau0, imin(M, N), 1);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
+  matrix_set_values(&A0, unitrand, ARMAS_ANY);
 
   // C is first N columns of identity matrix
-  armas_d_set_values(&C, zero, ARMAS_ANY);
-  armas_d_diag(&D, &C, 0);
-  armas_d_add(&D, 1.0, &conf);
-  armas_d_mcopy(&C1, &C);
+  matrix_set_values(&C, zero, ARMAS_ANY);
+  matrix_diag(&D, &C, 0);
+  matrix_add(&D, 1.0, &conf);
+  matrix_mcopy(&C1, &C);
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_d_qrmult_work(&C, ARMAS_LEFT, &conf);
-  armas_d_init(&W, wsize, 1);
+  wsize = matrix_qrmult_work(&C, ARMAS_LEFT, &conf);
+  matrix_init(&W, wsize, 1);
 
   // factorize
-  armas_d_qrfactor(&A0, &tau0, &W, &conf);
+  matrix_qrfactor(&A0, &tau0, &W, &conf);
 
-  armas_d_qrmult(&C, &A0, &tau0, &W, ARMAS_LEFT, &conf);
-  armas_d_qrmult(&C, &A0, &tau0, &W, ARMAS_LEFT|ARMAS_TRANS, &conf);
+  matrix_qrmult(&C, &A0, &tau0, &W, ARMAS_LEFT, &conf);
+  matrix_qrmult(&C, &A0, &tau0, &W, ARMAS_LEFT|ARMAS_TRANS, &conf);
 
-  n0 = rel_error((double *)0, &C, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n0 = rel_error(&n1, &C, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(n0, N);
 
   printf("%s: %s Q.T*Q == I\n", PASS(ok), blk);
   if (verbose > 0) {
     printf("  || rel_error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
-  armas_d_release(&A0);
-  armas_d_release(&C);
-  armas_d_release(&C1);
-  armas_d_release(&tau0);
+  matrix_release(&A0);
+  matrix_release(&C);
+  matrix_release(&C1);
+  matrix_release(&tau0);
   return ok;
 }
 
@@ -70,37 +69,37 @@ int test_mult_identity(int M, int N, int lb, int verbose)
 int test_mult_left(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_d_dense_t A0, C1, C0, tau0, W;
+  __Matrix A0, C1, C0, tau0, W;
   int wsize, ok;
-  double n0, n1;
+  __Dtype n0, n1;
   armas_conf_t conf = *armas_conf_default();
   
-  armas_d_init(&A0, M, N);
-  armas_d_init(&C0, M, N);
-  armas_d_init(&C1, M, N);
-  armas_d_init(&tau0, imin(M, N), 1);
+  matrix_init(&A0, M, N);
+  matrix_init(&C0, M, N);
+  matrix_init(&C1, M, N);
+  matrix_init(&tau0, imin(M, N), 1);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
+  matrix_set_values(&A0, unitrand, ARMAS_ANY);
 
   // C is first N columns of identity matrix
-  armas_d_set_values(&C0, unitrand, ARMAS_ANY);
-  armas_d_mcopy(&C1, &C0);
+  matrix_set_values(&C0, unitrand, ARMAS_ANY);
+  matrix_mcopy(&C1, &C0);
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_d_qrmult_work(&C0, ARMAS_LEFT, &conf);
-  armas_d_init(&W, wsize, 1);
+  wsize = matrix_qrmult_work(&C0, ARMAS_LEFT, &conf);
+  matrix_init(&W, wsize, 1);
 
   // factorize
   conf.lb = lb;
-  armas_d_qrfactor(&A0, &tau0, &W, &conf);
+  matrix_qrfactor(&A0, &tau0, &W, &conf);
 
   // compute C0 = Q.T*Q*C0
-  armas_d_qrmult(&C0, &A0, &tau0, &W, ARMAS_LEFT, &conf);
-  armas_d_qrmult(&C0, &A0, &tau0, &W, ARMAS_LEFT|ARMAS_TRANS, &conf);
+  matrix_qrmult(&C0, &A0, &tau0, &W, ARMAS_LEFT, &conf);
+  matrix_qrmult(&C0, &A0, &tau0, &W, ARMAS_LEFT|ARMAS_TRANS, &conf);
 
-  n0 = rel_error((double *)0, &C1, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n0 = rel_error(&n1, &C1, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok =isOK(n0, N);
 
   printf("%s: %s Q.T*Q*C == C\n", PASS(ok), blk);
@@ -108,10 +107,10 @@ int test_mult_left(int M, int N, int lb, int verbose)
     printf("  || rel_error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
 
-  armas_d_release(&A0);
-  armas_d_release(&C0);
-  armas_d_release(&C1);
-  armas_d_release(&tau0);
+  matrix_release(&A0);
+  matrix_release(&C0);
+  matrix_release(&C1);
+  matrix_release(&tau0);
   return ok; 
 }
 
@@ -123,75 +122,70 @@ int test_mult_left(int M, int N, int lb, int verbose)
 int test_mult_right(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_d_dense_t A0, C1, C0, tau0, W;
+  __Matrix A0, C1, C0, tau0, W;
   int wsize, ok;
-  double n0, n1;
+  __Dtype n0, n1;
   armas_conf_t conf = *armas_conf_default();
   
-  armas_d_init(&A0, M, N);
-  armas_d_init(&C0, N, M);
-  armas_d_init(&C1, N, M);
-  armas_d_init(&tau0, imin(M, N), 1);
+  matrix_init(&A0, M, N);
+  matrix_init(&C0, N, M);
+  matrix_init(&C1, N, M);
+  matrix_init(&tau0, imin(M, N), 1);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
+  matrix_set_values(&A0, unitrand, ARMAS_ANY);
 
   // C is first N columns of identity matrix
-  armas_d_set_values(&C0, unitrand, ARMAS_ANY);
-  armas_d_mcopy(&C1, &C0);
+  matrix_set_values(&C0, unitrand, ARMAS_ANY);
+  matrix_mcopy(&C1, &C0);
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_d_qrmult_work(&C0, ARMAS_RIGHT, &conf);
-  armas_d_init(&W, wsize, 1);
+  wsize = matrix_qrmult_work(&C0, ARMAS_RIGHT, &conf);
+  matrix_init(&W, wsize, 1);
 
   // factorize
   conf.lb = lb;
-  armas_d_qrfactor(&A0, &tau0, &W, &conf);
+  matrix_qrfactor(&A0, &tau0, &W, &conf);
 
   // compute C0 = C0*Q.T*Q
   int err;
-  err = armas_d_qrmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT|ARMAS_TRANS, &conf);
+  err = matrix_qrmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT|ARMAS_TRANS, &conf);
   if (verbose > 2 && N <= 10) {
     printf("err = %d, error = %d\n", err, conf.error);
-    printf("C0*Q.T:\n"); armas_d_printf(stdout, "%9.2e", &C1);
+    printf("C0*Q.T:\n"); matrix_printf(stdout, "%9.2e", &C1);
   }
-  armas_d_qrmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT, &conf);
+  matrix_qrmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT, &conf);
 
   if (verbose > 1 && N <= 10) {
-    printf("C0:\n"); armas_d_printf(stdout, "%9.2e", &C0);
-    printf("C0*Q.T*Q:\n"); armas_d_printf(stdout, "%9.2e", &C1);
+    printf("C0:\n"); matrix_printf(stdout, "%9.2e", &C0);
+    printf("C0*Q.T*Q:\n"); matrix_printf(stdout, "%9.2e", &C1);
   }
 
-  n0 = rel_error((double *)0, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n0 = rel_error(&n1, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(n0, N);
 
   printf("%s: %s C*Q.T*Q == C\n", PASS(ok), blk);
   if (verbose > 0)
     printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
 
-  armas_d_release(&A0);
-  armas_d_release(&C0);
-  armas_d_release(&C1);
-  armas_d_release(&tau0);
+  matrix_release(&A0);
+  matrix_release(&C0);
+  matrix_release(&C1);
+  matrix_release(&tau0);
   return ok;
 }
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int opt;
   int M = 787;
   int N = 741;
-  int K = N;
   int LB = 36;
-  int nproc = 1;
   int verbose = 1;
 
-  while ((opt = getopt(argc, argv, "P:v")) != -1) {
+  while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
-    case 'P':
-      nproc = atoi(optarg);
-      break;
     case 'v':
       verbose += 1;
       break;

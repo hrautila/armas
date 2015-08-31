@@ -6,47 +6,46 @@
 #include <math.h>
 #include <float.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "testing.h"
 
 #define NAME "ldl"
 
 
 int test_factor(int M, int N, int lb, int verbose, int flags)
 {
-  armas_d_dense_t A0, A1, W;
+  __Matrix A0, A1, W;
   armas_pivot_t P0, P1;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
   char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
-  double nrm;
+  __Dtype nrm;
 
-  armas_d_init(&A0, N, N);
-  armas_d_init(&A1, N, N);
+  matrix_init(&A0, N, N);
+  matrix_init(&A1, N, N);
   armas_pivot_init(&P0, N);
   armas_pivot_init(&P1, N);
 
   conf.lb = lb;
-  wsize = armas_d_bkfactor_work(&A0, &conf);
-  armas_d_init(&W, wsize, 1);
+  wsize = matrix_bkfactor_work(&A0, &conf);
+  matrix_init(&W, wsize, 1);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, flags);
-  armas_d_mcopy(&A1, &A0);
+  matrix_set_values(&A0, unitrand, flags);
+  matrix_mcopy(&A1, &A0);
 
   conf.error = 0;
   conf.lb = 0; 
-  armas_d_bkfactor(&A0, &W, &P0, flags, &conf);
+  matrix_bkfactor(&A0, &W, &P0, flags, &conf);
   if (verbose > 1 && conf.error != 0)
     printf("1. error=%d\n", conf.error);
 
   conf.error = 0;
   conf.lb = lb;
-  armas_d_bkfactor(&A1, &W, &P1, flags,  &conf);
+  matrix_bkfactor(&A1, &W, &P1, flags,  &conf);
   if (verbose > 1 && conf.error != 0)
     printf("1. error=%d\n", conf.error);
 
-  nrm = rel_error((double *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  nrm = rel_error((__Dtype *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, N);
 
   
@@ -55,9 +54,9 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
     printf("  || error.LDL(A, '%c') ||: %e [%d]\n", uplo, nrm, ndigits(nrm));
   }
 
-  armas_d_release(&A0);
-  armas_d_release(&A1);
-  armas_d_release(&W);
+  matrix_release(&A0);
+  matrix_release(&A1);
+  matrix_release(&W);
   armas_pivot_release(&P0);
   armas_pivot_release(&P1);
 
@@ -67,42 +66,46 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
 
 int test_solve(int M, int N, int lb, int verbose, int flags)
 {
-  armas_d_dense_t A0, A1;
-  armas_d_dense_t B0, B1, X0, X1, X2, W;
+  __Matrix A0, A1;
+  __Matrix B0, X0, W;
   armas_pivot_t P0;
   armas_conf_t conf = *armas_conf_default();
   char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
   int ok, wsize;
-  double nrm, nrm_A;
+  __Dtype nrm, nrm_A;
 
-  armas_d_init(&A0, N, N);
-  armas_d_init(&A1, N, N);
-  armas_d_init(&B0, N, M);
-  armas_d_init(&X0, N, M);
+  matrix_init(&A0, N, N);
+  matrix_init(&A1, N, N);
+  matrix_init(&B0, N, M);
+  matrix_init(&X0, N, M);
   armas_pivot_init(&P0, N);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, flags);
-  armas_d_mcopy(&A1, &A0);
+  matrix_set_values(&A0, unitrand, flags);
+  matrix_mcopy(&A1, &A0);
 
-  armas_d_set_values(&B0, unitrand, ARMAS_ANY);
-  armas_d_mcopy(&X0, &B0);
-  nrm_A = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+  matrix_set_values(&B0, unitrand, ARMAS_ANY);
+  matrix_mcopy(&X0, &B0);
+  nrm_A = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf);
 
   conf.lb = lb;
-  wsize = armas_d_bkfactor_work(&A0, &conf);
-  armas_d_init(&W, wsize, 1);
-  armas_d_bkfactor(&A0, &W, &P0, flags, &conf);
+  wsize = matrix_bkfactor_work(&A0, &conf);
+  matrix_init(&W, wsize, 1);
+  matrix_bkfactor(&A0, &W, &P0, flags, &conf);
 
   // solve
-  armas_d_bksolve(&X0, &A0, &W, &P0, flags, &conf);
+  matrix_bksolve(&X0, &A0, &W, &P0, flags, &conf);
   
   // B0 = B0 - A*X0
-  armas_d_mult_sym(&B0, &A1, &X0, -1.0, 1.0, ARMAS_LEFT|flags, &conf);
-  nrm = armas_d_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+  matrix_mult_sym(&B0, &A1, &X0, -1.0, 1.0, ARMAS_LEFT|flags, &conf);
+  nrm = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf);
   nrm /= nrm_A;
 
+#if FLOAT32
+  ok = isFINE(nrm, N*8e-6);
+#else
   ok = isFINE(nrm, N*1e-11);
+#endif
   
   printf("%s: LDL(%c)  A*(A.-1*B) == B\n", PASS(ok), uplo);
   if (verbose > 0) {
@@ -111,22 +114,16 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   return ok;
 }
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int opt;
   int M = 657;
   int N = 657;
-  int K = N;
   int LB = 40;
-  int ok = 0;
-  int nproc = 1;
   int verbose = 1;
 
-  while ((opt = getopt(argc, argv, "P:v")) != -1) {
+  while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
-    case 'P':
-      nproc = atoi(optarg);
-      break;
     case 'v':
       verbose += 1;
       break;

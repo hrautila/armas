@@ -4,30 +4,60 @@
 #include <unistd.h>
 #include <time.h>
 
+#if defined(FLOAT32)
+#include <armas/smatrix.h>
+typedef armas_s_dense_t __Matrix ;
+typedef float __Dtype;
+
+#define matrix_init        armas_s_init
+#define matrix_set_values  armas_s_set_values
+#define matrix_mult        armas_s_mult
+#define matrix_mult_trm    armas_s_mult_trm
+#define matrix_make_trm    armas_s_make_trm
+#define matrix_update2_sym armas_s_update2_sym
+#define matrix_transpose   armas_s_transpose
+#define matrix_release     armas_s_release
+#define matrix_mcopy       armas_s_mcopy
+#define matrix_printf      armas_s_printf
+
+#define __SCALING (__Dtype)((1 << 14) + 1)
+
+#else
 #include <armas/dmatrix.h>
+typedef armas_d_dense_t __Matrix ;
+typedef double __Dtype;
+
+#define matrix_init        armas_d_init
+#define matrix_set_values  armas_d_set_values
+#define matrix_mult        armas_d_mult
+#define matrix_mult_trm    armas_d_mult_trm
+#define matrix_make_trm    armas_d_make_trm
+#define matrix_update2_sym armas_d_update2_sym
+#define matrix_transpose   armas_d_transpose
+#define matrix_release     armas_d_release
+#define matrix_mcopy       armas_d_mcopy
+#define matrix_printf      armas_d_printf
+
+#define __SCALING (__Dtype)((1 << 27) + 1)
+
+#endif
 #include "helper.h"
 
 main(int argc, char **argv) {
 
   armas_conf_t conf;
-  armas_d_dense_t C, C0, B0, A, At;
+  matrix_dense_t C, C0, B0, A, At, B, Bt;
 
   int ok, opt, err;
   int N = 8;
-  int right = 0;
-  int lower = 0;
-  int flags = 0;
-  int nproc = 1;
-  int trans = 0;
-  int bsize = 0;
-  int algo = 'B';
-  double alpha = 1.0;
-  double inv_alpha = 1.0;
+  int verbose = 1;
+  int fails = 0;
+  __Dtype n0, n1, alpha = 1.0;
 
-  while ((opt = getopt(argc, argv, "P:")) != -1) {
+  while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
-    case 'P':
-      nproc = atoi(optarg);
+    case 'v':
+      verbose++;
       break;
     default:
       fprintf(stderr, "usage: syr2k [-P nproc] [size]\n");
@@ -38,83 +68,97 @@ main(int argc, char **argv) {
   if (optind < argc)
     N = atoi(argv[optind]);
 
-  conf.mb = 64;
-  conf.nb = 96;
-  conf.kb = 160;
-  conf.optflags = 0;
-  conf.maxproc = nproc;
+  conf = *armas_conf_default();
 
-  armas_d_init(&C,  N, N);
-  armas_d_init(&C0, N, N);
-  armas_d_init(&A,  N, N/2);
-  armas_d_init(&At, N/2, N);
-  armas_d_init(&B,  N, N/2);
-  armas_d_init(&Bt, N/2, N);
+  matrix_init(&C,  N, N);
+  matrix_init(&C0, N, N);
+  matrix_init(&A,  N, N/2);
+  matrix_init(&At, N/2, N);
+  matrix_init(&B,  N, N/2);
+  matrix_init(&Bt, N/2, N);
   
-  armas_d_set_values(&A, zeromean, ARMAS_NULL);
-  armas_d_set_values(&B, zeromean, ARMAS_NULL);
-  armas_d_transpose(&At, &A);
-  armas_d_transpose(&Bt, &B);
+  matrix_set_values(&A, zeromean, ARMAS_NULL);
+  matrix_set_values(&B, zeromean, ARMAS_NULL);
+  matrix_transpose(&At, &A);
+  matrix_transpose(&Bt, &B);
 
   // 1. C = upper(C) + A*B.T + B*A.T;
-  armas_d_set_values(&C, one, ARMAS_SYMM);
-  armas_d_mcopy(&C0, &C);
+  matrix_set_values(&C, one, ARMAS_SYMM);
+  matrix_mcopy(&C0, &C);
 
-  armas_d_mk_trm(&C, ARMAS_UPPER);
-  armas_d_2update_sym(&C, &A, &B, alpha, 0.0, ARMAS_UPPER, &conf);
+  matrix_make_trm(&C, ARMAS_UPPER);
+  matrix_update2_sym(&C, &A, &B, alpha, 0.0, ARMAS_UPPER, &conf);
 
-  armas_d_mult(&C0, &A, &At, alpha, 0.0, ARMAS_NULL, &conf);
-  armas_d_mk_trm(&C0, ARMAS_UPPER);
-  ok = armas_d_allclose(&C0, &C);
+  matrix_mult(&C0, &A, &Bt, alpha, 0.0, ARMAS_NULL, &conf);
+  matrix_mult(&C0, &B, &At, alpha, 0.0, ARMAS_NULL, &conf);
+  matrix_make_trm(&C0, ARMAS_UPPER);
 
-  printf("%6s: syrk(C, A, U|N) == TriU(gemm(C, A, A.T))\n", ok ? "OK" : "FAILED");
-  if (!ok)
-    exit(1-ok);
+  n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NULL, &conf);
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  printf("%6s: syr2k(C, A, U|N) == TriU(C + A*B.T + B*A.T))\n", PASS(ok));
+  if (verbose > 0) {
+    printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
+  }
+  fails += 1 - ok;
 
   // 2. C = upper(C) + A.T*A
-  armas_d_set_values(&C, one, ARMAS_SYMM);
-  armas_d_mcopy(&C0, &C);
+  matrix_set_values(&C, one, ARMAS_SYMM);
+  matrix_mcopy(&C0, &C);
 
-  armas_d_mk_trm(&C, ARMAS_UPPER);
-  armas_d_update_sym(&C, &At, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
+  matrix_make_trm(&C, ARMAS_UPPER);
+  matrix_update2_sym(&C, &At, &Bt, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
 
-  armas_d_mult(&C0, &At, &A, alpha, 0.0, ARMAS_TRANSA, &conf);
-  armas_d_mk_trm(&C0, ARMAS_UPPER);
-  ok = armas_d_allclose(&C0, &C);
+  matrix_mult(&C0, &Bt, &A, alpha, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  matrix_mult(&C0, &At, &B, alpha, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  matrix_make_trm(&C0, ARMAS_UPPER);
 
-  printf("%6s: syrk(C, A, T|N) == TriU(gemm(C, A.T, A))\n", ok ? "OK" : "FAILED");
-  if (!ok)
-    exit(1-ok);
+  n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NULL, &conf);
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  printf("%6s: syr2k(C, A, T|N) == TriU(C + B.T*A + A.T*B))\n", PASS(ok));
+  if (verbose > 0) {
+    printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
+  }
+  fails += 1 - ok;
 
   // 1. C = lower(C) + A*A.T;
-  armas_d_set_values(&C, one, ARMAS_SYMM);
-  armas_d_mcopy(&C0, &C);
+  matrix_set_values(&C, one, ARMAS_SYMM);
+  matrix_mcopy(&C0, &C);
 
-  armas_d_mk_trm(&C, ARMAS_LOWER);
-  armas_d_update_sym(&C, &A, alpha, 0.0, ARMAS_LOWER, &conf);
+  matrix_make_trm(&C, ARMAS_LOWER);
+  matrix_update2_sym(&C, &A, &B, alpha, 0.0, ARMAS_LOWER, &conf);
 
-  armas_d_mult(&C0, &A, &At, alpha, 0.0, ARMAS_NULL, &conf);
-  armas_d_mk_trm(&C0, ARMAS_LOWER);
-  ok = armas_d_allclose(&C0, &C);
+  matrix_mult(&C0, &A, &Bt, alpha, 0.0, ARMAS_NULL, &conf);
+  matrix_mult(&C0, &B, &At, alpha, 0.0, ARMAS_NULL, &conf);
+  matrix_make_trm(&C0, ARMAS_LOWER);
 
-  printf("%6s: syrk(C, A, L|N) == TriL(gemm(C, A, A.T))\n", ok ? "OK" : "FAILED");
-  if (!ok)
-    exit(1-ok);
+  n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NULL, &conf);
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  printf("%6s: syr2k(C, A, L|N) == TriL(C + A*B.T + B*A.T))\n", PASS(ok));
+  if (verbose > 0) {
+    printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
+  }
+  fails += 1 - ok;
 
   // 2. C = lower(C) + A.T*A
-  armas_d_set_values(&C, one, ARMAS_SYMM);
-  armas_d_mcopy(&C0, &C);
+  matrix_set_values(&C, one, ARMAS_SYMM);
+  matrix_mcopy(&C0, &C);
 
-  armas_d_mk_trm(&C, ARMAS_LOWER);
-  armas_d_update_sym(&C, &At, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
+  matrix_make_trm(&C, ARMAS_LOWER);
+  matrix_update2_sym(&C, &At, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
 
-  armas_d_mult(&C0, &At, &A, alpha, 0.0, ARMAS_TRANSA, &conf);
-  armas_d_mk_trm(&C0, ARMAS_LOWER);
-  ok = armas_d_allclose(&C0, &C);
+  matrix_mult(&C0, &Bt, &A, alpha, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  matrix_mult(&C0, &At, &B, alpha, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  matrix_make_trm(&C0, ARMAS_LOWER);
+  n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NULL, &conf);
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
 
-  printf("%6s: syrk(C, A, T|N) == TriU(gemm(C, A.T, A))\n", ok ? "OK" : "FAILED");
-  if (!ok)
-    exit(1-ok);
+  printf("%6s: syr2k(C, A, T|N) == TriL(gemm(C + B.T*A + A.T*B))\n", PASS(ok));
+  if (verbose > 0) {
+    printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
+  }
+  fails += 1 - ok;
+
+  exit(fails);
 }
 
 // Local Variables:

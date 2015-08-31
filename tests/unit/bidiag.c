@@ -6,60 +6,64 @@
 #include <math.h>
 #include <float.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "testing.h"
+#if FLOAT32
+#define __ERROR 6e-6
+#else
+#define __ERROR 1e-12
+#endif
 
 #define NAME "bidiag"
 
 int test_reduce(int M, int N, int lb, int verbose)
 {
-  armas_d_dense_t A0, A1, tauq0, taup0, tauq1, taup1, W, tmp;
+  __Matrix A0, A1, tauq0, taup0, tauq1, taup1, W;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
-  double nrm;
+  __Dtype nrm;
   char *mbyn = M >= N ? "M >= N" : "M < N";
 
-  armas_d_init(&A0, M, N);
-  armas_d_init(&A1, M, N);
-  armas_d_init(&tauq0, imin(M, N), 1);
-  armas_d_init(&tauq1, imin(M, N), 1);
-  armas_d_init(&taup0, imin(M, N), 1);
-  armas_d_init(&taup1, imin(M, N), 1);
+  matrix_init(&A0, M, N);
+  matrix_init(&A1, M, N);
+  matrix_init(&tauq0, imin(M, N), 1);
+  matrix_init(&tauq1, imin(M, N), 1);
+  matrix_init(&taup0, imin(M, N), 1);
+  matrix_init(&taup1, imin(M, N), 1);
 
   conf.lb = lb;
-  wsize = armas_d_bdreduce_work(&A0, &conf);
-  armas_d_init(&W, wsize, 1);
+  wsize = matrix_bdreduce_work(&A0, &conf);
+  matrix_init(&W, wsize, 1);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
-  armas_d_mcopy(&A1, &A0);
+  matrix_set_values(&A0, unitrand, ARMAS_ANY);
+  matrix_mcopy(&A1, &A0);
 
   // unblocked reduction
   conf.lb = 0;
-  armas_d_bdreduce(&A0, &tauq0, &taup0, &W, &conf);
+  matrix_bdreduce(&A0, &tauq0, &taup0, &W, &conf);
 
   // blocked reduction
   conf.lb = lb;
-  armas_d_bdreduce(&A1, &tauq1, &taup1, &W, &conf);
+  matrix_bdreduce(&A1, &tauq1, &taup1, &W, &conf);
 
-  nrm = rel_error((double *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  ok = isFINE(nrm, N*1e-12);
+  nrm = rel_error((__Dtype *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isFINE(nrm, N*__ERROR);
   printf("%s: %s unblk.BD(A) == blk.BD(A)\n", PASS(ok), mbyn);
   if (verbose > 0) {
     printf("  ||  error.BD(A)  ||: %e [%d]\n", nrm, ndigits(nrm));
-    nrm = rel_error((double *)0, &tauq0, &tauq1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+    nrm = rel_error((__Dtype *)0, &tauq0, &tauq1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
     printf("  || error.BD.tauq ||: %e [%d]\n", nrm, ndigits(nrm));
-    nrm = rel_error((double *)0, &taup0, &taup1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+    nrm = rel_error((__Dtype *)0, &taup0, &taup1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
     printf("  || error.BD.taup ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
-  armas_d_release(&A0);
-  armas_d_release(&A1);
-  armas_d_release(&tauq0);
-  armas_d_release(&tauq1);
-  armas_d_release(&taup0);
-  armas_d_release(&taup1);
-  armas_d_release(&W);
+  matrix_release(&A0);
+  matrix_release(&A1);
+  matrix_release(&tauq0);
+  matrix_release(&tauq1);
+  matrix_release(&taup0);
+  matrix_release(&taup1);
+  matrix_release(&W);
 
   return ok;
 }
@@ -67,236 +71,219 @@ int test_reduce(int M, int N, int lb, int verbose)
 // compute: ||A - Q*B*P.T|| == O(eps)
 int test_mult_qpt(int M, int N, int lb, int verbose)
 {
-  armas_d_dense_t A0, A1, B, tauq0, taup0, W, tmp, Btmp, d0, d1;
+  __Matrix A0, A1, B, tauq0, taup0, W, Btmp;
   armas_conf_t conf = *armas_conf_default();
-  int ok, wsize, err, ws2;
-  double nrm;
+  int ok, wsize;
+  __Dtype nrm;
   char *mbyn = M >= N ? "M >= N" : "M < N";
 
-  armas_d_init(&A0, M, N);
-  armas_d_init(&A1, M, N);
-  armas_d_init(&B, M, N);
-  armas_d_init(&tauq0, M, 1);
-  armas_d_init(&taup0, N, 1);
+  matrix_init(&A0, M, N);
+  matrix_init(&A1, M, N);
+  matrix_init(&B, M, N);
+  matrix_init(&tauq0, M, 1);
+  matrix_init(&taup0, N, 1);
 
   conf.lb = lb;
-  wsize = armas_d_bdreduce_work(&A0, &conf);
-  armas_d_init(&W, wsize, 1);
+  wsize = matrix_bdreduce_work(&A0, &conf);
+  matrix_init(&W, wsize, 1);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
-  armas_d_mcopy(&A1, &A0);
+  matrix_set_values(&A0, unitrand, ARMAS_ANY);
+  matrix_mcopy(&A1, &A0);
 
   // reduce to bidiagonal matrix
   conf.lb = lb;
-  armas_d_bdreduce(&A0, &tauq0, &taup0, &W, &conf);
+  matrix_bdreduce(&A0, &tauq0, &taup0, &W, &conf);
 
   // extract B from A
-  armas_d_mcopy(&B, &A0);
+  matrix_mcopy(&B, &A0);
   if (M > N) {
     // zero subdiagonal entries
-    armas_d_submatrix(&Btmp, &B, 0, 0, M, N);
-    armas_d_make_trm(&Btmp, ARMAS_UPPER);
+    matrix_submatrix(&Btmp, &B, 0, 0, M, N);
+    matrix_make_trm(&Btmp, ARMAS_UPPER);
     // zero entries above 1st superdiagonal
-    armas_d_submatrix(&Btmp, &B, 0, 1, N-1, N-1);
-    armas_d_make_trm(&Btmp, ARMAS_LOWER);
+    matrix_submatrix(&Btmp, &B, 0, 1, N-1, N-1);
+    matrix_make_trm(&Btmp, ARMAS_LOWER);
   } else {
     // zero entries below 1st subdiagonal
-    armas_d_submatrix(&Btmp, &B, 1, 0, M-1, M-1);
-    armas_d_make_trm(&Btmp, ARMAS_UPPER);
+    matrix_submatrix(&Btmp, &B, 1, 0, M-1, M-1);
+    matrix_make_trm(&Btmp, ARMAS_UPPER);
     // zero entries above diagonal
-    armas_d_submatrix(&Btmp, &B, 0, 0, M, N);
-    armas_d_make_trm(&Btmp, ARMAS_LOWER);
+    matrix_submatrix(&Btmp, &B, 0, 0, M, N);
+    matrix_make_trm(&Btmp, ARMAS_LOWER);
   }
 
   // A = Q*B*P.T; 
-  armas_d_bdmult(&B, &A0, &tauq0, &W, ARMAS_LEFT|ARMAS_MULTQ, &conf);
-  armas_d_bdmult(&B, &A0, &taup0, &W, ARMAS_RIGHT|ARMAS_TRANS|ARMAS_MULTP, &conf);
+  matrix_bdmult(&B, &A0, &tauq0, &W, ARMAS_LEFT|ARMAS_MULTQ, &conf);
+  matrix_bdmult(&B, &A0, &taup0, &W, ARMAS_RIGHT|ARMAS_TRANS|ARMAS_MULTP, &conf);
 
-#if 0
-  // B == A1?
-  armas_d_scale_plus(&B, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
-  nrm = armas_d_mnorm(&B, ARMAS_NORM_ONE, &conf);
-#endif
-
-  nrm = rel_error((double *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  ok = isFINE(nrm, N*1e-14);
+  nrm = rel_error((__Dtype *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isFINE(nrm, N*__ERROR);
   printf("%s: %s  Q*B*P.T == A\n", PASS(ok), mbyn);
   if (verbose > 0) {
     printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
-  armas_d_release(&A0);
-  armas_d_release(&B);
-  armas_d_release(&tauq0);
-  armas_d_release(&taup0);
-  armas_d_release(&W);
+  matrix_release(&A0);
+  matrix_release(&B);
+  matrix_release(&tauq0);
+  matrix_release(&taup0);
+  matrix_release(&W);
   return ok;
 }
 
 // compute: ||B - Q.T*A*P|| == O(eps)
 int test_mult_qtp(int M, int N, int lb, int verbose)
 {
-  armas_d_dense_t A0, A1, B, tauq0, taup0, W, tmp, Btmp, d0, d1;
+  __Matrix A0, A1, B, tauq0, taup0, W, Btmp;
   armas_conf_t conf = *armas_conf_default();
-  int ok, wsize, err, ws2;
-  double nrm;
+  int ok, wsize;
+  __Dtype nrm;
   char *mbyn = M >= N ? "M >= N" : "M < N";
 
-  armas_d_init(&A0, M, N);
-  armas_d_init(&A1, M, N);
-  armas_d_init(&B, M, N);
-  armas_d_init(&tauq0, M, 1);
-  armas_d_init(&taup0, N, 1);
+  matrix_init(&A0, M, N);
+  matrix_init(&A1, M, N);
+  matrix_init(&B, M, N);
+  matrix_init(&tauq0, M, 1);
+  matrix_init(&taup0, N, 1);
 
   conf.lb = lb;
-  wsize = armas_d_bdreduce_work(&A0, &conf);
-  armas_d_init(&W, wsize, 1);
+  wsize = matrix_bdreduce_work(&A0, &conf);
+  matrix_init(&W, wsize, 1);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
-  armas_d_mcopy(&A1, &A0);
+  matrix_set_values(&A0, unitrand, ARMAS_ANY);
+  matrix_mcopy(&A1, &A0);
 
   // reduce to bidiagonal matrix
   conf.lb = lb;
-  armas_d_bdreduce(&A0, &tauq0, &taup0, &W, &conf);
+  matrix_bdreduce(&A0, &tauq0, &taup0, &W, &conf);
 
   // extract B from A
-  armas_d_mcopy(&B, &A0);
+  matrix_mcopy(&B, &A0);
   if (M > N) {
     // zero subdiagonal entries
-    armas_d_submatrix(&Btmp, &B, 0, 0, M, N);
-    armas_d_make_trm(&Btmp, ARMAS_UPPER);
+    matrix_submatrix(&Btmp, &B, 0, 0, M, N);
+    matrix_make_trm(&Btmp, ARMAS_UPPER);
     // zero entries above 1st superdiagonal
-    armas_d_submatrix(&Btmp, &B, 0, 1, N-1, N-1);
-    armas_d_make_trm(&Btmp, ARMAS_LOWER);
+    matrix_submatrix(&Btmp, &B, 0, 1, N-1, N-1);
+    matrix_make_trm(&Btmp, ARMAS_LOWER);
   } else {
     // zero entries below 1st subdiagonal
-    armas_d_submatrix(&Btmp, &B, 1, 0, M-1, M-1);
-    armas_d_make_trm(&Btmp, ARMAS_UPPER);
+    matrix_submatrix(&Btmp, &B, 1, 0, M-1, M-1);
+    matrix_make_trm(&Btmp, ARMAS_UPPER);
     // zero entries above diagonal
-    armas_d_submatrix(&Btmp, &B, 0, 0, M, N);
-    armas_d_make_trm(&Btmp, ARMAS_LOWER);
+    matrix_submatrix(&Btmp, &B, 0, 0, M, N);
+    matrix_make_trm(&Btmp, ARMAS_LOWER);
   }
 
   // B = Q.T*B*P; 
-  armas_d_bdmult(&A1, &A0, &tauq0, &W, ARMAS_LEFT|ARMAS_MULTQ|ARMAS_TRANS, &conf);
-  armas_d_bdmult(&A1, &A0, &taup0, &W, ARMAS_RIGHT|ARMAS_MULTP, &conf);
+  matrix_bdmult(&A1, &A0, &tauq0, &W, ARMAS_LEFT|ARMAS_MULTQ|ARMAS_TRANS, &conf);
+  matrix_bdmult(&A1, &A0, &taup0, &W, ARMAS_RIGHT|ARMAS_MULTP, &conf);
 
-#if 0
-  // B == A1?
-  armas_d_scale_plus(&B, &A1, 1.0, -1.0, ARMAS_NONE, &conf);
-  nrm = armas_d_mnorm(&B, ARMAS_NORM_ONE, &conf);
-#endif
-  nrm = rel_error((double *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  ok = isFINE(nrm, N*1e-12);
+  nrm = rel_error((__Dtype *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = isFINE(nrm, N*__ERROR);
   printf("%s: %s  B == Q.T*A*P\n", PASS(ok), mbyn);
   if (verbose > 0) {
     printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
-  armas_d_release(&A0);
-  armas_d_release(&B);
-  armas_d_release(&tauq0);
-  armas_d_release(&taup0);
-  armas_d_release(&W);
+  matrix_release(&A0);
+  matrix_release(&B);
+  matrix_release(&tauq0);
+  matrix_release(&taup0);
+  matrix_release(&W);
   return ok;
 }
 
 // compute: ||B - Q.T*A*P|| == O(eps)
 int test_build_qp(int M, int N, int lb, int K, int flags, int verbose)
 {
-  armas_d_dense_t A0, tauq0, taup0, W, tmp, Qh, QQt, d0, d1;
+  __Matrix A0, tauq0, taup0, W, Qh, QQt, d0;
   armas_conf_t conf = *armas_conf_default();
-  int ok, wsize, err, ws2;
-  double nrm;
+  int ok, wsize;
+  __Dtype nrm;
   char *mbyn = M >= N ? "M >= N" : "M < N";
 
-  armas_d_init(&A0, M, N);
-  armas_d_init(&tauq0, imin(M, N), 1);
-  armas_d_init(&taup0, imin(M, N), 1);
+  matrix_init(&A0, M, N);
+  matrix_init(&tauq0, imin(M, N), 1);
+  matrix_init(&taup0, imin(M, N), 1);
 
   conf.lb = lb;
-  wsize = armas_d_bdreduce_work(&A0, &conf);
-  armas_d_init(&W, wsize, 1);
+  wsize = matrix_bdreduce_work(&A0, &conf);
+  matrix_init(&W, wsize, 1);
 
   // set source data
-  armas_d_set_values(&A0, unitrand, ARMAS_ANY);
+  matrix_set_values(&A0, unitrand, ARMAS_ANY);
 
   // reduce to bidiagonal matrix
   conf.lb = lb;
-  armas_d_bdreduce(&A0, &tauq0, &taup0, &W, &conf);
+  matrix_bdreduce(&A0, &tauq0, &taup0, &W, &conf);
 
   conf.error = 0;
   if (flags & ARMAS_WANTQ) {
-    armas_d_bdbuild(&A0, &tauq0, &W, K, flags, &conf);
+    matrix_bdbuild(&A0, &tauq0, &W, K, flags, &conf);
 
     if (M < N) {
-      armas_d_init(&QQt, M, M);
-      armas_d_submatrix(&Qh, &A0, 0, 0, M, M);
-      armas_d_mult(&QQt, &Qh, &Qh, 1.0, 0.0, ARMAS_TRANSA, &conf);
+      matrix_init(&QQt, M, M);
+      matrix_submatrix(&Qh, &A0, 0, 0, M, M);
+      matrix_mult(&QQt, &Qh, &Qh, 1.0, 0.0, ARMAS_TRANSA, &conf);
     } else {
-      armas_d_init(&QQt, N, N);
-      armas_d_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSA, &conf);
+      matrix_init(&QQt, N, N);
+      matrix_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSA, &conf);
     }
-    armas_d_diag(&d0, &QQt, 0);
-    armas_d_madd(&d0, -1.0, ARMAS_NONE);
+    matrix_diag(&d0, &QQt, 0);
+    matrix_madd(&d0, -1.0, ARMAS_NONE);
 
-    nrm = armas_d_mnorm(&QQt, ARMAS_NORM_ONE, &conf);
+    nrm = matrix_mnorm(&QQt, ARMAS_NORM_ONE, &conf);
     
-    ok = isFINE(nrm, N*1e-12);
+    ok = isFINE(nrm, N*__ERROR);
     printf("%s: %s  I == Q.T*Q\n", PASS(ok), mbyn);
     if (verbose > 0) {
       printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
     }
   } else {
     // P matrix
-    armas_d_bdbuild(&A0, &taup0, &W, K, flags, &conf);
+    matrix_bdbuild(&A0, &taup0, &W, K, flags, &conf);
 
     if (N < M) {
-      armas_d_init(&QQt, N, N);
-      armas_d_submatrix(&Qh, &A0, 0, 0, N, N);
-      armas_d_mult(&QQt, &Qh, &Qh, 1.0, 0.0, ARMAS_TRANSA, &conf);
+      matrix_init(&QQt, N, N);
+      matrix_submatrix(&Qh, &A0, 0, 0, N, N);
+      matrix_mult(&QQt, &Qh, &Qh, 1.0, 0.0, ARMAS_TRANSA, &conf);
     } else {
-      armas_d_init(&QQt, M, M);
-      armas_d_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+      matrix_init(&QQt, M, M);
+      matrix_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
     }
-    armas_d_diag(&d0, &QQt, 0);
-    armas_d_madd(&d0, -1.0, ARMAS_NONE);
+    matrix_diag(&d0, &QQt, 0);
+    matrix_madd(&d0, -1.0, ARMAS_NONE);
 
-    nrm = armas_d_mnorm(&QQt, ARMAS_NORM_ONE, &conf);
+    nrm = matrix_mnorm(&QQt, ARMAS_NORM_ONE, &conf);
     
-    ok = isFINE(nrm, N*1e-12);
+    ok = isFINE(nrm, N*__ERROR);
     printf("%s: %s  I == P*P.T\n", PASS(ok), mbyn);
     if (verbose > 0) {
       printf("  ||  rel error ||: %e [%d]\n", nrm, ndigits(nrm));
     }
   }
 
-  armas_d_release(&A0);
-  armas_d_release(&tauq0);
-  armas_d_release(&taup0);
-  armas_d_release(&W);
-  armas_d_release(&QQt);
+  matrix_release(&A0);
+  matrix_release(&tauq0);
+  matrix_release(&taup0);
+  matrix_release(&W);
+  matrix_release(&QQt);
   return ok;
 }
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int opt;
   int M = 787;
   int N = 741;
-  int K = N;
   int LB = 36;
-  int ok = 0;
-  int nproc = 1;
   int verbose = 1;
 
-  while ((opt = getopt(argc, argv, "P:v")) != -1) {
+  while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
-    case 'P':
-      nproc = atoi(optarg);
-      break;
     case 'v':
       verbose += 1;
       break;
