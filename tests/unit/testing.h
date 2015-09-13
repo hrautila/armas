@@ -2,8 +2,14 @@
 #ifndef _UNIT_TESTING_H
 #define _UNIT_TESTING_H 1
 
+#include <float.h>
+
 #if defined(FLOAT32)
 #include <armas/smatrix.h>
+
+#define _EPS FLT_EPSILON
+#define _EPS2 FLT_EPSILON*FLT_EPSILON
+
 typedef armas_s_dense_t __Matrix ;
 typedef float __Dtype;
 
@@ -12,6 +18,8 @@ typedef float __Dtype;
 #define matrix_madd            armas_s_madd
 #define matrix_set_values      armas_s_set_values
 #define matrix_copy            armas_s_copy
+#define matrix_row             armas_s_row
+#define matrix_column          armas_s_column
 #define matrix_size            armas_s_size
 #define matrix_set             armas_s_set
 #define matrix_get             armas_s_get
@@ -114,49 +122,121 @@ typedef float __Dtype;
 #define matrix_svd_work        armas_s_svd_work
 
 #else
+
+#define _EPS  DBL_EPSILON
+#define _EPS2 DBL_EPSILON*DBL_EPSILON
+
 #include <armas/dmatrix.h>
 typedef armas_d_dense_t __Matrix ;
 typedef double __Dtype;
 
-#define matrix_init          armas_d_init
-#define matrix_diag          armas_d_diag
-#define matrix_add           armas_d_add
-#define matrix_set_values    armas_d_set_values
-#define matrix_submatrix     armas_d_submatrix
-#define matrix_mult          armas_d_mult
-#define matrix_symm          armas_d_symm
-#define matrix_mult_trm      armas_d_mult_trm
-#define matrix_make_trm      armas_d_make_trm
-#define matrix_solve_trm     armas_d_solve_trm
-#define matrix_update_sym    armas_d_update_sym
-#define matrix_transpose     armas_d_transpose
-#define matrix_release       armas_d_release
-#define matrix_mcopy         armas_d_mcopy
-#define matrix_mnorm         armas_d_mnorm
-#define matrix_printf        armas_d_printf
-#define matrix_qrfactor      armas_d_qrfactor
-#define matrix_qrfactor_work armas_d_qrfactor_work
-#define matrix_qrmult        armas_d_qrmult
-#define matrix_qrmult_work   armas_d_qrmult_work
-#define matrix_qrbuild       armas_d_qrbuild
-#define matrix_qrbuild_work  armas_d_qrbuild_work
-#define matrix_qrsolve       armas_d_qrsolve
-#define matrix_qrsolve_work  armas_d_qrsolve_work
-#define matrix_qlfactor      armas_d_qlfactor
-#define matrix_qlfactor_work armas_d_qlfactor_work
-#define matrix_qlmult        armas_d_qlmult
-#define matrix_qlmult_work   armas_d_qlmult_work
-#define matrix_qlbuild       armas_d_qlbuild
-#define matrix_qlbuild_work  armas_d_qlbuild_work
-#define matrix_lqbuild       armas_d_lqbuild
-#define matrix_lqbuild_work  armas_d_lqbuild_work
-#define matrix_lqfactor      armas_d_lqfactor
-#define matrix_lqfactor_work armas_d_lqfactor_work
-#define matrix_lqmult        armas_d_lqmult
-#define matrix_lqmult_work   armas_d_lqmult_work
-#define matrix_lqreflector   armas_d_lqreflector
-#define matrix_lqsolve       armas_d_lqsolve
-#define matrix_lqsolve_work  armas_d_lqsolve_work
+#define matrix_init            armas_d_init
+#define matrix_diag            armas_d_diag
+#define matrix_madd            armas_d_madd
+#define matrix_set_values      armas_d_set_values
+#define matrix_copy            armas_d_copy
+#define matrix_row             armas_d_row
+#define matrix_column          armas_d_column
+#define matrix_size            armas_d_size
+#define matrix_set             armas_d_set
+#define matrix_get             armas_d_get
+#define matrix_set_at          armas_d_set_at
+#define matrix_get_at          armas_d_get_at
+#define matrix_submatrix       armas_d_submatrix
+#define matrix_mult            armas_d_mult
+#define matrix_mult_sym        armas_d_mult_sym
+#define matrix_mult_trm        armas_d_mult_trm
+#define matrix_mult_trm        armas_d_mult_trm
+#define matrix_make_trm        armas_d_make_trm
+#define matrix_solve_trm       armas_d_solve_trm
+#define matrix_mult_diag       armas_d_mult_diag
+#define matrix_solve_diag      armas_d_solve_diag
+#define matrix_update_sym      armas_d_update_sym
+#define matrix_transpose       armas_d_transpose
+#define matrix_release         armas_d_release
+#define matrix_mcopy           armas_d_mcopy
+#define matrix_mnorm           armas_d_mnorm
+#define matrix_col_as_row      armas_d_col_as_row
+#define matrix_nrm2            armas_d_nrm2
+#define matrix_asum            armas_d_asum
+#define matrix_dot             armas_d_dot
+#define matrix_axpy            armas_d_axpy
+#define matrix_scale           armas_d_scale
+#define matrix_invscale        armas_d_invscale
+#define matrix_printf          armas_d_printf
+#define matrix_qrfactor        armas_d_qrfactor
+#define matrix_qrfactor_work   armas_d_qrfactor_work
+#define matrix_qrmult          armas_d_qrmult
+#define matrix_qrmult_work     armas_d_qrmult_work
+#define matrix_qrbuild         armas_d_qrbuild
+#define matrix_qrbuild_work    armas_d_qrbuild_work
+#define matrix_qrsolve         armas_d_qrsolve
+#define matrix_qrsolve_work    armas_d_qrsolve_work
+#define matrix_qlfactor        armas_d_qlfactor
+#define matrix_qlfactor_work   armas_d_qlfactor_work
+#define matrix_qlmult          armas_d_qlmult
+#define matrix_qlmult_work     armas_d_qlmult_work
+#define matrix_qlbuild         armas_d_qlbuild
+#define matrix_qlbuild_work    armas_d_qlbuild_work
+#define matrix_lqbuild         armas_d_lqbuild
+#define matrix_lqbuild_work    armas_d_lqbuild_work
+#define matrix_lqfactor        armas_d_lqfactor
+#define matrix_lqfactor_work   armas_d_lqfactor_work
+#define matrix_lqmult          armas_d_lqmult
+#define matrix_lqmult_work     armas_d_lqmult_work
+#define matrix_lqreflector     armas_d_lqreflector
+#define matrix_lqsolve         armas_d_lqsolve
+#define matrix_lqsolve_work    armas_d_lqsolve_work
+#define matrix_rqbuild         armas_d_rqbuild
+#define matrix_rqbuild_work    armas_d_rqbuild_work
+#define matrix_rqfactor        armas_d_rqfactor
+#define matrix_rqfactor_work   armas_d_rqfactor_work
+#define matrix_rqmult          armas_d_rqmult
+#define matrix_rqmult_work     armas_d_rqmult_work
+#define matrix_rqreflector     armas_d_rqreflector
+#define matrix_bkfactor        armas_d_bkfactor
+#define matrix_bkfactor_work   armas_d_bkfactor_work
+#define matrix_bksolve         armas_d_bksolve
+#define matrix_bksolve_work    armas_d_bksolve_work
+#define matrix_lufactor        armas_d_lufactor
+#define matrix_lusolve         armas_d_lusolve
+#define matrix_cholfactor      armas_d_cholfactor
+#define matrix_cholsolve       armas_d_cholsolve
+#define matrix_qdroots         armas_d_qdroots
+#define matrix_discriminant    armas_d_discriminant
+#define matrix_mult_diag       armas_d_mult_diag
+#define matrix_solve_diag      armas_d_solve_diag
+#define matrix_scale_to        armas_d_scale_to
+#define matrix_gvcompute       armas_d_gvcompute
+#define matrix_gvrotate        armas_d_gvrotate
+#define matrix_gvleft          armas_d_gvleft
+#define matrix_gvright         armas_d_gvright
+#define matrix_gvupdate        armas_d_gvupdate
+#define matrix_bdreduce        armas_d_bdreduce
+#define matrix_bdreduce_work   armas_d_bdreduce_work
+#define matrix_bdmult          armas_d_bdmult
+#define matrix_bdmult_work     armas_d_bdmult_work
+#define matrix_bdbuild         armas_d_bdbuild
+#define matrix_bdbuild_work    armas_d_bdbuild_work
+#define matrix_trdreduce       armas_d_trdreduce
+#define matrix_trdreduce_work  armas_d_trdreduce_work
+#define matrix_trdbuild        armas_d_trdbuild
+#define matrix_trdbuild_work   armas_d_trdbuild_work
+#define matrix_trdmult         armas_d_trdmult
+#define matrix_trdmult_work    armas_d_trdmult_work
+#define matrix_trdeigen        armas_d_trdeigen
+#define matrix_trdsec_solve    armas_d_trdsec_solve
+#define matrix_trdsec_eigen    armas_d_trdsec_eigen
+#define matrix_trdsec_solve_vec armas_d_trdsec_solve_vec
+#define matrix_eigen_sym       armas_d_eigen_sym
+#define matrix_hessreduce      armas_d_hessreduce
+#define matrix_hessreduce_work armas_d_hessreduce_work
+#define matrix_hessmult        armas_d_hessmult
+#define matrix_hessmult_work   armas_d_hessmult_work
+#define matrix_bdsvd           armas_d_bdsvd
+#define matrix_bdsvd_work      armas_d_bdsvd_work
+#define matrix_svd             armas_d_svd
+#define matrix_svd_work        armas_d_svd_work
 
 #endif
 #include "helper.h"
