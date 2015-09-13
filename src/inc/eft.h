@@ -1,12 +1,16 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c), Harri Rautila, 2015
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
-#ifndef __ARMAS_EFT_H
-#define __ARMAS_EFT_H 1
+#ifndef __ARMAS_EFTMACROS_H
+#define __ARMAS_EFTMACROS_H 1
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Error-free transformation of floating point operations
@@ -15,290 +19,630 @@
  * (1) T. Ogita, S. Rump, S. Oishi
  *     Accurate Sum and Dot Product,
  *     2005, SIAM Journal of Scientific Computing
- * (3) Ph. Langlois, N. Louvet
+ * (2) Ph. Langlois, N. Louvet
  *     Solving Triangular Systems More Accurately and Efficiently
- * (4) T.J. Dekker
+ * (3) T.J. Dekker
  *     A Floating-Point Technique for Extending the Available Precission,
  *     1972, Numeriche Mathematik 18
- * (5) D.E. Knuth
+ * (4) D.E. Knuth
  *     The Art of Computer Programming: Seminumerical Algorithms, Vol 2
  *     1969
  */
 
+#include "simd.h"
 
-#if defined(__FLOAT32) || defined(__COMPLEX64)
-#define __NBITS 14
-#define __MBITS 27
-#else
-// default is double precision float
-#define __NBITS 27
-#define __MBITS 53
+#ifndef __SPLIT_FACTOR
+#define __SPLIT_FACTOR 1
+#define __FACT32 ((1 << 14) + 1)
+#define __FACT64 ((1 << 27) + 1)
+static const float  __factor_f32 = __FACT32;
+static const double __factor_f64 = __FACT64;
 #endif
 
-#if ! defined(__COMPLEX128) && ! defined(__COMPLEX64)
-// default is: double and single precision float here
-#define __FACTOR ((DTYPE)((1 << __NBITS)+1))
+#if defined(FLOAT32)
+#define twosum  twosum_f32
+#define twoprod twoprod_f32
+#define approx_twodiv twodiv_f32
+#else
+#define twosum  twosum_f64
+#define twoprod twoprod_f64
+#define approx_twodiv twodiv_f64
+#endif
+    
+/*
+ * Macros in architecture spesific headers generate multiple "uninitialized" warnings
+ * on internal register variables. Ignore these warnings.
+ */
+#ifndef __nopragma
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
 #if defined(__x86_64__)
-#include "eft_x86_64.h"
+#include "eft_x86.h"
+
+#elif defined(__arm__)
+#include "eft_arm.h"
 #endif
 
-#if ! defined(__COMPLEX128) && ! defined(__COMPLEX64)
+#if ! defined(__have_accelerated_eft_versions)
 
-// default is: double and single precision float here
+#warning "Using non-accelerated EFT transformations!"
 
-/*
- * Error free summation; computes x + y = a + b where x = fl(a+b) and |y| < |x|
- * (from (1), originally from (5))
+// these the basic, non-optimized versions
+#define __twosum_base(t, type, x, y, a, b)               \
+    do {                                                 \
+        volatile register type z, w;                     \
+        x = a + b;                                       \
+        z = x - a;                                       \
+        w = x - z;                                       \
+        w = a - w;                                       \
+        z = b - z;                                       \
+        y = w + z;                                       \
+    } while (0)
+
+#define __fastsum_base(t, type, x, y, a, b)              \
+    do {                                                 \
+        volatile register type z;                        \
+        x = a + b;                                       \
+        z = a - x;                                       \
+        y = z + b;                                       \
+    } while (0)
+
+#define __twoprod_base(t, type, x, y, ah, bh, fct)             \
+    do {                                                       \
+        volatile register type x0, y0, z1, z2;                 \
+        register type a1, a2, b1, b2;                          \
+        z1 = fct*ah;                                           \
+        a1 = z1 - ah;                                          \
+        a1 = z1 - a1;                                          \
+        a2 = ah - a1;                                          \
+        z2 = fct*bh;                                           \
+        b1 = z2 - bh;                                          \
+        b1 = z2 - b1;                                          \
+        b2 = bh - b1;                                          \
+        x0 = ah*bh;                                            \
+        y0 = (((x0 - a1*b1) - a2*b1) - a1*b2);                 \
+        y0 = a2*b2 - y0;                                       \
+        (x) = x0; (y) = y0;                                    \
+    } while (0)
+
+#define __approx_twodiv_base(t, type, x, y, a, b, fct) \
+    do {                                                \
+        volatile register type v, w, q;                 \
+        x = a/b;                                        \
+        __twoprod_base(t, type, v, w, x, b, fct);       \
+        y = a - v;                                      \
+        y = y - w;                                      \
+        y = y/b;                                        \
+    } while (0)
+
+#define __split_base(t, type, x, y, a, fct)        \
+    do {                                           \
+        volatile type z;                           \
+        z = fct*a;                                 \
+        x = z - a;                                 \
+        x = z - x;                                 \
+        y = a - x;                                 \
+    } while (0)
+
+
+#define __extract_scalar_base(t, type, x, y, p, r)   \
+     do {                                            \
+         volatile type q;                            \
+         q = p - r;                                  \
+         x = q - r;                                  \
+         y = p - x;                                  \
+     } while (0)
+    
+ 
+// Single precision float
+
+#define __twosum_base_f32(_x, _y, _a, _b) \
+    __twosum_base("", float, _x, _y, _a, _b)
+
+#define __fastsum_base_f32(_x, _y, _a, _b) \
+    __fastsum_base("", float, _x, _y, _a, _b)
+
+#define __twoprod_base_f32(_x, _y, _a, _b) \
+    __twoprod_base("", float, _x, _y, _a, _b, __factor_f32)
+
+#define __approx_twodiv_base_f32(_x, _y, _a, _b) \
+    __approx_twodiv_base("", float, _x, _y, _a, _b, __factor_f32)
+
+#define __split_base_f32(_x, _y, _a) \
+    __split_base("", float, _x, _y, _a, __factor_f32)
+
+#define __extract_base_f32(_x, _y, _p, _r)     \
+    __extract_scalar_base("", float, _x, _y, _p, _r)
+
+// Double precision float
+
+#define __twosum_base_f64(_x, _y, _a, _b) \
+    __twosum_base("", double, _x, _y, _a, _b)
+
+#define __fastsum_base_f64(_x, _y, _a, _b) \
+    __fastsum_base("", double, _x, _y, _a, _b)
+
+#define __twoprod_base_f64(_x, _y, _a, _b) \
+    __twoprod_base("", double, _x, _y, _a, _b, __factor_f64)
+
+#define __approx_twodiv_base_f64(_x, _y, _a, _b) \
+    __approx_twodiv_base("", double, _x, _y, _a, _b, __factor_f64)
+
+#define __split_base_f64(_x, _y, _a) \
+    __split_base("", double, _x, _y, _a, __factor_f64)
+
+#define __extract_base_f64(_x, _y, _p, _r)     \
+    __extract_scalar_base("", double, _x, _y, _p, _r)
+
+#endif  // non-optimized
+
+/* ------------------------------------------------------------------------------
+ *
  */
-#if ! defined(twosum_enhanced)
-static inline
-void twosum(DTYPE *x, DTYPE *y, DTYPE a, DTYPE b)
-{
-    // Define these volatile otherwise compiler may optimize them away;
-    // (This produces correct result with gcc -O3 level.)
-    volatile DTYPE z, y0;
-    *x = a + b;
-    z  = *x - a;
-    y0 = *x - z;
-    y0 = a - y0;
-    *y = y0 + (b - z);
-    return;
-}
-#endif
 
-/*
- * Error free summation; computes x + y = a + b where x = fl(a+b) and |y| < |x| iff |a| > |b|
- * (from (1), originally from (4))
+static inline void __attribute__((__always_inline__))
+twosum_f32(float *x, float *y, float a, float b)
+{
+    __twosum_base_f32((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twosum_f32_ext(float *x, float *y, float ah, float al, float bh, float bl)
+{
+    __twosum_base_f32((*x), (*y), ah, bh);
+    *y += al + bl;
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f32(float *x, float *y, float a, float b)
+{
+    __fastsum_base_f32((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f32_ext(float *x, float *y, float ah, float al, float bh, float bl)
+{
+    __fastsum_base_f32((*x), (*y), ah, bh);
+    *y += al + bl;
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f32(float *x, float *y, float a, float b)
+{
+    __twoprod_base_f32((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f32_ext(float *x, float *y, float ah, float al, float bh, float bl)
+{
+    register float yl = ah*bl + bh*al;
+    __twoprod_base_f32((*x), (*y), ah, bh);
+    *y += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f32(float *x, float *y, float a, float b)
+{
+    __approx_twodiv_base_f32((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f32_ext(float *x, float *y, float ah, float al, float b)
+{
+    register float yl = al/b;
+    __approx_twodiv_base_f32((*x), (*y), ah, b);
+    (*y) += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+split_f32(float *x, float *y, float a)
+{
+    __split_base_f32((*x), (*y), a);
+}
+
+static inline void __attribute__((__always_inline__))
+extract_f32(float *x, float *y, float p, float r)
+{
+    __extract_scalar_base_f32((*x), (*y), p, r);
+}
+
+static inline void __attribute__((__always_inline__))
+twosum_f64(double *x, double *y, double a, double b)
+{
+    __twosum_base_f64((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twosum_f64_ext(double *x, double *y, double ah, double al, double bh, double bl)
+{
+    __twosum_base_f64((*x), (*y), ah, bh);
+    *y += al + bl;
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f64(double *x, double *y, double a, double b)
+{
+    __fastsum_base_f64((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f64_ext(double *x, double *y, double ah, double al, double bh, double bl)
+{
+    __fastsum_base_f64((*x), (*y), ah, bh);
+    *y += al + bl;
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f64(double *x, double *y, double a, double b)
+{
+    __twoprod_base_f64((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f64_ext(double *x, double *y, double ah, double al, double bh, double bl)
+{
+    register double yl = ah*bl + bh*al;
+    __twoprod_base_f64((*x), (*y), ah, bh);
+    *y += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f64(double *x, double *y, double a, double b)
+{
+    __approx_twodiv_base_f64((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f64_ext(double *x, double *y, double ah, double al, double b)
+{
+    register double yl = al/b;
+    __approx_twodiv_base_f64((*x), (*y), ah, b);
+    (*y) += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+split_f64(double *x, double *y, double a)
+{
+    __split_base_f64((*x), (*y), a);
+}
+
+/* --------------------------------------------------------------------------------------
+ * Vectorized versions, 128bit
  */
-#if ! defined(fast_twosum_enhanced)
-static inline
-void fast_twosum(DTYPE *x, DTYPE *y, DTYPE a, DTYPE b)
-{
-    volatile DTYPE q;
-    *x = a + b;
-    q  = *x - a;
-    *y = b - q;
-}
-#endif
 
-/*
- * Error free split; x + y = a
- * From (2)
+#if __SIMD_LENGTH >= 128
+
+#ifdef __HAVE_SIMD32X4
+
+static inline void __attribute__((__always_inline__))
+twosum_f32x4(float32x4_t *x, float32x4_t *y, float32x4_t a, float32x4_t b)
+{
+    __twosum_base_f32x4((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twosum_f32x4_ext(float32x4_t *x, float32x4_t *y,
+                   float32x4_t ah, float32x4_t al, float32x4_t bh, float32x4_t bl)
+{
+    __twosum_base_f32x4((*x), (*y), ah, bh);
+    *y += al;
+    *y += bl;
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f32x4(float32x4_t *x, float32x4_t *y, float32x4_t a, float32x4_t b)
+{
+    __fastsum_base_f32x4((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f32x4_ext(float32x4_t *x, float32x4_t *y,
+                   float32x4_t ah, float32x4_t al, float32x4_t bh, float32x4_t bl)
+{
+    __fastsum_base_f32x4((*x), (*y), ah, bh);
+    *y += al;
+    *y += bl;
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f32x4(float32x4_t *x, float32x4_t *y, float32x4_t a, float32x4_t b)
+{
+    __twoprod_base_f32x4((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f32x4_ext(float32x4_t *x, float32x4_t *y,
+                   float32x4_t ah, float32x4_t al, float32x4_t bh, float32x4_t bl)
+{
+    register float32x4_t yl = ah*bl + bh*al;
+    __twoprod_base_f32x4((*x), (*y), ah, bh);
+    *y += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f32x4(float32x4_t *x, float32x4_t *y, float32x4_t a, float32x4_t b)
+{
+    __approx_twodiv_base_f32x4((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f32x4_ext(float32x4_t *x, float32x4_t *y,
+                   float32x4_t ah, float32x4_t al, float32x4_t b)
+{
+    register float32x4_t yl = al/b;
+    __approx_twodiv_base_f32x4((*x), (*y), ah, b);
+    *y += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+split_f32x4(float32x4_t *x, float32x4_t *y, float32x4_t a)
+{
+    __split_base_f32x4((*x), (*y), a);
+}
+
+static inline void __attribute__((__always_inline__))
+extract_f32x4(float32x4_t *x, float32x4_t *y, float32x4_t p, float32x4_t r)
+{
+    __extract_scalar_base_f32x4((*x), (*y), p, r);
+}
+
+#endif // __HAVE_SIMD32X4
+
+#ifdef __HAVE_SIMD64X2
+
+static inline void __attribute__((__always_inline__))
+twosum_f64x2(float64x2_t *x, float64x2_t *y, float64x2_t a, float64x2_t b)
+{
+    __twosum_base_f64x2((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twosum_f64x2_ext(float64x2_t *x, float64x2_t *y,
+                 float64x2_t ah, float64x2_t al, float64x2_t bh, float64x2_t bl)
+{
+    __twosum_base_f64x2((*x), (*y), ah, bh);
+    *y += al;
+    *y += bl;
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f64x2(float64x2_t *x, float64x2_t *y, float64x2_t a, float64x2_t b)
+{
+    __fastsum_base_f64x2((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f64x2_ext(float64x2_t *x, float64x2_t *y,
+                  float64x2_t ah, float64x2_t al, float64x2_t bh, float64x2_t bl)
+{
+    __fastsum_base_f64x2((*x), (*y), ah, bh);
+    *y += al;
+    *y += bl;
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f64x2(float64x2_t *x, float64x2_t *y, float64x2_t a, float64x2_t b)
+{
+    __twoprod_base_f64x2((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f64x2_ext(float64x2_t *x, float64x2_t *y,
+                  float64x2_t ah, float64x2_t al, float64x2_t bh, float64x2_t bl)
+{
+    register float64x2_t yl = ah*bl + bh*al;
+    __twoprod_base_f64x2((*x), (*y), ah, bh);
+    *y += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f64x2(float64x2_t *x, float64x2_t *y, float64x2_t a, float64x2_t b)
+{
+    __approx_twodiv_base_f64x2((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f64x2_ext(float64x2_t *x, float64x2_t *y,
+                 float64x2_t ah, float64x2_t al, float64x2_t b)
+{
+    register float64x2_t yl = al/b;
+    __approx_twodiv_base_f64x2((*x), (*y), ah, b);
+    *y += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+split_f64x2(float64x2_t *x, float64x2_t *y, float64x2_t a)
+{
+    __split_base_f64x2((*x), (*y), a);
+}
+
+static inline void __attribute__((__always_inline__))
+extract_f64x2(float64x2_t *x, float64x2_t *y, float64x2_t p, float64x2_t r)
+{
+    __extract_scalar_base_f64x2((*x), (*y), p, r);
+}
+
+#endif // __HAVE_SIMD64X2
+
+#endif // __SIMD_LENGTH >= 128
+
+/* --------------------------------------------------------------------------------------
+ * Vectorized versions, 256bit
  */
-#if ! defined(split_enhanced)
-static inline
-DTYPE split(DTYPE *x, DTYPE *y, DTYPE a)
+
+#if __SIMD_LENGTH >= 256
+// for f32x8 and f64x4
+#ifdef __HAVE_SIMD32X8
+
+static inline void __attribute__((__always_inline__))
+twosum_f32x8(float32x8_t *x, float32x8_t *y, float32x8_t a, float32x8_t b)
 {
-    volatile register DTYPE c;
-    c = __FACTOR*a;
-    *x = (c - (c - a));
-    *y = a - *x;
-    return c; // don't allow optimizing away
+    __twosum_base_f32x8((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twosum_f32x8_ext(float32x8_t *x, float32x8_t *y,
+                 float32x8_t ah, float32x8_t al, float32x8_t bh, float32x8_t bl)
+{
+    __twosum_base_f32x8((*x), (*y), ah, bh);
+    *y += al;
+    *y += bl;
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f32x8(float32x8_t *x, float32x8_t *y, float32x8_t a, float32x8_t b)
+{
+    __fastsum_base_f32x8((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f32x8_ext(float32x8_t *x, float32x8_t *y,
+                  float32x8_t ah, float32x8_t al, float32x8_t bh, float32x8_t bl)
+{
+    __fastsum_base_f32x8((*x), (*y), ah, bh);
+    *y += al;
+    *y += bl;
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f32x8(float32x8_t *x, float32x8_t *y, float32x8_t a, float32x8_t b)
+{
+    __twoprod_base_f32x8((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f32x8_ext(float32x8_t *x, float32x8_t *y,
+                  float32x8_t ah, float32x8_t al, float32x8_t bh, float32x8_t bl)
+{
+    register float32x8_t yl = ah*bl + bh*al;
+    __twoprod_base_f32x8((*x), (*y), ah, bh);
+    *y += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f32x8(float32x8_t *x, float32x8_t *y, float32x8_t a, float32x8_t b)
+{
+    __approx_twodiv_base_f32x8((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f32x8_ext(float32x8_t *x, float32x8_t *y,
+                 float32x8_t ah, float32x8_t al, float32x8_t b)
+{
+    register float32x8_t yl = al/b;
+    __approx_twodiv_base_f32x8((*x), (*y), ah, b);
+    *y += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+split_f32x8(float32x8_t *x, float32x8_t *y, float32x8_t a)
+{
+    __split_base_f32x8((*x), (*y), a);
+}
+
+static inline void __attribute__((__always_inline__))
+extract_f32x8(float32x8_t *x, float32x8_t *y, float32x8_t p, float32x8_t r)
+{
+    __extract_scalar_base_f32x8((*x), (*y), p, r);
+}
+
+#endif  //__HAVE_SIMD32X8
+
+
+#ifdef __HAVE_SIMD64X4
+
+static inline void __attribute__((__always_inline__))
+twosum_f64x4(float64x4_t *x, float64x4_t *y, float64x4_t a, float64x4_t b)
+{
+    __twosum_base_f64x4((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twosum_f64x4_ext(float64x4_t *x, float64x4_t *y,
+                 float64x4_t ah, float64x4_t al, float64x4_t bh, float64x4_t bl)
+{
+    __twosum_base_f64x4((*x), (*y), ah, bh);
+    *y += al;
+    *y += bl;
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f64x4(float64x4_t *x, float64x4_t *y, float64x4_t a, float64x4_t b)
+{
+    __fastsum_base_f64x4((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+fastsum_f64x4_ext(float64x4_t *x, float64x4_t *y,
+                  float64x4_t ah, float64x4_t al, float64x4_t bh, float64x4_t bl)
+{
+    __fastsum_base_f64x4((*x), (*y), ah, bh);
+    *y += al;
+    *y += bl;
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f64x4(float64x4_t *x, float64x4_t *y, float64x4_t a, float64x4_t b)
+{
+    __twoprod_base_f64x4((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twoprod_f64x4_ext(float64x4_t *x, float64x4_t *y,
+                  float64x4_t ah, float64x4_t al, float64x4_t bh, float64x4_t bl)
+{
+    register float64x4_t yl = ah*bl + bh*al;
+    __twoprod_base_f64x4((*x), (*y), ah, bh);
+    *y += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f64x4(float64x4_t *x, float64x4_t *y, float64x4_t a, float64x4_t b)
+{
+    __approx_twodiv_base_f64x4((*x), (*y), a, b);
+}
+
+static inline void __attribute__((__always_inline__))
+twodiv_f64x4_ext(float64x4_t *x, float64x4_t *y,
+                 float64x4_t ah, float64x4_t al, float64x4_t b)
+{
+    register float64x4_t yl = al/b;
+    __approx_twodiv_base_f64x4((*x), (*y), ah, b);
+    *y += yl;
+}
+
+static inline void __attribute__((__always_inline__))
+split_f64x4(float64x4_t *x, float64x4_t *y, float64x4_t a)
+{
+    __split_base_f64x4((*x), (*y), a);
+}
+
+static inline void __attribute__((__always_inline__))
+extract_f64x4(float64x4_t *x, float64x4_t *y, float64x4_t p, float64x4_t r)
+{
+    __extract_scalar_base_f64x4((*x), (*y), p, r);
+}
+
+#ifndef __nopragma
+#pragma GCC diagnostic pop
+#endif
+
+#endif // __HAVE_SIMD64X4
+
+#endif // __SIMD_LENGTH >= 256
+
+
+#ifdef __cplusplus
 }
 #endif
 
-/*
- * Error transformation extracting high order part
- * From (2)
- */
-#if ! defined(extract_scalar_enhanced)
-static inline
-DTYPE extract_scalar(DTYPE *x, DTYPE *y, DTYPE r, DTYPE p)
-{
-    volatile register DTYPE q;
-    q  = r + p;
-    *x = q - r;
-    *y = p - *x;
-}
-#endif
-
-/*
- * Error free product: x + y = a*b ; where x = fl(a*b) and |y| < |x|
- * From (1) 
- */
-#if ! defined(twoprod_enhanced)
-static inline
-void twoprod(DTYPE *x, DTYPE *y, DTYPE a, DTYPE b)
-{
-    volatile DTYPE x0, y0, z1, z2;
-    register DTYPE a1, a2, b1, b2; //, z1, z2;
-
-    // [a1, a2] = split(a)
-    z1 = __FACTOR*a;
-    a1 = z1 - a;
-    a1 = z1 - a1;
-    a2 = a  - a1;
-    // [b1, b2] = split(b)
-    z2 = __FACTOR*b;
-    b1 = z2 - b;
-    b1 = z2 - b1;
-    b2 = b  - b1;
-    // 
-    x0 = a*b;
-    y0 = (((x0 - a1*b1) - a2*b1) - a1*b2);
-    *y = a2*b2 - y0;
-    *x = x0;
-    return;
-}
-#endif
-
-#if ! defined(approx_twodiv_enhanced)
-static inline
-void approx_twodiv(DTYPE *x, DTYPE *y, DTYPE a, DTYPE b)
-{
-    DTYPE v, w;
-    *x = a/b;
-    twoprod(&v, &w, *x, b);
-    *y = (a - v - w)/b;
-}
-#endif
-
-// Algorithm 4.1 int (1); cascaded summation 
-static inline
-void __eft_sum2s(DTYPE *s, DTYPE *c, DTYPE *a, int N, DTYPE s0, DTYPE c0)
-{
-    DTYPE st, ct, p;
-    int k;
-
-    st = s0; ct = c0;
-    for (k = 0; k < N; k++) {
-        // q + p = s + a[k]
-        twosum(&st, &p, st, a[k]);
-        // summation of correction terms
-        ct += p;
-    }
-    *s = st;
-    *c = ct;
-}
-
-static inline
-DTYPE sum2s(DTYPE *a, int N)
-{
-    DTYPE s, c;
-    __eft_sum2s(&s, &c, a, N, 0.0, 0.0);
-    return s + c;
-}
-
-
-// Algorithm 4.3 in (1); error-free vector transformation for summation
-// Also called "distillation algorithm".
-static inline
-DTYPE vecsum(DTYPE *p, int N)
-{
-    DTYPE c;
-    int k;
-    c = 0.0;
-    for (k = 1; k < N; k++) {
-        // break the connection p0 -- p[k], p1 -- p[k-1] with argument ordering
-        twosum(&p[k], &p[k-1], p[k-1], p[k]);
-        c += p[k-1];
-    }
-    return p[N-1] + c;
-}
-
-// Algorithm 4.8 in (1); Summation in K-fold precission by (K-1)-fold error-free
-// vector transformation
-static inline
-DTYPE sumK(DTYPE *p, int N, int K)
-{
-    DTYPE s;
-    int k, j;
-
-    for (k = 0; k < K-1; k++) {
-        // vecsum here
-        for (j = 1; j < N; j++) {
-            twosum(&p[j], &p[j-1], p[j-1], p[j]);
-        }
-    }
-    s = 0.0;
-    for (k = 0; k < N; k++) {
-        s += p[k];
-    }
-    return s;
-}
-
-// Algorithm 5.3 in (1); Dot product in twice the working precission; 
-static inline
-void __eft_dot2s(DTYPE *p, DTYPE *c, DTYPE *a, DTYPE *b, int N, DTYPE p0, DTYPE c0)
-{
-    DTYPE p1, s1, h1, q1, r1;
-    int k;
-
-    p1 = p0; s1 = c0;
-    //twoprod(&p1, &s1, a[0], b[0]);
-    for (k = 0; k < N; k++) {
-        // h + r = a*b
-        twoprod(&h1, &r1, a[k], b[k]);
-        // p + q = p + h;
-        twosum(&p1, &q1, p1, h1);
-        // sum error terms
-        s1 += q1 + r1;
-    }
-    *p = p1;
-    *c = s1;
-}
-
-static inline
-DTYPE dot2s(DTYPE *a, DTYPE *b, int N)
-{
-    DTYPE p, s;
-    __eft_dot2s(&p, &s, a, b, N, 0.0, 0.0);
-    return p + s;
-}
-
-#if 0
-static inline
-DTYPE dot2s(DTYPE *a, DTYPE *b, int N)
-{
-    DTYPE p, s, h, q, r;
-    int k;
-
-    twoprod(&p, &s, a[0], b[0]);
-    for (k = 1; k < N; k++) {
-        // h + r = a*b
-        twoprod(&h, &r, a[k], b[k]);
-        // p + q = p + h;
-        twosum(&p, &q, p, h);
-        // sum error terms
-        s += q + r;
-    }
-    return p + s;
-}
-#endif
-
-// Algorithm 5.10 in (1); Dot product in K-fold precission
-static inline
-DTYPE dotK(DTYPE *x, DTYPE *y, int N, int K)
-{
-    DTYPE p, h, s, *r;
-    int k;
-    if (N == 1) {
-        twoprod(&p, &h, x[0], y[0]);
-        return p + h;
-    }    
-
-    r = calloc(2*N, sizeof(DTYPE));
-    twoprod(&p, &r[0], x[0], y[0]);
-    for (k = 1; k < N; k++) {
-        twoprod(&h, &r[k], x[k], y[k]);
-        twosum(&p, &r[N+k-1], p, h);
-    }
-    r[2*N-1] = p;
-    s = sumK(r, 2*N, K-1);
-    free(r);
-    return s;
-}
-
-#else
-// Complex versions here
-
-#endif
-
-#endif  // __ARMAS_EFT_H
+#endif  // __ARMAS_EFTMACROS_H
 
 // Local Variables:
 // indent-tabs-mode: nil
 // c-basic-offset: 4
 // End:
+
