@@ -90,8 +90,13 @@ DTYPE __vec_sum_ext(const mvec_t *X,  int N)
     }
 
  update:
-    c0  = sum2s((DTYPE[4]){c0, c1, c2, c3}, 4);
-    a0 += sum2s((DTYPE[3]){a1, a2, a3}, 3);
+    a0 += a1 + a2 + a3;
+    twosum(&c0, &z1, c0, c1);
+    a0 += z1;
+    twosum(&c0, &z1, c0, c2);
+    a0 += z1;
+    twosum(&c0, &z1, c0, c3);
+    a0 += z1;
     return c0 + a0;
 }
 
