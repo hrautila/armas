@@ -46,5 +46,23 @@ static inline int imax(int a, int b)
   return a > b ? a : b;
 }
 
+// extended precision helpers.
+
+extern __Dtype ep_dot_n(__Matrix *X, __Matrix *Y, __Dtype start, int N, int prec);
+extern __Dtype ep_dot(__Matrix *X, __Matrix *Y, __Dtype start, int prec);
+extern __Dtype ep_nrm2(__Matrix *X, __Dtype start, int prec);
+extern __Dtype ep_sum(__Matrix *X, __Dtype start, int prec);
+extern __Dtype ep_asum(__Matrix *X, __Dtype start, int prec);
+extern void ep_axpy(__Matrix *X, __Matrix *Y, __Dtype alpha, __Dtype beta, int prec);
+extern void ep_gemv(__Matrix *Y, __Matrix *A, __Matrix *X,
+                    __Dtype alpha, __Dtype beta, int prec, int flags);
+extern void ep_gemm(__Matrix *C, __Matrix *A, __Matrix *B,
+                    __Dtype alpha, __Dtype beta, int prec, int flags);
+
+extern void ep_gendot(__Dtype *dot, __Dtype *tcond,
+                      __Matrix *X, __Matrix *Y, __Dtype cond);
+extern void ep_gensum(__Dtype *dot, __Dtype *tcond, __Matrix *X, __Dtype cond);
+extern void ep_genmat(__Dtype *dot, __Dtype *tcond, __Matrix *A, __Matrix *B, __Dtype cond);
+extern void ep_gentrm(__Dtype *dot, __Dtype *tcond, __Matrix *A, __Matrix *B, __Dtype cond, int flags);
 
 #endif
