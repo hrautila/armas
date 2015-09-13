@@ -1,12 +1,12 @@
 
-// Copyright (c) Harri Rautila, 2012-2014
+// Copyright (c) Harri Rautila, 2012-2015
 
-// This file is part of github.com/hrautila/matops package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
-#ifndef _MULT_AVX_H
-#define _MULT_AVX_H 1
+#ifndef _MULT_AVX_F64_H
+#define _MULT_AVX_F64_H 1
 
 #include <immintrin.h>
 
@@ -29,7 +29,8 @@
 #define mm_load_A _mm256_loadu_pd
 #endif
 
-#include "avxfuncs.h"
+//#include "avxfuncs.h"
+#include "simd.h"
 #include "debug.h"
 
 // update 1x4 block of C; one row, four columns (mult4x1x1)
@@ -72,10 +73,10 @@ void __mult1c4(double *c0, double *c1, double *c2, double *c3,
   y3 += _mm256_mul_pd(A0, mm_load_B(&b3[k]));
 
 update:
-  c0[0] += alpha*hsum256_f64(y0);
-  c1[0] += alpha*hsum256_f64(y1);
-  c2[0] += alpha*hsum256_f64(y2);
-  c3[0] += alpha*hsum256_f64(y3);
+  c0[0] += alpha*hsum_f64x4(y0);
+  c1[0] += alpha*hsum_f64x4(y1);
+  c2[0] += alpha*hsum_f64x4(y2);
+  c3[0] += alpha*hsum_f64x4(y3);
 }
 
 
@@ -136,14 +137,14 @@ void __mult2c4(double *c0, double *c1, double *c2, double *c3,
   y7 += _mm256_mul_pd(A1, mm_load_B(&b3[k]));
 
 update:
-  c0[0] += alpha*hsum256_f64(y0);
-  c1[0] += alpha*hsum256_f64(y1);
-  c2[0] += alpha*hsum256_f64(y2);
-  c3[0] += alpha*hsum256_f64(y3);
-  c0[1] += alpha*hsum256_f64(y4);
-  c1[1] += alpha*hsum256_f64(y5);
-  c2[1] += alpha*hsum256_f64(y6);
-  c3[1] += alpha*hsum256_f64(y7);
+  c0[0] += alpha*hsum_f64x4(y0);
+  c1[0] += alpha*hsum_f64x4(y1);
+  c2[0] += alpha*hsum_f64x4(y2);
+  c3[0] += alpha*hsum_f64x4(y3);
+  c0[1] += alpha*hsum_f64x4(y4);
+  c1[1] += alpha*hsum_f64x4(y5);
+  c2[1] += alpha*hsum_f64x4(y6);
+  c3[1] += alpha*hsum_f64x4(y7);
 }
 
 
@@ -184,8 +185,8 @@ void __mult1c2(double *c0, double *c1,
   y1 += _mm256_mul_pd(A0, mm_load_B(&b1[k]));
 
 update:
-  c0[0] += alpha*hsum256_f64(y0);
-  c1[0] += alpha*hsum256_f64(y1);
+  c0[0] += alpha*hsum_f64x4(y0);
+  c1[0] += alpha*hsum_f64x4(y1);
 }
 
 
@@ -238,10 +239,10 @@ void __mult2c2(double *c0, double *c1,
   y3 += _mm256_mul_pd(A1, mm_load_B(&b1[k]));
 
 update:
-  c0[0] += alpha*hsum256_f64(y0);
-  c1[0] += alpha*hsum256_f64(y1);
-  c0[1] += alpha*hsum256_f64(y2);
-  c1[1] += alpha*hsum256_f64(y3);
+  c0[0] += alpha*hsum_f64x4(y0);
+  c1[0] += alpha*hsum_f64x4(y1);
+  c0[1] += alpha*hsum_f64x4(y2);
+  c1[1] += alpha*hsum_f64x4(y3);
 }
 
 // update single element of C; with inner product of A row and B column
@@ -274,7 +275,7 @@ void __mult1c1(double *c, const double *a, const double *b, double alpha, int nR
   y0 += _mm256_mul_pd(A, mm_load_B(&b[k]));
 
 update:
-  c[0] += alpha*hsum256_f64(y0);
+  c[0] += alpha*hsum_f64x4(y0);
 }
 
 
@@ -322,10 +323,10 @@ void __mult4c1(double *c0,
   y3 += _mm256_mul_pd(B0, mm_load_A(&a3[k]));
 
 update:
-  c0[0] += alpha*hsum256_f64(y0);
-  c0[1] += alpha*hsum256_f64(y1);
-  c0[2] += alpha*hsum256_f64(y2);
-  c0[3] += alpha*hsum256_f64(y3);
+  c0[0] += alpha*hsum_f64x4(y0);
+  c0[1] += alpha*hsum_f64x4(y1);
+  c0[2] += alpha*hsum_f64x4(y2);
+  c0[3] += alpha*hsum_f64x4(y3);
 }
 
 
@@ -385,14 +386,14 @@ void __mult4c2(double *c0, double *c1,
   y7 += _mm256_mul_pd(B1, mm_load_A(&a3[k]));
 
 update:
-  c0[0] += alpha*hsum256_f64(y0);
-  c0[1] += alpha*hsum256_f64(y1);
-  c0[2] += alpha*hsum256_f64(y2);
-  c0[3] += alpha*hsum256_f64(y3);
-  c1[0] += alpha*hsum256_f64(y4);
-  c1[1] += alpha*hsum256_f64(y5);
-  c1[2] += alpha*hsum256_f64(y6);
-  c1[3] += alpha*hsum256_f64(y7);
+  c0[0] += alpha*hsum_f64x4(y0);
+  c0[1] += alpha*hsum_f64x4(y1);
+  c0[2] += alpha*hsum_f64x4(y2);
+  c0[3] += alpha*hsum_f64x4(y3);
+  c1[0] += alpha*hsum_f64x4(y4);
+  c1[1] += alpha*hsum_f64x4(y5);
+  c1[2] += alpha*hsum_f64x4(y6);
+  c1[3] += alpha*hsum_f64x4(y7);
 }
 
 
@@ -434,8 +435,8 @@ void __mult2c1(double *c0,
   y1 += _mm256_mul_pd(B0, mm_load_A(&a1[k]));
 
 update:
-  c0[0] += alpha*hsum256_f64(y0);
-  c0[1] += alpha*hsum256_f64(y1);
+  c0[0] += alpha*hsum_f64x4(y0);
+  c0[1] += alpha*hsum_f64x4(y1);
 }
 
 
