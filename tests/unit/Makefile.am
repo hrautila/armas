@@ -5,7 +5,7 @@ AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall -I../ -I../
 
 noinst_HEADERS = ../helper.h
 
-UNIT_TESTS =
+UNIT_TESTS = efttest
 
 if ENABLE_FLOAT32
 LDADD = ../../src/libarmass.la
@@ -52,6 +52,8 @@ ext_dtrsv_LDFLAGS = -lmpfr -lgmp
 
 
 check_PROGRAMS = $(UNIT_TESTS)
+
+efttest_SOURCES = efttest.c
 
 # BLAS (double)
 dgemm_SOURCES  = gemm.c ../helper.c
