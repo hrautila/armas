@@ -4,8 +4,9 @@
 #include <unistd.h>
 #include <time.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "testing.h"
+//#include <armas/dmatrix.h>
+//#include "helper.h"
 
 main(int argc, char **argv) {
 
