@@ -64,7 +64,7 @@ int test_factor(int M, int N, int lb, int verbose)
 }
 
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int opt;
   int N = 787;

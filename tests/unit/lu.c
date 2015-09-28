@@ -12,7 +12,7 @@
 #if FLOAT32
 #define MAX_ERROR 8e-6
 #else
-#define MAX_ERRRO 1e-12
+#define MAX_ERROR 1e-12
 #endif
 
 int test_solve(int M, int N, int lb, int verbose)
