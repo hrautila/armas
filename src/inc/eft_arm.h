@@ -40,6 +40,7 @@ extern "C" {
 #include <arm_neon.h>
 #endif
 
+
 #if ! defined(__SIMD_LENGTH)
 #if defined(__ARM_NEON)
 #define __SIMD_LENGTH 128
@@ -47,6 +48,18 @@ extern "C" {
 #ifndef __HAVE_SIMD32X4
 #define __HAVE_SIMD32X4 1
 #endif
+
+/*
+ * Division by reciprocal estimation and two refinements.
+ */
+extern inline __attribute__((__always_inline__))
+float32x4_t vdivq_f32(float32x4_t a, float32x4_t b)
+{
+    float32x4_t recp = vrecpeq_f32(b);
+    recp = vmulq_f32(vrecpsq_f32(b, recp), recp);
+    recp = vmulq_f32(vrecpsq_f32(b, recp), recp);
+    return vmulq_f32(a, recp);
+}
 
 #else
 #define __SIMD_LENGTH 0
@@ -141,6 +154,13 @@ extern "C" {
              : [ah]    co (a), [bh]    co (b));                         \
     } while (0)
 
+#define __twoprod_vec(t, type, x, y, a, b, fct) \
+    do {                                        \
+        x = vmulq_f32(a, b);                    \
+        y = vnegq_f32(x);                       \
+        y = vfmaq_f32(a, b, y);                \
+    } while (0)
+
 
 /*
  * Approx twodiv (with fused-multiply-add)
@@ -169,35 +189,70 @@ extern "C" {
               : [a]  co (_a), [b]  co (_b),  [f] co (_fct));            \
      } while (0)
 
+#define __approx_twodiv_vec(t, type, x, y, a, b, fct)  \
+    do {                                        \
+        register type v, w;                     \
+        x = vdivq_f32(a, b);                    \
+        v = vmulq_f32(x, b);                    \
+        w = vnegq_f32(w);                       \
+        w = vfmaq_f32(x, b, w);                 \
+        v = vsubq_f32(a, v);                    \
+        v = vsubq_f32(v, w);                    \
+        y = vdivq_f32(v, b);                    \
+    } while (0)
+
 #else 
 // without Fused-Multiply-Add
 #define __twoprod_base(t, co, op, type, _x, _y, _a, _b, _fct)           \
-        do {                                                            \
-            register type z, a2, a1, b2, b1;                            \
-            asm __volatile__                                            \
-                (                                                       \
-                 "vmul" t " %"op"[z],  %"op"[ah], %"op"[f]\n\t"         \
-                 "vsub" t " %"op"[a1], %"op"[z],  %"op"[ah]\n\t"        \
-                 "vsub" t " %"op"[a1], %"op"[z],  %"op"[a1]\n\t"        \
-                 "vsub" t " %"op"[a2], %"op"[ah], %"op"[a1]\n\t"        \
-                 "vmul" t " %"op"[z],  %"op"[bh], %"op"[f]\n\t"         \
-                 "vsub" t " %"op"[b1], %"op"[z],  %"op"[bh]\n\t"        \
-                 "vsub" t " %"op"[b1], %"op"[z],  %"op"[b1]\n\t"        \
-                 "vsub" t " %"op"[b2], %"op"[bh], %"op"[b1]\n\t"        \
-                 "vmul" t " %"op"[x0], %"op"[ah], %"op"[bh]\n\t"        \
-                 "vmul" t " %"op"[z],  %"op"[b1], %"op"[a1]\n\t"        \
-                 "vsub" t " %"op"[y0], %"op"[x0], %"op"[z]\n\t"         \
-                 "vmul" t " %"op"[z],  %"op"[a2], %"op"[b1]\n\t"        \
-                 "vsub" t " %"op"[y0], %"op"[y0], %"op"[z]\n\t"         \
-                 "vmul" t " %"op"[z],  %"op"[a1], %"op"[b2]\n\t"        \
-                 "vsub" t " %"op"[y0], %"op"[y0], %"op"[z]\n\t"         \
-                 "vmul" t " %"op"[z],  %"op"[a2], %"op"[b2]\n\t"        \
-                 "vsub" t " %"op"[y0], %"op"[z],  %"op"[y0]\n\t"        \
-                 : [x0] "+"co (_x), [y0] "+"co (_y), [z]  "+"co (z),    \
-                   [a1] "+"co (a1), [a2] "+"co (a2),                    \
-                   [b1] "+"co (b1), [b2] "+"co (b2)                     \
-                 : [ah]  "x" (_a), [bh]  "x" (_b),  [f] "x" (_fct));    \
-        } while (0)
+    do {                                                                \
+        register type z, a2, a1, b2, b1;                                \
+        asm __volatile__                                                \
+            (                                                           \
+             "vmul" t " %"op"[z],  %"op"[ah], %"op"[f]\n\t"             \
+             "vsub" t " %"op"[a1], %"op"[z],  %"op"[ah]\n\t"            \
+             "vsub" t " %"op"[a1], %"op"[z],  %"op"[a1]\n\t"            \
+             "vsub" t " %"op"[a2], %"op"[ah], %"op"[a1]\n\t"            \
+             "vmul" t " %"op"[z],  %"op"[bh], %"op"[f]\n\t"             \
+             "vsub" t " %"op"[b1], %"op"[z],  %"op"[bh]\n\t"            \
+             "vsub" t " %"op"[b1], %"op"[z],  %"op"[b1]\n\t"            \
+             "vsub" t " %"op"[b2], %"op"[bh], %"op"[b1]\n\t"            \
+             "vmul" t " %"op"[x0], %"op"[ah], %"op"[bh]\n\t"            \
+             "vmul" t " %"op"[z],  %"op"[b1], %"op"[a1]\n\t"            \
+             "vsub" t " %"op"[y0], %"op"[x0], %"op"[z]\n\t"             \
+             "vmul" t " %"op"[z],  %"op"[a2], %"op"[b1]\n\t"            \
+             "vsub" t " %"op"[y0], %"op"[y0], %"op"[z]\n\t"             \
+             "vmul" t " %"op"[z],  %"op"[a1], %"op"[b2]\n\t"            \
+             "vsub" t " %"op"[y0], %"op"[y0], %"op"[z]\n\t"             \
+             "vmul" t " %"op"[z],  %"op"[a2], %"op"[b2]\n\t"            \
+             "vsub" t " %"op"[y0], %"op"[z],  %"op"[y0]\n\t"            \
+             : [x0] "+"co (_x), [y0] "+"co (_y), [z]  "+"co (z),        \
+               [a1] "+"co (a1), [a2] "+"co (a2),                        \
+               [b1] "+"co (b1), [b2] "+"co (b2)                         \
+             : [ah]  "x" (_a), [bh]  "x" (_b),  [f] "x" (_fct));        \
+    } while (0)
+
+#define __twoprod_vec(t, type, _x, _y, _a, _b, _fct)                    \
+    do {                                                                \
+        register type z, f0, a2, a1, b2, b1;                            \
+        f0 = _fct;                                                      \
+        z  = vmulq_f32(_a, f0);						\
+        a1 = vsubq_f32( z, _a);						\
+        a1 = vsubq_f32( z, a1);						\
+        a2 = vsubq_f32(_a, a1);						\
+        z  = vmulq_f32(_b, f0);						\
+        b1 = vsubq_f32( z, _b);						\
+        b1 = vsubq_f32( z, b1);						\
+        b2 = vsubq_f32(_b, b1);						\
+        _x = vmulq_f32(_a, _b);						\
+        z  = vmulq_f32(a1, b1);						\
+        _y = vsubq_f32(_x, z);                                          \
+        z  = vmulq_f32(a2, b1);						\
+        _y = vsubq_f32(_y, z);                                          \
+        z  = vmulq_f32(a1, b2);						\
+        _y = vsubq_f32(_y, z);                                          \
+        z  = vmulq_f32(a2, b2);						\
+        _y = vsubq_f32(z, _y);						\
+    } while (0)
 
 
 /*
@@ -246,6 +301,34 @@ extern "C" {
                   : [a] co  (_a), [b] co  (_b),  [f] co (_fct));        \
          } while (0)
 
+#define __approx_twodiv_vec(t, type, _x, _y, _a, _b, _fct)     \
+    do {                                                \
+        register type z, f0, a2, a1, b2, b1, v, w;      \
+        f0 = _fct;                                      \
+        _x = vdivq_f32(_a, _b);                         \
+        z  = vmulq_f32(_x, f0);                         \
+        a1 = vsubq_f32( z, _a);                         \
+        a1 = vsubq_f32( z, a1);                         \
+        a2 = vsubq_f32(_x, a1);                         \
+        z  = vmulq_f32(_b, f0);                         \
+        b1 = vsubq_f32( z, _b);                         \
+        b1 = vsubq_f32( z, b1);                         \
+        b2 = vsubq_f32(_b, b1);                         \
+        v  = vmulq_f32(_a, _b);                         \
+        z  = vmulq_f32(a1, b1);                         \
+        w  = vsubq_f32( v, z);                          \
+        z  = vmulq_f32(a2, b1);                         \
+        w  = vsubq_f32( w, z);                          \
+        z  = vmulq_f32(a1, b2);                         \
+        w  = vsubq_f32( w, z);                          \
+        z  = vmulq_f32(a2, b2);                         \
+        w  = vsubq_f32( z,  w);                         \
+        v  = vsubq_f32(_a, v);                          \
+        v  = vsubq_f32( v, w);                          \
+        _y = vdivq_f32( v, _b);                         \
+    } while (0)
+
+
 #endif
 
 #define __twosum_base_f32(_x, _y, _a, _b) \
@@ -290,6 +373,10 @@ extern "C" {
 
 #ifdef __HAVE_SIMD32X4
 
+static const float32x4_t __factor_f32x4 = (const float32x4_t){
+    __FACT32, __FACT32, __FACT32, __FACT32
+};
+
 #define __twosum_base_f32x4(_x, _y, _a, _b)                             \
              __twosum_base(".f32", "t", "q", float32x4_t, _x, _y, _a, _b)
 
@@ -297,13 +384,13 @@ extern "C" {
              __fastsum_base(".f32", "t", "q", float32x4_t, _x, _y, _a, _b)
 
 #define __twoprod_base_f32x4(_x, _y, _a, _b)                            \
-             __twoprod_base(".f32", "t", "q", float32x4_t, _x, _y, _a, _b, __fact_f32x4)
+             __twoprod_vec("q_f32", float32x4_t, _x, _y, _a, _b, __factor_f32x4)
 
 #define __approx_twodiv_base_f32x4(_x, _y, _a, _b)                      \
-             __approx_twodiv_base(".f32", "t", "q", float32x4_t, _x, _y, _a, _b, __fact_f32x4);
+             __approx_twodiv_vec("q_f32", float32x4_t, _x, _y, _a, _b, __factor_f32x4);
 
 #define __split_base_f32x4(_x, _y, _a)                                  \
-             __split_base(".f32", "t", "q", float32x4_t, _x, _y, _a, __fact_f32x4);
+             __split_base(".f32", "t", "q", float32x4_t, _x, _y, _a, __factor_f32x4);
 
 #define __extract_scalar_base_f32x4(_x, _y, _p, _r)                     \
              __extract_scalar_base(".f32", "t", "q", float32x4_t, _x, _y, _p, _r)
