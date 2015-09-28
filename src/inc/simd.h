@@ -12,9 +12,19 @@
 extern "C" {
 #endif
 
+/*
+ * Macros in architecture spesific headers generate multiple "break strict-aliasing rules" warnings.
+ * Ignore these warnings.
+ */
+#ifndef __nopragma
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
+
 #if defined(__x86_64__)
 #if defined(__AVX__)
 
+#include <stdint.h>
 #include <immintrin.h>
 
 #ifndef __HAVE_SIMD32X4 
@@ -73,6 +83,20 @@ int eq_f32x4(float32x4_t A, float32x4_t B)
     return 0.0 == hsum_f32x4(C);
 }
 
+static inline __attribute__((__always_inline__))
+int le_f32x4(float32x4_t A, float32x4_t B)
+{
+    float32x4_t C = A > B;
+    return 0.0 == hsum_f32x4(C);
+}
+
+static inline __attribute__((__always_inline__))
+int lt_f32x4(float32x4_t A, float32x4_t B)
+{
+    float32x4_t C = A >= B;
+    return 0.0 == hsum_f32x4(C);
+}
+
 /*
  * {ABCD} : {CDAB} = {ABAB}
  * {ABAB} : {BABA} = {AAAA}
@@ -99,14 +123,49 @@ float min_f32x4(float32x4_t A)
 static inline __attribute__((__always_inline__))
 float32x4_t hflip_f32x4(float32x4_t A)
 {
-  return _mm_permute_ps(A, 0b01001110);
+    return _mm_permute_ps(A, 0b01001110);
 }
 
 // pairwise flip
 static inline __attribute__((__always_inline__))
 float32x4_t pflip_f32x4(float32x4_t A)
 {
-  return _mm_permute_ps(A, 0b10110001);
+    return _mm_permute_ps(A, 0b10110001);
+}
+
+static inline __attribute__((__always_inline__))
+float32x4_t abs_f32x4(float32x4_t A)
+{
+    unsigned int m = 0x7FFFFFFF;
+    float32x4_t mask = set1_f32x4(*(float *)&m);
+    return _mm_and_ps(A, mask);
+}
+
+static inline __attribute__((__always_inline__))
+float32x4_t neg_f32x4(float32x4_t A)
+{
+    unsigned int m = ~UINT32_MAX;
+    float32x4_t mask = set1_f32x4(*(float *)&m);
+    return _mm_xor_ps(A, mask);
+}
+
+static inline __attribute__((__always_inline__))
+float32x4_t zero_f32x4(void)
+{
+    float32x4_t m;
+    return _mm_xor_ps(m, m);
+}
+
+static inline __attribute__((__always_inline__))
+float32x4_t load_f32x4(const float *a)
+{
+    return _mm_load_ps(a);
+}
+
+static inline __attribute__((__always_inline__))
+float32x4_t loadu_f32x4(const float *a)
+{
+    return _mm_loadu_ps(a);
 }
 
 #endif // __HAVE_SIMD32X4
@@ -134,6 +193,27 @@ double hsum_f64x2(float64x2_t A)
     register float64x2_t B;
     B = _mm_hadd_pd(A, A);
     return B[0];
+}
+
+static inline __attribute__((__always_inline__))
+int eq_f64x2(float64x2_t A, float64x2_t B)
+{
+    register float64x2_t C = A != B;
+    return 0.0 == hsum_f64x2(C);
+}
+
+static inline __attribute__((__always_inline__))
+int le_f64x2(float64x2_t A, float64x2_t B)
+{
+    register float64x2_t C = A > B;
+    return 0.0 == hsum_f64x2(C);
+}
+
+static inline __attribute__((__always_inline__))
+int lt_f64x2(float64x2_t A, float64x2_t B)
+{
+    register float64x2_t C = A >= B;
+    return 0.0 == hsum_f64x2(C);
 }
 
 static inline __attribute__((__always_inline__))
@@ -190,6 +270,20 @@ int eq_f64x4(float64x4_t A, float64x4_t B)
     return 0.0 == hsum_f64x4(C);
 }
 
+static inline __attribute__((__always_inline__))
+int le_f64x4(float64x4_t A, float64x4_t B)
+{
+    register float64x4_t C = A > B;
+    return 0.0 == hsum_f64x4(C);
+}
+
+static inline __attribute__((__always_inline__))
+int lt_f64x4(float64x4_t A, float64x4_t B)
+{
+    register float64x4_t C = A >= B;
+    return 0.0 == hsum_f64x4(C);
+}
+
 /*
  * Assume A > B > C > D
  *
@@ -221,14 +315,30 @@ double min_f64x4(float64x4_t A)
 static inline __attribute__((__always_inline__))
 float64x4_t hflip_f64x4(float64x4_t A)
 {
-  return _mm256_permute2f128_pd(A, A, 1);
+    return _mm256_permute2f128_pd(A, A, 1);
 }
 
 // pairwise flip; {1, 2, 3, 4} -> {2, 1, 4, 3}
 static inline __attribute__((__always_inline__))
 float64x4_t pflip_f64x4(float64x4_t A)
 {
-  return _mm256_permute_pd(A, 0b0101);
+    return _mm256_permute_pd(A, 0b0101);
+}
+
+static inline __attribute__((__always_inline__))
+float64x4_t abs_f64x4(float64x4_t A)
+{
+    uint64_t m = INT64_MAX;
+    float64x4_t mask = set1_f64x4(*(double *)&m);
+    return _mm256_and_pd(A, mask);
+}
+
+static inline __attribute__((__always_inline__))
+float64x4_t neg_f64x4(float64x4_t A)
+{
+    uint64_t m = ~UINT64_MAX;
+    float64x4_t mask = set1_f64x4(*(double *)&m);
+    return _mm256_xor_pd(A, mask);
 }
 
 #endif // __HAVE_SIMD64X4
@@ -270,6 +380,20 @@ static inline __attribute__((__always_inline__))
 int eq_f32x8(float32x8_t A, float32x8_t B)
 {
     register float32x8_t C = A != B;
+    return 0.0 == hsum_f32x8(C);
+}
+
+static inline __attribute__((__always_inline__))
+int le_f32x8(float32x8_t A, float32x8_t B)
+{
+    register float32x8_t C = A > B;
+    return 0.0 == hsum_f32x8(C);
+}
+
+static inline __attribute__((__always_inline__))
+int lt_f32x8(float32x8_t A, float32x8_t B)
+{
+    register float32x8_t C = A >= B;
     return 0.0 == hsum_f32x8(C);
 }
 
@@ -316,7 +440,7 @@ float min_f32x8(float32x8_t A)
 static inline __attribute__((__always_inline__))
 float32x8_t hflip_f32x8(float32x8_t A)
 {
-  return _mm256_permute2f128_ps(A, A, 1);
+    return _mm256_permute2f128_ps(A, A, 1);
 }
 
 /**
@@ -325,17 +449,35 @@ float32x8_t hflip_f32x8(float32x8_t A)
 static inline __attribute__((__always_inline__))
 float32x8_t pflip_f32x8(float32x8_t A)
 {
-  return _mm256_permute_ps(A, 0b10110001);
+    return _mm256_permute_ps(A, 0b10110001);
 }
 
 /**
- * Flip 256bit vector  single precision elements in pairs, 32x2 parts
+ * Flip 256bit vector  pairs of single precision elements, 32x2 parts
  */
 static inline __attribute__((__always_inline__))
 float32x8_t qflip_f32x8(float32x8_t A)
 {
-  return _mm256_permute_ps(A, 0b01001110);
+    return _mm256_permute_ps(A, 0b01001110);
 }
+
+static inline __attribute__((__always_inline__))
+float32x8_t abs_f32x8(float32x8_t A)
+{
+    uint32_t m = 0x7FFFFFFF;
+    float32x8_t mask = set1_f32x8(*(float *)&m);
+    return _mm256_and_ps(A, mask);
+}
+
+static inline __attribute__((__always_inline__))
+float32x8_t neg_f32x8(float32x8_t A)
+{
+    uint32_t m = ~INT32_MAX;
+    float32x8_t mask = set1_f32x8(*(float *)&m);
+    return _mm256_xor_ps(A, mask);
+}
+
+
 
 #endif  // __HAVE_SIMD32X8
 
@@ -353,6 +495,13 @@ float32x8_t qflip_f32x8(float32x8_t A)
 #endif
 
 #ifdef __HAVE_SIMD32X4
+
+static inline __attribute__((__always_inline__))
+float32x4_t set1_f32x4(float v)
+{
+    return (float32x4_t){v, v, v, v};
+}
+
 static inline __attribute__((__always_inline__))
 float hsum_f32x4(float32x4_t A)
 {
@@ -367,8 +516,26 @@ int eq_f32x4(float32x4_t A, float32x4_t B)
 {
   register float32x4_t C;
   C = (float32x4_t)(A != B); 
-  return 0.0 == hsum_f32x4(C));
+  return 0.0 == hsum_f32x4(C);
 }
+
+#if 0
+static inline __attribute__((__always_inline__))
+int le_f32x4(float32x4_t A, float32x4_t B)
+{
+  register float32x4_t C;
+  C = (float32x4_t)(A > B); 
+  return 0.0 == hsum_f32x4(C);
+}
+
+static inline __attribute__((__always_inline__))
+int lt_f32x4(float32x4_t A, float32x4_t B)
+{
+  register float32x4_t C;
+  C = (float32x4_t)(A >= B); 
+  return 0.0 == hsum_f32x4(C);
+}
+#endif
 
 static inline __attribute__((__always_inline__))
 float max_f32x4(float32x4_t A)
@@ -390,11 +557,45 @@ float min_f32x4(float32x4_t A)
   return C[0];
 }
 
+static inline __attribute__((__always_inline__))
+float32x4_t abs_f32x4(float32x4_t A)
+{
+    return vabsq_f32(A);
+}
+
+static inline __attribute__((__always_inline__))
+float32x4_t neg_f32x4(float32x4_t A)
+{
+    return vnegq_f32(A);
+}
+
+static inline __attribute__((__always_inline__))
+float32x4_t zero_f32x4()
+{
+    uint32x4_t z;
+    return (float32x4_t)veorq_u32(z, z);
+}
+
+static inline __attribute__((__always_inline__))
+float32x4_t load_f32x4(const float *a)
+{
+    return vld1q_f32(a);
+}
+
+static inline __attribute__((__always_inline__))
+float32x4_t loadu_f32x4(const float *a)
+{
+    return vld1q_f32(a);
+}
 
 #endif // __HAVE_SIMD32X4
 
 #endif // __ARM_NEON
 #endif // __arm__
+
+#ifndef __nopragma
+#pragma GCC diagnostic pop
+#endif
 
 #ifdef __cplusplus
 }
