@@ -162,8 +162,8 @@ static const __m256d __fact_f64x4 = (const __m256d){
              movi " %[ah], %[a0]\n\t"                                   \
              movi " %[bh], %[b0]\n\t"                                   \
              "vmul" t " %[ah], %[bh], %[ch]\n\t"                        \
-             "mov" t  " %[ch], %[cl]\n\t"                               \
-             "vfmsub231" t " %[ah], %[bh], %[cl]\n\t"                   \
+             movi " %[ch], %[cl]\n\t"                                   \
+             "vfmsub231" t " %[a0], %[b0], %[cl]\n\t"                   \
              : [ch] "+x" (x),  [cl] "+x" (y),                           \
                [a0] "+x" (a0), [b0] "+x" (b0)                           \
              : [ah]  "x"  (a), [bh]  "x"  (b));                         \
@@ -182,11 +182,11 @@ static const __m256d __fact_f64x4 = (const __m256d){
  */
 #define __approx_twodiv_base(t, movi, type, _x, _y, _a, _b, _fct)       \
      do {                                                               \
-         register type v, w, a0, b0;                                       \
+         register type v, w, a0, b0;                                    \
          asm __volatile__                                               \
              (                                                          \
-              movi " %[ah], %[a0]\n\t"                                  \
-              movi " %[bh], %[b0]\n\t"                                  \
+              movi " %[a], %[a0]\n\t"                                   \
+              movi " %[b], %[b0]\n\t"                                   \
               "vdiv" t " %[b], %[a], %[x]\n\t"                          \
               "vmul" t " %[b0], %[x], %[v]\n\t"                         \
               movi " %[v], %[w]\n\t"                                    \
@@ -195,7 +195,7 @@ static const __m256d __fact_f64x4 = (const __m256d){
               "vsub" t " %[w], %[v], %[v]\n\t"                          \
               "vdiv" t " %[b0], %[v], %[y]\n\t"                         \
               : [x]  "+x" (_x), [y]  "+x" (_y),                         \
-                [v]  "+x" (v),  [w]  "+x" (w)                           \
+                [v]  "+x" (v),  [w]  "+x" (w),                          \
                 [a0] "+x" (a0), [b0] "+x" (b0)                          \
               : [a]  "x"  (_a), [b]  "x"  (_b));                        \
      } while (0)
