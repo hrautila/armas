@@ -4,10 +4,11 @@
 #include <unistd.h>
 #include <time.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "testing.h"
+//#include <armas/dmatrix.h>
+//#include "helper.h"
 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
   armas_conf_t conf;
   armas_d_dense_t X, Y, Y0, A, At;

@@ -5,8 +5,9 @@
 #include <time.h>
 #include <float.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "testing.h"
+//#include <armas/dmatrix.h>
+//#include "helper.h"
 
 /*
  *  Generate set matrices such that C = A * B
