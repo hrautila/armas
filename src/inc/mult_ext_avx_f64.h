@@ -53,8 +53,7 @@ void __mult1c1_ext(DTYPE *c, DTYPE *d, const DTYPE *a, const DTYPE *b, DTYPE alp
     
     twoprod_f64x4(&P, &Q, A, B); // 17 flops / 2 flops with FMA
     twosum_f64x4(&S, &R, P, S);  // 6 flops
-    R += Q;                      // 2 flops
-    C += R;
+    C += (R + Q);                // 2 flops
   }
   if (k == nR)
     goto update;
@@ -78,8 +77,7 @@ void __mult1c1_ext(DTYPE *c, DTYPE *d, const DTYPE *a, const DTYPE *b, DTYPE alp
   }
   twoprod_f64x4(&P, &Q, A, B);
   twosum_f64x4(&S, &R, P, S);
-  R += Q;
-  C += R;
+  C += (R + Q);
   
  update:
   A = _mm256_set1_pd(alpha);
@@ -115,13 +113,11 @@ void __mult1c2_ext(DTYPE *c0, DTYPE *c1, DTYPE *d0, DTYPE *d1,
 
     twoprod_f64x4(&P0, &Q0, A, B0);
     twosum_f64x4(&S0, &R0, P0, S0);
-    R0 += Q0;
-    C0 += R0;
+    C0 += (R0 + Q0);
 
     twoprod_f64x4(&P1, &Q1, A, B1);
     twosum_f64x4(&S1, &R1, P1, S1);
-    R1 += Q1;
-    C1 += R1;
+    C1 += (R1 + Q1);
   }
   if (k == nR)
     goto update;
@@ -149,13 +145,11 @@ void __mult1c2_ext(DTYPE *c0, DTYPE *c1, DTYPE *d0, DTYPE *d1,
   }
   twoprod_f64x4(&P0, &Q0, A, B0);
   twosum_f64x4(&S0, &R0, P0, S0);
-  R0 += Q0; 
-  C0 += C0; 
+  C0 += (R0 + Q0); 
 
   twoprod_f64x4(&P1, &Q1, A, B1);
   twosum_f64x4(&S1, &R1, P1, S1);
-  R1 += Q1;
-  C1 += R1;
+  C1 += (R1 + Q1);
   
  update:
   A = _mm256_set1_pd(alpha);
