@@ -94,7 +94,7 @@ int __blk_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W, 
   __armas_dense_t TL, TR, T00, T01, T02;
   __armas_dense_t w1, Wrk;
 
-  EMPTY(A00);
+  EMPTY(A00); EMPTY(AL);
   EMPTY(TL); EMPTY(TR); EMPTY(T00); EMPTY(w1);
 
   __partition_2x2(&ATL,  __nil,

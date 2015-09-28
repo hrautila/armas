@@ -203,7 +203,7 @@ int __unblk_build_hess_gqvdg(__armas_dense_t *A, __armas_dense_t *T,
   __armas_dense_t TTL, TBR, T00, t01, t11, T22;
   DTYPE beta, tauval;
 
-  EMPTY(a11);
+  EMPTY(a11); EMPTY(A00);
   EMPTY(VR); EMPTY(VL); EMPTY(AL); 
 
   beta = __ZERO;
