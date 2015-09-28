@@ -91,6 +91,7 @@ AM_CONDITIONAL([ENABLE_FLOAT32],    [test "$enable_float32" = "yes"])
 AM_CONDITIONAL([ENABLE_COMPLEX64],  [test "$enable_complex64" = "yes"])
 AM_CONDITIONAL([ENABLE_COMPLEX128], [test "$enable_complex128" = "yes"])
 AM_CONDITIONAL([ENABLE_EXT_PRECISION], [test "$enable_ext_precision" = "yes"])
+AM_CONDITIONAL([ENABLE_COMPAT],     [test "$enable_compat" = "yes"])
 
 AM_CONDITIONAL([HAVE_GMP_MPFR], [test "$have_gmp_and_mpfr" = "yes"])
 
