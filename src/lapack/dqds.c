@@ -605,10 +605,10 @@ int __dqds_goodstep(DTYPE *ssum, __armas_dense_t *Z, int N, int pp, dmin_data_t 
     //printf("..[goodstep] entering ping=%d, N=%d, newseg=%d, sigma=%e, dmin=%e\n",
     //     pp, N, newseg, sigma, dmind->dmin);
 
-    armas_d_row(&sq, Z, pp);
-    armas_d_row(&dq, Z, 1 - pp);
-    armas_d_row(&se, Z, 2 + pp);
-    armas_d_row(&de, Z, 3 - pp);
+    __armas_row(&sq, Z, pp);
+    __armas_row(&dq, Z, 1 - pp);
+    __armas_row(&se, Z, 2 + pp);
+    __armas_row(&de, Z, 3 - pp);
 
     dmind->niter++;
     if (N == 1) {
@@ -802,10 +802,10 @@ void __dqds_li_test(int ping, __armas_dense_t *Z, int N, DTYPE *emin, DTYPE *qma
 
     EMPTY(de); EMPTY(dq); EMPTY(se); EMPTY(sq);
 
-    armas_d_row(&sq, Z, ping);
-    armas_d_row(&dq, Z, 1 - ping);
-    armas_d_row(&se, Z, 2 + ping);
-    armas_d_row(&de, Z, 3 - ping);
+    __armas_row(&sq, Z, ping);
+    __armas_row(&dq, Z, 1 - ping);
+    __armas_row(&se, Z, 2 + ping);
+    __armas_row(&de, Z, 3 - ping);
 
     d = __armas_get_at_unsafe(&sq, N-1);
     // run Li's reverse test
