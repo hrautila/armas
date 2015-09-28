@@ -661,7 +661,7 @@ int test_twosum_f32x4(int verbose)
     printf("\tx=a; x+b, x==1001 && y==eps  : '%c'\n", OK(x_ok && y_ok));
 
   x = b;
-  twosum_f32x4(&x, &y, x, b);
+  twosum_f32x4(&x, &y, a, x);
   x_ok = eq_f32x4(x, x_exp);
   y_ok = eq_f32x4(y, y_exp);
   nfails += 1 - (int)(x_ok && y_ok);
@@ -700,6 +700,53 @@ int test_twosum_extf32x4(int verbose)
   nfails += 1 - (int)(x_ok && y_ok);
   if (verbose)
     printf("\t|a|<|b|, x==1001 && y==0.0  : '%c'\n", OK(x_ok && y_ok));
+  return nfails;
+}
+
+int test_twoprod_f32x4(int verbose)
+{
+  int x_ok, y_ok, nfails = 0;
+  float32x4_t x, y;
+  float32x4_t a = set1_f32x4(1.0 - FLT_EPSILON);
+  float32x4_t b = set1_f32x4(1.0 + FLT_EPSILON);
+  float32x4_t x_exp = set1_f32x4(1.0);
+  float32x4_t y_exp = set1_f32x4(-FLT_EPSILON*FLT_EPSILON);
+
+  if (verbose)
+    printf("twoprod_f32x4: |a| > |b|, (1.0 - eps) * (1.0 + eps)\n");
+
+  twoprod_f32x4(&x, &y, a, b);
+  x_ok = eq_f32x4(x, x_exp);
+  y_ok = eq_f32x4(y, y_exp);
+  nfails += 1 - (int)(x_ok && y_ok);
+  if (verbose)
+    printf("\t     a*b, x==1.0 && y==-eps*eps : '%c'\n", OK(x_ok && y_ok));
+
+  twoprod_f32x4(&x, &y, b, a);
+  x_ok = eq_f32x4(x, x_exp);
+  y_ok = eq_f32x4(y, y_exp);
+
+  nfails += 1 - (int)(x_ok && y_ok);
+  if (verbose)
+    printf("\t     b*a, x==1.0 && y==-eps*eps : '%c'\n", OK(x_ok && y_ok));
+
+  x = a;
+  twoprod_f32x4(&x, &y, x, b);
+  x_ok = eq_f32x4(x, x_exp);
+  y_ok = eq_f32x4(y, y_exp);
+  nfails += 1 - (int)(x_ok && y_ok);
+  if (verbose)
+    printf("\tx=a; x*b, x==1.0 && y==-eps*eps : '%c'\n", OK(x_ok && y_ok));
+
+  x = b;
+  twoprod_f32x4(&x, &y, a, x);
+  x_ok = eq_f32x4(x, x_exp);
+  y_ok = eq_f32x4(y, y_exp);
+  nfails += 1 - (int)(x_ok && y_ok);
+  if (verbose)
+    printf("\tx=b; a*x, x==1.0 && y==-eps*eps : '%c'\n", OK(x_ok && y_ok));
+
+
   return nfails;
 }
 #endif
@@ -855,6 +902,7 @@ int main(int argc, char **argv)
 
 #ifdef __HAVE_SIMD32X4
   TEST(nfails, test_twosum_f32x4);
+  TEST(nfails, test_twoprod_f32x4);
 #endif
 
 #ifdef __HAVE_SIMD64X2
