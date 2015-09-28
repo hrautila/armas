@@ -8,6 +8,8 @@
 #ifndef _MULT_AVX_F64_H
 #define _MULT_AVX_F64_H 1
 
+#include <limits.h>
+#include <stdint.h>
 #include <immintrin.h>
 
 #if defined(UNALIGNED)
@@ -33,6 +35,14 @@
 #include "simd.h"
 #include "debug.h"
 
+#define __hb64  (1L << 63)
+
+static const uint64_t __masks_pd[4][4] __attribute__((aligned(64))) = {
+  {__hb64, __hb64, __hb64, __hb64},
+  {     0, __hb64, __hb64, __hb64},
+  {     0,      0, __hb64, __hb64},
+  {     0,      0,      0, __hb64}};
+
 // update 1x4 block of C; one row, four columns (mult4x1x1)
 static inline
 void __mult1c4(double *c0, double *c1, double *c2, double *c3,
@@ -40,7 +50,7 @@ void __mult1c4(double *c0, double *c1, double *c2, double *c3,
                const double *b2, const double *b3, double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, y2, y3, A0, Z;
+  register __m256d y0, y1, y2, y3, A0, Z, M;
   y0 = _mm256_set1_pd(0.0);
   y1 = y2 = y3 = y0;
 
@@ -55,18 +65,10 @@ void __mult1c4(double *c0, double *c1, double *c2, double *c3,
     goto update;
 
   Z  = _mm256_set1_pd(0.0);
+  M  = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
   A0 = mm_load_A(&a[k]);
-  switch(nR-k) {
-  case 3:
-    A0 = _mm256_blend_pd(A0, Z, 0x8);
-    break;
-  case 2:
-    A0 = _mm256_blend_pd(A0, Z, 0xC);
-    break;
-  case 1:
-    A0 = _mm256_blend_pd(A0, Z, 0xE);
-    break;
-  }
+  A0 = _mm256_blendv_pd(A0, Z, M);
+
   y0 += _mm256_mul_pd(A0, mm_load_B(&b0[k]));
   y1 += _mm256_mul_pd(A0, mm_load_B(&b1[k]));
   y2 += _mm256_mul_pd(A0, mm_load_B(&b2[k]));
@@ -88,7 +90,7 @@ void __mult2c4(double *c0, double *c1, double *c2, double *c3,
                double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, y2, y3, y4, y5, y6, y7, A0, A1, Z;
+  register __m256d y0, y1, y2, y3, y4, y5, y6, y7, A0, A1, Z, M;
   y0 = _mm256_set1_pd(0.0);
   y1 = y2 = y3 = y4 = y5 = y6 = y7 = y0;
 
@@ -110,22 +112,12 @@ void __mult2c4(double *c0, double *c1, double *c2, double *c3,
     goto update;
 
   Z  = _mm256_set1_pd(0.0);
+  M  = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
   A0 = mm_load_A(&a0[k]);
   A1 = mm_load_A(&a1[k]);
-  switch(nR-k) {
-  case 3:
-    A0 = _mm256_blend_pd(A0, Z, 0x8);
-    A1 = _mm256_blend_pd(A1, Z, 0x8);
-    break;
-  case 2:
-    A0 = _mm256_blend_pd(A0, Z, 0xC);
-    A1 = _mm256_blend_pd(A1, Z, 0xC);
-    break;
-  case 1:
-    A0 = _mm256_blend_pd(A0, Z, 0xE);
-    A1 = _mm256_blend_pd(A1, Z, 0xE);
-    break;
-  }
+  A0 = _mm256_blendv_pd(A0, Z, M);
+  A1 = _mm256_blendv_pd(A1, Z, M);
+
   y0 += _mm256_mul_pd(A0, mm_load_B(&b0[k]));
   y1 += _mm256_mul_pd(A0, mm_load_B(&b1[k]));
   y2 += _mm256_mul_pd(A0, mm_load_B(&b2[k]));
@@ -155,7 +147,7 @@ void __mult1c2(double *c0, double *c1,
                double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, A0, Z;
+  register __m256d y0, y1, A0, Z, M;
 
   y0 = _mm256_set1_pd(0.0);
   y1 = y0; 
@@ -169,18 +161,10 @@ void __mult1c2(double *c0, double *c1,
     goto update;
 
   Z  = _mm256_set1_pd(0.0);
+  M  = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
   A0 = mm_load_A(&a[k]);
-  switch(nR-k) {
-  case 3:
-    A0 = _mm256_blend_pd(A0, Z, 0x8);
-    break;
-  case 2:
-    A0 = _mm256_blend_pd(A0, Z, 0xC);
-    break;
-  case 1:
-    A0 = _mm256_blend_pd(A0, Z, 0xE);
-    break;
-  }
+  A0 = _mm256_blendv_pd(A0, Z, M);
+
   y0 += _mm256_mul_pd(A0, mm_load_B(&b0[k]));
   y1 += _mm256_mul_pd(A0, mm_load_B(&b1[k]));
 
@@ -198,7 +182,7 @@ void __mult2c2(double *c0, double *c1,
                double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, y2, y3, A0, A1, Z;
+  register __m256d y0, y1, y2, y3, A0, A1, Z, M;
 
   y0 = _mm256_set1_pd(0.0);
   y1 = y0; 
@@ -217,22 +201,12 @@ void __mult2c2(double *c0, double *c1,
     goto update;
 
   Z  = _mm256_set1_pd(0.0);
+  M  = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
   A0 = mm_load_A(&a0[k]);
   A1 = mm_load_A(&a1[k]);
-  switch(nR-k) {
-  case 3:
-    A0 = _mm256_blend_pd(A0, Z, 0x8);
-    A1 = _mm256_blend_pd(A1, Z, 0x8);
-    break;
-  case 2:
-    A0 = _mm256_blend_pd(A0, Z, 0xC);
-    A1 = _mm256_blend_pd(A1, Z, 0xC);
-    break;
-  case 1:
-    A0 = _mm256_blend_pd(A0, Z, 0xE);
-    A1 = _mm256_blend_pd(A1, Z, 0xE);
-    break;
-  }
+  A0 = _mm256_blendv_pd(A0, Z, M);
+  A1 = _mm256_blendv_pd(A1, Z, M);
+
   y0 += _mm256_mul_pd(A0, mm_load_B(&b0[k]));
   y1 += _mm256_mul_pd(A0, mm_load_B(&b1[k]));
   y2 += _mm256_mul_pd(A1, mm_load_B(&b0[k]));
@@ -250,7 +224,7 @@ static inline
 void __mult1c1(double *c, const double *a, const double *b, double alpha, int nR)
 {
   register int k;
-  register __m256d y0, A, Z;
+  register __m256d y0, A, Z, M;
   y0 = _mm256_set1_pd(0.0);
   for (k = 0; k < nR-3; k += 4) {
     A  = mm_load_A(&a[k]);
@@ -260,18 +234,10 @@ void __mult1c1(double *c, const double *a, const double *b, double alpha, int nR
     goto update;
 
   Z = _mm256_set1_pd(0.0);
+  M = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
   A = mm_load_A(&a[k]);
-  switch(nR-k) {
-  case 3:
-    A = _mm256_blend_pd(A, Z, 0x8);
-    break;
-  case 2:
-    A = _mm256_blend_pd(A, Z, 0xC);
-    break;
-  case 1:
-    A = _mm256_blend_pd(A, Z, 0xE);
-    break;
-  }
+  A = _mm256_blendv_pd(A, Z, M);
+
   y0 += _mm256_mul_pd(A, mm_load_B(&b[k]));
 
 update:
@@ -290,7 +256,7 @@ void __mult4c1(double *c0,
                const double *b0, double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, y2, y3, B0, Z;
+  register __m256d y0, y1, y2, y3, B0, Z, M;
   y0 = _mm256_set1_pd(0.0);
   y1 = y2 = y3 = y0;
 
@@ -305,18 +271,10 @@ void __mult4c1(double *c0,
     goto update;
 
   Z  = _mm256_set1_pd(0.0);
+  M  = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
   B0 = mm_load_B(&b0[k]);
-  switch(nR-k) {
-  case 3:
-    B0 = _mm256_blend_pd(B0, Z, 0x8);
-    break;
-  case 2:
-    B0 = _mm256_blend_pd(B0, Z, 0xC);
-    break;
-  case 1:
-    B0 = _mm256_blend_pd(B0, Z, 0xE);
-    break;
-  }
+  B0 = _mm256_blendv_pd(B0, Z, M);
+
   y0 += _mm256_mul_pd(B0, mm_load_A(&a0[k]));
   y1 += _mm256_mul_pd(B0, mm_load_A(&a1[k]));
   y2 += _mm256_mul_pd(B0, mm_load_A(&a2[k]));
@@ -338,7 +296,7 @@ void __mult4c2(double *c0, double *c1,
                const double *b0, const double *b1, double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, y2, y3, y4, y5, y6, y7, B0, B1, Z;
+  register __m256d y0, y1, y2, y3, y4, y5, y6, y7, B0, B1, Z, M;
   y0 = _mm256_set1_pd(0.0);
   y1 = y2 = y3 = y0;
   y4 = y5 = y6 = y7 = y0;
@@ -360,22 +318,12 @@ void __mult4c2(double *c0, double *c1,
     goto update;
 
   Z  = _mm256_set1_pd(0.0);
+  M  = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
   B0 = mm_load_B(&b0[k]);
   B1 = mm_load_B(&b1[k]);
-  switch(nR-k) {
-  case 3:
-    B0 = _mm256_blend_pd(B0, Z, 0x8);
-    B1 = _mm256_blend_pd(B1, Z, 0x8);
-    break;
-  case 2:
-    B0 = _mm256_blend_pd(B0, Z, 0xC);
-    B1 = _mm256_blend_pd(B1, Z, 0xC);
-    break;
-  case 1:
-    B0 = _mm256_blend_pd(B0, Z, 0xE);
-    B1 = _mm256_blend_pd(B1, Z, 0xE);
-    break;
-  }
+  B0 = _mm256_blendv_pd(B0, Z, M);
+  B1 = _mm256_blendv_pd(B1, Z, M);
+
   y0 += _mm256_mul_pd(B0, mm_load_A(&a0[k]));
   y1 += _mm256_mul_pd(B0, mm_load_A(&a1[k]));
   y2 += _mm256_mul_pd(B0, mm_load_A(&a2[k]));
@@ -405,7 +353,7 @@ void __mult2c1(double *c0,
                const double *b0, double alpha, int nR)
 {
   register int k;
-  register __m256d y0, y1, B0, Z;
+  register __m256d y0, y1, B0, Z, M;
 
   y0 = _mm256_set1_pd(0.0);
   y1 = y0; 
@@ -419,18 +367,10 @@ void __mult2c1(double *c0,
     goto update;
 
   Z  = _mm256_set1_pd(0.0);
+  M  = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
   B0 = mm_load_B(&b0[k]);
-  switch(nR-k) {
-  case 3:
-    B0 = _mm256_blend_pd(B0, Z, 0x8);
-    break;
-  case 2:
-    B0 = _mm256_blend_pd(B0, Z, 0xC);
-    break;
-  case 1:
-    B0 = _mm256_blend_pd(B0, Z, 0xE);
-    break;
-  }
+  B0 = _mm256_blendv_pd(B0, Z, M);
+
   y0 += _mm256_mul_pd(B0, mm_load_A(&a0[k]));
   y1 += _mm256_mul_pd(B0, mm_load_A(&a1[k]));
 
