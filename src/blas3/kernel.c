@@ -31,65 +31,66 @@
 /* ---------------------------------------------------------------------------
  * Definitions for single precision complex numbers.
  */
-#if defined(__AVX__) //&& defined(WITH_AVX_C128)
-#include "mult_avx_c128.h"
+  #if defined(__AVX__) //&& defined(WITH_AVX_C128)
+    #include "mult_avx_c128.h"
+  #elif defined(__SSE__) //&& defined(WITH_SSE_C128)
+    #include "mult_sse_c128.h"
+  #else
+    #include "mult_nosimd.h"
+  #endif
 
-#elif defined(__SSE__) //&& defined(WITH_SSE_C128)
-#include "mult_sse_c128.h"
-
-#else
-#include "mult_nosimd.h"
-
-#endif
-
-
-#elif COMPLEX64
+#elif defined(COMPLEX64)
 /* ---------------------------------------------------------------------------
  * Definitions for single precision complex numbers.
  */
 
-#if defined(__AVX__) //&& defined(WITH_AVX_C64)
-#include "mult_avx_c64.h"
+  #if defined(__AVX__) //&& defined(WITH_AVX_C64)
+    #include "mult_avx_c64.h"
+  #elif defined(__SSE__) //&& defined(WITH_SSE_C64)
+    #include "mult_sse_c64.h"
+  #else
+    #include "mult_nosimd.h"
+  #endif
 
-#elif defined(__SSE__) //&& defined(WITH_SSE_C64)
-#include "mult_sse_c64.h"
-
-#else
-#include "mult_nosimd.h"
-
-#endif
-
-#elif FLOAT32
+#elif defined(FLOAT32)
 /* ---------------------------------------------------------------------------
  * Definitions for single precision floating type.
  */
-#if defined(__AVX__) //&& defined(WITH_AVX_F32)
-#include "mult_avx_f32.h"
-
-#elif defined(__SSE__) //&& defined(WITH_SSE_F32)
-#include "mult_sse_f32.h"
-
-#else
-#include "mult_nosimd.h"
-
-#endif
+  #if defined(__x86_64__)
+    #if defined(__AVX__) //&& defined(WITH_AVX_F32)
+      #include "mult_avx_f32.h"
+    #elif defined(__SSE__) //&& defined(WITH_SSE_F32)
+      #include "mult_sse_f32.h"
+    #else
+      #include "mult_nosimd.h"
+    #endif
+  #elif defined(__arm__)
+    #if defined(__ARM_NEON)
+      #if defined(__ARM_FEATURE_FMA)
+        #include "mult_armneon_fma_f32.h"
+      #else
+        #include "mult_armneon_f32.h"
+      #endif
+    #else
+      #include "mult_nosimd.h"
+    #endif
+  #else
+      #include "mult_nosimd.h"
+  #endif
 
 #else  
 /* ---------------------------------------------------------------------------
  * Definitions for double precision floating types.
  */
-#if defined(__FMA__) //&& defined(WITH_FMA)
-#include "mult_fma_f64.h"
-
-#elif defined(__AVX__) //&& defined(WITH_AVX)
-#include "mult_avx_f64.h"
-
-#elif defined(__SSE__) //&& defined(WITH_SSE)
-#include "mult_sse_f64.h"
-
-#else
-#include "mult_nosimd.h"
-#endif
+  #if defined(__FMA__) //&& defined(WITH_FMA)
+    #include "mult_fma_f64.h"
+  #elif defined(__AVX__) //&& defined(WITH_AVX)
+    #include "mult_avx_f64.h"
+  #elif defined(__SSE__) //&& defined(WITH_SSE)
+    #include "mult_sse_f64.h"
+  #else
+    #include "mult_nosimd.h"
+  #endif
 
 #endif
 
