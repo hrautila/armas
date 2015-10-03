@@ -289,7 +289,6 @@ static const __m256d __fact_f64x4 = (const __m256d){
          
 #endif    // !defined(__FMA__)
 
-#endif    // defined(__AVX__)
                       
 
 #define __twosum_base_f32(_x, _y, _a, _b) \
@@ -329,6 +328,8 @@ static const __m256d __fact_f64x4 = (const __m256d){
 
 #define __extract_scalar_base_f64(_x, _y, _p, _r)     \
     __extract_scalar_base("sd", double, _x, _y, _p, _r)
+
+#endif    // defined(__AVX__)
 
 
 #if __SIMD_LENGTH >= 128
