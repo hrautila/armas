@@ -7,7 +7,7 @@
 #include <math.h>
 #include <float.h>
 
-#include <armas/dmatrix.h>
+//#include <armas/dmatrix.h>
 
 // Generate ill-conditioned vectors for dot product with targeted condition number.
 // 
@@ -16,9 +16,9 @@
 //     Accurate Sum and Dot Product,
 //     2005, SIAM Journal of Scientific Computing
 //  
-typedef double DTYPE;
-#include "eft.h"
+//typedef double DTYPE;
 #include "testing.h"
+#include "eft.h"
 
 #include <gmp.h>
 #include <mpfr.h>
@@ -228,8 +228,8 @@ void ep_gemv(__Matrix *Y, __Matrix *A, __Matrix *X,
 
     trans = flags & ARMAS_TRANS ? 1 : 0;
 
-    M = armas_d_size(Y);
-    N = armas_d_size(X);
+    M = matrix_size(Y);
+    N = matrix_size(X);
 
     if (prec <= 27) {
         prec = 200;
@@ -252,13 +252,13 @@ void ep_gemv(__Matrix *Y, __Matrix *A, __Matrix *X,
             } else {
                 mpfr_set_d(a1, (double)matrix_get(A, i, j), MPFR_RNDN);
             }
-            mpfr_set_d(x0, armas_d_get_at(X, j), MPFR_RNDN);
+            mpfr_set_d(x0, matrix_get_at(X, j), MPFR_RNDN);
             mpfr_mul(x0, a1, x0, MPFR_RNDN);
             mpfr_add(y0, y0, x0, MPFR_RNDN);
         }
         mpfr_mul(y0, a0, y0, MPFR_RNDN);
         // here: y0 = alpha*(sum(A[i,:]*x[:])
-        mpfr_set_d(x0, armas_d_get_at(Y, i), MPFR_RNDN);
+        mpfr_set_d(x0, matrix_get_at(Y, i), MPFR_RNDN);
         mpfr_mul(x0, b0, x0, MPFR_RNDN);
         // here: x0 = beta*y[i]
         mpfr_add(y0, x0, y0, MPFR_RNDN);
@@ -403,7 +403,7 @@ void ep_gendot(double *dot, double *tcond, __Matrix *X, __Matrix *Y, double cond
     double b, e, de, s, p, h, q, x0, y0;
     int n2, i, N;
 
-    N = armas_d_size(X);
+    N = matrix_size(X);
     n2 = N/2 + (N&0x1);
     b = log2(cond);
 
@@ -470,23 +470,23 @@ void ep_gendot(double *dot, double *tcond, __Matrix *X, __Matrix *Y, double cond
 
 
 // Generate ill-conditioned vector for sum; N must be even.
-void ep_gensum(double *dot, double *tcond, armas_d_dense_t *X, double cond)
+void ep_gensum(double *dot, double *tcond, __Matrix *X, double cond)
 {
-    double p, q;
-    armas_d_dense_t X0, Y0;
-    double x0, y0;
+    __Dtype p, q;
+    __Matrix X0, Y0;
+    __Dtype x0, y0;
     int k;
-    int N = armas_d_size(X);
+    int N = matrix_size(X);
 
-    armas_d_make(&X0, N/2, 1, N/2, armas_d_data(X));
-    armas_d_make(&Y0, N/2, 1, N/2, &armas_d_data(X)[N/2]);
+    matrix_make(&X0, N/2, 1, N/2, matrix_data(X));
+    matrix_make(&Y0, N/2, 1, N/2, &matrix_data(X)[N/2]);
     ep_gendot(dot, tcond, &X0, &Y0, cond);
     for (k = 0; k < N/2; k++) {
-        x0 = armas_d_get_at(&X0, k);
-        y0 = armas_d_get_at(&Y0, k);
+        x0 = matrix_get_at(&X0, k);
+        y0 = matrix_get_at(&Y0, k);
         twoprod(&p, &q, x0, y0);
-        armas_d_set_at(&X0, k, p);
-        armas_d_set_at(&Y0, k, q);
+        matrix_set_at(&X0, k, p);
+        matrix_set_at(&Y0, k, q);
     }
     vpermute(X);
 }
@@ -510,12 +510,12 @@ void ep_genmat(double *dot, double *tcond, __Matrix *A, __Matrix *B, double cond
     }
 }
 
-static double __zeros(int i, int j)
+static __Dtype __zeros(int i, int j)
 {
     return 0.0;
 }
 
-static double __ones(int i, int j)
+static __Dtype __ones(int i, int j)
 {
     return 1.0;
 }

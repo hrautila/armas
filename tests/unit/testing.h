@@ -14,6 +14,8 @@ typedef armas_s_dense_t __Matrix ;
 typedef float __Dtype;
 
 #define matrix_init            armas_s_init
+#define matrix_make            armas_s_make
+#define matrix_data            armas_s_data
 #define matrix_diag            armas_s_diag
 #define matrix_madd            armas_s_madd
 #define matrix_add             armas_s_add
@@ -132,6 +134,8 @@ typedef armas_d_dense_t __Matrix ;
 typedef double __Dtype;
 
 #define matrix_init            armas_d_init
+#define matrix_make            armas_d_make
+#define matrix_data            armas_d_data
 #define matrix_diag            armas_d_diag
 #define matrix_madd            armas_d_madd
 #define matrix_add             armas_d_add
