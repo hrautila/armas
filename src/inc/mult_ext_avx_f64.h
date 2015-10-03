@@ -10,6 +10,17 @@
 
 #include "eft.h"
 
+#ifndef __hb64
+#define __hb64  (1L << 63)
+
+static const uint64_t __masks_pd[4][4] __attribute__((aligned(64))) = {
+  {__hb64, __hb64, __hb64, __hb64},
+  {     0, __hb64, __hb64, __hb64},
+  {     0,      0, __hb64, __hb64},
+  {     0,      0,      0, __hb64}};
+
+#endif
+
 // error free horizontal summation of vector 4 doubles
 static
 void hsum_m256d(double *sum, double *err, __m256d S, __m256d C)
@@ -41,15 +52,15 @@ void __mult1c1_ext(DTYPE *c, DTYPE *d, const DTYPE *a, const DTYPE *b, DTYPE alp
 {
   register int k;
   __m256d P, Q, S, R;
-  register __m256d C, A, B, Z;
+  register __m256d C, A, B, Z, M;
 
   // sum registers
   S = _mm256_set1_pd(0.0);
   C = _mm256_set1_pd(0.0);
   
   for (k = 0; k < nR-3; k += 4) {
-    A  = _mm256_loadu_pd(&a[k]);
-    B  = _mm256_loadu_pd(&b[k]);
+    A  = _mm256_load_pd(&a[k]);
+    B  = _mm256_load_pd(&b[k]);
     
     twoprod_f64x4(&P, &Q, A, B); // 17 flops / 2 flops with FMA
     twosum_f64x4(&S, &R, P, S);  // 6 flops
@@ -61,6 +72,10 @@ void __mult1c1_ext(DTYPE *c, DTYPE *d, const DTYPE *a, const DTYPE *b, DTYPE alp
   Z = _mm256_set1_pd(0.0);
   A = _mm256_loadu_pd(&a[k]);
   B = _mm256_loadu_pd(&b[k]);
+  M  = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
+  A = _mm256_blendv_pd(A, Z, M);
+  B = _mm256_blendv_pd(B, Z, M);
+#if 0
   switch(nR-k) {
   case 3:
     A = _mm256_blend_pd(A, Z, 0x8);
@@ -75,6 +90,7 @@ void __mult1c1_ext(DTYPE *c, DTYPE *d, const DTYPE *a, const DTYPE *b, DTYPE alp
     B = _mm256_blend_pd(B, Z, 0xE);
     break;
   }
+#endif
   twoprod_f64x4(&P, &Q, A, B);
   twosum_f64x4(&S, &R, P, S);
   C += (R + Q);
@@ -97,7 +113,7 @@ void __mult1c2_ext(DTYPE *c0, DTYPE *c1, DTYPE *d0, DTYPE *d1,
                    const DTYPE *b0, const DTYPE *b1, DTYPE alpha, int nR)
 {
   register int k;
-  register __m256d A, B0, B1, C0, C1, Z;
+  register __m256d A, B0, B1, C0, C1, Z, M;
   __m256d P0, Q0, S0, R0, P1, Q1, S1, R1;
 
   // sum registers
@@ -107,9 +123,9 @@ void __mult1c2_ext(DTYPE *c0, DTYPE *c1, DTYPE *d0, DTYPE *d1,
   C1 = _mm256_set1_pd(0.0);
   
   for (k = 0; k < nR-3; k += 4) {
-    A   = _mm256_loadu_pd(&a[k]);
-    B0  = _mm256_loadu_pd(&b0[k]);
-    B1  = _mm256_loadu_pd(&b1[k]);
+    A   = _mm256_load_pd(&a[k]);
+    B0  = _mm256_load_pd(&b0[k]);
+    B1  = _mm256_load_pd(&b1[k]);
 
     twoprod_f64x4(&P0, &Q0, A, B0);
     twosum_f64x4(&S0, &R0, P0, S0);
@@ -123,9 +139,14 @@ void __mult1c2_ext(DTYPE *c0, DTYPE *c1, DTYPE *d0, DTYPE *d1,
     goto update;
   
   Z  = _mm256_set1_pd(0.0);
-  A  = _mm256_loadu_pd(&a[k]);
-  B0 = _mm256_loadu_pd(&b0[k]);
-  B1 = _mm256_loadu_pd(&b1[k]);
+  A  = _mm256_load_pd(&a[k]);
+  B0 = _mm256_load_pd(&b0[k]);
+  B1 = _mm256_load_pd(&b1[k]);
+  M  = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
+  A = _mm256_blendv_pd(A, Z, M);
+  B0 = _mm256_blendv_pd(B0, Z, M);
+  B1 = _mm256_blendv_pd(B1, Z, M);
+#if 0
   switch(nR-k) {
   case 3:
     A  = _mm256_blend_pd(A, Z, 0x8);
@@ -143,6 +164,7 @@ void __mult1c2_ext(DTYPE *c0, DTYPE *c1, DTYPE *d0, DTYPE *d1,
     B1 = _mm256_blend_pd(B1, Z, 0xE);
     break;
   }
+#endif
   twoprod_f64x4(&P0, &Q0, A, B0);
   twosum_f64x4(&S0, &R0, P0, S0);
   C0 += (R0 + Q0); 
