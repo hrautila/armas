@@ -59,10 +59,10 @@ extern void ep_gemv(__Matrix *Y, __Matrix *A, __Matrix *X,
 extern void ep_gemm(__Matrix *C, __Matrix *A, __Matrix *B,
                     __Dtype alpha, __Dtype beta, int prec, int flags);
 
-extern void ep_gendot(__Dtype *dot, __Dtype *tcond,
-                      __Matrix *X, __Matrix *Y, __Dtype cond);
-extern void ep_gensum(__Dtype *dot, __Dtype *tcond, __Matrix *X, __Dtype cond);
-extern void ep_genmat(__Dtype *dot, __Dtype *tcond, __Matrix *A, __Matrix *B, __Dtype cond);
-extern void ep_gentrm(__Dtype *dot, __Dtype *tcond, __Matrix *A, __Matrix *B, __Dtype cond, int flags);
+extern void ep_gendot(double *dot, double *tcond,
+                      __Matrix *X, __Matrix *Y, double cond);
+extern void ep_gensum(double *dot, double *tcond, __Matrix *X, double cond);
+extern void ep_genmat(double *dot, double *tcond, __Matrix *A, __Matrix *B, double cond);
+extern void ep_gentrm(double *dot, double *tcond, __Matrix *A, __Matrix *B, double cond, int flags);
 
 #endif
