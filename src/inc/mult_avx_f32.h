@@ -34,8 +34,6 @@
 #include "simd.h"
 #include "debug.h"
 
-const uint32_t __hb32 = (1 << 31);
-
 #define __HB32 (1 << 31)
 
 static uint32_t __masks_ps[8][8] __attribute__((aligned(64))) = {
