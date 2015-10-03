@@ -47,22 +47,26 @@
 /* ---------------------------------------------------------------------------
  * Definitions for single precision floating type.
  */
-#include "mult_ext_nosimd.h"
-#include "mult_nosimd.h"
+  #if defined(__AVX__) // && defined(__SIMD_EFT) 
+    #include "mult_avx_f32.h"
+    #include "mult_ext_avx_f32.h"
+  #else
+    #include "mult_nosimd.h"
+    #include "mult_ext_nosimd.h"
+  #endif
 
 #else  
 /* ---------------------------------------------------------------------------
  * Definitions for double precision floating types.
  */
 
-#if defined(__AVX__) // && defined(__SIMD_EFT) 
-#include "mult_ext_avx_f64.h"
-#include "mult_avx_f64.h"
-#else
-#include "mult_ext_nosimd.h"
-#include "mult_nosimd.h"
-#endif   // defined(__AVX__)
-
+  #if defined(__AVX__) // && defined(__SIMD_EFT) 
+    #include "mult_avx_f64.h"
+    #include "mult_ext_avx_f64.h"
+  #else
+    #include "mult_nosimd.h"
+    #include "mult_ext_nosimd.h"
+  #endif   // defined(__AVX__)
 
 #endif
 
