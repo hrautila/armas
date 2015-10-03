@@ -211,11 +211,13 @@ noinst_LTLIBRARIES += libdext.la
 libarmasd_la_LIBADD += libdext.la
 endif
 
+if ENABLE_COMPAT
 # double precision compability
 libdcompat_la_SOURCES = $(COMPAT)
 libdcompat_la_CPPFLAGS = -DFLOAT64 -DCOMPAT
 noinst_LTLIBRARIES += libdcompat.la
 libarmasd_la_LIBADD += libdcompat.la
+endif
 
 BUILT_SOURCES += armas/dmatrix.h armas/linalgd.h
 
@@ -232,11 +234,21 @@ libarmass_la_LIBADD = libx.la libs.la
 libs_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
 libs_la_CPPFLAGS = -DFLOAT32 
 
+if ENABLE_EXT_PRECISION
+# extended precision
+libsext_la_SOURCES = $(XBLAS1) $(XBLAS2) $(XBLAS3)
+libsext_la_CPPFLAGS = -DFLOAT32
+noinst_LTLIBRARIES += libsext.la
+libarmass_la_LIBADD += libsext.la
+endif
+
+if ENABLE_COMPAT
 # single precision compability
 libscompat_la_SOURCES = $(COMPAT)
 libscompat_la_CPPFLAGS = -DFLOAT32 -DCOMPAT
 noinst_LTLIBRARIES += libscompat.la
 libarmass_la_LIBADD += libscompat.la
+endif
 
 BUILT_SOURCES += armas/smatrix.h armas/linalgs.h
 
