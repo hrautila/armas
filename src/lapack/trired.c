@@ -378,7 +378,7 @@ int __unblk_trdbuild_upper(__armas_dense_t *A, __armas_dense_t *tauq,
 
   v0 = __ZERO;
   EMPTY(ATL); EMPTY(a11);
-  EMPTY(YTL);
+  EMPTY(YTL); EMPTY(Y00);
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);
