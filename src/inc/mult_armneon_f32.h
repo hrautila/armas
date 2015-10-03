@@ -17,13 +17,19 @@
 
 const uint32_t __hb32 = (1 << 31);
 
-#define __t32 0xffffff
+#define __t32 0xffffffff
 
-static uint32_t __masks_f32[4][4] __attribute__((aligned(64))) = {
+static uint32_t __masks_rev_f32[4][4] __attribute__((aligned(64))) = {
   {__t32, __t32, __t32, __t32},
   {__t32, __t32, __t32,     0},
   {__t32, __t32,     0,     0},
   {__t32,     0,     0,     0}};
+
+static uint32_t __masks_f32[4][4] __attribute__((aligned(64))) = {
+  {    0,     0,     0,     0},
+  {__t32,     0,     0,     0},
+  {__t32, __t32,     0,     0},
+  {__t32, __t32, __t32,     0}};
 
 // update 1x4 block of C; one row, four columns (mult4x1x1)
 static inline

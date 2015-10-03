@@ -17,13 +17,19 @@
 
 const uint32_t __hb32 = (1 << 31);
 
-#define __t32 0xffffff
+#define __t32 0xffffffff
 
-static uint32_t __masks_f32[4][4] __attribute__((aligned(64))) = {
+static uint32_t __masks_rev_f32[4][4] __attribute__((aligned(64))) = {
   {__t32, __t32, __t32, __t32},
   {__t32, __t32, __t32,     0},
   {__t32, __t32,     0,     0},
   {__t32,     0,     0,     0}};
+
+static uint32_t __masks_f32[4][4] __attribute__((aligned(64))) = {
+  {    0,     0,     0,     0},
+  {__t32,     0,     0,     0},
+  {__t32, __t32,     0,     0},
+  {__t32, __t32, __t32,     0}};
 
 // update 1x4 block of C; one row, four columns (mult4x1x1)
 static inline
@@ -149,7 +155,7 @@ void __mult1c2(float *c0, float *c1,
 
   Z  = zero_f32x4();
   M  = vld1q_u32(&__masks_f32[nR-k][0]);
-  A0 = load_f32x4(&a0[k]);
+  A0 = load_f32x4(&a[k]);
   A0 = (float32x4_t)vbslq_u32(M, (uint32x4_t)A0, (uint32x4_t)Z);
 
   y0 = vfmaq_f32(y0, A0, load_f32x4(&b0[k]));
@@ -212,12 +218,13 @@ static inline
 void __mult1c1(float *c, const float *a, const float *b, float alpha, int nR)
 {
   register int k;
-  register float32x4_t y0, A, Z, M;
+  register float32x4_t y0, A, Z;
+  register uint32x4_t M;
 
   y0 = zero_f32x4();
   for (k = 0; k < nR-3; k += 4) {
     A  = load_f32x4(&a[k]);
-    y0 += vfmaq_f32(A, load_f32x4(&b[k]));
+    y0 += vfmaq_f32(y0, A, load_f32x4(&b[k]));
   }
   if (k == nR)
     goto update;
@@ -225,7 +232,7 @@ void __mult1c1(float *c, const float *a, const float *b, float alpha, int nR)
   Z = zero_f32x4();
   M  = vld1q_u32(&__masks_f32[nR-k][0]);
   A = load_f32x4(&a[k]);
-  A0 = (float32x4_t)vbslq_u32(M, (uint32x4_t)A0, (uint32x4_t)Z);
+  A = (float32x4_t)vbslq_u32(M, (uint32x4_t)A, (uint32x4_t)Z);
 
   y0 = vfmaq_f32(y0, A, load_f32x4(&b[k]));
 
