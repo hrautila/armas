@@ -206,6 +206,31 @@ typedef float ABSTYPE;
 #define __update_ger_unb         __s_update_ger_unb
 #define __update_ger_recursive   __s_update_ger_recursive
 
+// extended precision functions
+#define __vec_axpy_ext           __s_vec_axpy_ext
+#define __vec_axpby_ext          __s_vec_axpby_ext
+#define __vec_dot_ext            __s_vec_dot_ext
+#define __vec_sum_ext            __s_vec_sum_ext
+#define __vec_asum_ext           __s_vec_asum_ext
+#define __gemv_ext_unb           __s_gemv_ext_unb
+#define __gemv_update_ext_unb    __s_gemv_update_ext_unb
+#define __symv_ext_unb           __s_symv_ext_unb
+#define __trsv_ext_unb           __s_trsv_ext_unb
+#define __trmv_ext_unb           __s_trmv_ext_unb
+#define __update_ger_ext_unb     __s_update_ger_ext_unb
+#define __update_trmv_ext_unb    __s_update_trmv_ext_unb
+#define __update2_symv_ext_unb   __s_update2_symv_ext_unb
+#define __kernel_ext_colblk_inner    __s_kernel_ext_colblk_inner
+#define __kernel_ext_panel_inner     __s_kernel_ext_panel_inner
+#define __kernel_ext_colwise_inner_no_scale  __s_kernel_ext_colwise_inner_no_scale
+#define __kernel_ext_colwise_inner_scale_c   __s_kernel_ext_colwise_inner_scale_c
+#define __kernel_ext_symm         __s_kernel_ext_symm
+#define __kernel_inner_ext        __s_kernel_inner_ext
+#define __trmm_ext_blk            __s_trmm_ext_blk
+#define __solve_ext_blk           __s_solve_ext_blk
+#define __solve_ext_unb           __s_solve_ext_unb
+#define __solve_ext               __s_solve_ext
+
 // internal matrix block routines
 #define __partition_2x1           __s_partition_2x1
 #define __repartition_2x1to3x1    __s_repartition_2x1to3x1
