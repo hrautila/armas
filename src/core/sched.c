@@ -61,20 +61,22 @@ void *worker_thread(void *arg)
 
         // try to reserve for this worker
         if (cmpxchg(&T->wid, 0, W->id) == 0) {
+            // decrement per task worker count;
+            atomic_dec(&T->wcnt);
             // run task
             (T->task)(T->arg);
-            // increment ready task counter
-            armas_counter_inc(T->ready);
+
             W->nexec++;
             if (T->next) {
                 armas_sched_schedule(W->sched, T->next);
                 T->next = 0;
             }
+            // increment ready task counter
+            armas_counter_inc(T->ready);
         } else {
-            // was already reserved, forget it
+            // was already reserved, decrement and forget it
+            atomic_dec(&T->wcnt);
         }
-        // decrement per task worker count;
-        atomic_dec(&T->wcnt);
     }
     W->running = 0;
     return (void *)0;
