@@ -24,7 +24,11 @@
 #define atomic_dec(P) __sync_sub_and_fetch((P), 1)
 #define atomic_inc(P) __sync_add_and_fetch((P), 1) 
 
+#ifdef __x86_64__
 #define cpu_relax() asm volatile("pause\n": : :"memory")
+#else
+#define cpu_relax() asm volatile("": : :"memory")
+#endif
 
 static inline
 int futex_wait(volatile void *addr, int val, struct timespec *tm)
