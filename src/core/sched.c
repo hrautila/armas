@@ -41,6 +41,8 @@ void worker_init(armas_worker_t *W, unsigned long id, int sz, struct armas_sched
     W->nsched = 0;
     W->nexec = 0;
     W->sched = s;
+    W->cmem = 0;
+    W->l1mem = 0;
 }
 
 
@@ -50,6 +52,7 @@ void *worker_thread(void *arg)
     armas_worker_t *W = (armas_worker_t *)arg;
     armas_task_t *T;
     W->running = 1;
+    armas_cbuf_init(&W->cbuf, W->cmem, W->l1mem);
 
     while (1) {
         taskq_read(&W->inqueue, &T);
@@ -64,7 +67,11 @@ void *worker_thread(void *arg)
             // decrement per task worker count;
             atomic_dec(&T->wcnt);
             // run task
-            (T->task)(T->arg);
+            if (T->task2) {
+                (T->task2)(T->arg, &W->cbuf);
+            } else {
+                (T->task)(T->arg);
+            }
 
             W->nexec++;
             if (T->next) {
@@ -78,6 +85,7 @@ void *worker_thread(void *arg)
             atomic_dec(&T->wcnt);
         }
     }
+    armas_cbuf_release(&W->cbuf);
     W->running = 0;
     return (void *)0;
 }
@@ -140,6 +148,23 @@ void armas_sched_init(armas_scheduler_t *S, int n, int qlen)
     S->nsched = 0;
 }
 
+void armas_sched_conf(armas_scheduler_t *S, armas_conf_t *conf, int qlen)
+{
+    int i, last_cpu;
+    S->workers = calloc(conf->maxproc, sizeof(armas_worker_t));
+    S->nworker = conf->maxproc;
+    last_cpu = -1;
+
+    for (i = 0; i < conf->maxproc; i++) {
+        worker_init(&S->workers[i], i+1, qlen, S);
+        S->workers[i].cmem = conf->cmem ? conf->cmem : 10240;
+        S->workers[i].l1mem = conf->l1mem ? conf->l1mem : 5120;
+        // pick up next cpu from list available cpus
+        last_cpu = next_cpu_in_set(&S->cpus, last_cpu);
+        S->workers[i].cpuid = last_cpu;
+    }
+    S->nsched = 0;
+}
 
 void armas_sched_start(armas_scheduler_t *S)
 {

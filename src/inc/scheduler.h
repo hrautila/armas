@@ -8,6 +8,8 @@
 #ifndef __ARMAS_SCHEDULER_H
 #define __ARMAS_SCHEDULER_H 1
 
+#include <stddef.h>
+
 #define __USE_GNU
 #include <sched.h>
 #include <pthread.h>
@@ -23,10 +25,14 @@ struct armas_task {
     unsigned int wcnt;
     armas_counter_t *ready;
     void *(*task)(void *);
+    void *(*task2)(void *, armas_cbuf_t *);
     void *arg;
 };
 typedef struct armas_task armas_task_t;
 typedef struct armas_task *armas_task_ptr;
+
+typedef void *(*__T1)(void *);
+typedef void *(*__T2)(void *, armas_cbuf_t *);
 
 static inline
 armas_task_t * armas_task_init(armas_task_t *T, unsigned int id,
@@ -35,6 +41,21 @@ armas_task_t * armas_task_init(armas_task_t *T, unsigned int id,
     T->id = id;
     T->wid = 0;
     T->task = func;
+    T->task2 = (__T2)0;
+    T->arg = arg;
+    T->ready = c;
+    T->next = NULL;
+    return T;
+}
+
+static inline
+armas_task_t * armas_task2_init(armas_task_t *T, unsigned int id,
+                                void *(*func)(void *, armas_cbuf_t *), void *arg, armas_counter_t *c)
+{
+    T->id = id;
+    T->wid = 0;
+    T->task2 = func;
+    T->task = (__T1)0;
     T->arg = arg;
     T->ready = c;
     T->next = NULL;
@@ -74,6 +95,9 @@ typedef struct armas_worker {
     pthread_t tid;
     int nsched;
     int nexec;
+    armas_cbuf_t cbuf;
+    size_t cmem;
+    size_t l1mem;
     struct armas_scheduler *sched;
 } armas_worker_t;
 
@@ -89,6 +113,7 @@ typedef struct armas_scheduler {
 } armas_scheduler_t;
 
 extern void armas_sched_init(armas_scheduler_t *S, int n, int qlen);
+extern void armas_sched_conf(armas_scheduler_t *S, armas_conf_t *conf, int qlen);
 extern void armas_sched_stop(armas_scheduler_t *S);
 extern void armas_sched_schedule(armas_scheduler_t *S, armas_task_t *T);
 extern void armas_schedule(armas_task_t *T);
