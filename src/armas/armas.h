@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -113,31 +114,49 @@ enum armas_norms {
 #endif
 
 /**
+ * @brief CPU cache-line aligned memory buffer
+ */
+typedef struct _armas_cbuf_s {
+  char *data;           ///< CPU cache-line aligned buffer address
+  size_t len;           ///< aligned buffer size
+  void *__unaligned;    ///< allocated memory block
+  size_t __nbytes;      ///< size of allocated block
+  size_t cmem;          ///< requested cache size (L2/L3)
+  size_t l1mem;         ///< configured innermost cache size (L1)
+} armas_cbuf_t;
+
+/**
  * @brief Configuration parameters
  */
 typedef struct armas_conf {
-  int mb;        ///< block size relative to result matrix rows (blas3)
-  int nb;        ///< block size relative to result matrix cols (blas3)
-  int kb;        ///< block size relative to operand matrix common dimension (blas3)
-  int lb;        ///< block size for blocked algorithms (lapack)
-  int maxproc;   ///< max processors to use
-  int wb;        ///< block size for cpu scheduler
-  int error;     ///< last error
-  int optflags;  ///< config options
-  int tolmult;   ///< tolerance multiplier, used tolerance is tolmult*EPSILON
+  int mb;               ///< block size relative to result matrix rows (blas3)
+  int nb;               ///< block size relative to result matrix cols (blas3)
+  int kb;               ///< block size relative to operand matrix common dimension (blas3)
+  int lb;               ///< block size for blocked algorithms (lapack)
+  int maxproc;          ///< max processors to use
+  int wb;               ///< block size for cpu scheduler
+  int error;            ///< last error
+  int optflags;         ///< config options
+  int tolmult;          ///< tolerance multiplier, used tolerance is tolmult*EPSILON
+  size_t cmem;          ///< sizeof of internal per-thread cache 
+  size_t l1mem;         ///< sizeof of L1 memory
+  armas_cbuf_t *cbuf;   ///< user defined cache buffer
 } armas_conf_t;
 
 // use default configuration block
 #define ARMAS_CDFLT  (armas_conf_t *)0;
 
+extern armas_conf_t *armas_conf_default();
 extern long armas_use_nproc(uint64_t nelems, armas_conf_t *conf);
 extern int armas_nblocks(uint64_t nelems, int wb, int maxproc, int flags);
-
-extern armas_conf_t *armas_conf_default();
-
 extern int armas_last_error();
-
 extern void armas_init(void);
+
+extern armas_cbuf_t *armas_cbuf_default(void);
+extern armas_cbuf_t *armas_cbuf_get(armas_conf_t *conf);
+extern armas_cbuf_t *armas_cbuf_init(armas_cbuf_t *cbuf, size_t cmem, size_t l1mem);
+extern armas_cbuf_t *armas_cbuf_make(armas_cbuf_t *cbuf, void *buf, size_t cmem, size_t l1mem);
+extern void armas_cbuf_release(armas_cbuf_t *cbuf);
 
 // pivot vectors
 

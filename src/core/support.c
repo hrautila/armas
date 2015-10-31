@@ -18,18 +18,23 @@
 #include <armas/armas.h>
 #include "scheduler.h"
 
+#define CMEMSIZE 384*1024L
+
 static int __armas_init_flag = 0;
 
 static armas_conf_t __default_conf = {
-  .mb = 64,     // MB (row count)
-  .nb = 128,    // NB (col count)
-  .kb = 160,    // KB (row/col count)
-  .lb = 48,     // LB (lapack blocking size)
-  .maxproc = 1, // max processors
-  .wb = 480,    // WB (scheduler blocking size)
-  .error = 0,   // last error
-  .optflags = 0, // opt flags
-  .tolmult = 10   // error tolerance multiplier (tolerance = tolmult*EPSILON)
+  .mb = 64,             // MB (row count)
+  .nb = 128,            // NB (col count)
+  .kb = 160,            // KB (row/col count)
+  .lb = 48,             // LB (lapack blocking size)
+  .maxproc = 1,         // max processors
+  .wb = 480,            // WB (scheduler blocking size)
+  .error = 0,           // last error
+  .optflags = 0,        // opt flags
+  .tolmult = 10,        // error tolerance multiplier (tolerance = tolmult*EPSILON)
+  .cmem = CMEMSIZE,     // default per-thread cache memory size
+  .l1mem = CMEMSIZE/4,
+  .cbuf = (armas_cbuf_t *)0
 };
 
 static armas_scheduler_t __default_sched = {
@@ -41,6 +46,14 @@ static armas_scheduler_t __default_sched = {
  .status  = 0,     // not running
  .nsched  = 0      // zero schedules
 };
+
+static armas_cbuf_t __cache_mem = (armas_cbuf_t){
+  .data = (char *)0,
+  .len = 0,
+  .__unaligned = (char *)0,
+  .__nbytes = 0
+};
+
 
 long armas_use_nproc(uint64_t nelems, armas_conf_t *conf)
 {
@@ -108,6 +121,20 @@ armas_scheduler_t *armas_sched_default()
 
 int armas_last_error() {
   return __default_conf.error;
+}
+
+armas_cbuf_t *armas_cbuf_get(armas_conf_t *conf)
+{
+  return conf && conf->cbuf ? conf->cbuf : armas_cbuf_default();
+}
+
+armas_cbuf_t *armas_cbuf_default(void)
+{
+  armas_init();
+  if (__cache_mem.__nbytes == 0) {
+    armas_cbuf_init(&__cache_mem, __default_conf.cmem, __default_conf.l1mem);
+  }
+  return &__cache_mem;
 }
 
 void armas_parse_scheduling(char *str, cpu_set_t *cpus, armas_conf_t *conf)
@@ -213,6 +240,7 @@ void armas_parse_scheduling(char *str, cpu_set_t *cpus, armas_conf_t *conf)
 }
 
 #define ENV_ARMAS_CONFIG "ARMAS_CONFIG"
+#define ENV_ARMAS_CACHE  "ARMAS_CACHE"
 #define ENV_ARMAS_SCHED  "ARMAS_SCHED"
 
 /*!
@@ -295,6 +323,38 @@ void armas_init()
     }
   }
 
+  // get cache memory size; L2MEM,L1MEM
+  cstr = getenv(ENV_ARMAS_CACHE);
+  if (cstr) {
+    char *endptr;
+    size_t val;
+    for (n = 0, tok = strsep(&cstr, ","); tok; tok = strsep(&cstr, ","), n++) {
+      endptr = (char *)0;
+      val = strtoul(tok, &endptr, 0);
+      if (endptr) {
+        switch (toupper(*endptr)) {
+        case 'K':
+          val *= 1024;
+          break;
+        case 'M':
+          val *= 1024*1024;
+          break;
+        default:
+          break;
+        }
+      }
+      switch (n) {
+      case 0:
+        __default_conf.cmem = val;
+        break;
+      case 1:
+        __default_conf.l1mem = val;
+        break;
+      }
+    }
+    //printf(".. cmem=%ld, l1mem=%ld\n", __default_conf.cmem, __default_conf.l1mem);
+  }
+
 #if defined(ENABLE_THREADS)
   if (__default_conf.maxproc > 1) {
     // read scheduling config
@@ -302,7 +362,7 @@ void armas_init()
     armas_parse_scheduling(cstr, &__default_sched.cpus, &__default_conf);
 
     // init scheduler
-    armas_sched_init(&__default_sched, __default_conf.maxproc, 64);
+    armas_sched_conf(&__default_sched, &__default_conf, 64);
   }
 #endif
   __armas_init_flag = 1;
