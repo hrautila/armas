@@ -11,6 +11,7 @@
 #define __ARMAS_INTERNAL_H
 
 #include <string.h>
+#include <armas/armas.h>
 
 // maximum sizes
 
@@ -55,22 +56,25 @@ typedef struct mvec {
   int inc;
 } mvec_t;
 
-typedef struct cache_buffer {
-  mdata_t *Acpy;
-  mdata_t *Bcpy;
-  int KB;
-  int NB;
-  int MB;
+
+typedef struct cache_s {
+  mdata_t Acpy;  // kb*mb
+  mdata_t Bcpy;  // kb*nb
+  size_t KB;
+  size_t NB;
+  size_t MB;
+  size_t rb;
   // for extended precision versions
-  mdata_t *C0;
-  mdata_t *dC;
+  mdata_t C0;    // kb*mb; kb >= nb;
+  mdata_t dC;    // kb*mb; kb >= nb
+  armas_cbuf_t *cbuf;
 } cache_t;
 
 // parameter block for kernel function invocation
 typedef struct kernel_param {
-  mdata_t *C;
-  const mdata_t *A;
-  const mdata_t *B;
+  mdata_t C;
+  mdata_t A;
+  mdata_t B;
   DTYPE alpha;
   DTYPE beta;
   int flags;
@@ -92,7 +96,9 @@ kernel_param_t * __kernel_params(kernel_param_t *p,
                                  int K, int S, int L, int R, int E,
                                  int KB, int NB, int MB, int opts)
 {
-  p->C = C; p->A = A; p->B = B;
+  p->C = C ? *C : (mdata_t){(DTYPE *)0, 0}; 
+  p->A = A ? *A : (mdata_t){(DTYPE *)0, 0}; 
+  p->B = B ? *B : (mdata_t){(DTYPE *)0, 0}; 
   p->alpha = alpha;
   p->beta = beta;
   p->flags = flags;
@@ -103,6 +109,15 @@ kernel_param_t * __kernel_params(kernel_param_t *p,
   p->optflags = opts;
   return p;
 }
+
+
+// thread parameters for recursive thread invocations
+typedef struct block_args_s 
+{
+  kernel_param_t *kp;
+  armas_cbuf_t *cbuf;
+} block_args_t;
+
 
 static inline
 int min(int a, int b) {
@@ -153,6 +168,13 @@ int __block_index2(int i, int n, int sz) {
         return sz;
     }
     return i*sz/n - ((i*sz/n) & 0x1);
+}
+
+// block is empty if data pointer is null or step is zero
+static inline
+int __empty_blk(const mdata_t *A)
+{
+  return ! A->md || A->step == 0;
 }
 
 // make A subblock of B, starting from B[r,c] 
@@ -280,6 +302,14 @@ void ext_merge(mdata_t *A, mdata_t *B, int nR, int nC)
   }
 }
 
+extern void armas_cbuf_split2(armas_cbuf_t *cbuf, void **aptr, 
+                              void **bptr, size_t *mb, size_t *nb, size_t *kb, size_t p);
+extern void armas_cache_setup2(cache_t *cache, armas_cbuf_t *cbuf, 
+                               size_t mb, size_t nb, size_t kb, size_t p);
+extern void armas_cbuf_split3(armas_cbuf_t *cbuf, void **aptr, void **bptr,
+                              void **cptr, size_t *mb, size_t *nb, size_t *kb, size_t p);
+extern void armas_cache_setup3(cache_t *cache, armas_cbuf_t *cbuf, 
+                               size_t mb, size_t nb, size_t kb, size_t p);
 
 // forward declarations of some element type dependent functions
 //extern void __SCALE(DTYPE *X, int ldX, const DTYPE beta, int M, int N);
@@ -310,7 +340,7 @@ void __kernel_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdata_t 
 extern
 void __kernel_inner(mdata_t *C, const mdata_t *A, const mdata_t *B,
                     DTYPE alpha, DTYPE beta, int flags,
-                    int P, int S, int L, int R, int E, int KB, int NB, int MB);
+                    int P, int S, int L, int R, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf);
 
 extern
 void __rank_diag(mdata_t *C, const mdata_t *A, const mdata_t *B, 
@@ -321,11 +351,11 @@ void __trmm_unb(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int N, int
 
 extern 
 void __trmm_blk(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
-                int N, int S, int E, int KB, int NB, int MB);
+                int N, int S, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf);
 
 extern
 void __trmm_recursive(mdata_t *B, const mdata_t *A, DTYPE alpha,
-                      int flags, int N, int S, int E, int KB, int NB, int MB);
+                      int flags, int N, int S, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf);
 
 extern
 void __trmm_blk_recursive(mdata_t *B, const mdata_t *A, DTYPE alpha,
@@ -342,7 +372,7 @@ void __solve_left_unb(mdata_t *B, const mdata_t *A, DTYPE alpha,
 
 extern
 void __solve_recursive(mdata_t *B, const mdata_t *A, DTYPE alpha,
-                       int flags, int N, int S, int E, int KB, int NB, int MB);
+                       int flags, int N, int S, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf);
 
 extern
 void __solve_blk_recursive(mdata_t *B, const mdata_t *A, DTYPE alpha,
@@ -350,7 +380,7 @@ void __solve_blk_recursive(mdata_t *B, const mdata_t *A, DTYPE alpha,
 
 extern
 void __solve_blocked(mdata_t *B, const mdata_t *A, DTYPE alpha,
-                     int flags, int N, int S, int E, int KB, int NB, int MB);
+                     int flags, int N, int S, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf);
 
 
 extern
