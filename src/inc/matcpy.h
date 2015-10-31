@@ -1,7 +1,7 @@
 
 // Copyright (c) Harri Rautila, 2012-2014
 
-// This file is part of github.com/hrautila/matops package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -100,39 +100,9 @@ void colcpy_fill_up(DTYPE *dst, int ldD, const DTYPE *src, int ldS, int nR, int 
 }
 
 
-static inline
-void __CPTRANS(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
-  copy_trans4x1(d, ldD, s, ldS, nR, nC);
-}
-
-static inline
-void __CP(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
-  copy_plain_mcpy1(d, ldD, s, ldS, nR, nC);
-}
-
-static inline
-void __CPBLK_TRANS(mdata_t *d, const mdata_t *s, int nR, int nC) {
-  copy_trans4x1(d->md, d->step, s->md, s->step, nR, nC);
-}
-
-static inline
-void __CPBLK(mdata_t *d, const mdata_t *s, int nR, int nC) {
-  copy_plain_mcpy1(d->md, d->step, s->md, s->step, nR, nC);
-}
-
-static inline
-void __CPTRIL_UFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int unit) {
-  colcpy_fill_up(d->md, d->step, s->md, s->step, nR, nC, unit);
-}
-
-static inline
-void __CPTRIU_LFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int unit) {
-  colcpy_fill_low(d->md, d->step, s->md, s->step, nR, nC, unit);
-}
 
 
-#if defined(__NEED_CONJUGATE)
-
+#if defined(COMPLEX64) || defined(COMPLEX128)
 #include <complex.h>
 #define __CONJ(a) conj(a)
 
@@ -162,7 +132,7 @@ void copy_trans_conj1x4(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int 
 }
 
 static inline
-void __CPTRANS_CONJ(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
+void copy_trans_conj4x1(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
   register int i, j;
   for (j = 0; j < nC-3; j += 4) {
     for (i = 0; i < nR; i ++) {
@@ -203,7 +173,7 @@ void copy_conj1x4(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
 }
 
 static inline
-void __CPCONJ(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
+void copy_conj4x1(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
   register int i, j;
   for (j = 0; j < nC-3; j += 4) {
     for (i = 0; i < nR; i ++) {
@@ -218,12 +188,88 @@ void __CPCONJ(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
   copy_conj1x4(&d[j], ldD, &s[j*ldS], ldS, nR, nC-j);
 }
 
-#else  /* __NEED_CONJUGATE */
+#endif /* COMPLEX64 || COMPLEX128 */
 
-#define __CPTRANS_CONJ __CPTRANS
-#define __CPCONJ       __CP
 
-#endif /* __NEED_CONJUGATE */
+#if defined(FLOAT32) || defined(FLOAT64)
+static inline
+void __CPTRANS(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
+  copy_trans4x1(d, ldD, s, ldS, nR, nC);
+}
+
+static inline
+void __CP(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
+  copy_plain_mcpy1(d, ldD, s, ldS, nR, nC);
+}
+
+static inline
+void __CPTRIL_UFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int unit) {
+  colcpy_fill_up(d->md, d->step, s->md, s->step, nR, nC, unit);
+}
+
+static inline
+void __CPTRIU_LFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int unit) {
+  colcpy_fill_low(d->md, d->step, s->md, s->step, nR, nC, unit);
+}
+
+static inline
+void __CPBLK_TRANS(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
+  copy_trans4x1(d->md, d->step, s->md, s->step, nR, nC);
+}
+
+static inline
+void __CPBLK(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
+  copy_plain_mcpy1(d->md, d->step, s->md, s->step, nR, nC);
+}
+
+static inline
+void __CPBLK_TRIL_UFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
+  colcpy_fill_up(d->md, d->step, s->md, s->step, nR, nC, (flags&ARMAS_UNIT));
+}
+
+static inline
+void __CPBLK_TRIU_LFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
+  colcpy_fill_low(d->md, d->step, s->md, s->step, nR, nC, (flags&ARMAS_UNIT));
+}
+
+#else   /* COMPLEX64 || COMPLEX128 */
+
+static inline
+void __CPBLK_TRANS(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
+  if (flags & (ARMAS_CONJA || ARMAS_CONJB)) {
+    copy_trans_conj4x1(d->md, d->step, s->md, s->step, nR, nC);
+  } else {
+    copy_trans4x1(d->md, d->step, s->md, s->step, nR, nC);
+  }
+}
+
+static inline
+void __CPBLK(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
+  if (flags & (ARMAS_CONJA || ARMAS_CONJB)) {
+    copy_conj4x1(d->md, d->step, s->md, s->step, nR, nC);
+  } else {
+    copy_plain_mcpy1(d->md, d->step, s->md, s->step, nR, nC);
+  }
+}
+
+static inline
+void __CPBLK_TRIL_UFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
+  if (flags & (ARMAS_CONJA || ARMAS_CONJB)) {
+  } else {
+    colcpy_fill_up(d->md, d->step, s->md, s->step, nR, nC, (flags&ARMAS_UNIT));
+  }
+}
+
+static inline
+void __CPBLK_TRIU_LFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
+  if (flags & (ARMAS_CONJA || ARMAS_CONJB)) {
+  } else {
+    colcpy_fill_low(d->md, d->step, s->md, s->step, nR, nC, (flags&ARMAS_UNIT));
+  }
+}
+
+#endif  /* COMPLEX64 || COMPLEX128 */
+
 
 #endif
 
