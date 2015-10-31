@@ -468,6 +468,8 @@ int __blk_trdreduce_upper(__armas_dense_t *A, __armas_dense_t *tauq,
   DTYPE v0;
   int err = 0;
 
+  EMPTY(ATL);
+  
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);
   __partition_2x1(&YT,

@@ -551,6 +551,9 @@ void __trdsec_eigenbuild_inplace(__armas_dense_t *Q, __armas_dense_t *z)
     DTYPE zk0, zk1, dk0, dk1, t;
     int k, i;
     __armas_dense_t QTL, QBR, Q00, q11, q12, q21, Q22, qi;
+
+    EMPTY(q11); EMPTY(q12); EMPTY(q21); EMPTY(Q00);
+    
     __partition_2x2(&QTL,  __nil,
                     __nil, &QBR,  /**/ Q, 0, 0, ARMAS_PTOPLEFT);
     while (QBR.rows > 0) {

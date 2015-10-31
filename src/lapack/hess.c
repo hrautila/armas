@@ -205,7 +205,8 @@ int __unblk_build_hess_gqvdg(__armas_dense_t *A, __armas_dense_t *T,
 
   EMPTY(a11); EMPTY(A00);
   EMPTY(VR); EMPTY(VL); EMPTY(AL); 
-
+  EMPTY(A0);
+  
   beta = __ZERO;
 
   __partition_2x2(&ATL,  __nil,

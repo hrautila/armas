@@ -191,7 +191,8 @@ int __unblk_bdbuild_left(__armas_dense_t *A, __armas_dense_t *tauq,
 
   EMPTY(A00); EMPTY(ATR);
   EMPTY(y11); EMPTY(z11);
-
+  EMPTY(Z00); EMPTY(Y00);
+  
   __partition_2x2(&ATL,  &ATR,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
   __partition_2x2(&YTL,  __nil,
@@ -544,6 +545,7 @@ int __unblk_bdbuild_right(__armas_dense_t *A, __armas_dense_t *tauq,
 
   EMPTY(A00); EMPTY(ABL);
   EMPTY(y11); EMPTY(z11);
+  EMPTY(Z00); EMPTY(Y00);
 
   __partition_2x2(&ATL,  __nil,
                   &ABL,  &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
