@@ -20,6 +20,7 @@ noinst_HEADERS = \
 	inc/internal_lapack.h \
 	inc/scheduler.h \
 	inc/eft.h \
+	inc/eft_arm.h \
 	inc/eft_x86_64.h \
 	inc/sync.h \
 	inc/chan.h \
@@ -28,13 +29,18 @@ noinst_HEADERS = \
 	inc/kernel_ext.h \
 	inc/matrix.h \
 	inc/mult.h \
+	inc/mult_armneon_f32.h \
+	inc/mult_armneon_fma_f32.h \
 	inc/mult_nosimd.h \
 	inc/mult_sse_f64.h \
+	inc/mult_avx_f32.h \
 	inc/mult_avx_f64.h \
+	inc/mult_fma_f32.h \
 	inc/mult_fma_f64.h \
 	inc/mvec_nosimd.h \
 	inc/pivot.h \
 	inc/partition.h \
+	inc/simd.h \
 	inc/mult_avx_c128.h \
 	inc/mult_avx_c64.h \
 	inc/mult_avx_f32.h \
@@ -44,6 +50,7 @@ noinst_HEADERS = \
 	inc/mult_sse_c128.h \
 	inc/mult_sse_c64.h \
 	inc/mult_sse_f32.h \
+	inc/mult_ext_avx_f32.h \
 	inc/mult_ext_avx_f64.h \
 	inc/mult_ext_nosimd.h
 
@@ -51,6 +58,7 @@ noinst_HEADERS = \
 COMMON = \
 	core/support.c \
 	core/sched.c \
+	core/cache.c \
 	core/pivot_ext.c
 
 CORE = \
