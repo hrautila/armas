@@ -12,9 +12,11 @@
 
 #include "dtype.h"
 #include "internal.h"
-#include "matcpy.h"
 
 // include inline functions without extern inline declaration
+#ifdef __INLINE
+#undef __INLINE
+#endif
 #define __INLINE
 #include "matrix.h"
 

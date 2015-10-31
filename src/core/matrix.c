@@ -12,8 +12,8 @@
 
 #include "dtype.h"
 #include "internal.h"
-#include "matcpy.h"
 #include "matrix.h"
+#include "matcpy.h"
   
 // CPU cache line size in bytes (CPU spesific)
 #define CACHELINE 64
