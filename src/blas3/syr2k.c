@@ -47,97 +47,75 @@
  */
 void __rank2_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
                  DTYPE alpha, DTYPE beta, int flags,
-                 int P, int S, int E,  int KB, int NB, int MB)
+                 int P, int S, int E,  int KB, int NB, int MB, armas_cbuf_t *cbuf)
 {
   register int i, nI, nC;
   mdata_t Cd, Ad, Bd;
-  mdata_t Acpy, Bcpy;
-  cache_t cache;
-  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  cache_t mcache;
 
-  if (E-S <= 0 || P <= 0)
+  if (E-S <= 0 || P <= 0) {
     return;
-
-  if (NB > E-S) {
-    NB = E-S;
   }
 
-  if (KB > MAX_KB || KB <= 0) {
-    KB = MAX_KB;
-  }
-  if (NB > MAX_NB || NB <= 0) {
-    NB = MAX_NB;
-  }
-  if (MB > MAX_MB || MB <= 0) {
-    MB = MAX_MB;
-  }
-
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-
-  // setup cache area
-  Acpy = (mdata_t){Abuf, MAX_KB};
-  Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
+  armas_cache_setup2(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
 
   if (flags & ARMAS_TRANSA) {
     //   C = alpha*A.T*B + alpha*B.T*A + beta*C 
-    for (i = S; i < E; i += NB) {
-      nI = E - i < NB ? E - i : NB;
+    for (i = S; i < E; i += mcache.NB) {
+      nI = E - i < mcache.NB ? E - i : mcache.NB;
     
       // 1. update on diagonal
       __subblock(&Cd, C, i, i);
       __subblock(&Ad, A, 0, i);
       __subblock(&Bd, B, 0, i);
-      __rank_diag(&Cd, &Ad, &Bd, alpha, beta, flags, P, nI, &cache);
+      __rank_diag(&Cd, &Ad, &Bd, alpha, beta, flags, P, nI, &mcache);
 
       // 2. update block right of diagonal (UPPER) or left of diagonal (LOWER)
       __subblock(&Ad, A, 0, i);
       if (flags & ARMAS_LOWER) {
         __subblock(&Cd, C, i, 0);
         __subblock(&Bd, B, 0, S);
-        nC = E - i - nI;
+        nC = i;
       } else {
         __subblock(&Cd, C, i, i+nI);
         __subblock(&Bd, B, 0, i+nI);
-        nC = i;
+        nC = E - i - nI;
       }
       __kernel_colwise_inner_scale_c(&Cd, &Ad, &Bd, alpha, beta, ARMAS_TRANSA,
-                                     P, 0, nC, 0, nI, &cache); 
+                                     P, 0, nC, 0, nI, &mcache); 
 
       // 2nd part
       // 1. update on diagonal
       __subblock(&Cd, C, i, i);
       __subblock(&Ad, A, 0, i);
       __subblock(&Bd, B, 0, i);
-      __rank_diag(&Cd, &Bd, &Ad, alpha, 1.0, flags, P, nI, &cache);
+      __rank_diag(&Cd, &Bd, &Ad, alpha, 1.0, flags, P, nI, &mcache);
 
       // 2. update block right of diagonal (UPPER) or left of diagonal (LOWER)
       __subblock(&Bd, B, 0, i);
       if (flags & ARMAS_LOWER) {
         __subblock(&Cd, C, i, 0);
         __subblock(&Ad, A, 0, S);
-        nC = E - i - nI;
+        nC = i;
       } else {
         __subblock(&Cd, C, i, i+nI);
         __subblock(&Ad, A, 0, i+nI);
-        nC = i;
+        nC = E - i - nI;
       }
       __kernel_colwise_inner_scale_c(&Cd, &Bd, &Ad, alpha, 1.0, ARMAS_TRANSA,
-                                     P, 0, nC, 0, nI, &cache);
+                                     P, 0, nC, 0, nI, &mcache);
 
     }
   } else {
     //   C = alpha*A*B.T + alpha*B*A.T + beta*C  
-    for (i = S; i < E; i += NB) {
-      nI = E - i < NB ? E - i : NB;
+    for (i = S; i < E; i += mcache.NB) {
+      nI = E - i < mcache.NB ? E - i : mcache.NB;
     
       // 1. update on diagonal
       __subblock(&Cd, C, i, i);
       __subblock(&Ad, A, i, 0);
       __subblock(&Bd, B, i, 0);
-      __rank_diag(&Cd, &Ad, &Bd, alpha, beta, flags, P, nI, &cache); 
+      __rank_diag(&Cd, &Ad, &Bd, alpha, beta, flags, P, nI, &mcache); 
 
       // 2. update block right of diagonal (UPPER) or left of diagonal (LOWER)
       __subblock(&Ad, A, i, 0);
@@ -152,13 +130,13 @@ void __rank2_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
       }
 
       __kernel_colwise_inner_scale_c(&Cd, &Ad, &Bd, alpha, beta, ARMAS_TRANSB,
-                                     P, 0, nC, 0, nI, &cache);
+                                     P, 0, nC, 0, nI, &mcache);
 
       // 1. update on diagonal
       __subblock(&Cd, C, i, i);
       __subblock(&Ad, B, i, 0);
       __subblock(&Bd, A, i, 0);
-      __rank_diag(&Cd, &Ad, &Bd, alpha, 1.0, flags, P, nI, &cache);
+      __rank_diag(&Cd, &Ad, &Bd, alpha, 1.0, flags, P, nI, &mcache);
 
       // 2. update block right of diagonal (UPPER) or left of diagonal (LOWER)
       __subblock(&Ad, B, i, 0);
@@ -173,7 +151,7 @@ void __rank2_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
       }
 
       __kernel_colwise_inner_scale_c(&Cd, &Ad, &Bd, alpha, 1.0, ARMAS_TRANSB,
-                                     P, 0, nC, 0, nI, &cache);
+                                     P, 0, nC, 0, nI, &mcache);
 
     }
   }
@@ -186,9 +164,11 @@ int __rank2_threaded(int blk, int nblk, __armas_dense_t *C,
                      DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   int K = flags & ARMAS_TRANSA ? A->rows : A->cols;
+  armas_cbuf_t *cbuf = armas_cbuf_get(conf);
 
+  // no threading support yet; execute like single threaded
   __rank2_blk((mdata_t *)C, (const mdata_t *)A, (const mdata_t *)B, alpha, beta,
-              flags, K, 0, C->rows, conf->kb, conf->nb, conf->mb);
+              flags, K, 0, C->rows, conf->kb, conf->nb, conf->mb, cbuf);
   return 0;
 }
 
@@ -222,33 +202,28 @@ int __armas_update2_sym(__armas_dense_t *C,
                         const __armas_dense_t *A, const __armas_dense_t *B,
                         DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
-  long nproc;
-  int K;
-  mdata_t *_C;
-  const mdata_t *_A, *_B;
-
   if (__armas_size(C) == 0 || __armas_size(A) == 0 || __armas_size(B) == 0)
     return 0;
 
   if (!conf)
     conf = armas_conf_default();
 
-  _C = (mdata_t*)C;
-  _A = (const mdata_t *)A;
-  _B = (const mdata_t *)B;
+#if defined(ENABLE_THREADS)
+  long nproc = armas_use_nproc(__armas_size(C), conf);
+  return __rank2_threaded(0, nproc, C, A, B, alpha, beta, flags, conf);
+#else
+  mdata_t *_C = (mdata_t*)C;
+  const mdata_t *_A = (const mdata_t *)A;
+  const mdata_t *_B = (const mdata_t *)B;
+  armas_cbuf_t *cbuf = armas_cbuf_get(conf);
 
-  nproc = armas_use_nproc(__armas_size(C), conf);
-
-  K = flags & ARMAS_TRANSA ? A->rows : A->cols;
+  int K = flags & ARMAS_TRANSA ? A->rows : A->cols;
 
   // if only one thread, just do it
-  if (nproc == 1) {
-    __rank2_blk(_C, _A, _B, alpha, beta, flags, K, 0, C->rows,
-                conf->kb, conf->nb, conf->mb);
-    return 0;
-  }
-
-  return __rank2_threaded(0, nproc, C, A, B, alpha, beta, flags, conf);
+  __rank2_blk(_C, _A, _B, alpha, beta, flags, K, 0, C->rows,
+              conf->kb, conf->nb, conf->mb, cbuf);
+  return 0;
+#endif
 }
 
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

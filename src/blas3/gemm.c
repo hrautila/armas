@@ -36,8 +36,10 @@
 extern int __kernel_inner_ext(mdata_t *C, const mdata_t *A, const mdata_t *B,
                               DTYPE alpha, DTYPE beta, int flags,
                               int P, int S, int L, int R, int E, 
-                              int KB, int NB, int MB);
+                              int KB, int NB, int MB, armas_cbuf_t *cbuf);
 #define HAVE_EXT_PRECISION 1
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 // include conditional code macros; 
@@ -47,17 +49,41 @@ extern int __kernel_inner_ext(mdata_t *C, const mdata_t *A, const mdata_t *B,
 #if defined(ENABLE_THREADS)
 
 static
-void *__compute_block(void *arg) {
+void *__compute_recursive(void *arg) 
+{
+  kernel_param_t *kp = ((block_args_t *)arg)->kp;
+  armas_cbuf_t *cbuf  = ((block_args_t *)arg)->cbuf;
+
+  // if extended precision enabled and requested
+  if (HAVE_EXT_PRECISION && (kp->optflags & ARMAS_OEXTPREC)) {
+    // compiler 'dead code' pruning removes this block if extended precision is not defined
+    __kernel_inner_ext(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                       kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+    return (void *)0;
+  }
+
+  // normal precision here; extended not enabled and not requested
+  __kernel_inner(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                 kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+  return (void *)0;
+}
+
+static
+void *__compute_block2(void *arg, armas_cbuf_t *cbuf) 
+{
   kernel_param_t *kp = (kernel_param_t *)arg;
 
   // if extended precision enabled and requested
-  IF_EXTPREC_RVAL(kp->optflags&ARMAS_OEXTPREC, (void *)0, 
-                  __kernel_inner_ext(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
-                                     kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB));
+  if (HAVE_EXT_PRECISION && (kp->optflags & ARMAS_OEXTPREC)) {
+    // compiler 'dead code' pruning removes this block if extended precision is not defined
+    __kernel_inner_ext(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                       kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+    return (void *)0;
+  }
 
   // normal precision here; extended not enabled and not requested
-  __kernel_inner(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
-                 kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB);
+  __kernel_inner(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                 kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
   return 0;
 }
 
@@ -74,7 +100,9 @@ int __mult_threaded(int blknum, int nblk, int colwise,
   int ie, ir, K, err;
   pthread_t th;
   kernel_param_t kp;
-
+  armas_cbuf_t cbuf;
+  block_args_t args = (block_args_t){&kp, &cbuf};
+  
   _C = (mdata_t*)C;
   _A = (const mdata_t *)A;
   _B = (const mdata_t *)B;
@@ -83,29 +111,33 @@ int __mult_threaded(int blknum, int nblk, int colwise,
 
   // last block immediately
   if (blknum == nblk-1) {
+    armas_cbuf_init(&cbuf, conf->cmem, conf->l1mem);
     if (colwise) {
       ir = __block_index4(blknum, nblk, C->cols);
       ie = __block_index4(blknum+1, nblk, C->cols);
       // if extended precision enabled and requested
-      IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                      __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
-                                         conf->kb, conf->nb, conf->mb));
-
+      if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+        __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
+                           conf->kb, conf->nb, conf->mb, &cbuf);
+        return 0;
+      }
       // normal precision here
       __kernel_inner(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
-                     conf->kb, conf->nb, conf->mb);
+                     conf->kb, conf->nb, conf->mb, &cbuf);
     } else {
       ir = __block_index4(blknum,   nblk, C->rows);
       ie = __block_index4(blknum+1, nblk, C->rows);
       // if extended precision enabled and requested
-      IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                      __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
-                                         conf->kb, conf->nb, conf->mb));
-
+      if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+        __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
+                           conf->kb, conf->nb, conf->mb, &cbuf);
+        return 0;
+      }
       // normal precision here
       __kernel_inner(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, ir, ie,
-                     conf->kb, conf->nb, conf->mb);
+                     conf->kb, conf->nb, conf->mb, &cbuf);
     }
+    armas_cbuf_release(&cbuf);
     return 0;
   }
 
@@ -123,9 +155,11 @@ int __mult_threaded(int blknum, int nblk, int colwise,
   }
 
   // create new thread to compute this block
-  err = pthread_create(&th, NULL, __compute_block, &kp);
+  armas_cbuf_init(&cbuf, conf->cmem, conf->l1mem);
+  err = pthread_create(&th, NULL, __compute_recursive, &args);
   if (err) {
     conf->error = -err;
+    armas_cbuf_release(&cbuf);
     return -1;
   }
 
@@ -144,6 +178,8 @@ int __mult_threaded(int blknum, int nblk, int colwise,
   err = __mult_threaded(blknum+1, nblk, colwise, C, A, B, alpha, beta, flags, conf);
   // wait for this block to finish
   pthread_join(th, NULL);
+  // release cache memory block
+  armas_cbuf_release(&cbuf);
   return err;
 }
 
@@ -166,7 +202,7 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
   _A = (const mdata_t *)A;
   _B = (const mdata_t *)B;
 
-  K = flags & ARMAS_TRANSA ? A->rows : A->cols;
+  K = flags & (ARMAS_TRANSA|ARMAS_CONJA) ? A->rows : A->cols;
 
   if (conf->optflags & ARMAS_BLAS_BLOCKED) {
     nT = nblk;
@@ -196,7 +232,7 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
       __kernel_params(&tasks[k].kp, _C, _A, _B, alpha, beta, flags, K, jS, jL, iR, iE,
                       conf->kb, conf->nb, conf->mb, conf->optflags);
       // init task
-      armas_task_init(&tasks[k].t, k, __compute_block, &tasks[k].kp, &ready);
+      armas_task2_init(&tasks[k].t, k, __compute_block2, &tasks[k].kp, &ready);
       // schedule
       armas_schedule(&tasks[k].t);
       k++;
@@ -212,7 +248,7 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
         __kernel_params(&tasks[k].kp, _C, _A, _B, alpha, beta, flags, K, jS, jL, iR, iE,
                         conf->kb, conf->nb, conf->mb, conf->optflags);
         // init task
-        armas_task_init(&tasks[k].t, k, __compute_block, &tasks[k].kp, &ready);
+        armas_task2_init(&tasks[k].t, k, __compute_block2, &tasks[k].kp, &ready);
         // schedule
         armas_schedule(&tasks[k].t);
         k++;
@@ -269,11 +305,7 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
 int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_dense_t *B,
                  DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
-  long nproc;
-  int K, ok;
-  mdata_t *_C;
-  const mdata_t *_A, *_B;
-  
+  int ok;
 
   if (__armas_size(A) == 0 || __armas_size(B) == 0 || __armas_size(C) == 0)
     return  0;
@@ -282,14 +314,19 @@ int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_den
     conf = armas_conf_default();
 
   // check consistency
-  switch (flags & (ARMAS_TRANSA|ARMAS_TRANSB)) {
+  switch (flags & (ARMAS_TRANSA|ARMAS_TRANSB|ARMAS_CONJA|ARMAS_CONJB)) {
   case ARMAS_TRANSA|ARMAS_TRANSB:
+  case ARMAS_TRANSA|ARMAS_CONJB:
+  case ARMAS_CONJA|ARMAS_CONJB:
+  case ARMAS_CONJA|ARMAS_TRANSB:
     ok = C->rows == A->cols && C->cols == B->rows && A->rows == B->cols;
     break;
   case ARMAS_TRANSA:
+  case ARMAS_CONJA:
     ok = C->rows == A->cols && C->cols == B->cols && A->rows == B->rows;
     break;
   case ARMAS_TRANSB:
+  case ARMAS_CONJB:
     ok = C->rows == A->rows && C->cols == B->rows && A->cols == B->cols;
     break;
   default:
@@ -301,37 +338,35 @@ int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_den
     return -1;
   }
 
-  _C = (mdata_t*)C;
-  _A = (const mdata_t *)A;
-  _B = (const mdata_t *)B;
-
-  nproc = armas_use_nproc(__armas_size(C), conf);
-
-  // if only one thread, just do it
-  if (nproc == 1) {
-    K = flags & ARMAS_TRANSA ? A->rows : A->cols;
-    // if extended precision enabled and requested
-    IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0,
-                    __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
-                                       conf->kb, conf->nb, conf->mb));
-
-    // otherwise, normal precision here
-    __kernel_inner(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
-                   conf->kb, conf->nb, conf->mb);
-    return 0;
-  }
-
 #if defined(ENABLE_THREADS)
+  long nproc = armas_use_nproc(__armas_size(C), conf);
   int colwise = C->rows <= C->cols;
-  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
+  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED) && nproc > 1) {
     return __mult_schedule(nproc, colwise, C, A, B, alpha, beta, flags, conf);
   }
   // default is recursive scheduling of threads
   return __mult_threaded(0, nproc, colwise, C, A, B, alpha, beta, flags, conf);
+
 #else
-  // no threading; we should not be here as nproc == 1 when threading not enabled.
-  conf->error = ARMAS_EIMP;
-  return -1;
+  // no threading
+  mdata_t *_C = (mdata_t*)C;
+  const mdata_t *_A = (const mdata_t *)A;
+  const mdata_t *_B = (const mdata_t *)B;
+  int K = flags & (ARMAS_TRANSA|ARMAS_CONJA) ? A->rows : A->cols;
+
+  armas_cbuf_t *cbuf = armas_cbuf_get(conf);
+
+  // if extended precision enabled and requested
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+    __kernel_inner_ext(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
+                       conf->kb, conf->nb, conf->mb, cbuf);
+    return 0;
+  }
+  
+  // otherwise, normal precision here
+  __kernel_inner(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
+                  conf->kb, conf->nb, conf->mb, cbuf);
+  return 0;
 #endif
 }
 

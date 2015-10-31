@@ -868,7 +868,7 @@ void __solve_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha,
 {
   int ib, nJ;
   mdata_t B0;
-  mdata_t *dB = cache->dC;
+  mdata_t *dB = &cache->dC;
   int right = flags & ARMAS_RIGHT;
   int NB = cache->NB;
 
@@ -920,69 +920,39 @@ void __solve_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha,
 }
 
 int __solve_ext(mdata_t *B, const mdata_t *A, DTYPE alpha,
-                int flags, int N, int S, int E, int KB, int NB, int MB, int optflags)
+                int flags, int N, int S, int E, int KB, int NB, int MB, int optflags, armas_cbuf_t *cbuf)
 {
+  mdata_t B0;
+  cache_t mcache;
   DTYPE *dptr = (DTYPE *)0;
-  mdata_t Aa, Ba, B0, dC; //Ca;
-  cache_t cache;
-  DTYPE /*Cbuf[MAX_MB*MAX_NB/4],*/ Dbuf[MAX_NB*MAX_NB/4] __attribute__((aligned(64)));
-  DTYPE Abuf[MAX_NB*MAX_NB/4], Bbuf[MAX_NB*MAX_NB/4] __attribute__((aligned(64)));
   int right = flags & ARMAS_RIGHT ? 1 : 0;
 
-  if (E-S <= 0) {
+  if (E-S <= 0 || N <= 0) {
     // nothing to do, zero columns or rows
     return 0;
   }
 
-  // restrict block sizes as data is copied to aligned buffers of
-  // predefined max sizes.
-  if (NB > MAX_NB/2 || NB <= 0) {
-    NB = __ALIGNED(MAX_NB/2);
-  }
-  if (MB > MAX_MB/2 || MB <= 0) {
-    MB = __ALIGNED(MAX_MB/2);
-  }
-  if (KB  > MAX_KB/2 || KB <= 0) {
-    KB = __ALIGNED(MAX_KB/2);
-  }
-  if (NB < __DTYPE_ALIGN_SIZE)
-    NB = __DTYPE_ALIGN_SIZE;
-  if (MB < __DTYPE_ALIGN_SIZE)
-    MB = __DTYPE_ALIGN_SIZE;
-  if (KB < __DTYPE_ALIGN_SIZE)
-    KB = __DTYPE_ALIGN_SIZE;
-
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-  // setup cache area; Aa and Ba for single precision operators
-  Aa = (mdata_t){Abuf, MAX_NB/2};
-  Ba = (mdata_t){Bbuf, MAX_NB/2};
-
+  armas_cache_setup3(&mcache, cbuf, NB, NB, KB, sizeof(DTYPE));
 
   // we need working space N*NB elements for error terms
-  if (N*NB > sizeof(Dbuf)/sizeof(DTYPE)) {
-    long nelem = N*NB + __DTYPE_ALIGN_SIZE;
+  if (N > mcache.KB) {
+    long nelem = N*mcache.NB + __DTYPE_ALIGN_SIZE;
     dptr = calloc(nelem, sizeof(DTYPE));
-    dC = (mdata_t){__ALIGNED_PTR(DTYPE, dptr), (right ? NB : N)};
+    mcache.dC = (mdata_t){__ALIGNED_PTR(DTYPE, dptr), (right ? mcache.NB : N)};
   } else {
-    dC = (mdata_t){Dbuf, (right ? NB : N)};
+    mcache.dC.step = right ? mcache.NB : N;
   }
 
-  //Ca = (mdata_t){Cbuf, MAX_MB/2};
-  cache = (cache_t){&Aa, &Ba, NB, NB, NB, (mdata_t *)0/*&Ca*/, &dC};
-
-  if (flags & ARMAS_RIGHT) {
-    __subblock(&B0, B, S, 0);
-  } else {
-    __subblock(&B0, B, 0, S);
-  }
-
-  if (optflags & ARMAS_ONAIVE || N <= NB) {
+  if (optflags & ARMAS_ONAIVE || N <= mcache.NB) {
     // small problem; solve with unblocked code
-    __solve_ext_unb(&B0, &dC, A, alpha, flags, N, E-S, &cache);
+    if (flags & ARMAS_RIGHT) {
+      __subblock(&B0, B, S, 0);
+    } else {
+      __subblock(&B0, B, 0, S);
+    }
+    __solve_ext_unb(&B0, &mcache.dC, A, alpha, flags, N, E-S, &mcache);
   } else {
-    __solve_ext_blk(B, A, alpha, flags, N, S, E, &cache);
+    __solve_ext_blk(B, A, alpha, flags, N, S, E, &mcache);
   }
 
   // if allocated memory release it

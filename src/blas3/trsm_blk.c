@@ -249,57 +249,32 @@ void __solve_blk_rut_rl(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
   }
 }
 
-
 void __solve_blocked(mdata_t *B, const mdata_t *A, DTYPE alpha,
-                     int flags, int N, int S, int E, int KB, int NB, int MB)
+                     int flags, int N, int S, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf)
 {
-  mdata_t Acpy, Bcpy;
-  cache_t cache;
+  cache_t mcache;
 
-  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  armas_cache_setup2(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
 
-  if (E-S <= 0 || N <= 0)
-    return;
-
-  // restrict block sizes as data is copied to aligned buffers of predefined max sizes.
-  if (NB > MAX_NB || NB <= 0) {
-    NB = MAX_NB;
-  }
-  if (MB > MAX_MB || MB <= 0) {
-    MB = MAX_MB;
-  }
-  if (KB > MAX_KB || KB <= 0) {
-    KB = MAX_KB;
-  }
-
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-
-  // setup cache area
-  Acpy = (mdata_t){Abuf, MAX_KB};
-  Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
-  
   switch (flags&(ARMAS_UPPER|ARMAS_LOWER|ARMAS_RIGHT|ARMAS_TRANSA)) {
   case ARMAS_RIGHT|ARMAS_UPPER:
   case ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA:
-    __solve_blk_ru_rlt(B, A, alpha, flags, N, S, E, &cache);
+    __solve_blk_ru_rlt(B, A, alpha, flags, N, S, E, &mcache);
     break;
     
   case ARMAS_RIGHT|ARMAS_LOWER:
   case ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANSA:
-    __solve_blk_rut_rl(B, A, alpha, flags, N, S, E, &cache);
+    __solve_blk_rut_rl(B, A, alpha, flags, N, S, E, &mcache);
     break;
 
   case ARMAS_UPPER:
   case ARMAS_LOWER|ARMAS_TRANSA:
-    __solve_blk_lu_llt(B, A, alpha, flags, N, S, E, &cache);
+    __solve_blk_lu_llt(B, A, alpha, flags, N, S, E, &mcache);
     break;
 
   case ARMAS_LOWER:
   case ARMAS_UPPER|ARMAS_TRANSA:
-    __solve_blk_lut_ll(B, A, alpha, flags, N, S, E, &cache);
+    __solve_blk_lut_ll(B, A, alpha, flags, N, S, E, &mcache);
     break;
   }
 }

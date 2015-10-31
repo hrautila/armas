@@ -39,8 +39,8 @@
  *  l20 l21 l22   a20 a21                          u22
  *
  */
- static
- void __update_trm_diag(mdata_t *C, const mdata_t *A, const mdata_t *B, 
+static
+void __update_trm_diag(mdata_t *C, const mdata_t *A, const mdata_t *B, 
                         DTYPE alpha, DTYPE beta,
                         int flags,  int P, int nC, int nR, cache_t *cache)
 {
@@ -89,44 +89,24 @@
 
 static
 void __update_trm_naive(mdata_t *C, const mdata_t *A, const mdata_t *B,
-                        DTYPE alpha, DTYPE beta, int flags,
-                        int P, int S, int L, int R, int E, int KB, int NB, int MB)
+                        DTYPE alpha, DTYPE beta, int flags, int P, int S, int L, 
+                        int R, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf)
 {
-  mdata_t Acpy, Bcpy;
-  cache_t cache;
-  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  cache_t mcache;
 
-  if (E-R <= 0 || L-S <=0 || P <= 0) {
+  if (E-R <= 0 || L-S <= 0 || P <= 0) {
     return;
   }
 
-  // restrict block sizes as data is copied to aligned buffers of predefined max sizes.
-  if (NB > MAX_NB || NB <= 0) {
-    NB = MAX_NB;
-  }
-  if (MB > MAX_MB || MB <= 0) {
-    MB = MAX_MB;
-  }
-  if (KB > MAX_KB || KB <= 0) {
-    KB = MAX_KB;
-  }
+  armas_cache_setup2(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
 
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-
-  // setup cache area
-  Acpy = (mdata_t){Abuf, MAX_KB};
-  Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
-
-  __update_trm_diag(C, A, B, alpha, beta, flags, P, L-S, E-R, &cache);
+  __update_trm_diag(C, A, B, alpha, beta, flags, P, L-S, E-R, &mcache);
 }
 
- static
- void __update_upper_recursive(mdata_t *C, const mdata_t *A, const mdata_t *B, 
-                               DTYPE alpha, DTYPE beta,
-                               int flags,  int P, int N, int M, cache_t *cache)
+static
+void __update_upper_recursive(mdata_t *C, const mdata_t *A, const mdata_t *B, 
+                              DTYPE alpha, DTYPE beta,
+                              int flags,  int P, int N, int M, cache_t *cache)
 {
   mdata_t c0, a0, b0;
 
@@ -175,10 +155,10 @@ void __update_trm_naive(mdata_t *C, const mdata_t *A, const mdata_t *B,
                                  P, 0, N-nb, 0, nb, cache);
 }
 
- static
- void __update_lower_recursive(mdata_t *C, const mdata_t *A, const mdata_t *B, 
-                               DTYPE alpha, DTYPE beta,
-                               int flags,  int P, int N, int M, cache_t *cache)
+static
+void __update_lower_recursive(mdata_t *C, const mdata_t *A, const mdata_t *B, 
+                              DTYPE alpha, DTYPE beta,
+                              int flags,  int P, int N, int M, cache_t *cache)
 {
   mdata_t c0, a0, b0;
 
@@ -233,41 +213,21 @@ void __update_trm_naive(mdata_t *C, const mdata_t *A, const mdata_t *B,
 
 static
 void __update_trm_recursive(mdata_t *C, const mdata_t *A, const mdata_t *B,
-                            DTYPE alpha, DTYPE beta, int flags,
-                            int P, int S, int L, int R, int E, int KB, int NB, int MB)
+                            DTYPE alpha, DTYPE beta, int flags, int P, int S, int L,
+                            int R, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf)
 {
-  mdata_t Acpy, Bcpy;
-  cache_t cache;
-  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  cache_t mcache;
 
   if (E-R <= 0 || L-S <= 0 || P <= 0) {
     return;
   }
 
-  // restrict block sizes as data is copied to aligned buffers of predefined max sizes.
-  if (NB > MAX_NB || NB <= 0) {
-    NB = MAX_NB;
-  }
-  if (MB > MAX_MB || MB <= 0) {
-    MB = MAX_MB;
-  }
-  if (KB > MAX_KB || KB <= 0) {
-    KB = MAX_KB;
-  }
-
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-
-  // setup cache area
-  Acpy = (mdata_t){Abuf, MAX_KB};
-  Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
+  armas_cache_setup2(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
 
   if (flags & ARMAS_UPPER) {
-    __update_upper_recursive(C, A, B, alpha, beta, flags, P, L-S, E-R, &cache);
+    __update_upper_recursive(C, A, B, alpha, beta, flags, P, L-S, E-R, &mcache);
   } else {
-    __update_lower_recursive(C, A, B, alpha, beta, flags, P, L-S, E-R, &cache);
+    __update_lower_recursive(C, A, B, alpha, beta, flags, P, L-S, E-R, &mcache);
   }
 }
 
@@ -293,49 +253,28 @@ void __update_trm_recursive(mdata_t *C, const mdata_t *A, const mdata_t *B,
  *    inconsistent update block spefication, will not do anything
  *            
  */
+static
 void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
                       DTYPE alpha, DTYPE beta, int flags,
-                      int P, int S, int L, int R, int E, int KB, int NB, int MB)
+                      int P, int S, int L, int R, int E, cache_t *cache)
 {
   register int i, nI, ar, ac, br, bc, N, M;
   mdata_t Cd, Ad, Bd;
-  mdata_t Acpy, Bcpy;
-  cache_t cache;
-  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
 
   if (E-R <= 0 || L-S <= 0 || P <= 0) {
     return;
   }
 
-  // restrict block sizes as data is copied to aligned buffers of predefined max sizes.
-  if (NB > MAX_NB || NB <= 0) {
-    NB = MAX_NB;
-  }
-  if (MB > MAX_MB || MB <= 0) {
-    MB = MAX_MB;
-  }
-  if (KB > MAX_KB || KB <= 0) {
-    KB = MAX_KB;
-  }
-
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-
-  // setup cache area
-  Acpy = (mdata_t){Abuf, MAX_KB};
-  Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
-
   if ( S != R && (S <= E || R <= L)) {
     // inconsistent update configuration
     return;
   }
+
   if (flags & ARMAS_UPPER) {
     // by rows; M is the last row; L-S is column count; implicitely S == R
     M = min(L, E);
-    for (i = R; i < M; i += NB) {
-      nI = M - i < NB ? M - i : NB;
+    for (i = R; i < M; i += cache->NB) {
+      nI = M - i < cache->NB ? M - i : cache->NB;
     
       // 1. update block on diagonal (square block)
       br = flags & ARMAS_TRANSB ? i : 0;
@@ -348,7 +287,7 @@ void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
       __subblock(&Bd, B, br, bc);
       __subblock(&Ad, A, ar, ac);
       __update_upper_recursive(&Cd, &Ad, &Bd, alpha, beta, flags, P,
-                               nI, nI, &cache);
+                               nI, nI, cache);
 
       // 2. update right of the diagonal block (rectangle, nI rows)
       br = flags & ARMAS_TRANSB ? i+nI : 0;
@@ -360,14 +299,14 @@ void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
       __subblock(&Ad, A, ar, ac);
       __subblock(&Bd, B, br, bc);
       __kernel_colwise_inner_scale_c(&Cd, &Ad, &Bd, alpha, beta, flags,
-                                     P, 0, L-i-nI, 0, nI, &cache);
+                                     P, 0, L-i-nI, 0, nI, cache);
 
     }
    } else {
     // by columns; N is the last column, E-R is row count;
     N = min(L, E);
-    for (i = S; i < N; i += NB) {
-      nI = N - i < NB ? N - i : NB;
+    for (i = S; i < N; i += cache->NB) {
+      nI = N - i < cache->NB ? N - i : cache->NB;
     
       // 1. update on diagonal (square block)
       br = flags & ARMAS_TRANSB ? i : 0;
@@ -378,7 +317,7 @@ void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
       __subblock(&Bd, B, br, bc);
       __subblock(&Ad, A, ar, ac);
       __update_lower_recursive(&Cd, &Ad, &Bd, alpha, beta, flags,
-                               P, nI, nI, &cache);
+                               P, nI, nI, cache);
 
       // 2. update block below the diagonal block (rectangle, nI columns)
       br = flags & ARMAS_TRANSB ? i    : 0;
@@ -389,29 +328,69 @@ void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
       __subblock(&Bd, B, br, bc);
       __subblock(&Ad, A, ar, ac);
       __kernel_colwise_inner_scale_c(&Cd, &Ad, &Bd, alpha, beta, flags,
-                                     P, 0, nI, 0, E-i-nI, &cache);
+                                     P, 0, nI, 0, E-i-nI, cache);
     }
   }
+}
+
+void __update_trm_blocked(mdata_t *C, const mdata_t *A, const mdata_t *B,
+                          DTYPE alpha, DTYPE beta, int flags, int P, int S, int L, 
+                          int R, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf)
+{
+  //register int i, nI, ar, ac, br, bc, N, M;
+  //mdata_t Cd, Ad, Bd;
+  cache_t mcache;
+
+  if (E-R <= 0 || L-S <= 0 || P <= 0) {
+    return;
+  }
+
+  armas_cache_setup2(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
+
+  __update_trm_blk(C, A, B, alpha, beta, flags, P, S, L, R, E, &mcache);
 }
 
 #if defined(ENABLE_THREADS)
 
 static
-void *__start_thread(void *arg) {
+void *__start_thread(void *arg)
+{
+  kernel_param_t *kp = ((block_args_t *)arg)->kp;
+  armas_cbuf_t *cbuf  = ((block_args_t *)arg)->cbuf;
+
+  switch (kp->optflags) {
+  case ARMAS_SNAIVE:
+    __update_trm_naive(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                       kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+    break;
+  case ARMAS_RECURSIVE:
+    __update_trm_recursive(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                           kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+    break;
+  default:
+    __update_trm_blocked(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                         kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+  }
+  return arg;
+}
+
+static
+void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
+{
   kernel_param_t *kp = (kernel_param_t *)arg;
 
   switch (kp->optflags) {
   case ARMAS_SNAIVE:
-    __update_trm_naive(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
-                       kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB);
+    __update_trm_naive(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                       kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
     break;
   case ARMAS_RECURSIVE:
-    __update_trm_recursive(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
-                           kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB);
+    __update_trm_recursive(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                           kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
     break;
   default:
-    __update_trm_blk(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
-                     kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB);
+    __update_trm_blocked(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                         kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
   }
   return arg;
 }
@@ -427,6 +406,8 @@ int __update_trm_threaded(int blk, int nblk, __armas_dense_t *C,
   const mdata_t *_A, *_B;
   pthread_t th;
   kernel_param_t kp;
+  armas_cbuf_t cbuf;
+  block_args_t args = (block_args_t){&kp, &cbuf};
 
   if (flags & ARMAS_UPPER) {
     rs = __block_index4(blk, nblk, C->rows);
@@ -455,19 +436,21 @@ int __update_trm_threaded(int blk, int nblk, __armas_dense_t *C,
   __subblock(&B0, _B, (flags & ARMAS_TRANSB ? cs : 0), (flags & ARMAS_TRANSB ? 0 : cs));
 
   if (blk == nblk-1) {
+    armas_cbuf_init(&cbuf, conf->cmem, conf->l1mem);
     switch (conf->optflags) {
     case ARMAS_SNAIVE:
       __update_trm_naive(&C0, &A0, &B0, alpha, beta, flags,
-                         K, 0, ce-cs, 0, re-rs, conf->kb, conf->nb, conf->mb);
+                         K, 0, ce-cs, 0, re-rs, conf->kb, conf->nb, conf->mb, &cbuf);
       break;
     case ARMAS_RECURSIVE:
       __update_trm_recursive(&C0, &A0, &B0, alpha, beta, flags,
-                             K, 0, ce-cs, 0, re-rs, conf->kb, conf->nb, conf->mb);
+                             K, 0, ce-cs, 0, re-rs, conf->kb, conf->nb, conf->mb, &cbuf);
       break;
     default:
-      __update_trm_blk(&C0, &A0, &B0, alpha, beta, flags,
-                       K, 0, ce-cs, 0, re-rs, conf->kb, conf->nb, conf->mb);
+      __update_trm_blocked(&C0, &A0, &B0, alpha, beta, flags,
+                           K, 0, ce-cs, 0, re-rs, conf->kb, conf->nb, conf->mb, &cbuf);
     }
+    armas_cbuf_release(&cbuf);
     return 0;
   }
 
@@ -477,16 +460,87 @@ int __update_trm_threaded(int blk, int nblk, __armas_dense_t *C,
                   conf->kb, conf->nb, conf->mb, conf->optflags);
 
   // create new thread to compute this block
-  err = pthread_create(&th, NULL, __start_thread, &kp);
+  armas_cbuf_init(&cbuf, conf->cmem, conf->l1mem);
+  err = pthread_create(&th, NULL, __start_thread, &args);
   if (err) {
     conf->error = -err;
+    armas_cbuf_release(&cbuf);
     return -1;
   }
   // recursively invoke next block
   err = __update_trm_threaded(blk+1, nblk, C, A, B, alpha, beta, flags, conf);
   // wait for this block to finish
   pthread_join(th, NULL);
+  armas_cbuf_release(&cbuf);
   return err;
+}
+
+static
+int __update_trm_schedule(int nblk, __armas_dense_t *C,
+                          const __armas_dense_t *A, const __armas_dense_t *B,
+                          DTYPE alpha, DTYPE beta, int flags,
+                          armas_conf_t *conf)
+{
+  int nT, K, rs, re, cs, ce, j;
+  blas_task_t *tasks;
+  armas_counter_t ready;
+  mdata_t C0, A0, B0;
+
+  mdata_t *_C = (mdata_t *)C;
+  const mdata_t *_B = (const mdata_t*)B;
+  const mdata_t *_A = (const mdata_t *)A;
+
+  nT = nblk;
+  tasks = (blas_task_t *)calloc(nT, sizeof(blas_task_t));
+  if (! tasks) {
+    conf->error = ARMAS_EMEMORY;
+    return -1;
+  }
+  armas_counter_init(&ready, nT);
+  K = flags & ARMAS_TRANSA ? A->rows : A->cols;
+
+  for (j = 0; j < nblk; j++) {
+    if (flags & ARMAS_UPPER) {
+      rs = __block_index4(j, nblk, C->rows);
+      re = __block_index4(j+1, nblk, C->rows);
+      cs = rs;
+      ce = C->cols;
+    } else {
+      cs = __block_index4(j, nblk, C->cols);
+      ce = __block_index4(j+1, nblk, C->cols);
+      rs = cs;
+      re = C->rows;
+    }
+
+    // shift the start point to top-left corner [rs,cs] of this block. Block size
+    //   UPPER:  [rows/nblk-rs, cols-ce] 
+    //   LOWER:  [cols/nblk-cs, rows-rs] 
+    __subblock(&C0, _C, rs, cs);
+    __subblock(&A0, _A, (flags & ARMAS_TRANSA ? 0 : rs), (flags & ARMAS_TRANSA ? rs : 0));
+    __subblock(&B0, _B, (flags & ARMAS_TRANSB ? cs : 0), (flags & ARMAS_TRANSB ? 0 : cs));
+
+    // setup thread parameters
+    __kernel_params(&tasks[j].kp, &C0, &A0, &B0,
+                    alpha, beta, flags, K, 0, ce-cs, 0, re-rs,
+                    conf->kb, conf->nb, conf->mb, conf->optflags);
+
+    // init task
+    armas_task2_init(&tasks[j].t, j, __compute_block2, &tasks[j].kp, &ready);
+    // schedule
+    armas_schedule(&tasks[j].t);
+  }
+
+  // wait for tasks to finish
+  armas_counter_wait(&ready);
+  // 1. check that task worker count is zero on all tasks
+  int refcnt = 0;
+  for (j = 0; j < nT; j++) {
+    refcnt += tasks[j].t.wcnt;
+  }
+  assert(refcnt == 0);
+  // release task memory
+  free(tasks);
+  return 0;
 }
 
 #endif   // ENABLE_THREADS
@@ -522,10 +576,7 @@ int __armas_update_trm(__armas_dense_t *C,
                        const __armas_dense_t *A, const __armas_dense_t *B,
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
-  long nproc;
-  int K, ok;
-  mdata_t *_C;
-  const mdata_t *_A, *_B;
+  int ok;
 
   if (__armas_size(C) == 0 || __armas_size(A) == 0 || __armas_size(B) == 0)
     return 0;
@@ -551,37 +602,37 @@ int __armas_update_trm(__armas_dense_t *C,
     conf->error = ARMAS_ESIZE;
     return -1;
   }
-  _C = (mdata_t*)C;
-  _A = (const mdata_t *)A;
-  _B = (const mdata_t *)B;
 
-  nproc = armas_use_nproc(__armas_size(C), conf);
 
-  K = flags & ARMAS_TRANSA ? A->rows : A->cols;
-
-  // if only one thread, just do it
-  if (nproc == 1) {
-    switch (conf->optflags) {
-    case ARMAS_SNAIVE:
-      __update_trm_naive(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
-                         conf->kb, conf->nb, conf->mb);
-      break;
-    case ARMAS_RECURSIVE:
-      __update_trm_recursive(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
-                             conf->kb, conf->nb, conf->mb);
-      break;
-    default:
-      __update_trm_blk(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
-                       conf->kb, conf->nb, conf->mb);
-    }
-    return 0;
-  }
 
 #if defined(ENABLE_THREADS)
+  long nproc = armas_use_nproc(__armas_size(C), conf);
+  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED) && nproc > 1) {
+    return __update_trm_schedule(nproc, C, A, B, alpha, beta, flags, conf);
+  }
   return __update_trm_threaded(0, nproc, C, A, B, alpha, beta, flags, conf);
+
 #else
-  conf->error = ARMAS_EIMP;
-  return -1;
+  int K = flags & ARMAS_TRANSA ? A->rows : A->cols;
+  armas_cbuf_t *cbuf = armas_cbuf_default();
+  mdata_t *_C = (mdata_t*)C;
+  const mdata_t *_A = (const mdata_t *)A;
+  const mdata_t *_B = (const mdata_t *)B;
+
+  switch (conf->optflags) {
+  case ARMAS_SNAIVE:
+    __update_trm_naive(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
+                       conf->kb, conf->nb, conf->mb, cbuf);
+    break;
+  case ARMAS_RECURSIVE:
+    __update_trm_recursive(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
+                           conf->kb, conf->nb, conf->mb, cbuf);
+    break;
+  default:
+    __update_trm_blocked(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
+                         conf->kb, conf->nb, conf->mb, cbuf);
+  }
+  return 0;
 #endif
 }
 

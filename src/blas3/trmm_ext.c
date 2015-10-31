@@ -80,7 +80,7 @@ void __trmm_ext_blk_upper(mdata_t *B, const mdata_t *A, const DTYPE alpha,
   mdata_t A0, A1, B0, B1, *dB;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
-  dB = cache->dC;
+  dB = &cache->dC;
 
   for (i = 0; i < N; i += NB) {
     nI = N - i < NB ? N - i : NB;
@@ -150,7 +150,7 @@ void __trmm_ext_blk_u_trans(mdata_t *B, const mdata_t *A, DTYPE alpha,
   mdata_t A0, A1, B0, B1, *dB;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
-  dB = cache->dC;
+  dB = &cache->dC;
 
   for (i = N; i > 0; i -= NB) {
     nI = i < NB ? i : NB;
@@ -218,7 +218,7 @@ void __trmm_ext_blk_lower(mdata_t *B, const mdata_t *A, DTYPE alpha,
   mdata_t A0, A1, B0, B1, *dB;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   int NB = cache->NB;
-  dB = cache->dC;
+  dB = &cache->dC;
 
   for (i = N; i > 0; i -= NB) {
     nI = i < NB ? i : NB;
@@ -293,7 +293,7 @@ void __trmm_ext_blk_l_trans(mdata_t *B, const mdata_t *A,
   mdata_t A0, A1, B0, B1, *dB;
   int NB = cache->NB;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-  dB = cache->dC;
+  dB = &cache->dC;
 
   for (i = 0; i < N; i += NB) {
     nI = N - i < NB ? N - i : NB;
@@ -367,7 +367,7 @@ void __trmm_ext_blk_r_upper(mdata_t *B, const mdata_t *A, DTYPE alpha,
   mdata_t A0, A1, B0, B1, *dB;
   int NB = cache->NB;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-  dB = cache->dC;
+  dB = &cache->dC;
 
   // rows/columns of A; columns of B; nI is number of columns
   for (i = N; i > 0; i -= NB) {
@@ -440,7 +440,7 @@ void __trmm_ext_blk_r_lower(mdata_t *B, const mdata_t *A, DTYPE alpha,
   mdata_t A0, A1, B0, B1, *dB;
   int NB = cache->NB;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-  dB = cache->dC;
+  dB = &cache->dC;
 
   // rows/columns of A; columns of B; nI is number of columns
   for (i = 0; i < N; i += NB) {
@@ -512,7 +512,7 @@ void __trmm_ext_blk_ru_trans(mdata_t *B, const mdata_t *A, DTYPE alpha,
   mdata_t A0, A1, B0, B1, *dB;
   int NB = cache->NB;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-  dB = cache->dC;
+  dB = &cache->dC;
 
   // rows/columns of A; columns of B; nI is number of columns
   for (i = 0; i < N; i += NB) {
@@ -583,7 +583,7 @@ void __trmm_ext_blk_rl_trans(mdata_t *B, const mdata_t *A, DTYPE alpha,
   mdata_t A0, A1, B0, B1, *dB;
   int NB = cache->NB;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-  dB = cache->dC;
+  dB = &cache->dC;
 
   // for columns/rows of A; columns of B; nI is column count
   for (i = N; i > 0; i -= NB) {
@@ -655,40 +655,20 @@ void __trmm_ext_unb(mdata_t *Bc, mdata_t *dB, const mdata_t *A, DTYPE alpha, int
 
 
 void __trmm_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
-                    int N, int S, int E, int KB, int NB, int MB)
+                    int N, int S, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf)
 {
-  mdata_t Acpy, Bcpy, Cpy, Dcpy;
-  cache_t cache;
-  DTYPE Abuf[MAX_KB*MAX_NB/4], Bbuf[MAX_KB*MAX_NB/4] __attribute__((aligned(64)));
-  DTYPE Cbuf[MAX_KB*MAX_NB/4], Dbuf[MAX_KB*MAX_NB/4] __attribute__((aligned(64)));
-  if (E-S <= 0 || N <= 0)
+  cache_t mcache;
+
+  if (E-S <= 0 || N <= 0) {
+    // nothing to do, zero columns or rows
     return;
+  }
 
-  // restrict block sizes as data is copied to aligned buffers of predefined max sizes.
-  if (NB > MAX_NB/2 || NB <= 0) {
-    NB = MAX_NB/2;
-  }
-  if (MB > MAX_NB/2 || MB <= 0) {
-    MB = MAX_NB/2;
-  }
-  if (KB > MAX_KB/2 || KB <= 0) {
-    KB = MAX_KB/2;
-  }
-  // should KB >= NB ??
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-
-  // setup cache area
-  Acpy = (mdata_t){Abuf, MAX_KB/2};
-  Bcpy = (mdata_t){Bbuf, MAX_KB/2};
-  Cpy  = (mdata_t){Cbuf, MAX_KB/2};
-  Dcpy = (mdata_t){Dbuf, MAX_KB/2};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, &Cpy, &Dcpy};
+  armas_cache_setup3(&mcache, cbuf, NB, NB, KB, sizeof(DTYPE));
 
   if (N < 2*NB) {
     // do only unblocked
-    __trmm_ext_unb(B, &Dcpy, A, alpha, flags, N, S, E);
+    __trmm_ext_unb(B, &mcache.dC, A, alpha, flags, N, S, E);
     return;
   }
 
@@ -696,15 +676,15 @@ void __trmm_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
     // B = alpha*B*op(A)
     if (flags & ARMAS_UPPER) {
       if (flags & ARMAS_TRANSA) {
-        __trmm_ext_blk_ru_trans(B, A, alpha, flags, N, S, E, &cache);
+        __trmm_ext_blk_ru_trans(B, A, alpha, flags, N, S, E, &mcache);
       } else {
-        __trmm_ext_blk_r_upper(B, A, alpha, flags, N, S, E, &cache); 
+        __trmm_ext_blk_r_upper(B, A, alpha, flags, N, S, E, &mcache); 
       }
     } else {
       if (flags & ARMAS_TRANSA) {
-        __trmm_ext_blk_rl_trans(B, A, alpha, flags, N, S, E, &cache);
+        __trmm_ext_blk_rl_trans(B, A, alpha, flags, N, S, E, &mcache);
       } else {
-        __trmm_ext_blk_r_lower(B, A, alpha, flags, N, S, E, &cache); 
+        __trmm_ext_blk_r_lower(B, A, alpha, flags, N, S, E, &mcache); 
       }
     }
 
@@ -712,15 +692,15 @@ void __trmm_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
     // B = alpha*op(A)*B
     if (flags & ARMAS_UPPER) {
       if (flags & ARMAS_TRANSA) {
-        __trmm_ext_blk_u_trans(B, A, alpha, flags, N, S, E, &cache); 
+        __trmm_ext_blk_u_trans(B, A, alpha, flags, N, S, E, &mcache); 
       } else {
-        __trmm_ext_blk_upper(B, A, alpha, flags, N, S, E, &cache); 
+        __trmm_ext_blk_upper(B, A, alpha, flags, N, S, E, &mcache); 
       }
     } else {
       if (flags & ARMAS_TRANSA) {
-        __trmm_ext_blk_l_trans(B, A, alpha, flags, N, S, E, &cache);
+        __trmm_ext_blk_l_trans(B, A, alpha, flags, N, S, E, &mcache);
       } else {
-        __trmm_ext_blk_lower(B, A, alpha, flags, N, S, E, &cache); 
+        __trmm_ext_blk_lower(B, A, alpha, flags, N, S, E, &mcache); 
       }
     }
   }

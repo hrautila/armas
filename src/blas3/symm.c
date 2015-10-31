@@ -25,10 +25,13 @@
 // ------------------------------------------------------------------------------
 
 #include "internal.h"
-#include "scheduler.h"
 #include "matrix.h"
 #include "matcpy.h"
+#include "scheduler.h"
 
+extern
+void __kernel_colblk_inner2(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
+                            DTYPE alpha, int nJ, int nR, int nP, int rb);
 
 // C += A*B; A is the diagonal block
 static
@@ -43,30 +46,29 @@ void __mult_symm_diag(mdata_t *C, const mdata_t *A, const mdata_t *B,
     return;
 
   nAC = flags & ARMAS_RIGHT ? nSL : nRE;
-  
-  if (flags & ARMAS_LOWER) {
-    // upper part of source untouchable, copy diagonal block and fill upper part
-    //colcpy_fill_up(Acpy->md, Acpy->step, A->md, A->step, nAC, nAC, unit);
-    __CPTRIL_UFILL(cache->Acpy, A, nAC, nAC, unit);
-  } else {
-    // lower part of source untouchable, copy diagonal block and fill lower part
-    //colcpy_fill_low(Acpy->md, Acpy->step, A->md, A->step, nAC, nAC, unit);
-    __CPTRIU_LFILL(cache->Acpy, A, nAC, nAC, unit);
-  }
 
   if (flags & ARMAS_RIGHT) {
-    //__CPTRANS(Bcpy->md, Bcpy->step, B->md, B->step, nRE, nSL);
-    __CPBLK_TRANS(cache->Bcpy, B, nRE, nSL);
+    // upper/lower part of source untouchable, copy diagonal block and fill lower/upper part
+    if (flags & ARMAS_LOWER) {
+      __CPTRIL_UFILL(&cache->Bcpy, A, nAC, nAC, unit);
+    } else {
+      __CPTRIU_LFILL(&cache->Bcpy, A, nAC, nAC, unit);
+    }
+    __CPBLK_TRANS(&cache->Acpy, B, nRE, nSL, flags);
+    __kernel_colblk_inner(C, &cache->Acpy, &cache->Bcpy, alpha, nAC, nRE, nP);
+    //__kernel_colblk_inner2(C, cache->Bcpy, cache->Acpy, alpha, nAC, nRE, nP, cache->rb);
   } else {
-    //__CP(Bcpy->md, Bcpy->step, B->md, B->step, nRE, nSL);
-    __CPBLK(cache->Bcpy, B, nRE, nSL);
+    // upper/lower part of source untouchable, copy diagonal block and fill lower/upper part
+    if (flags & ARMAS_LOWER) {
+      __CPTRIL_UFILL(&cache->Acpy, A, nAC, nAC, unit);
+    } else {
+      __CPTRIU_LFILL(&cache->Acpy, A, nAC, nAC, unit);
+    }
+    __CPBLK(&cache->Bcpy, B, nRE, nSL, flags);
+    __kernel_colblk_inner(C, &cache->Acpy, &cache->Bcpy, alpha, nSL, nAC, nP);
+    //__kernel_colblk_inner2(C, cache->Acpy, cache->Bcpy, alpha, nSL, nAC, nP, cache->rb);
   }
 
-  if (flags & ARMAS_RIGHT) {
-    __kernel_colblk_inner(C, cache->Bcpy, cache->Acpy, alpha, nAC, nRE, nP);
-  } else {
-    __kernel_colblk_inner(C, cache->Acpy, cache->Bcpy, alpha, nSL, nAC, nP);
-  }
 }
 
 
@@ -75,36 +77,21 @@ static
 void __kernel_symm_left(mdata_t *C, const mdata_t *A, const mdata_t *B,
                         DTYPE alpha, DTYPE beta, int flags,
                         int P, int S, int L, int R, int E,
-                        int KB, int NB, int MB)
+                        int KB, int NB, int MB, armas_cbuf_t *cbuf)
 {
   int i, j, nI, nJ, flags1, flags2;
-  mdata_t A0, B0, C0, Acpy, Bcpy;
-  cache_t cache;
-  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  mdata_t A0, B0, C0;
+  cache_t mcache;
 
-  if (L-S <= 0 || E-R <= 0) {
+  if (alpha == 0.0) {
+    if (beta != 1.0) {
+      __subblock(&C0, C, R, S);
+      __blk_scale(&C0, beta, E-R, L-S);
+    }
     return;
   }
 
-  if (KB > MAX_KB || KB <= 0) {
-    KB = MAX_KB;
-  }
-  if (NB > MAX_NB || NB <= 0) {
-    NB = MAX_NB;
-  }
-  if (MB > MAX_MB || MB <= 0) {
-    MB = MAX_MB;
-  }
-
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-
-  // setup cache area
-  Acpy  = (mdata_t){Abuf, MAX_KB};
-  Bcpy  = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
-
+  armas_cache_setup2(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
   flags1 = 0;
   flags2 = 0;
 
@@ -126,12 +113,12 @@ void __kernel_symm_left(mdata_t *C, const mdata_t *A, const mdata_t *B,
   flags1 |= flags & ARMAS_UPPER ? ARMAS_TRANSA : 0;
   flags2 |= flags & ARMAS_LOWER ? ARMAS_TRANSA : 0;
 
-  for (i = R; i < E; i += MB) {
-    nI = E - i < MB ? E - i : MB;
+  for (i = R; i < E; i += mcache.MB) {
+    nI = E - i < mcache.MB ? E - i : mcache.MB;
 
     // for all column of C, B ...
-    for (j = S; j < L; j += NB) {
-      nJ = L - j < NB ? L - j : NB;
+    for (j = S; j < L; j += mcache.NB) {
+      nJ = L - j < mcache.NB ? L - j : mcache.NB;
       __subblock(&C0, C, i, j);
 
       // block of C upper left at [i,j], lower right at [i+nI, j+nj]
@@ -143,12 +130,12 @@ void __kernel_symm_left(mdata_t *C, const mdata_t *A, const mdata_t *B,
       __subblock(&B0, B, 0, j);
 
       __kernel_colwise_inner_no_scale(&C0, &A0, &B0, alpha, flags1,
-                                      i, nJ, nI, &cache);
+                                      i, nJ, nI, &mcache);
 
       // 2. on-diagonal block in A;
       __subblock(&A0, A, i, i);
       __subblock(&B0, B, i, j);
-      __mult_symm_diag(&C0, &A0, &B0, alpha, flags, nI, nJ, nI, &cache);
+      __mult_symm_diag(&C0, &A0, &B0, alpha, flags, nI, nJ, nI, &mcache);
 
       // 3. off-diagonal block in A; if UPPER then right of [i, i+nI];
       //    if LOWER then below [i+nI, i]
@@ -157,7 +144,7 @@ void __kernel_symm_left(mdata_t *C, const mdata_t *A, const mdata_t *B,
       __subblock(&A0, A, (flags&ARMAS_UPPER ? i : i+nI), (flags&ARMAS_UPPER ? i+nI : i));
       __subblock(&B0, B, i+nI, j);
       __kernel_colwise_inner_no_scale(&C0, &A0, &B0, alpha, flags2,
-                                      P-i-nI, nJ, nI, &cache); 
+                                      P-i-nI, nJ, nI, &mcache); 
     }
   }
 }
@@ -165,39 +152,24 @@ void __kernel_symm_left(mdata_t *C, const mdata_t *A, const mdata_t *B,
 
 static
 void __kernel_symm_right(mdata_t *C, const mdata_t *A, const mdata_t *B,
-                        DTYPE alpha, DTYPE beta, int flags,
-                        int P, int S, int L, int R, int E,
-                        int KB, int NB, int MB)
+                         DTYPE alpha, DTYPE beta, int flags,
+                         int P, int S, int L, int R, int E,
+                         int KB, int NB, int MB, armas_cbuf_t *cbuf)
 {
   int flags1, flags2;
   register int nR, nC, ic, ir;
-  mdata_t A0, B0, C0, Acpy, Bcpy;
-  cache_t cache;
-  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  mdata_t A0, B0, C0; //, Acpy, Bcpy;
+  cache_t mcache;
 
-  if (L-S <= 0 || E-R <= 0) {
+  if (alpha == 0.0) {
+    if (beta != 1.0) {
+      __subblock(&C0, C, R, S);
+      __blk_scale(&C0, beta, E-R, L-S);
+    }
     return;
   }
 
-  if (KB > MAX_KB || KB <= 0) {
-    KB = MAX_KB;
-  }
-  if (NB > MAX_NB || NB <= 0) {
-    NB = MAX_NB;
-  }
-  if (MB > MAX_MB || MB <= 0) {
-    MB = MAX_MB;
-  }
-
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-
-  // setup cache area
-  Acpy  = (mdata_t){Abuf, MAX_KB};
-  Bcpy  = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
-
+  armas_cache_setup2(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
   flags1 = 0;
   flags2 = 0;
 
@@ -224,12 +196,12 @@ void __kernel_symm_right(mdata_t *C, const mdata_t *A, const mdata_t *B,
   flags1 |= flags & ARMAS_LOWER ? ARMAS_TRANSB : 0;
   flags2 |= flags & ARMAS_UPPER ? ARMAS_TRANSB : 0;
 
-  for (ic = S; ic < L; ic += NB) {
-    nC = L - ic < NB ? L - ic : NB;
+  for (ic = S; ic < L; ic += mcache.NB) {
+    nC = L - ic < mcache.NB ? L - ic : mcache.NB;
 
     // for all rows of C, B ...
-    for (ir = R; ir < E; ir += MB) {
-      nR = E - ir < MB ? E - ir : MB;
+    for (ir = R; ir < E; ir += mcache.MB) {
+      nR = E - ir < mcache.MB ? E - ir : mcache.MB;
 
       __subblock(&C0, C, ir, ic);
       __blk_scale(&C0, beta, nR, nC);
@@ -238,17 +210,17 @@ void __kernel_symm_right(mdata_t *C, const mdata_t *A, const mdata_t *B,
       __subblock(&A0, A, (flags&ARMAS_UPPER ? 0 : ic), (flags&ARMAS_UPPER ? ic : 0));
       __subblock(&B0, B, ir, 0);
       __kernel_colwise_inner_no_scale(&C0, &B0, &A0, alpha, flags1,
-                                      ic, nC, nR, &cache);
+                                      ic, nC, nR, &mcache);
       // diagonal block
       __subblock(&A0, A, ic, ic);
       __subblock(&B0, B, ir, ic);
-      __mult_symm_diag(&C0, &A0, &B0, alpha, flags, nC, nC, nR, &cache); 
+      __mult_symm_diag(&C0, &A0, &B0, alpha, flags, nC, nC, nR, &mcache); 
 
       // right|below of diagonal
       __subblock(&A0, A, (flags&ARMAS_UPPER ? ic : ic+nC), (flags&ARMAS_UPPER ? ic+nC : ic));
       __subblock(&B0, B, ir, ic+nC);
       __kernel_colwise_inner_no_scale(&C0, &B0, &A0, alpha, flags2,
-                                      P-ic-nC, nC, nR, &cache);
+                                      P-ic-nC, nC, nR, &mcache);
     }
   }
 
@@ -258,16 +230,35 @@ void __kernel_symm_right(mdata_t *C, const mdata_t *A, const mdata_t *B,
 // threading support
 
 static
-void *__compute_block(void *arg) {
-  kernel_param_t *kp = (kernel_param_t *)arg;
+void *__compute_recursive(void *arg) 
+{
+  kernel_param_t *kp = ((block_args_t *)arg)->kp;
+  armas_cbuf_t *cbuf  = ((block_args_t *)arg)->cbuf;
   if (kp->flags & ARMAS_RIGHT) {
-    __kernel_symm_right(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
+    __kernel_symm_right(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
                         kp->K, kp->S, kp->L, kp->R, kp->E,
-                        kp->KB, kp->NB, kp->MB);
+                        kp->KB, kp->NB, kp->MB, cbuf);
   } else {
-    __kernel_symm_left(kp->C, kp->A, kp->B, kp->alpha, kp->beta, kp->flags,
+    __kernel_symm_left(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
                        kp->K, kp->S, kp->L, kp->R, kp->E,
-                       kp->KB, kp->NB, kp->MB);
+                       kp->KB, kp->NB, kp->MB, cbuf);
+  }
+  return arg;
+}
+
+static
+void *__compute_block2(void *arg, armas_cbuf_t *cbuf) 
+{
+  kernel_param_t *kp = (kernel_param_t *)arg;
+
+  if (kp->flags & ARMAS_RIGHT) {
+    __kernel_symm_right(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                        kp->K, kp->S, kp->L, kp->R, kp->E,
+                        kp->KB, kp->NB, kp->MB, cbuf);
+  } else {
+    __kernel_symm_left(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
+                       kp->K, kp->S, kp->L, kp->R, kp->E,
+                       kp->KB, kp->NB, kp->MB, cbuf);
   }
   return arg;
 }
@@ -287,6 +278,8 @@ int __mult_sym_threaded(int blknum, int nblk, int colwise,
   int ie, ir, K, err;
   pthread_t th;
   kernel_param_t kp;
+  armas_cbuf_t cbuf;
+  block_args_t args = (block_args_t){&kp, &cbuf};
 
   _C = (mdata_t*)C;
   _A = (const mdata_t *)A;
@@ -302,27 +295,27 @@ int __mult_sym_threaded(int blknum, int nblk, int colwise,
       ie = __block_index4(blknum+1, nblk, C->rows);
   }
 
-  __DEBUG(printf("blk=%d nblk=%d, ir=%d, ie=%d\n", blknum, nblk, ir, ie));
-
   // last block immediately
   if (blknum == nblk-1) {
+    armas_cbuf_init(&cbuf, conf->cmem, conf->l1mem);
     if (flags & ARMAS_RIGHT) {
       if (colwise) {
         __kernel_symm_right(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
-                            conf->kb, conf->nb, conf->mb);
+                            conf->kb, conf->nb, conf->mb, &cbuf);
       } else {
         __kernel_symm_right(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, ir, ie,
-                            conf->kb, conf->nb, conf->mb);
+                            conf->kb, conf->nb, conf->mb, &cbuf);
       }
     } else {
       if (colwise) {
         __kernel_symm_left(_C, _A, _B, alpha, beta, flags, K, ir, ie, 0, C->rows,
-                           conf->kb, conf->nb, conf->mb);
+                           conf->kb, conf->nb, conf->mb, &cbuf);
       } else {
         __kernel_symm_left(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, ir, ie,
-                           conf->kb, conf->nb, conf->mb);
+                           conf->kb, conf->nb, conf->mb, &cbuf);
       }
     }
+    armas_cbuf_release(&cbuf);
     return 0;
   }
 
@@ -337,15 +330,18 @@ int __mult_sym_threaded(int blknum, int nblk, int colwise,
   }
 
   // create new thread to compute this block
-  err = pthread_create(&th, NULL, __compute_block, &kp);
+  armas_cbuf_init(&cbuf, conf->cmem, conf->l1mem);
+  err = pthread_create(&th, NULL, __compute_recursive, &args);
   if (err) {
     conf->error = -err;
+    armas_cbuf_release(&cbuf);
     return -1;
   }
   // recursively invoke next block
   err = __mult_sym_threaded(blknum+1, nblk, colwise, C, A, B, alpha, beta, flags, conf);
   // wait for this block to finish
   pthread_join(th, NULL);
+  armas_cbuf_release(&cbuf);
   return err;
 }
 
@@ -399,7 +395,7 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
       __kernel_params(&tasks[k].kp, _C, _A, _B, alpha, beta, flags, K, jS, jL, iR, iE,
                       conf->kb, conf->nb, conf->mb, conf->optflags);
       // init task
-      armas_task_init(&tasks[k].t, k, __compute_block, &tasks[k].kp, &ready);
+      armas_task2_init(&tasks[k].t, k, __compute_block2, &tasks[k].kp, &ready);
       // schedule
       armas_schedule(&tasks[k].t);
       k++;
@@ -416,7 +412,7 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
         __kernel_params(&tasks[k].kp, _C, _A, _B, alpha, beta, flags, K, jS, jL, iR, iE,
                         conf->kb, conf->nb, conf->mb, conf->optflags);
         // init task
-        armas_task_init(&tasks[k].t, k, __compute_block, &tasks[k].kp, &ready);
+        armas_task2_init(&tasks[k].t, k, __compute_block2, &tasks[k].kp, &ready);
         // schedule
         armas_schedule(&tasks[k].t);
         k++;
@@ -473,10 +469,7 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
 int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas_dense_t *B,
                       DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
-  long nproc;
-  int K, ok;
-  mdata_t *_C;
-  const mdata_t *_A, *_B;
+  int ok;
 
   if (C->rows == 0 || C->cols == 0)
     return 0;
@@ -501,26 +494,12 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
     return -1;
   }
 
-  _C = (mdata_t*)C;
-  _A = (const mdata_t *)A;
-  _B = (const mdata_t *)B;
-
-  K = A->cols;
-  nproc = armas_use_nproc(__armas_size(C), conf);
-  if (nproc == 1) {
-    if (flags & ARMAS_RIGHT) {
-      __kernel_symm_right(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
-                          conf->kb, conf->nb, conf->mb);
-    } else {
-      __kernel_symm_left(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
-                         conf->kb, conf->nb, conf->mb);
-    }
-    return 0;
-  }
 
 #if defined(ENABLE_THREADS)
   int colwise = C->rows < C->cols;
-  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
+  long nproc = armas_use_nproc(__armas_size(C), conf);
+
+  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED) && nproc > 1) {
     return __mult_sym_schedule(nproc, colwise,
                                C, A, B, alpha, beta, flags, conf);
   }
@@ -529,8 +508,19 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
   return __mult_sym_threaded(0, nproc, colwise,
                              C, A, B, alpha, beta, flags, conf);
 #else
-  conf->error = ARMAS_EIMP;
-  return -1;
+  int K = A->cols;
+  mdata_t *_C = (mdata_t*)C;
+  const mdata_t *_A = (const mdata_t *)A;
+  const mdata_t *_B = (const mdata_t *)B;
+  armas_cbuf_t *cbuf = armas_cbuf_get(conf);
+  if (flags & ARMAS_RIGHT) {
+    __kernel_symm_right(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
+                        conf->kb, conf->nb, conf->mb, cbuf);
+  } else {
+    __kernel_symm_left(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
+                       conf->kb, conf->nb, conf->mb, cbuf);
+  }
+  return 0;
 #endif
 }
 

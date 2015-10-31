@@ -137,8 +137,8 @@ void __kernel_ext_panel_inner(mdata_t *C, mdata_t *dC,
   int j, kp, nK;
   mdata_t *Acpy, *Bcpy;
 
-  Acpy = cache->Acpy;
-  Bcpy = cache->Bcpy;
+  Acpy = &cache->Acpy;
+  Bcpy = &cache->Bcpy;
 
   for (kp = 0; kp < nP; kp += cache->KB) {
     nK = min(cache->KB, nP-kp);
@@ -173,8 +173,8 @@ void __kernel_ext_panel_inner_dA(mdata_t *C, mdata_t *dC,
   int j, kp, nK;
   mdata_t *Acpy, *Bcpy;
 
-  Acpy = cache->Acpy;
-  Bcpy = cache->Bcpy;
+  Acpy = &cache->Acpy;
+  Bcpy = &cache->Bcpy;
 
   for (kp = 0; kp < nP; kp += cache->KB) {
     nK = min(cache->KB, nP-kp);
@@ -230,8 +230,8 @@ void __kernel_ext_panel_inner_dB(mdata_t *C, mdata_t *dC,
   int j, kp, nK;
   mdata_t *Acpy, *Bcpy;
 
-  Acpy = cache->Acpy;
-  Bcpy = cache->Bcpy;
+  Acpy = &cache->Acpy;
+  Bcpy = &cache->Bcpy;
 
   for (kp = 0; kp < nP; kp += cache->KB) {
     nK = min(cache->KB, nP-kp);
@@ -288,17 +288,16 @@ void __kernel_ext_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mda
   mdata_t Ca;
 
   int KB, NB, MB;
-  mdata_t *Acpy, *Bcpy, *C0, *dC;
+  mdata_t *Acpy, *Bcpy, *dC;
 
   if (nRE <= 0 || nSL <= 0)
     return;
 
   Ca.step = C->step;
   KB = cache->KB; NB = cache->NB; MB = cache->MB;
-  Acpy = cache->Acpy;
-  Bcpy = cache->Bcpy;
-  C0   = cache->C0;
-  dC   = cache->dC;
+  Acpy = &cache->Acpy;
+  Bcpy = &cache->Bcpy;
+  dC   = &cache->dC;
 
   // loop over columns of C
   for (jp = 0; jp < nSL; jp += NB) {
@@ -310,7 +309,7 @@ void __kernel_ext_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mda
 
       __subblock(&Ca, C, ip, jp);
       // initialize block {C0, dC} = {C, 0}
-      __blk_scale_ext(C0, dC, &Ca, __ZERO, nI, nJ);
+      __blk_scale_ext(&Ca, dC, &Ca, __ZERO, nI, nJ);
 
       for (kp = 0; kp < P; kp += KB) {
         nP = min(KB, P-kp);
@@ -328,15 +327,15 @@ void __kernel_ext_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mda
         }
 
         for (j = 0; j < nJ-1; j += 2) {
-            __CMULT2EXT(C0, dC, Acpy, Bcpy, alpha, j, nI, nP);
+            __CMULT2EXT(&Ca, dC, Acpy, Bcpy, alpha, j, nI, nP);
         }
         if (j == nJ)
           continue;
-        __CMULT1EXT(C0, dC, Acpy, Bcpy, alpha, j, nI, nP);
+        __CMULT1EXT(&Ca, dC, Acpy, Bcpy, alpha, j, nI, nP);
       }
 
       // merge back to target
-      __blk_merge_ext(&Ca, C0, dC, nI, nJ);
+      __blk_merge_ext(&Ca, &Ca, dC, nI, nJ);
       
     }
   }
@@ -350,17 +349,17 @@ void __kernel_ext_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdat
   int j, ip, jp, kp, nP, nI, nJ;
   mdata_t Ca;
   int KB, NB, MB;
-  mdata_t *Acpy, *Bcpy, *C0, *dC;
+  mdata_t *Acpy, *Bcpy, *dC;
 
   if (L-S <= 0 || E-R <= 0 || P <= 0)
     return;
 
   Ca.step = C->step;
   KB = cache->KB; NB = cache->NB; MB = cache->MB;
-  Acpy = cache->Acpy;
-  Bcpy = cache->Bcpy;
-  C0   = cache->C0;
-  dC   = cache->dC;
+  Acpy = &cache->Acpy;
+  Bcpy = &cache->Bcpy;
+  //C0   = cache->C0;
+  dC   = &cache->dC;
 
   // loop over columns of C
   for (jp = S; jp < L; jp += NB) {
@@ -372,7 +371,7 @@ void __kernel_ext_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdat
 
       __subblock(&Ca, C, ip, jp);
       // compute C0 + dC = beta*C
-      __blk_scale_ext(C0, dC, &Ca, beta, nI, nJ);
+      __blk_scale_ext(&Ca, dC, &Ca, beta, nI, nJ);
 
       for (kp = 0; kp < P; kp += KB) {
         nP = min(KB, P-kp);
@@ -390,15 +389,15 @@ void __kernel_ext_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdat
         }
 
         for (j = 0; j < nJ-1; j += 2) {
-            __CMULT2EXT(C0, dC, Acpy, Bcpy, alpha, j, nI, nP);
+            __CMULT2EXT(&Ca, dC, Acpy, Bcpy, alpha, j, nI, nP);
         }
         if (j == nJ)
           continue;
-        __CMULT1EXT(C0, dC, Acpy, Bcpy, alpha, j, nI, nP);
+        __CMULT1EXT(&Ca, dC, Acpy, Bcpy, alpha, j, nI, nP);
       }
 
       // merge back to target
-      __blk_merge_ext(&Ca, C0, dC, nI, nJ);
+      __blk_merge_ext(&Ca, &Ca, dC, nI, nJ);
     }
   }
 }
@@ -414,50 +413,28 @@ void __kernel_ext_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdat
 int __kernel_inner_ext(mdata_t *C, const mdata_t *A, const mdata_t *B,
                        DTYPE alpha, DTYPE beta, int flags,
                        int P, int S, int L, int R, int E, 
-                       int KB, int NB, int MB)
+                       int KB, int NB, int MB, armas_cbuf_t *cbuf)
 {
-  mdata_t Aa, Ba, Ca, dC;
-  cache_t cache;
-  DTYPE Abuf[MAX_KB*MAX_MB/4], Bbuf[MAX_KB*MAX_NB/4] __attribute__((aligned(64)));
-  DTYPE Cbuf[MAX_MB*MAX_NB/4], Dbuf[MAX_MB*MAX_NB/4] __attribute__((aligned(64)));
+  mdata_t Aa;
+  cache_t mcache;
 
   if (L-S <= 0 || E-R <= 0) {
     // nothing to do, zero columns or rows
     return 0;
   }
 
-  // restrict block sizes as data is copied to aligned buffers of
-  // predefined max sizes.
-  if (NB > MAX_NB/2 || NB <= 0) {
-    NB = MAX_NB/2;
-  }
-  if (MB > MAX_MB/2 || MB <= 0) {
-    MB = MAX_MB/2;
-  }
-  if (KB  > MAX_KB/2 || KB <= 0) {
-    KB = MAX_KB/2;
-  }
-
   if (alpha == 0.0) {
-    __subblock(&Aa, C, R, S);
-    __blk_scale(&Aa, beta, E-R, L-R);
+    if (beta != 1.0) {
+      __subblock(&Aa, C, R, S);
+      __blk_scale(&Aa, beta, E-R, L-S);
+    }
     return 0;
   }
 
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-
-  // setup cache area
-  Aa = (mdata_t){Abuf, MAX_KB/2};
-  Ba = (mdata_t){Bbuf, MAX_KB/2};
-  Ca = (mdata_t){Cbuf, MAX_MB/2};
-  dC = (mdata_t){Dbuf, MAX_MB/2};
-  cache = (cache_t){&Aa, &Ba, KB, NB, MB, &Ca, &dC};
-
+  armas_cache_setup3(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
   // update C using A as inner most matrix
   __kernel_ext_colwise_inner_scale_c(C, A, B, alpha, beta, flags,
-                                     P, S, L, R, E, &cache); 
+                                     P, S, L, R, E, &mcache); 
   return 0;
 }
 

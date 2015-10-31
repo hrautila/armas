@@ -32,8 +32,10 @@
 
 #if EXT_PRECISION && defined(__trmm_ext_blk)
 extern void __trmm_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
-                           int N, int S, int E, int KB, int NB, int MB);
+                           int N, int S, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf);
 #define HAVE_EXT_PRECISION 1
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -44,20 +46,55 @@ extern void __trmm_ext_blk(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
 // ------------------------------------------------------------------------------
 
 static
-void *__compute_block(void *arg) {
+void *__compute_recursive(void *arg) 
+{
+  kernel_param_t *kp = ((block_args_t *)arg)->kp;
+  armas_cbuf_t *cbuf  = ((block_args_t *)arg)->cbuf;
+
+  if (HAVE_EXT_PRECISION && (kp->optflags & ARMAS_OEXTPREC)) {
+      __trmm_ext_blk(&kp->C, &kp->A, kp->alpha, kp->flags, 
+                     kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+      return (void *)0;
+  }
+
+  switch (kp->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
+  case ARMAS_SNAIVE:
+    __trmm_unb(&kp->C, &kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
+    break;
+  case ARMAS_RECURSIVE:
+    __trmm_recursive(&kp->C, &kp->A, kp->alpha, kp->flags,
+                     kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+    break;
+  default:
+    __trmm_blk(&kp->C, &kp->A, kp->alpha, kp->flags,
+               kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+  }
+  return (void *)0;
+}
+
+static
+void *__compute_block2(void *arg, armas_cbuf_t *cbuf) 
+{
   kernel_param_t *kp = (kernel_param_t *)arg;
-    switch (kp->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-    case ARMAS_SNAIVE:
-      __trmm_unb(kp->C, kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
-      break;
-    case ARMAS_RECURSIVE:
-      __trmm_recursive(kp->C, kp->A, kp->alpha, kp->flags,
-                       kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB);
-      break;
-    default:
-      __trmm_blk(kp->C, kp->A, kp->alpha, kp->flags,
-                 kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB);
-    }
+
+  if (HAVE_EXT_PRECISION && (kp->optflags & ARMAS_OEXTPREC)) {
+      __trmm_ext_blk(&kp->C, &kp->A, kp->alpha, kp->flags, 
+                     kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+      return (void *)0;
+  }
+
+  switch (kp->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
+  case ARMAS_SNAIVE:
+    __trmm_unb(&kp->C, &kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
+    break;
+  case ARMAS_RECURSIVE:
+    __trmm_recursive(&kp->C, &kp->A, kp->alpha, kp->flags,
+                      kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+    break;
+  default:
+    __trmm_blk(&kp->C, &kp->A, kp->alpha, kp->flags,
+                kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+  }
   return arg;
 }
 
@@ -75,6 +112,8 @@ int __mult_trm_threaded(int blknum, int nblk,
   const mdata_t *_A;
   pthread_t th;
   kernel_param_t kp;
+  armas_cbuf_t cbuf;
+  block_args_t args = (block_args_t){&kp, &cbuf};
 
   _B = (mdata_t*)B;
   _A = (const mdata_t *)A;
@@ -88,10 +127,15 @@ int __mult_trm_threaded(int blknum, int nblk,
   }
 
   if (blknum == nblk-1) {
-    // if extended precision enabled and requested
-    IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                    __trmm_ext_blk(_B, _A, alpha, flags, A->cols, ir, ie,
-                                   conf->kb, conf->nb, conf->mb));
+    armas_cbuf_init(&cbuf, conf->cmem, conf->l1mem);
+
+    // if extended precision enabled; 
+    if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+      // compiler dead code pruning removes following if HAVE_EXT_PRECISION == 0
+      __trmm_ext_blk(_B, _A, alpha, flags, A->cols, ir, ie, conf->kb, conf->nb, conf->mb, &cbuf);
+      armas_cbuf_release(&cbuf);
+      return 0;
+    }
 
     // normal precision
     switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
@@ -99,12 +143,14 @@ int __mult_trm_threaded(int blknum, int nblk,
       __trmm_unb(_B, _A, alpha, flags, A->cols, ir, ie);
       break;
     case ARMAS_RECURSIVE:
-      __trmm_recursive(_B, _A, alpha, flags, A->cols, ir, ie, conf->kb, conf->nb, conf->mb);
+      __trmm_recursive(_B, _A, alpha, flags, A->cols, ir, ie, conf->kb, conf->nb, conf->mb, &cbuf);
       break;
     default:
-      __trmm_blk(_B, _A, alpha, flags, A->cols, ir, ie, conf->kb, conf->nb, conf->mb);
+      __trmm_blk(_B, _A, alpha, flags, A->cols, ir, ie, conf->kb, conf->nb, conf->mb, &cbuf);
       break;
     }
+    armas_cbuf_release(&cbuf);
+
     return 0;
   }
 
@@ -113,15 +159,18 @@ int __mult_trm_threaded(int blknum, int nblk,
                   conf->kb, conf->nb, conf->mb, conf->optflags);
 
   // create new thread to compute this block
-  err = pthread_create(&th, NULL, __compute_block, &kp);
+  armas_cbuf_init(&cbuf, conf->cmem, conf->l1mem);
+  err = pthread_create(&th, NULL, __compute_recursive, &args);
   if (err) {
     conf->error = -err;
+    armas_cbuf_release(&cbuf);
     return -1;
   }
   // recursively invoke next block
   err = __mult_trm_threaded(blknum+1, nblk, B, A, alpha, flags, conf);
   // wait for this block to finish
   pthread_join(th, NULL);
+  armas_cbuf_release(&cbuf);
   return err;
 }
 
@@ -131,8 +180,8 @@ int __mult_trm_threaded(int blknum, int nblk,
 
 static
 int __mult_trm_schedule(int nblk, 
-                         __armas_dense_t *B, const __armas_dense_t *A, 
-                         DTYPE alpha, int flags, armas_conf_t *conf)
+                        __armas_dense_t *B, const __armas_dense_t *A, 
+                        DTYPE alpha, int flags, armas_conf_t *conf)
 {
   int ir, ie, nT, k, j;
   mdata_t *_B;
@@ -165,7 +214,7 @@ int __mult_trm_schedule(int nblk,
     __kernel_params(&tasks[k].kp, _B, _A, 0, alpha, alpha, flags, A->cols, ir, 0, 0, ie,
                   conf->kb, conf->nb, conf->mb, conf->optflags);
     // init task
-    armas_task_init(&tasks[k].t, k, __compute_block, &tasks[k].kp, &ready);
+    armas_task2_init(&tasks[k].t, k, __compute_block2, &tasks[k].kp, &ready);
     // schedule
     armas_schedule(&tasks[k].t);
     k++;
@@ -216,10 +265,7 @@ int __mult_trm_schedule(int nblk,
 int __armas_mult_trm(__armas_dense_t *B, const __armas_dense_t *A, 
                       DTYPE alpha, int flags, armas_conf_t *conf)
 {
-  long nproc;
-  int ie, ok, opts;
-  mdata_t *_B;
-  const mdata_t *_A;
+  int ok;
 
   if (__armas_size(B) == 0 || __armas_size(A) == 0)
     return 0;
@@ -242,48 +288,45 @@ int __armas_mult_trm(__armas_dense_t *B, const __armas_dense_t *A,
     return -1;
   }
 
-  _B = (mdata_t*)B;
-  _A = (const mdata_t *)A;
-
-  // tiled scheduling not supported, use blocked instead
-  opts = conf->optflags;
-  if (opts & ARMAS_BLAS_TILED) {
-    opts |= ARMAS_BLAS_BLOCKED;
-    opts ^= ARMAS_BLAS_TILED;
-  }
-  nproc = armas_nblocks(__armas_size(B), conf->wb, conf->maxproc, opts);
-
-  if (nproc == 1) {
-    ie = flags & ARMAS_RIGHT ? B->rows : B->cols;
-
-    // if extended precision enabled and requested
-    IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                    __trmm_ext_blk(_B, _A, alpha, flags, A->cols, 0, ie,
-                                   conf->kb, conf->nb, conf->mb));
-
-    // normal precision here; extended precision not enabled neither requested
-    switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-    case ARMAS_SNAIVE:
-      __trmm_unb(_B, _A, alpha, flags, A->cols, 0, ie);
-      break;
-    case ARMAS_RECURSIVE:
-      __trmm_recursive(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb);
-      break;
-    default:
-      __trmm_blk(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb);
-      break;
-    }
-    return 0;
-  }
-
 #if defined(ENABLE_THREADS)
-  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
+  int opts = conf->optflags;
+  if (opts & ARMAS_BLAS_TILED) {
+    opts ^= ~ARMAS_BLAS_TILED;
+    opts |= ARMAS_BLAS_BLOCKED;
+  }
+  long nproc = armas_nblocks(__armas_size(B), conf->wb, conf->maxproc, opts);
+
+  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED) && nproc > 1) {
     return __mult_trm_schedule(nproc, B, A, alpha, flags, conf);
   }
   return __mult_trm_threaded(0, nproc, B, A, alpha, flags, conf);
+
 #else
-  conf->error = ARMAS_EIMP;
-  return -1;
+  int ie = flags & ARMAS_RIGHT ? B->rows : B->cols;
+  mdata_t *_B = (mdata_t*)B;
+  const mdata_t *_A = (const mdata_t *)A;
+  armas_cbuf_t *cbuf = conf->cbuf ? conf->cbuf : armas_cbuf_default();
+
+  
+  // if extended precision enabled and requested
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+    __trmm_ext_blk(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb, cbuf);
+    return 0;
+  }
+
+  // normal precision here; extended precision not enabled neither requested
+  switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
+  case ARMAS_SNAIVE:
+    __trmm_unb(_B, _A, alpha, flags, A->cols, 0, ie);
+    break;
+  case ARMAS_RECURSIVE:
+    __trmm_recursive(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb);
+    break;
+  default:
+    __trmm_blk(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb);
+    break;
+  }
+  return 0;
 #endif
 }
 

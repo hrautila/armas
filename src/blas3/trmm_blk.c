@@ -365,48 +365,27 @@ void __trmm_blk_rl_trans(mdata_t *B, const mdata_t *A, DTYPE alpha,
 }
 
 
+
 void __trmm_blk(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
-                int N, int S, int E, int KB, int NB, int MB)
+                int N, int S, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf)
 {
-  mdata_t Acpy, Bcpy;
-  cache_t cache;
-  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
-  
-  if (E-S <= 0 || N <= 0)
-    return;
+  cache_t mcache;
 
-  // restrict block sizes as data is copied to aligned buffers of predefined max sizes.
-  if (NB > MAX_NB || NB <= 0) {
-    NB = MAX_NB;
-  }
-  if (MB > MAX_MB || MB <= 0) {
-    MB = MAX_MB;
-  }
-  if (KB > MAX_KB || KB <= 0) {
-    KB = MAX_KB;
-  }
-  // clear Abuf, Bbuf to avoid NaN values later
-  memset(Abuf, 0, sizeof(Abuf));
-  memset(Bbuf, 0, sizeof(Bbuf));
-
-  // setup cache area
-  Acpy = (mdata_t){Abuf, MAX_KB};
-  Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB, (mdata_t *)0, (mdata_t *)0};
+  armas_cache_setup2(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
 
   if (flags & ARMAS_RIGHT) {
     // B = alpha*B*op(A)
     if (flags & ARMAS_UPPER) {
       if (flags & ARMAS_TRANSA) {
-        __trmm_blk_ru_trans(B, A, alpha, flags, N, S, E, &cache);
+        __trmm_blk_ru_trans(B, A, alpha, flags, N, S, E, &mcache);
       } else {
-        __trmm_blk_r_upper(B, A, alpha, flags, N, S, E, &cache); 
+        __trmm_blk_r_upper(B, A, alpha, flags, N, S, E, &mcache); 
       }
     } else {
       if (flags & ARMAS_TRANSA) {
-        __trmm_blk_rl_trans(B, A, alpha, flags, N, S, E, &cache);
+        __trmm_blk_rl_trans(B, A, alpha, flags, N, S, E, &mcache);
       } else {
-        __trmm_blk_r_lower(B, A, alpha, flags, N, S, E, &cache); 
+        __trmm_blk_r_lower(B, A, alpha, flags, N, S, E, &mcache); 
       }
     }
 
@@ -414,15 +393,15 @@ void __trmm_blk(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
     // B = alpha*op(A)*B
     if (flags & ARMAS_UPPER) {
       if (flags & ARMAS_TRANSA) {
-        __trmm_blk_u_trans(B, A, alpha, flags, N, S, E, &cache); 
+        __trmm_blk_u_trans(B, A, alpha, flags, N, S, E, &mcache); 
       } else {
-        __trmm_blk_upper(B, A, alpha, flags, N, S, E, &cache); 
+        __trmm_blk_upper(B, A, alpha, flags, N, S, E, &mcache); 
       }
     } else {
       if (flags & ARMAS_TRANSA) {
-        __trmm_blk_l_trans(B, A, alpha, flags, N, S, E, &cache);
+        __trmm_blk_l_trans(B, A, alpha, flags, N, S, E, &mcache);
       } else {
-        __trmm_blk_lower(B, A, alpha, flags, N, S, E, &cache); 
+        __trmm_blk_lower(B, A, alpha, flags, N, S, E, &mcache); 
       }
     }
   }

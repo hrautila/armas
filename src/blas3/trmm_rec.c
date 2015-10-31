@@ -258,50 +258,31 @@ void __trmm_blk_recursive(mdata_t *B, const mdata_t *A, DTYPE alpha,
 }
 
 void __trmm_recursive(mdata_t *B, const mdata_t *A, DTYPE alpha,
-                       int flags, int N, int S, int E, int KB, int NB, int MB)
+                       int flags, int N, int S, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf)
 {
-  mdata_t Acpy, Bcpy;
-  cache_t cache;
+  cache_t mcache;
 
-  DTYPE Abuf[MAX_KB*MAX_MB], Bbuf[MAX_KB*MAX_NB] __attribute__((aligned(64)));
+  armas_cache_setup2(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
 
-  if (E-S <= 0 || N <= 0)
-    return;
-
-  // restrict block sizes as data is copied to aligned buffers of predefined max sizes.
-  if (NB > MAX_NB || NB <= 0) {
-    NB = MAX_NB;
-  }
-  if (MB > MAX_MB || MB <= 0) {
-    MB = MAX_MB;
-  }
-  if (KB > MAX_KB || KB <= 0) {
-    KB = MAX_KB;
-  }
-
-  Acpy = (mdata_t){Abuf, MAX_KB};
-  Bcpy = (mdata_t){Bbuf, MAX_KB};
-  cache = (cache_t){&Acpy, &Bcpy, KB, NB, MB};
-  
   switch (flags&(ARMAS_UPPER|ARMAS_LOWER|ARMAS_RIGHT|ARMAS_TRANSA)) {
   case ARMAS_RIGHT|ARMAS_UPPER:
   case ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA:
-    __mult_right_backward(B, A, alpha, flags, N, S, E, &cache);
+    __mult_right_backward(B, A, alpha, flags, N, S, E, &mcache);
     break;
     
   case ARMAS_RIGHT|ARMAS_LOWER:
   case ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANSA:
-    __mult_right_forward(B, A, alpha, flags, N, S, E, &cache);
+    __mult_right_forward(B, A, alpha, flags, N, S, E, &mcache);
     break;
 
   case ARMAS_UPPER:
   case ARMAS_LOWER|ARMAS_TRANSA:
-    __mult_left_forward(B, A, alpha, flags, N, S, E, &cache);
+    __mult_left_forward(B, A, alpha, flags, N, S, E, &mcache);
     break;
 
   case ARMAS_LOWER:
   case ARMAS_UPPER|ARMAS_TRANSA:
-    __mult_left_backward(B, A, alpha, flags, N, S, E, &cache);
+    __mult_left_backward(B, A, alpha, flags, N, S, E, &mcache);
     break;
   }
 }
