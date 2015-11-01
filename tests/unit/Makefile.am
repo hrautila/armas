@@ -27,7 +27,7 @@ endif
 if ENABLE_FLOAT64
 ##LDADD = ../../src/libarmasd.la
 
-UNIT_TESTS += dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dgemv dger dtrmv dtrsv diag
+UNIT_TESTS += dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dsyr2k dgemv dger dtrmv dtrsv diag
 
 UNIT_TESTS +=  \
 	evd gesvd secular \
@@ -75,6 +75,8 @@ dtrsm_SOURCES  = trsm.c ../helper.c
 dtrsm_LDADD    = ../../src/libarmasd.la
 dsyrk_SOURCES  = syrk.c ../helper.c
 dsyrk_LDADD    = ../../src/libarmasd.la
+dsyr2k_SOURCES = syr2k.c ../helper.c
+dsyr2k_LDADD   = ../../src/libarmasd.la
 dtrmrk_SOURCES = trmrk.c ../helper.c
 dtrmrk_LDADD    = ../../src/libarmasd.la
 dgemv_SOURCES  = gemv.c ../helper.c
