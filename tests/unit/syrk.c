@@ -4,43 +4,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#if defined(FLOAT32)
-#include <armas/smatrix.h>
-typedef armas_s_dense_t __Matrix ;
-typedef float __Dtype;
-
-#define matrix_init       armas_s_init
-#define matrix_set_values armas_s_set_values
-#define matrix_mult       armas_s_mult
-#define matrix_mult_trm   armas_s_mult_trm
-#define matrix_make_trm   armas_s_make_trm
-#define matrix_update_sym armas_s_update_sym
-#define matrix_transpose  armas_s_transpose
-#define matrix_release    armas_s_release
-#define matrix_mcopy      armas_s_mcopy
-#define matrix_printf     armas_s_printf
-#define __SCALING (__Dtype)((1 << 14) + 1)
-
-#else
-#include <armas/dmatrix.h>
-typedef armas_d_dense_t __Matrix ;
-typedef double __Dtype;
-
-#define matrix_init       armas_d_init
-#define matrix_set_values armas_d_set_values
-#define matrix_mult       armas_d_mult
-#define matrix_make_trm   armas_d_make_trm
-#define matrix_mult_trm   armas_d_mult_trm
-#define matrix_update_sym armas_d_update_sym
-#define matrix_transpose  armas_d_transpose
-#define matrix_release    armas_d_release
-#define matrix_mcopy      armas_d_mcopy
-#define matrix_printf     armas_d_printf
-
-#define __SCALING (__Dtype)((1 << 27) + 1)
-
-#endif
-#include "helper.h"
+#include "testing.h"
 
 int main(int argc, char **argv)
 {
@@ -87,7 +51,7 @@ int main(int argc, char **argv)
   matrix_make_trm(&C0, ARMAS_UPPER);
   //ok = matrix_allclose(&C0, &C);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
 
   printf("%6s: syrk(C, A, U|N) == TriU(gemm(C, A, A.T))\n", PASS(ok));
   if (verbose > 0) {
@@ -106,7 +70,7 @@ int main(int argc, char **argv)
   matrix_make_trm(&C0, ARMAS_UPPER);
   //ok = matrix_allclose(&C0, &C);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
 
   printf("%6s: syrk(C, A, U|T) == TriU(gemm(C, A.T, A))\n", PASS(ok));
   if (verbose > 0) {
@@ -125,7 +89,7 @@ int main(int argc, char **argv)
   matrix_make_trm(&C0, ARMAS_LOWER);
   //ok = matrix_allclose(&C0, &C);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
 
   printf("%6s: syrk(C, A, L|N) == TriL(gemm(C, A, A.T))\n", PASS(ok));
   if (verbose > 0) {
@@ -144,7 +108,7 @@ int main(int argc, char **argv)
   matrix_make_trm(&C0, ARMAS_LOWER);
   //ok = matrix_allclose(&C0, &C);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
 
   printf("%6s: syrk(C, A, L|T) == TriL(gemm(C, A.T, A))\n", PASS(ok));
   if (verbose > 0) {
