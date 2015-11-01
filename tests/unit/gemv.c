@@ -11,20 +11,18 @@
 int main(int argc, char **argv) {
 
   armas_conf_t conf;
-  armas_d_dense_t X, Y, Y0, A, At;
-
+  __Matrix X, Y, Y0, A, At;
+  __Dtype nrm_y, nrm_z;
+  
   int ok, opt;
+  int verbose = 1;
   int N = 1307;
   int M = 1025;
-  int nproc = 1;
-  int bsize = 0;
-  int psize = 10;
-  int algo = 'B';
 
-  while ((opt = getopt(argc, argv, "a:")) != -1) {
+  while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
-    case 'P':
-      nproc = atoi(optarg);
+    case 'v':
+      verbose += 1;
       break;
     default:
       fprintf(stderr, "usage: gemv [-P nproc] [size]\n");
@@ -39,29 +37,32 @@ int main(int argc, char **argv) {
     M = N = atoi(argv[optind]);
   }
 
-  conf.mb = 64;
-  conf.nb = 96;
-  conf.kb = 160;
-  conf.maxproc = 1;
-
-  armas_d_init(&Y, M, 1);
-  armas_d_init(&Y0, M, 1);
-  armas_d_init(&X, N, 1);
-  armas_d_init(&A, M, N);
-  armas_d_init(&At, N, M);
+  matrix_init(&Y, M, 1);
+  matrix_init(&Y0, M, 1);
+  matrix_init(&X, N, 1);
+  matrix_init(&A, M, N);
+  matrix_init(&At, N, M);
   
-  armas_d_set_values(&Y, zero, ARMAS_NULL);
-  armas_d_set_values(&Y0, zero, ARMAS_NULL);
-  armas_d_set_values(&X, unitrand, ARMAS_NULL);
-  armas_d_set_values(&A, unitrand, ARMAS_NULL);
-  armas_d_transpose(&At, &A);
+  matrix_set_values(&Y, zero, ARMAS_NULL);
+  matrix_set_values(&Y0, zero, ARMAS_NULL);
+  matrix_set_values(&X, unitrand, ARMAS_NULL);
+  matrix_set_values(&A, unitrand, ARMAS_NULL);
+  matrix_transpose(&At, &A);
 
   // Y = A*X
-  armas_d_mvmult(&Y, &A, &X, 1.0, 0.0, 0, &conf);
+  matrix_mvmult(&Y, &A, &X, 1.0, 0.0, 0, &conf);
+  nrm_y = matrix_nrm2(&Y, &conf);
   // Y = Y - A*X
-  armas_d_mvmult(&Y, &At, &X, -1.0, 1.0, ARMAS_TRANS, &conf);
-  ok = armas_d_allclose(&Y, &Y0);
-  printf("%6s : gemv(A, X) == gemv(A.T, X, T)\n", ok ? "OK" : "FAILED");
+  matrix_mvmult(&Y, &At, &X, -1.0, 1.0, ARMAS_TRANS, &conf);
+  if (N < 10 && verbose > 1) {
+    printf("Y\n"); matrix_printf(stdout, "%5.2f", &Y);
+  }
+  nrm_z = matrix_nrm2(&Y, &conf);
+  ok = nrm_z == 0.0 || isOK(nrm_z/nrm_y, N) ? 1 : 0;
+  printf("%6s : gemv(A, X) == gemv(A.T, X, T)\n", PASS(ok));
+  if (verbose > 0) {
+    printf("   || rel error || : %e, [%d]\n", nrm_z/nrm_y, ndigits(nrm_z/nrm_y));
+  }
   exit(1 - ok);
 
 }
