@@ -132,9 +132,10 @@ __Dtype stdrand(int i, int j)
 
 int isOK(__Dtype nrm, int N)
 {
-  int nk = (int64_t)(FABS(nrm/EPSILON));
+  //int nk = (int64_t)(FABS(nrm/EPSILON));
+  //return nrm != 0.0 && nk < (int64_t)N;
   // if exactly zero then something suspect
-  return nrm != 0.0 && nk < (int64_t)N;
+  return nrm != 0.0 && FABS(nrm) < (__Dtype)N*EPSILON;
 }
 
 int isFINE(__Dtype nrm, __Dtype tol)
