@@ -166,7 +166,8 @@ void *__compute_threaded(void *arg)
   armas_cbuf_t *cbuf  = ((block_args_t *)arg)->cbuf;
 
   int flags = kp->flags & ARMAS_TRANSA ? ARMAS_TRANSA : ARMAS_TRANSB;
-
+  flags |= kp->flags & ARMAS_UPPER ? ARMAS_UPPER : ARMAS_LOWER;
+  
   __update_trm_blocked(&kp->C, &kp->A, &kp->A, kp->alpha, kp->beta, flags, 
                        kp->K, kp->S, kp->L, kp->R, kp->E, kp->MB, kp->NB, kp->KB, cbuf);
   return (void *)0;
@@ -178,8 +179,8 @@ int __rank_threaded(int blk, int nblk,
                     DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   int rs, re, cs, ce, err;
-  mdata_t *_C, C0, A0; //, B0;
-  const mdata_t *_A; //, *_B;
+  mdata_t *_C, C0, A0;
+  const mdata_t *_A; 
   pthread_t th;
   kernel_param_t kp;
   armas_cbuf_t cbuf;
