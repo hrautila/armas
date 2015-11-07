@@ -26,6 +26,7 @@
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
+#include "scheduler.h"
 
 extern
 void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
@@ -160,7 +161,7 @@ void __update_trm_blocked(mdata_t *C, const mdata_t *A, const mdata_t *B,
                           int R, int E, int KB, int NB, int MB, armas_cbuf_t *cbuf);
 
 static
-void *__compute_threaded(void *arg)
+void *__compute_recursive(void *arg)
 {
   kernel_param_t *kp = ((block_args_t *)arg)->kp;
   armas_cbuf_t *cbuf  = ((block_args_t *)arg)->cbuf;
@@ -174,7 +175,7 @@ void *__compute_threaded(void *arg)
 }
 
 static
-int __rank_threaded(int blk, int nblk,
+int __rank_recursive(int blk, int nblk,
                     __armas_dense_t *C, const __armas_dense_t *A, 
                     DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
@@ -224,17 +225,132 @@ int __rank_threaded(int blk, int nblk,
 
   // create new thread to compute this block
   armas_cbuf_init(&cbuf, conf->cmem, conf->l1mem);
-  err = pthread_create(&th, NULL, __compute_threaded, &args);
+  err = pthread_create(&th, NULL, __compute_recursive, &args);
   if (err) {
     conf->error = -err;
     armas_cbuf_release(&cbuf);
     return -1;
   }
   // recursively invoke next block
-  err = __rank_threaded(blk+1, nblk, C, A, alpha, beta, flags, conf);
+  err = __rank_recursive(blk+1, nblk, C, A, alpha, beta, flags, conf);
   // wait for this block to finish
   pthread_join(th, NULL);
   armas_cbuf_release(&cbuf);
+  return 0;
+}
+
+static
+void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
+{
+  kernel_param_t *kp = (kernel_param_t *)arg;
+
+  int flags = kp->flags & ARMAS_TRANSA ? ARMAS_TRANSA : ARMAS_TRANSB;
+  flags |= kp->flags & ARMAS_UPPER ? ARMAS_UPPER : ARMAS_LOWER;
+  
+  if (kp->optflags & ARMAS_BLAS_BLOCKED) {
+    __update_trm_blocked(&kp->C, &kp->A, &kp->A, kp->alpha, kp->beta, flags, 
+                         kp->K, kp->S, kp->L, kp->R, kp->E, kp->MB, kp->NB, kp->KB, cbuf);
+  } else {
+    // tiled
+    if (kp->S == kp->R && kp->L == kp->E) {
+      // diagonal block; 
+      __update_trm_blocked(&kp->C, &kp->A, &kp->A, kp->alpha, kp->beta, flags, 
+                           kp->K, kp->S, kp->L, kp->R, kp->E, kp->MB, kp->NB, kp->KB, cbuf);
+    } else {
+      // square block;
+      __kernel_inner(&kp->C, &kp->A, &kp->A, kp->alpha, kp->beta, flags,
+                     kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
+    }
+  }
+  return (void *)0;
+}
+
+static
+int __rank_schedule(int nblk, __armas_dense_t *C, const __armas_dense_t *A,
+                    DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
+{
+  int rN, cN, i, j, iR, iE, jS, jL, k, nT, K;
+  blas_task_t *tasks;
+  mdata_t *_C;
+  const mdata_t *_A;
+  armas_counter_t ready;
+
+  _C = (mdata_t*)C;
+  _A = (const mdata_t *)A;
+
+  K = flags & ARMAS_TRANSA ? A->rows : A->cols;
+
+  // number of tasks
+  nT = nblk; rN = cN = 0;
+  if (conf->optflags & ARMAS_BLAS_TILED) {
+    nT = blocking(C->rows, C->cols, conf->wb, &rN, &cN);
+    // substract the off-diagonal tile count
+    nT -= ((rN - 1)*cN)/2;
+  }
+
+  tasks = (blas_task_t *)calloc(nT, sizeof(blas_task_t));
+  if (! tasks) {
+    conf->error = ARMAS_EMEMORY;
+    return -1;
+  }
+  armas_counter_init(&ready, nT);
+  k = 0; 
+
+  if (conf->optflags & ARMAS_BLAS_BLOCKED) {
+    // compute in nblk blocks (row stripes for upper/column stripes for lower)
+    iR = 0; iE = C->rows;
+    jS = 0; jL = C->cols;
+    for (j = 0; j < nblk; j++) {
+      if (flags & ARMAS_UPPER) {
+        iR = __block_index4(j,   nblk, C->rows);
+        iE = __block_index4(j+1, nblk, C->rows);
+        jS = iR;
+      } else {
+        jS = __block_index4(j,   nblk, C->cols);
+        jL = __block_index4(j+1, nblk, C->cols);
+        iR = jS;
+      }
+      __kernel_params(&tasks[k].kp, _C, _A, (mdata_t *)0, alpha, beta, flags, K, jS, jL, iR, iE,
+                      conf->kb, conf->nb, conf->mb, conf->optflags);
+      // init task and schedule
+      armas_task2_init(&tasks[k].t, k, __compute_block2, &tasks[k].kp, &ready);
+      armas_schedule(&tasks[k].t);
+      k++;
+    }
+  } else {
+    // compute in tiles of wb x wb; C is square matrix --> cN == rN
+    for (j = 0; j < cN; j++) {
+      jS = block_index(j,   cN, conf->wb, C->cols);
+      jL = block_index(j+1, cN, conf->wb, C->cols);
+      for (i = j; i < rN; i++) {
+        iR = block_index(i,   rN, conf->wb, C->rows);
+        iE = block_index(i+1, rN, conf->wb, C->rows);
+        if (flags & ARMAS_UPPER) {
+          __kernel_params(&tasks[k].kp, _C, _A, (mdata_t *)0, alpha, beta, flags,
+                          K, iR, iE, jS, jL, conf->kb, conf->nb, conf->mb, conf->optflags);
+        } else {
+          __kernel_params(&tasks[k].kp, _C, _A, (mdata_t *)0, alpha, beta, flags,
+                          K, jS, jL, iR, iE, conf->kb, conf->nb, conf->mb, conf->optflags);
+        }
+
+        // init task and schedule
+        armas_task2_init(&tasks[k].t, k, __compute_block2, &tasks[k].kp, &ready);
+        armas_schedule(&tasks[k].t);
+        k++;
+      }
+    }
+  }
+  assert(k == nT);
+  // wait for tasks to finish
+  armas_counter_wait(&ready);
+  // 1. check that task worker count is zero on all tasks
+  int refcnt = 0;
+  for (i = 0; i < nT; i++) {
+    refcnt += tasks[i].t.wcnt;
+  }
+  assert(refcnt == 0);
+  // release task memory
+  free(tasks);
   return 0;
 }
 
@@ -248,7 +364,7 @@ int __rank_threaded(int blk, int nblk,
  *
  * Computes
  * > C = beta*C + alpha*A*A.T\n
- * > C = beta*C + alpha*A.T*A   if TRANSA
+ * > C = beta*C + alpha*A.T*A   if TRANS
  *
  * Matrix C is upper (lower) triangular if flag bit ARMAS_UPPER (ARMAS_LOWER)
  * is set. If matrix is upper (lower) then
@@ -277,11 +393,8 @@ int __armas_update_sym(__armas_dense_t *C,  const __armas_dense_t *A,
   if (!conf)
     conf = armas_conf_default();
 
-  if (flags & ARMAS_TRANS)
-    flags |= ARMAS_TRANSA;
-
-  switch (flags & ARMAS_TRANSA) {
-  case ARMAS_TRANSA:
+  switch (flags & ARMAS_TRANS) {
+  case ARMAS_TRANS:
     ok = C->rows == A->cols && C->rows == C->cols;
     break;
   default:
@@ -295,14 +408,17 @@ int __armas_update_sym(__armas_dense_t *C,  const __armas_dense_t *A,
 
 #if defined(ENABLE_THREADS)
   long nproc = armas_use_nproc(__armas_size(C), conf);
-  return __rank_threaded(0, nproc, C, A, alpha, beta, flags, conf);
+  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
+    return __rank_schedule(nproc, C, A, alpha, beta, flags, conf);
+  }
+  return __rank_recursive(0, nproc, C, A, alpha, beta, flags, conf);
 
 #else
   mdata_t *_C = (mdata_t*)C;
   const mdata_t *_A = (const mdata_t *)A;
   armas_cbuf_t *cbuf = armas_cbuf_get(conf);
 
-  int K = flags & ARMAS_TRANSA ? A->rows : A->cols;
+  int K = flags & ARMAS_TRANS ? A->rows : A->cols;
 
   // if only one thread, just do it
   __rank_blk(_C, _A, alpha, beta, flags, K, 0, C->rows,
