@@ -48,7 +48,7 @@ void compute(__Dtype *ne, __Dtype *re,
     printf("exc(A*B):\n"); matrix_printf(stdout, "%13e", C);
     printf("trm(A)*B:\n"); matrix_printf(stdout, "%13e", B);
   }
-  *re = rel_error(ne, B, C, ARMAS_NORM_ONE, ARMAS_NONE, conf);
+  *re = rel_error(ne, B, C, ARMAS_NORM_INF, ARMAS_NONE, conf);
 #if 0
   armas_d_scale_plus(B, C, 1.0, -1.0, ARMAS_NONE, conf);
 
@@ -83,7 +83,7 @@ int test(char *name, int N, int K, int flags, int verbose, int prec, double cwan
   // 1. A*B
   compute(&m_c, &m_one, &B, &A, &Ce, flags, prec, verbose, conf);
 
-  ok = m_one < N*DBL_EPSILON;
+  ok = m_one < N*_EPS;
   printf("%-4s: %s rel.error %e [%e]\n",  PASS(ok), name, m_one, m_c);
   if (!ok && N < 10) {
     printf("B-Ce:\n"); matrix_printf(stdout, "%13e", &B);
@@ -104,7 +104,6 @@ int main(int argc, char **argv)
 {
 
   armas_conf_t conf;
-  //armas_d_dense_t C, Ct, T, B0, A, B, Ce;
 
   int ok, opt;
   int N = 33;
@@ -113,10 +112,10 @@ int main(int argc, char **argv)
   int prec = 200;
   int verbose = 0;
   int flags = ARMAS_UPPER;
-  int all = 0;
-  double cwant = 1e14; // wanted condition number
+  int all = 1;
+  double cwant = 1.0/_EPS; // wanted condition number
 
-  while ((opt = getopt(argc, argv, "C:p:vALRT")) != -1) {
+  while ((opt = getopt(argc, argv, "C:p:vSLRT")) != -1) {
     switch (opt) {
     case 'C':
       cwant = strtod(optarg, (char **)0);
@@ -127,8 +126,8 @@ int main(int argc, char **argv)
     case 'v':
       verbose += 1;
       break;
-    case 'A':
-      all = 1;
+    case 'S':
+      all = 0;
       break;
     case 'L':
       flags &= ~ARMAS_UPPER;

@@ -5,43 +5,6 @@
 #include <time.h>
 #include <float.h>
 
-#if 0
-#if defined(FLOAT32)
-#include <armas/smatrix.h>
-typedef armas_s_dense_t __Matrix ;
-typedef float __Dtype;
-
-#define matrix_init       armas_s_init
-#define matrix_set_values armas_s_set_values
-#define matrix_mult       armas_s_mult
-#define matrix_transpose  armas_s_transpose
-#define matrix_release    armas_s_release
-#define matrix_printf     armas_s_printf
-#else
-#include <armas/dmatrix.h>
-typedef armas_d_dense_t __Matrix ;
-typedef double __Dtype;
-
-#define matrix_init       armas_d_init
-#define matrix_set_values armas_d_set_values
-#define matrix_mult       armas_d_mult
-#define matrix_transpose  armas_d_transpose
-#define matrix_release    armas_d_release
-#define matrix_printf     armas_d_printf
-
-#endif
-
-#include "helper.h"
-extern void
-ep_genmat(double *dot, double *tcond, armas_d_dense_t *A, armas_d_dense_t *B, double cond);
-
-extern void
-ep_gemm(armas_d_dense_t *C, armas_d_dense_t *A, armas_d_dense_t *B,
-        double alpha, double beta, int prec, int flags);
-
-
-#endif
-
 #include "testing.h"
 
 /*
@@ -76,8 +39,8 @@ int main(int argc, char **argv) {
   int debug = 0;
   int prec = 200;
   int verbose = 0;
-  double cwant = 1e14; // wanted condition number
-  double dot, cond, m_one_t, m_one; //, m_c;
+  double cwant = 1.0/_EPS; // wanted condition number
+  double dot, cond, m_one_t, m_one; 
 
   while ((opt = getopt(argc, argv, "C:p:vSD")) != -1) {
     switch (opt) {
