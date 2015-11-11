@@ -424,13 +424,18 @@ void __kernel_ext_panel_inner_dA(mdata_t *C, mdata_t *dC,
 
 extern 
 void __kernel_ext_panel_inner_dB(mdata_t *C, mdata_t *dC,
-                                   const mdata_t *A, const mdata_t *B, const mdata_t *dB,
-                                   DTYPE alpha, int flags, int nJ, int nR, int nP, cache_t *cache);
+                                 const mdata_t *A, const mdata_t *B, const mdata_t *dB,
+                                 DTYPE alpha, int flags, int nJ, int nR, int nP, cache_t *cache);
 
 extern
 void __kernel_ext_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mdata_t *B,
-                                           DTYPE alpha, int flags, int P, int nSL, int nRE,
-                                           cache_t *cache);
+                                         DTYPE alpha, int flags, int P, int nSL, int nRE,
+                                         cache_t *cache);
+
+extern
+void __kernel_ext_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdata_t *B,
+                                        DTYPE alpha, DTYPE beta, int flags, int P, int S, int L,
+                                        int R, int E, cache_t *cache);
 
 #endif
 
