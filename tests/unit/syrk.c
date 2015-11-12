@@ -49,7 +49,11 @@ int main(int argc, char **argv)
 
   matrix_mult(&C0, &A, &At, alpha, 0.0, ARMAS_NULL, &conf);
   matrix_make_trm(&C0, ARMAS_UPPER);
-  //ok = matrix_allclose(&C0, &C);
+  if (verbose > 1 && N < 10) {
+    printf("syrk(C)\n"); matrix_printf(stdout, "%5.2f", &C);
+    printf("C0\n"); matrix_printf(stdout, "%5.2f", &C0);
+  }
+
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
 
@@ -68,7 +72,7 @@ int main(int argc, char **argv)
 
   matrix_mult(&C0, &At, &At, alpha, 0.0, ARMAS_TRANSA, &conf);
   matrix_make_trm(&C0, ARMAS_UPPER);
-  //ok = matrix_allclose(&C0, &C);
+
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
 
@@ -87,7 +91,11 @@ int main(int argc, char **argv)
 
   matrix_mult(&C0, &A, &At, alpha, 0.0, ARMAS_NULL, &conf);
   matrix_make_trm(&C0, ARMAS_LOWER);
-  //ok = matrix_allclose(&C0, &C);
+
+  if (verbose > 1 && N < 10) {
+    printf("syrk(C)\n"); matrix_printf(stdout, "%5.2f", &C);
+    printf("C0\n"); matrix_printf(stdout, "%5.2f", &C0);
+  }
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
 
@@ -106,7 +114,7 @@ int main(int argc, char **argv)
 
   matrix_mult(&C0, &At, &At, alpha, 0.0, ARMAS_TRANSA, &conf);
   matrix_make_trm(&C0, ARMAS_LOWER);
-  //ok = matrix_allclose(&C0, &C);
+
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
 
