@@ -29,6 +29,7 @@ typedef float __Dtype;
 #define matrix_set_at          armas_s_set_at
 #define matrix_get_at          armas_s_get_at
 #define matrix_submatrix       armas_s_submatrix
+#define matrix_subvector       armas_s_subvector
 #define matrix_mvmult          armas_s_mvmult
 #define matrix_mvsolve_trm     armas_s_mvsolve_trm
 #define matrix_allclose        armas_s_allclose
@@ -153,6 +154,7 @@ typedef double __Dtype;
 #define matrix_set_at          armas_d_set_at
 #define matrix_get_at          armas_d_get_at
 #define matrix_submatrix       armas_d_submatrix
+#define matrix_subvector       armas_d_subvector
 #define matrix_mvmult          armas_d_mvmult
 #define matrix_mvsolve_trm     armas_d_mvsolve_trm
 #define matrix_allclose        armas_d_allclose
