@@ -43,48 +43,29 @@
 static
 void __trsv_ext_unb_ll(mvec_t *X, mvec_t *dX, const mdata_t *Ac, int unit, int N, int nD)
 {
-    register int i, j, k, nRE;
-    mvec_t X0, X1, dX0, dX1;
-    mdata_t A0, A1;
+    register int i, j;
     DTYPE s0, u0, p0, r0, c0, x0;
 
     u0 = __ZERO;
-    for (k = 0; k < N; k += nD) {
-        nRE = k < N - nD ? nD : N-k;
-        dX->md[0] = 0.0;
-        __subvector(&X0,   X, k);
-        __subvector(&dX0, dX, k);
-        __subblock(&A0, Ac, k, k);
-        for (i = 0; i < nRE; i++) {
-            s0 = __get_at(&X0, i); //.md[i*X0.inc];
-            u0 = __get_at(&dX0, i); //0.0;
-            for (j = 0; j < i; j++) {
-                // p + r = A[i,j]*X[j]
-                twoprod(&p0, &r0, __get(&A0, i, j), __get_at(&X0, j));
-                // s + c = s - A[i,j]*X[j]
-                twosum(&s0, &c0, s0, -p0);
-                u0 = u0 - (__get(&A0, i, j)*__get_at(&dX0, j) + r0 - c0);
-            }
-            if (unit) {
-                __set_at(&dX0, i, u0);
-                __set_at(&X0,  i, s0); 
-                continue;
-            }
-            // if not unit diagonal then here
-            approx_twodiv(&x0, &p0, s0, __get(&A0, i, i));
-            __set_at(&dX0, i, (p0 + u0/__get(&A0, i, i)));
-            __set_at(&X0,  i, x0);
+    for (i = 0; i < N; i++) {
+        s0  = __get_at(X, i);
+        u0 += __get_at(dX, i);
+        for (j = 0; j < i; j++) {
+            // p + r = A[i,j]*X[j]
+            twoprod(&p0, &r0, __get(Ac, i, j), __get_at(X, j));
+            // s + c = s - A[i,j]*X[j]
+            twosum(&s0, &c0, -p0, s0);
+            u0 += (c0 - r0) - __get(Ac, i, j)*__get_at(dX, j);
         }
-
-        // if nD < N then assume gemv update runs faster and update remaining values
-        // with solution of current block.
-        if (N-k > nRE) {
-            // update vector values below with current block
-            __subvector(&X1,  X, k+nRE);
-            __subvector(&dX1, dX, k+nRE);
-            __subblock(&A1, Ac, k+nRE, k);  // row k+nRE and below
-            __gemv_update_ext_unb(&X1, &dX1, &A1, &X0, &dX0, -1, 0, nRE, N-k-nRE);
+        if (unit) {
+            __set_at(X,  i, s0); 
+            __set_at(dX, i, u0);
+            continue;
         }
+        // if not unit diagonal then here
+        approx_twodiv(&x0, &p0, s0, __get(Ac, i, i));
+        __set_at(dX, i, (p0 + u0/__get(Ac, i, i)));
+        __set_at(X,  i, x0);
     }
 }
 
@@ -103,45 +84,28 @@ void __trsv_ext_unb_ll(mvec_t *X, mvec_t *dX, const mdata_t *Ac, int unit, int N
 static
 void __trsv_ext_unb_llt(mvec_t *X, mvec_t *dX, const mdata_t *Ac, int unit, int N, int nD)
 {
-    register int i, j, k, nRE;
-    mvec_t X0, X1, dX0, dX1;
-    mdata_t A0, A1;
+    register int i, j;
     DTYPE s0, u0, p0, r0, c0, x0;
 
-    for (k = N; k > 0; k -= nD) {
-        nRE = k > nD ? nD : k;
-        dX->md[nRE-1] = 0.0;
-        __subvector(&X1,   X, k-nRE);
-        __subvector(&dX1, dX, k-nRE);
-        __subblock(&A1, Ac, k-nRE, k-nRE);
-        for (i = nRE-1; i >= 0; i--) {
-            s0 = __get_at(&X1, i); //.md[i*X1.inc];
-            u0 = __get_at(&dX1, i); //0.0;
-            for (j = i+1; j < nRE; j++) { 
-                // p + r = A[i,j]*X[j]
-                twoprod(&p0, &r0, __get(&A1, j, i), __get_at(&X1, j));
-                // s + c = s - A[i,j]*X[j]
-                twosum(&s0, &c0, s0, -p0);
-                u0 = u0 - (__get(&A1, j, i)*__get_at(&dX1, j) + r0 - c0);
-            }
-            if (unit) {
-                __set_at(&dX1, i, u0);
-                __set_at(&X1, i, s0);
-                continue;
-            }
-            // if not unit diagonal then here
-            approx_twodiv(&x0, &p0, s0, __get(&A1, i, i));
-            __set_at(&dX1, i, (p0 + u0/__get(&A1, i, i)));
-            __set_at(&X1,  i, x0);
+    for (i = N-1; i >= 0; i--) {
+        s0 = __get_at(X, i); //.md[i*X1.inc];
+        u0 = __get_at(dX, i); //0.0;
+        for (j = i+1; j < N; j++) { 
+            // p + r = A[i,j]*X[j]
+            twoprod(&p0, &r0, __get(Ac, j, i), __get_at(X, j));
+            // s + c = s - A[i,j]*X[j]
+            twosum(&s0, &c0, s0, -p0);
+            u0 = u0 - (__get(Ac, j, i)*__get_at(dX, j) + (r0 - c0));
         }
-
-        if (k > nRE) {
-            // update vector values above with current block
-            __subvector(&X0,   X, 0);
-            __subvector(&dX0, dX, 0);
-            __subblock(&A0, Ac, k-nRE, 0);  
-            __gemv_update_ext_unb(&X0, &dX0, &A0, &X1, &dX1, -1, ARMAS_TRANS, nRE, k-nRE);
+        if (unit) {
+            __set_at(dX, i, u0);
+            __set_at(X, i, s0);
+            continue;
         }
+        // if not unit diagonal then here
+        approx_twodiv(&x0, &p0, s0, __get(Ac, i, i));
+        __set_at(dX, i, (p0 + u0/__get(Ac, i, i)));
+        __set_at(X,  i, x0);
     }
 }
 
@@ -159,43 +123,30 @@ void __trsv_ext_unb_llt(mvec_t *X, mvec_t *dX, const mdata_t *Ac, int unit, int 
 static
 void __trsv_ext_unb_lu(mvec_t *X, mvec_t *dX, const mdata_t *Ac, int unit, int N, int nD)
 {
-    register int i, j, k, nRE;
-    mvec_t X0, X1, dX0, dX1;
-    mdata_t A0, A1;
+    register int i, j; //, k, nRE;
+    //mvec_t X0, X1, dX0, dX1;
+    //mdata_t A0, A1;
     DTYPE s0, u0, p0, r0, c0, x0;
 
-    for (k = N; k > 0; k -= nD) {
-        nRE = k > nD ? nD : k;
-        __subvector(&X1,   X, k-nRE);
-        __subvector(&dX1, dX, k-nRE);
-        __subblock(&A1, Ac, k-nRE, k-nRE);
-        for (i = nRE-1; i >= 0; i--) {
-            s0 = __get_at(&X1, i); //.md[i*X1.inc];
-            u0 = __get_at(&dX1,i ); //0.0;
-            for (j = i+1; j < nRE; j++) { 
-                // p + r = A[i,j]*X[j]
-                twoprod(&p0, &r0, __get(&A1, i, j), __get_at(&X1, j));
-                // s + c = s - A[i,j]*X[j]
-                twosum(&s0, &c0, s0, -p0);
-                u0 = u0 - (__get(&A1, i, j)*__get_at(&dX1, j) + r0 - c0);
-            }
-            if (unit) {
-                __set_at(&dX1, i, u0);
-                __set_at(&X1,  i, s0);
-                continue;
-            }
-            // if not unit diagonal then here
-            approx_twodiv(&x0, &p0, s0, __get(&A1, i, i));
-            __set_at(&dX1, i, u0/__get(&A1, i, i) + p0);
-            __set_at(&X1,  i, x0);
+    for (i = N-1; i >= 0; i--) {
+        s0 = __get_at(X, i); 
+        u0 = __get_at(dX, i );
+        for (j = i+1; j < N; j++) { 
+            // p + r = A[i,j]*X[j]
+            twoprod(&p0, &r0, __get(Ac, i, j), __get_at(X, j));
+            // s + c = s - A[i,j]*X[j]
+            twosum(&s0, &c0, s0, -p0);
+            u0 = u0 - (__get(Ac, i, j)*__get_at(dX, j) + (r0 - c0));
         }
-        if (k > nRE) {
-            // update vector values above with current block
-            __subvector(&X0,   X, 0);
-            __subvector(&dX0, dX, 0);
-            __subblock(&A0, Ac, 0, k-nRE);  
-            __gemv_update_ext_unb(&X0, &dX0, &A0, &X1, &dX1, -1, 0, nRE, k-nRE);
+        if (unit) {
+            __set_at(dX, i, u0);
+            __set_at(X,  i, s0);
+            continue;
         }
+        // if not unit diagonal then here
+        approx_twodiv(&x0, &p0, s0, __get(Ac, i, i));
+        __set_at(dX, i, u0/__get(Ac, i, i) + p0);
+        __set_at(X,  i, x0);
     }
 }
 
@@ -213,43 +164,30 @@ void __trsv_ext_unb_lu(mvec_t *X, mvec_t *dX, const mdata_t *Ac, int unit, int N
 static
 void __trsv_ext_unb_lut(mvec_t *X, mvec_t *dX, const mdata_t *Ac, int unit, int N, int nD)
 {
-    register int i, j, k, nRE;
-    mvec_t X0, X1, dX0, dX1;
-    mdata_t A0, A1;
+    register int i, j; //, k, nRE;
+    //mvec_t X0, X1, dX0, dX1;
+    //mdata_t A0, A1;
     DTYPE s0, u0, p0, r0, c0, x0;
 
-    for (k = 0; k < N; k += nD) {
-        nRE = k < N - nD ? nD : N-k;
-        __subvector(&X0,   X, k);
-        __subvector(&dX0, dX, k);
-        __subblock(&A0, Ac, k, k);
-        for (i = 0; i < nRE; i++) {
-            s0 = __get_at(&X0, i); //.md[i*X0.inc];
-            u0 = __get_at(&dX0, i);
-            for (j = 0; j < i; j++) {
-                // p + r = A[i,j]*X[j]
-                twoprod(&p0, &r0, __get(&A0, j, i), __get_at(&X0, j));
-                // s + c = s - A[i,j]*X[j]
-                twosum(&s0, &c0, s0, -p0);
-                u0 = u0 - (__get(&A0, j, i)*__get_at(&dX0, j) + r0 - c0);
-            }
-            if (unit) {
-                __set_at(&dX0, i, u0);
-                __set_at(&X0,  i, s0);
-                continue;
-            }
-            // if not unit diagonal then here
-            approx_twodiv(&x0, &p0, s0, __get(&A0, i, i));
-            __set_at(&dX0, i, u0/__get(&A0, i, i) + p0);
-            __set_at(&X0,  i, x0);
+    for (i = 0; i < N; i++) {
+        s0 = __get_at(X, i);
+        u0 = __get_at(dX, i);
+        for (j = 0; j < i; j++) {
+            // p + r = A[i,j]*X[j]
+            twoprod(&p0, &r0, __get(Ac, j, i), __get_at(X, j));
+            // s + c = s - A[i,j]*X[j]
+            twosum(&s0, &c0, s0, -p0);
+            u0 = u0 - (__get(Ac, j, i)*__get_at(dX, j) + (r0 - c0));
         }
-        if (N-k > nRE) {
-            // update vector values below with current block
-            __subvector(&X1,   X, k+nRE);
-            __subvector(&dX1, dX, k+nRE);
-            __subblock(&A1, Ac, k, k+nRE);  // row k+nRE and below
-            __gemv_update_ext_unb(&X1, &dX1, &A1, &X0, &dX0, -1, ARMAS_TRANS, nRE, N-k-nRE);
+        if (unit) {
+            __set_at(dX, i, u0);
+            __set_at(X,  i, s0);
+            continue;
         }
+        // if not unit diagonal then here
+        approx_twodiv(&x0, &p0, s0, __get(Ac, i, i));
+        __set_at(dX, i, u0/__get(Ac, i, i) + p0);
+        __set_at(X,  i, x0);
     }
 }
 
@@ -275,6 +213,7 @@ int __trsv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N)
       memset(dbuf, 0, sizeof(dbuf));
     }
 
+    nD = N;
     switch (flags & (ARMAS_TRANS|ARMAS_UPPER|ARMAS_LOWER)){
     case ARMAS_UPPER|ARMAS_TRANS:
         __trsv_ext_unb_lut(X, &dX, A, unit, N, nD);
@@ -302,7 +241,7 @@ int __trsv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N)
         DTYPE p, q;
         for (i = 0; i < N; i++) {
             twoprod(&p, &q, alpha, __get_at(X, i));
-            __set_at(X, i, (p + q + alpha*__get_at(&dX, i)));
+            __set_at(X, i, (p + (q + alpha*__get_at(&dX, i))));
         }
     }
     if (dp)
