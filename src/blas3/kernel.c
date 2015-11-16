@@ -104,29 +104,9 @@
 // update C block defined by nR rows, nJ columns, nP is A, B common dimension
 // A, B data arranged for DOT operations, A matrix is the inner matrix block
 // and is looped over nJ times
-void __kernel_colblk_inner(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
-                           DTYPE alpha, int nJ, int nR, int nP)
-{
-  register int j;
-  
-  for (j = 0; j < nJ-3; j += 4) {
-    __CMULT4(Cblk, Ablk, Bblk, alpha, j, nR, nP);
-  }
-  if (j == nJ)
-    return;
-  // the uneven column stripping part ....
-  if (j < nJ-1) {
-    __CMULT2(Cblk, Ablk, Bblk, alpha, j, nR, nP);
-    j += 2;
-  }
-  if (j < nJ) {
-    __CMULT1(Cblk, Ablk, Bblk, alpha, j, nR, nP);
-    j++;
-  }
-}
-
-void __kernel_colblk_inner2(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
-                            DTYPE alpha, int nJ, int nR, int nP, int rb)
+static inline
+void __colblk_inner2(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
+                     DTYPE alpha, int nJ, int nR, int nP, int rb)
 {
   register int j, kp, nK;
   mdata_t Ca, Ac;
@@ -152,13 +132,19 @@ void __kernel_colblk_inner2(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *B
   }
 }
 
+void __kernel_colblk_inner(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
+                            DTYPE alpha, int nJ, int nR, int nP, int rb)
+{
+  __colblk_inner2(Cblk, Ablk, Bblk, alpha, nJ, nR, nP, rb);
+}
+
 // update block of C with A and B panels; A panel is nR*P, B panel is P*nSL
 // C block is nR*nSL
 void __kernel_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mdata_t *B,
                                      DTYPE alpha, int flags, int P, int nSL, int nRE,
                                      cache_t *cache)
 {
-  int j, ip, jp, kp, rp, nP, nI, nJ, nR;
+  int ip, jp, kp, nP, nI, nJ;
   mdata_t Ca, Ac, Bc;
   Ca.step = C->step;
 
@@ -195,25 +181,8 @@ void __kernel_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mdata_t
           __CPBLK_TRANS(&cache->Acpy, &Ac, nI, nP, flags);
         }
 
-        for (rp = 0; rp < nI; rp += cache->rb) {
-          nR = min(cache->rb, nI-rp);
-          __subblock(&Ca, C, ip+rp, jp);
-          __subblock(&Ac, &cache->Acpy, 0, rp);
-          for (j = 0; j < nJ-3; j += 4) {
-            __CMULT4(&Ca, &Ac, &cache->Bcpy, alpha, j, nR, nP);
-          }
-          if (j == nJ)
-            continue;
-          // the uneven column stripping part ....
-          if (j < nJ-1) {
-            __CMULT2(&Ca, &Ac, &cache->Bcpy, alpha, j, nR, nP);
-            j += 2;
-          }
-          if (j < nJ) {
-            __CMULT1(&Ca, &Ac, &cache->Bcpy, alpha, j, nR, nP);
-            j++;
-          }
-        }
+        __subblock(&Ca, C, ip, jp);
+        __colblk_inner2(&Ca, &cache->Acpy, &cache->Bcpy, alpha, nJ, nI, nP, cache->rb);
       }
     }
   }
@@ -224,7 +193,7 @@ void __kernel_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdata_t 
                                     DTYPE alpha, DTYPE beta, int flags,
                                     int P, int S, int L, int R, int E, cache_t *cache)
 {
-  int j, ip, jp, kp, rp, nP, nI, nJ, nR;
+  int ip, jp, kp, nP, nI, nJ;
   mdata_t Ca;
   int KB, NB, MB;
   mdata_t Ac, Bc;
@@ -265,26 +234,9 @@ void __kernel_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdata_t 
           __CPBLK_TRANS(&cache->Acpy, &Ac, nI, nP, flags);
         }
 
-        // workout through A in blocks of cache->rb
-        for (rp = 0; rp < nI; rp += cache->rb) {
-          nR = min(cache->rb, nI-rp);
-          __subblock(&Ca, C, ip+rp, jp);
-          __subblock(&Ac, &cache->Acpy, 0, rp);
-          for (j = 0; j < nJ-3; j += 4) {
-            __CMULT4(&Ca, &Ac, &cache->Bcpy, alpha, j, nR, nP);
-          }
-          if (j == nJ)
-            continue;
-          // the uneven column stripping part ....
-          if (j < nJ-1) {
-            __CMULT2(&Ca, &Ac, &cache->Bcpy, alpha, j, nR, nP);
-            j += 2;
-          }
-          if (j < nJ) {
-            __CMULT1(&Ca, &Ac, &cache->Bcpy, alpha, j, nR, nP);
-            j++;
-          }
-        }
+        __subblock(&Ca, C, ip, jp);
+        __colblk_inner2(&Ca, &cache->Acpy, &cache->Bcpy, alpha, nJ, nI, nP, cache->rb);
+
       }
     }
   }
