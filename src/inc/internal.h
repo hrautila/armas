@@ -325,7 +325,7 @@ void __blk_scale_ext(mdata_t *C0, mdata_t *dC, const mdata_t *A, DTYPE beta, int
 
 extern
 void __kernel_colblk_inner(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
-                           DTYPE alpha, int nJ, int nR, int nP);
+                           DTYPE alpha, int nJ, int nR, int nP, int rb);
 
 extern
 void __kernel_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mdata_t *B,
