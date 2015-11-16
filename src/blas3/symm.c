@@ -55,8 +55,7 @@ void __mult_symm_diag(mdata_t *C, const mdata_t *A, const mdata_t *B,
       __CPTRIU_LFILL(&cache->Bcpy, A, nAC, nAC, unit);
     }
     __CPBLK_TRANS(&cache->Acpy, B, nRE, nSL, flags);
-    __kernel_colblk_inner(C, &cache->Acpy, &cache->Bcpy, alpha, nAC, nRE, nP);
-    //__kernel_colblk_inner2(C, cache->Bcpy, cache->Acpy, alpha, nAC, nRE, nP, cache->rb);
+    __kernel_colblk_inner(C, &cache->Acpy, &cache->Bcpy, alpha, nAC, nRE, nP, cache->rb);
   } else {
     // upper/lower part of source untouchable, copy diagonal block and fill lower/upper part
     if (flags & ARMAS_LOWER) {
@@ -65,8 +64,7 @@ void __mult_symm_diag(mdata_t *C, const mdata_t *A, const mdata_t *B,
       __CPTRIU_LFILL(&cache->Acpy, A, nAC, nAC, unit);
     }
     __CPBLK(&cache->Bcpy, B, nRE, nSL, flags);
-    __kernel_colblk_inner(C, &cache->Acpy, &cache->Bcpy, alpha, nSL, nAC, nP);
-    //__kernel_colblk_inner2(C, cache->Acpy, cache->Bcpy, alpha, nSL, nAC, nP, cache->rb);
+    __kernel_colblk_inner(C, &cache->Acpy, &cache->Bcpy, alpha, nSL, nAC, nP, cache->rb);
   }
 
 }
