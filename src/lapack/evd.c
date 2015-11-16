@@ -29,6 +29,7 @@
 /*
  * \brief Eigenvalues and vectors of 2x2 matrix
  */
+static
 int __eigen_sym_small(__armas_dense_t *D, __armas_dense_t *A,
                       __armas_dense_t *W, int flags, armas_conf_t *conf)
 {
