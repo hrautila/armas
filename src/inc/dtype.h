@@ -203,6 +203,7 @@ typedef float ABSTYPE;
 #define __update_trmv_unb        __s_update_trmv_unb
 #define __update_trmv_recursive  __s_update_trmv_recursive
 #define __update_trm_blk         __s_update_trm_blk
+#define __update_trm_blocked     __s_update_trm_blocked
 #define __update_ger_unb         __s_update_ger_unb
 #define __update_ger_recursive   __s_update_ger_recursive
 
@@ -222,6 +223,8 @@ typedef float ABSTYPE;
 #define __update2_symv_ext_unb   __s_update2_symv_ext_unb
 #define __kernel_ext_colblk_inner    __s_kernel_ext_colblk_inner
 #define __kernel_ext_panel_inner     __s_kernel_ext_panel_inner
+#define __kernel_ext_panel_inner_dA  __s_kernel_ext_panel_inner_dA
+#define __kernel_ext_panel_inner_dB  __s_kernel_ext_panel_inner_dB
 #define __kernel_ext_colwise_inner_no_scale  __s_kernel_ext_colwise_inner_no_scale
 #define __kernel_ext_colwise_inner_scale_c   __s_kernel_ext_colwise_inner_scale_c
 #define __kernel_ext_symm         __s_kernel_ext_symm
@@ -230,6 +233,10 @@ typedef float ABSTYPE;
 #define __solve_ext_blk           __s_solve_ext_blk
 #define __solve_ext_unb           __s_solve_ext_unb
 #define __solve_ext               __s_solve_ext
+#define __update_ext_trm_blocked  __s_update_ext_trm_blocked
+#define __update_ext_trm_naive    __s_update_ext_trm_naive
+#define __blk_scale_ext           __s_blk_scale_ext
+#define __rank_ext_diag           __s_rank_ext_diag
 
 // internal matrix block routines
 #define __partition_2x1           __s_partition_2x1
@@ -396,6 +403,7 @@ typedef double ABSTYPE;
 #define __update_trmv_unb        __d_update_trmv_unb
 #define __update_trmv_recursive  __d_update_trmv_recursive
 #define __update_trm_blk         __d_update_trm_blk
+#define __update_trm_blocked     __d_update_trm_blocked
 #define __update_ger_unb         __d_update_ger_unb
 #define __update_ger_recursive   __d_update_ger_recursive
 
@@ -415,6 +423,8 @@ typedef double ABSTYPE;
 #define __update2_symv_ext_unb   __d_update2_symv_ext_unb
 #define __kernel_ext_colblk_inner    __d_kernel_ext_colblk_inner
 #define __kernel_ext_panel_inner     __d_kernel_ext_panel_inner
+#define __kernel_ext_panel_inner_dA  __d_kernel_ext_panel_inner_dA
+#define __kernel_ext_panel_inner_dB  __d_kernel_ext_panel_inner_dB
 #define __kernel_ext_colwise_inner_no_scale  __d_kernel_ext_colwise_inner_no_scale
 #define __kernel_ext_colwise_inner_scale_c   __d_kernel_ext_colwise_inner_scale_c
 #define __kernel_ext_symm         __d_kernel_ext_symm
@@ -423,6 +433,10 @@ typedef double ABSTYPE;
 #define __solve_ext_blk           __d_solve_ext_blk
 #define __solve_ext_unb           __d_solve_ext_unb
 #define __solve_ext               __d_solve_ext
+#define __update_ext_trm_blocked  __d_update_ext_trm_blocked
+#define __update_ext_trm_naive    __d_update_ext_trm_naive
+#define __blk_scale_ext           __d_blk_scale_ext
+#define __rank_ext_diag           __d_rank_ext_diag
 
 // internal matrix block routines
 #define __partition_2x1           __d_partition_2x1
