@@ -119,7 +119,7 @@ void __colblk_inner2(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
       __CMULT4(&Ca, &Ac, Bblk, alpha, j, nK, nP);
     }
     if (j == nJ)
-      return;
+      continue;
     // the uneven column stripping part ....
     if (j < nJ-1) {
       __CMULT2(&Ca, &Ac, Bblk, alpha, j, nK, nP);
