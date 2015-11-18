@@ -104,6 +104,40 @@
 // update C block defined by nR rows, nJ columns, nP is A, B common dimension
 // A, B data arranged for DOT operations, A matrix is the inner matrix block
 // and is looped over nJ times
+#if HAVE_6COL == 1
+static inline
+void __colblk_inner2(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
+                     DTYPE alpha, int nJ, int nR, int nP, int rb)
+{
+  register int j, kp, nK;
+  mdata_t Ca, Ac;
+
+  for (kp = 0; kp < nR; kp += rb) {
+    nK = min(rb, nR-kp);
+    __subblock(&Ca, Cblk, kp, 0);
+    __subblock(&Ac, Ablk, 0, kp);
+    for (j = 0; j < nJ-5; j += 6) {
+      __CMULT6(&Ca, &Ac, Bblk, alpha, j, nK, nP);
+    }
+    if (j == nJ)
+      continue;
+    // the uneven column stripping part ....
+    if (j < nJ-3) {
+      __CMULT4(&Ca, &Ac, Bblk, alpha, j, nK, nP);
+      j += 4;
+    }
+    if (j < nJ-1) {
+      __CMULT2(&Ca, &Ac, Bblk, alpha, j, nK, nP);
+      j += 2;
+    }
+    if (j < nJ) {
+      __CMULT1(&Ca, &Ac, Bblk, alpha, j, nK, nP);
+      j++;
+    }
+  }
+}
+
+#else
 static inline
 void __colblk_inner2(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
                      DTYPE alpha, int nJ, int nR, int nP, int rb)
@@ -131,6 +165,7 @@ void __colblk_inner2(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
     }
   }
 }
+#endif
 
 void __kernel_colblk_inner(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
                             DTYPE alpha, int nJ, int nR, int nP, int rb)
