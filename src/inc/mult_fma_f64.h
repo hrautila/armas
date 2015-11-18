@@ -39,6 +39,126 @@ static const uint64_t __masks_pd[4][4] __attribute__((aligned(64))) = {
   {     0,      0, __hb64, __hb64},
   {     0,      0,      0, __hb64}};
 
+// Use six column version when FMA instructions available
+#define HAVE_6COL 1
+
+// update 1x6 block of C; one row, six columns
+static inline
+void __mult1c6(double *c0, double *c1, double *c2, double *c3,
+               double *c4, double *c5,
+               const double *a, const double *b0, const double *b1,
+               const double *b2, const double *b3, const double *b4,
+               const double *b5, double alpha, int nR)
+{
+  register int k;
+  register __m256d y0, y1, y2, y3, y4, y5, A0, Z, M;
+
+  y0 = _mm256_set1_pd(0.0);
+  y1 = y2 = y3 = y4 = y5 = y0;
+
+  for (k = 0; k < nR-3; k += 4) {
+    A0 = mm_load_A(&a[k]);
+    y0 = _mm256_fmadd_pd(A0, mm_load_B(&b0[k]), y0);
+    y1 = _mm256_fmadd_pd(A0, mm_load_B(&b1[k]), y1);
+    y2 = _mm256_fmadd_pd(A0, mm_load_B(&b2[k]), y2);
+    y3 = _mm256_fmadd_pd(A0, mm_load_B(&b3[k]), y3);
+    y4 = _mm256_fmadd_pd(A0, mm_load_B(&b4[k]), y4);
+    y5 = _mm256_fmadd_pd(A0, mm_load_B(&b5[k]), y5);
+  }
+  if (k == nR)
+    goto update;
+
+  Z  = _mm256_set1_pd(0.0);
+  A0 = mm_load_A(&a[k]);
+  M  = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
+  A0 = _mm256_blendv_pd(A0, Z, M);
+
+  y0 = _mm256_fmadd_pd(A0, mm_load_B(&b0[k]), y0);
+  y1 = _mm256_fmadd_pd(A0, mm_load_B(&b1[k]), y1);
+  y2 = _mm256_fmadd_pd(A0, mm_load_B(&b2[k]), y2);
+  y3 = _mm256_fmadd_pd(A0, mm_load_B(&b3[k]), y3);
+  y4 = _mm256_fmadd_pd(A0, mm_load_B(&b4[k]), y4);
+  y5 = _mm256_fmadd_pd(A0, mm_load_B(&b5[k]), y5);
+
+update:
+  c0[0] += alpha*hsum_f64x4(y0);
+  c1[0] += alpha*hsum_f64x4(y1);
+  c2[0] += alpha*hsum_f64x4(y2);
+  c3[0] += alpha*hsum_f64x4(y3);
+  c4[0] += alpha*hsum_f64x4(y4);
+  c5[0] += alpha*hsum_f64x4(y5);
+}
+
+// update 2x6 block of C; two rows, size columns
+static inline
+void __mult2c6(double *c0, double *c1, double *c2, double *c3,
+               double *c4, double *c5, const double *a0, const double *a1,
+               const double *b0, const double *b1, const double *b2, const double *b3,
+               const double *b4, const double *b5, double alpha, int nR)
+{
+  register int k;
+  register __m256d y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, A0, A1, Z, M;
+  y0 = _mm256_set1_pd(0.0);
+  y1 = y2 = y3 = y4 = y5 = y6 = y7 = y8 = y9 = y10 = y11 = y0;
+
+  for (k = 0; k < nR-3; k += 4) {
+    A0  = mm_load_A(&a0[k]);
+    A1  = mm_load_A(&a1[k]);
+    y0  = _mm256_fmadd_pd(A0, mm_load_B(&b0[k]), y0);
+    y1  = _mm256_fmadd_pd(A0, mm_load_B(&b1[k]), y1);
+    y2  = _mm256_fmadd_pd(A0, mm_load_B(&b2[k]), y2);
+    y3  = _mm256_fmadd_pd(A0, mm_load_B(&b3[k]), y3);
+    y4  = _mm256_fmadd_pd(A0, mm_load_B(&b4[k]), y4);
+    y5  = _mm256_fmadd_pd(A0, mm_load_B(&b5[k]), y5);
+
+    y6  = _mm256_fmadd_pd(A1, mm_load_B(&b0[k]), y6);
+    y7  = _mm256_fmadd_pd(A1, mm_load_B(&b1[k]), y7);
+    y8  = _mm256_fmadd_pd(A1, mm_load_B(&b2[k]), y8);
+    y9  = _mm256_fmadd_pd(A1, mm_load_B(&b3[k]), y9);
+    y10 = _mm256_fmadd_pd(A1, mm_load_B(&b4[k]), y10);
+    y11 = _mm256_fmadd_pd(A1, mm_load_B(&b5[k]), y11);
+
+  }
+  if (k == nR)
+    goto update;
+
+  Z   = _mm256_set1_pd(0.0);
+  A0  = mm_load_A(&a0[k]);
+  A1  = mm_load_A(&a1[k]);
+  M   = _mm256_load_pd((double *)&__masks_pd[nR-k][0]);
+  A0  = _mm256_blendv_pd(A0, Z, M);
+  A1  = _mm256_blendv_pd(A1, Z, M);
+
+  y0  = _mm256_fmadd_pd(A0, mm_load_B(&b0[k]), y0);
+  y1  = _mm256_fmadd_pd(A0, mm_load_B(&b1[k]), y1);
+  y2  = _mm256_fmadd_pd(A0, mm_load_B(&b2[k]), y2);
+  y3  = _mm256_fmadd_pd(A0, mm_load_B(&b3[k]), y3);
+  y4  = _mm256_fmadd_pd(A0, mm_load_B(&b4[k]), y4);
+  y5  = _mm256_fmadd_pd(A0, mm_load_B(&b5[k]), y5);
+  
+  y6  = _mm256_fmadd_pd(A1, mm_load_B(&b0[k]), y6);
+  y7  = _mm256_fmadd_pd(A1, mm_load_B(&b1[k]), y7);
+  y8  = _mm256_fmadd_pd(A1, mm_load_B(&b2[k]), y8);
+  y9  = _mm256_fmadd_pd(A1, mm_load_B(&b3[k]), y9);
+  y10 = _mm256_fmadd_pd(A1, mm_load_B(&b4[k]), y10);
+  y11 = _mm256_fmadd_pd(A1, mm_load_B(&b5[k]), y11);
+
+update:
+  c0[0] += alpha*hsum_f64x4(y0);
+  c1[0] += alpha*hsum_f64x4(y1);
+  c2[0] += alpha*hsum_f64x4(y2);
+  c3[0] += alpha*hsum_f64x4(y3);
+  c4[0] += alpha*hsum_f64x4(y4);
+  c5[0] += alpha*hsum_f64x4(y5);
+  c0[1] += alpha*hsum_f64x4(y6);
+  c1[1] += alpha*hsum_f64x4(y7);
+  c2[1] += alpha*hsum_f64x4(y8);
+  c3[1] += alpha*hsum_f64x4(y9);
+  c4[1] += alpha*hsum_f64x4(y10);
+  c5[1] += alpha*hsum_f64x4(y11);
+}
+
+
 // update 1x4 block of C; one row, four columns (mult4x1x1)
 static inline
 void __mult1c4(double *c0, double *c1, double *c2, double *c3,
