@@ -19,7 +19,16 @@ ARMAS_CONFIG has the format "MB,NB,KB,LB,WB,NPROC"
 
 Low level blocking configuration for BLAS3 level functions is defined by parameters MB, NB and
 KB. In matrix-matrix multiplication (GEMM) MB,NB block is computed as sum of [MB,KB]x[KB,NB]
-blocks. Other BLAS3 level functions use these blocking parameters as appropriate. 
+blocks. Other BLAS3 level functions use these blocking parameters as appropriate. The
+environment variable defines the relative sizes of these parameters. Actual parameter values
+computed from values of cache memory environment variable ARMAS_CACHE. ARMAS_CACHE has format
+"L3MEM,L1MEM", where L3MEM is the number of bytes reserved for per thread cache memory. This
+buffer is divided to two blocks, one of size KBxMB elements and other of size KBxNB elements. 
+Each column of KB elements in block is aligned to CPU cache-line. (For extended precision 
+routines cache buffer is divided to three blocks.) Silent assumption is that MB <= NB <= KB.
+The L1MEM parameter is used to compute internal parameter RB < MB, that controls access
+to innermost block which is looped over NB times. Values of L3MEM and L1MEM are
+integer numbers followed by optional letter 'k', 'K', 'm' or 'M'.
 
 Parameter LB defines the blocking size for LAPACK level functions. Blocked code progresses
 in LB size blocks.
