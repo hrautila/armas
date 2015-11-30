@@ -34,6 +34,7 @@
 // internal helpers
 #define __swap_rows               __s_swap_rows
 #define __swap_cols               __s_swap_cols
+#define __apply_pivots            __s_apply_pivots
 #define __apply_row_pivots        __s_apply_row_pivots
 #define __pivot_index             __s_pivot_index
 // marker for above function
@@ -194,6 +195,14 @@
 #define __armas_svd		armas_s_svd
 #define __armas_svd_work	armas_s_svd_work
 
+// Butterfly
+#define __armas_gen_rbt         armas_s_gen_rbt
+#define __armas_size_rbt        armas_s_size_rbt
+#define __armas_mult_rbt        armas_s_mult_rbt
+#define __armas_update2_rbt     armas_s_update2_rbt
+#define __armas_update2_sym_rbt armas_s_update2_sym_rbt
+#define __update2_rbt_descend   __s_update2_rbt_descend
+
 // internal
 #define __sym_eigen2x2          __s_sym_eigen2x2
 #define __sym_eigen2x2vec       __s_sym_eigen2x2vec
@@ -222,6 +231,7 @@
 // internal helpers
 #define __swap_rows               __d_swap_rows
 #define __swap_cols               __d_swap_cols
+#define __apply_pivots            __d_apply_pivots
 #define __apply_row_pivots        __d_apply_row_pivots
 #define __pivot_index             __d_pivot_index
 // marker for above function
@@ -373,6 +383,14 @@
 // SVD
 #define __armas_svd		armas_d_svd
 #define __armas_svd_work	armas_d_svd_work
+
+// Butterfly
+#define __armas_gen_rbt         armas_d_gen_rbt
+#define __armas_size_rbt        armas_d_size_rbt
+#define __armas_mult_rbt        armas_d_mult_rbt
+#define __armas_update2_rbt     armas_d_update2_rbt
+#define __armas_update2_sym_rbt armas_d_update2_sym_rbt
+#define __update2_rbt_descend   __d_update2_rbt_descend
 
 // internal
 #define __sym_eigen2x2          __d_sym_eigen2x2

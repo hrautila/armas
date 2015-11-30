@@ -173,6 +173,8 @@ typedef float ABSTYPE;
 #define __HYPOT hypotf
 #define __SIGN  signbit
 #define __COPYSIGN  copysignf
+#define __POW   powf
+#define __EXP   expf
 
 // internally available functions
 #define __blk_add      __s_blk_add
@@ -287,12 +289,21 @@ typedef float ABSTYPE;
 #define __armas_mscale        armas_s_mscale
 #define __armas_madd          armas_s_madd
 #define __armas_mnorm         armas_s_mnorm
+#define __armas_norm          armas_s_norm
 #define __armas_transpose     armas_s_transpose
 #define __armas_allclose      armas_s_allclose
 #define __armas_intolerance   armas_s_intolerance
 #define __armas_make_trm      armas_s_make_trm
 #define __armas_scale_plus    armas_s_scale_plus
 #define __armas_isvector      armas_s_isvector
+// element-wise functions
+#define __armas_add_elem      armas_s_add_elem
+#define __armas_sub_elem      armas_s_sub_elem
+#define __armas_mul_elem      armas_s_mul_elem
+#define __armas_div_elem      armas_s_div_elem
+#define __armas_apply         armas_s_apply
+#define __armas_apply2        armas_s_apply2
+
 
 #define __armas_submatrix_unsafe  armas_s_submatrix_unsafe
 #define __armas_subvector_unsafe  armas_s_subvector_unsafe
@@ -373,6 +384,8 @@ typedef double ABSTYPE;
 #define __HYPOT hypot
 #define __SIGN  signbit
 #define __COPYSIGN copysign
+#define __POW   pow
+#define __EXP   exp
 
 // internally available functions
 #define __blk_add      __d_blk_add
@@ -487,12 +500,20 @@ typedef double ABSTYPE;
 #define __armas_mscale        armas_d_mscale
 #define __armas_madd          armas_d_madd
 #define __armas_mnorm         armas_d_mnorm
+#define __armas_norm          armas_d_norm
 #define __armas_transpose     armas_d_transpose
 #define __armas_allclose      armas_d_allclose
 #define __armas_intolerance   armas_d_intolerance
 #define __armas_make_trm      armas_d_make_trm
 #define __armas_scale_plus    armas_d_scale_plus
 #define __armas_isvector      armas_d_isvector
+// element-wise functions
+#define __armas_add_elem      armas_d_add_elem
+#define __armas_sub_elem      armas_d_sub_elem
+#define __armas_mul_elem      armas_d_mul_elem
+#define __armas_div_elem      armas_d_div_elem
+#define __armas_apply         armas_d_apply
+#define __armas_apply2        armas_d_apply2
 
 #define __armas_submatrix_unsafe  armas_d_submatrix_unsafe
 #define __armas_subvector_unsafe  armas_d_subvector_unsafe
