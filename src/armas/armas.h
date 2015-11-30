@@ -47,7 +47,10 @@ enum armas_flags {
   ARMAS_WANTU   = 0x8000,       ///< generate left eigenvectors
   ARMAS_WANTV   = 0x10000,      ///< generate right eigenvectors
   ARMAS_FORWARD = 0x20000,      ///< apply forward
-  ARMAS_BACKWARD= 0x40000       ///< apply backward
+  ARMAS_BACKWARD= 0x40000,      ///< apply backward
+  ARMAS_ABSA    = 0x80000,      ///< compute with |A| 
+  ARMAS_ABSB    = 0x100000,     ///< compute with |B|
+  ARMAS_ABS     = ARMAS_ABSA    ///< compute with |x|
 };
 
 enum armas_sort {
