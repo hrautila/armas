@@ -40,23 +40,21 @@ static inline int _N(__armas_dense_t *A) {
 }
 
 // function that constants
-typedef DTYPE (*CONSTFUNC)();
+typedef DTYPE (*__armas_constfunc_t)();
 
 // function that returns value for element
-typedef DTYPE (*VALUEFUNC)(int, int);
+typedef DTYPE (*__armas_valuefunc_t)(int, int);
 
-// function that returns workspace size 
-typedef int (*WSFUNC)(__armas_dense_t *, int);
-
-// function that returns workspace size 
-typedef int (*WSSIZE)(int, int, int);
+// element wise operator functions
+typedef DTYPE (*__armas_operator_t)(DTYPE);
+typedef DTYPE (*__armas_operator2_t)(DTYPE, DTYPE);
 
 extern __armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c);
 
 extern void __armas_print(const __armas_dense_t *m, FILE *out);
 extern void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m);
-extern int __armas_set_consts(__armas_dense_t *m, CONSTFUNC func, int flags);
-extern int __armas_set_values(__armas_dense_t *m, VALUEFUNC func, int flags);
+extern int __armas_set_consts(__armas_dense_t *m, __armas_constfunc_t func, int flags);
+extern int __armas_set_values(__armas_dense_t *m, __armas_valuefunc_t func, int flags);
 
 extern int __armas_allclose(__armas_dense_t *A, __armas_dense_t *B);
 extern int __armas_intolerance(__armas_dense_t *A, __armas_dense_t *B, ABSTYPE atol, ABSTYPE rtol);
@@ -69,13 +67,21 @@ extern void __armas_make_trm(__armas_dense_t *m, int flags);
 
 extern int __armas_mscale(__armas_dense_t *d, DTYPE alpha, int flags);
 extern int __armas_madd(__armas_dense_t *d, DTYPE alpha, int flags);
-
+  // element wise operators
+extern int __armas_mul_elem(__armas_dense_t *A, const __armas_dense_t *B, int flags);
+extern int __armas_add_elem(__armas_dense_t *A, const __armas_dense_t *B, int flags);
+extern int __armas_div_elem(__armas_dense_t *A, const __armas_dense_t *B, int flags);
+extern int __armas_sub_elem(__armas_dense_t *A, const __armas_dense_t *B, int flags);
+extern int __armas_apply(__armas_dense_t *A, __armas_operator_t func, int flags);
+extern int __armas_apply2(__armas_dense_t *A, __armas_operator2_t func, DTYPE val, int flags);
+  
 #if !defined(__ARMAS_LINALG_H)
 // these were moved to linalg.h, if it is included skip these.
 
 extern int __armas_scale_plus(__armas_dense_t *A, const __armas_dense_t *B,
                               DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
 extern ABSTYPE __armas_mnorm(const __armas_dense_t *A, int norm, armas_conf_t *conf);
+extern ABSTYPE __armas_norm(const __armas_dense_t *A, int norm, int flags, armas_conf_t *conf);
 
 // Blas level 1 functions
 extern int     __armas_iamax(const __armas_dense_t *X, armas_conf_t *conf);
@@ -589,7 +595,7 @@ DTYPE __armas_get_at(const __armas_dense_t *m, int ix)
 }
 
 __INLINE
-DTYPE __armas_get_at_unsafe(__armas_dense_t *m, int ix)
+DTYPE __armas_get_at_unsafe(const __armas_dense_t *m, int ix)
 {
   return m->elems[(m->rows == 1 ? ix*m->step : ix)];
 }
@@ -607,7 +613,7 @@ int __armas_index(const __armas_dense_t *m, int row, int col)
 }
 
 __INLINE
-DTYPE *__armas_data(__armas_dense_t *m)
+DTYPE *__armas_data(const __armas_dense_t *m)
 {
   return m ? m->elems : (DTYPE *)0;
 }
