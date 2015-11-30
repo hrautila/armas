@@ -12,6 +12,12 @@
 
 // internal declarations for lapack functionality.
 
+// function that returns workspace size 
+typedef int (*WSFUNC)(__armas_dense_t *, int);
+
+// function that returns workspace size 
+typedef int (*WSSIZE)(int, int, int);
+
 #ifndef TRUE
 #define TRUE 1
 #endif
