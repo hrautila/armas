@@ -11,7 +11,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(__armas_update_sym) && defined(__rank_diag)
+#if defined(__rank_ext_blk) && defined(__rank_ext_diag)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
