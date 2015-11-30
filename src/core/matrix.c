@@ -251,7 +251,7 @@ void __armas_print(const __armas_dense_t *m, FILE *out)
  * @returns 0  Succes
  * @returns -1 Failure
  */
-int __armas_set_values(__armas_dense_t *m, VALUEFUNC value, int flags)
+int __armas_set_values(__armas_dense_t *m, __armas_valuefunc_t value, int flags)
 {
   int i, j;
   switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_SYMM)) {
