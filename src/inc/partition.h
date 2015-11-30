@@ -26,7 +26,7 @@
  */
 __INLINE
 void __partition_2x1(__armas_dense_t *AT, __armas_dense_t *AB,
-                     __armas_dense_t *A, int nb, int side)
+                     const __armas_dense_t *A, int nb, int side)
 {
   if (nb > A->rows)
     nb = A->rows;
@@ -56,7 +56,7 @@ void __partition_2x1(__armas_dense_t *AT, __armas_dense_t *AB,
 __INLINE
 void __repartition_2x1to3x1(__armas_dense_t *AT, __armas_dense_t *A0,
                             __armas_dense_t *A1, __armas_dense_t *A2,
-                            __armas_dense_t *A, int nb, int direction)
+                            const __armas_dense_t *A, int nb, int direction)
 {
   switch (direction) {
   case ARMAS_PBOTTOM:
@@ -90,7 +90,7 @@ void __repartition_2x1to3x1(__armas_dense_t *AT, __armas_dense_t *A0,
 __INLINE
 void __continue_3x1to2x1(__armas_dense_t *AT, __armas_dense_t *AB,
                          __armas_dense_t *A0, __armas_dense_t *A1,
-                         __armas_dense_t *A, int direction)
+                         const __armas_dense_t *A, int direction)
 {
   int nr0 = A0->rows;
   int nr1 = A1->rows;
@@ -116,7 +116,7 @@ void __continue_3x1to2x1(__armas_dense_t *AT, __armas_dense_t *AB,
  */
 __INLINE
 void __partition_1x2(__armas_dense_t *AL, __armas_dense_t *AR,
-                     __armas_dense_t *A, int nb, int side)
+                     const __armas_dense_t *A, int nb, int side)
 {
   if (nb > A->cols) {
     nb = A->cols;
@@ -145,7 +145,7 @@ void __partition_1x2(__armas_dense_t *AL, __armas_dense_t *AR,
 __INLINE
 void __repartition_1x2to1x3(__armas_dense_t *AL, __armas_dense_t *A0,
                             __armas_dense_t *A1, __armas_dense_t *A2,
-                            __armas_dense_t *A, int nb, int direction)
+                            const __armas_dense_t *A, int nb, int direction)
 {
   switch (direction) {
   case ARMAS_PLEFT:
@@ -178,7 +178,7 @@ void __repartition_1x2to1x3(__armas_dense_t *AL, __armas_dense_t *A0,
 __INLINE
 void __continue_1x3to1x2(__armas_dense_t *AL, __armas_dense_t *AR,
                          __armas_dense_t *A0, __armas_dense_t *A1,
-                         __armas_dense_t *A, int direction) 
+                         const __armas_dense_t *A, int direction) 
 {
   int nl;
   switch (direction) {
@@ -207,7 +207,7 @@ void __continue_1x3to1x2(__armas_dense_t *AL, __armas_dense_t *AR,
 __INLINE
 void __partition_2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
                      __armas_dense_t *ABL, __armas_dense_t *ABR,
-                     __armas_dense_t *A, int mb, int nb, int side)
+                     const __armas_dense_t *A, int mb, int nb, int side)
 {
   switch (side) {
   case ARMAS_PTOPLEFT:
@@ -247,7 +247,7 @@ void __repartition_2x2to3x3(__armas_dense_t *ATL,
                             __armas_dense_t *A00, __armas_dense_t *A01, __armas_dense_t *A02,
                             __armas_dense_t *A10, __armas_dense_t *A11, __armas_dense_t *A12,
                             __armas_dense_t *A20, __armas_dense_t *A21, __armas_dense_t *A22,
-                            __armas_dense_t *A, int nb, int direction)
+                            const __armas_dense_t *A, int nb, int direction)
 {
   int kr = ATL->rows;
   int kc = ATL->cols;
@@ -316,7 +316,7 @@ __INLINE
 void __continue_3x3to2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
                          __armas_dense_t *ABL, __armas_dense_t *ABR,
                          __armas_dense_t *A00, __armas_dense_t *A11, __armas_dense_t *A22,
-                         __armas_dense_t *A, int direction)
+                         const __armas_dense_t *A, int direction)
 {
   //int nk = A00->rows;
   int mb = A11->cols;
