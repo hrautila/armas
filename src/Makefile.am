@@ -68,7 +68,12 @@ CORE = \
 	core/mscale.c \
 	core/plus.c \
 	core/partition.c \
-	core/pivot.c 
+	core/pivot.c \
+	core/madd.c \
+	core/msub.c \
+	core/mmul.c \
+	core/mdiv.c \
+	core/mapply.c 
 
 
 
@@ -124,9 +129,13 @@ XBLAS3 = \
 	blas3/kernel_ext.c \
 	blas3/symm_ext.c \
 	blas3/trmm_ext.c \
-	blas3/trsm_ext.c
+	blas3/trsm_ext.c \
+	blas3/updtrm_ext.c \
+	blas3/syrk_ext.c
 
 LAPACK = \
+	lapack/rbtgm.c \
+	lapack/rbtgu.c \
 	lapack/house.c \
 	lapack/support.c \
 	lapack/qr.c \
