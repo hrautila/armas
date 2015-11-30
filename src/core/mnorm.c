@@ -24,6 +24,7 @@
 
 #include "internal.h"
 #include "matrix.h"
+#include "internal_lapack.h"
 
 static 
 void __sum_of_sq(ABSTYPE *ssum, ABSTYPE *scale, __armas_dense_t *X, ABSTYPE sum, ABSTYPE scl)
@@ -155,15 +156,16 @@ ABSTYPE __armas_mnorm(const __armas_dense_t *x, int which, armas_conf_t *conf)
   return normval;
 }
 
-#if 0
 
 static
 ABSTYPE __trm_norm_one(const __armas_dense_t *A, int flags, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a10, a11, a12, a21, A22, *Acol;
-  ABSTYPE aval, cmax = ___ABSZERO;
+  __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a11, a21, A22, *Acol;
+  ABSTYPE aval, cmax = __ABSZERO;
 
   Acol = flags & ARMAS_UPPER ? &a01 : &a21;
+
+  EMPTY(A00); EMPTY(a11);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -190,12 +192,14 @@ ABSTYPE __trm_norm_one(const __armas_dense_t *A, int flags, armas_conf_t *conf)
 }
 
 static
-ABSTYPE __trm_norm_inf(__armas_dense_t *A, int flags, armas_conf_t *conf)
+ABSTYPE __trm_norm_inf(const __armas_dense_t *A, int flags, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a10, a11, a12, a21, A22, *Arow;
-  ABSTYPE aval, cmax = ___ABSZERO;
+  __armas_dense_t ATL, ABL, ABR, ATR, A00, a10, a11, a12, A22, *Arow;
+  ABSTYPE aval, cmax = __ABSZERO;
 
   Arow = flags & ARMAS_UPPER ? &a12 : &a10;
+
+  EMPTY(A00); EMPTY(a11);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -222,10 +226,9 @@ ABSTYPE __trm_norm_inf(__armas_dense_t *A, int flags, armas_conf_t *conf)
 }
 
 static
-ABSTYPE __trm_norm_frb(__armas_dense_t *A, int flags, armas_conf_t *conf)
+ABSTYPE __trm_norm_frb(const __armas_dense_t *A, int flags, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a10, a11, a12, a21, A22, *Acol;
-    DTYPE aval, cmax = ___ABSZERO;
+  __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a11, a21, A22, *Acol;
     ABSTYPE ssum, scale;
 
     ssum = __ABSONE;
@@ -257,10 +260,12 @@ ABSTYPE __trm_norm_frb(__armas_dense_t *A, int flags, armas_conf_t *conf)
 
 ABSTYPE __armas_norm(const __armas_dense_t *A, int which, int flags, armas_conf_t *conf)
 {
+  DTYPE normval = __ABSZERO;
+
   if (!conf)
     conf = armas_conf_default();
 
-  if (! x || __armas_size(x) == 0)
+  if (! A || __armas_size(A) == 0)
     return __ABSZERO;
 
   if (!(flags & (ARMAS_LOWER|ARMAS_UPPER))) {
@@ -288,7 +293,6 @@ ABSTYPE __armas_norm(const __armas_dense_t *A, int which, int flags, armas_conf_
   return normval;
   
 }
-#endif
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
