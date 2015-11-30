@@ -239,6 +239,7 @@ typedef float ABSTYPE;
 #define __update_ext_trm_naive    __s_update_ext_trm_naive
 #define __blk_scale_ext           __s_blk_scale_ext
 #define __rank_ext_diag           __s_rank_ext_diag
+#define __rank_ext_blk            __s_rank_ext_blk
 
 // internal matrix block routines
 #define __partition_2x1           __s_partition_2x1
@@ -450,6 +451,7 @@ typedef double ABSTYPE;
 #define __update_ext_trm_naive    __d_update_ext_trm_naive
 #define __blk_scale_ext           __d_blk_scale_ext
 #define __rank_ext_diag           __d_rank_ext_diag
+#define __rank_ext_blk            __d_rank_ext_blk
 
 // internal matrix block routines
 #define __partition_2x1           __d_partition_2x1
