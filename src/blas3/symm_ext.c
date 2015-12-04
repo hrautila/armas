@@ -32,7 +32,7 @@
 extern
 void __kernel_ext_colblk_inner(mdata_t *Cblk, mdata_t *dC,
                                const mdata_t *Ablk, const mdata_t *Bblk,
-                               DTYPE alpha, int nJ, int nR, int nP);
+                               DTYPE alpha, int nJ, int nR, int nP, int rb);
 
 // C += A*B; A is the diagonal block
 static
@@ -67,9 +67,9 @@ void __mult_symm_ext_diag(mdata_t *C, mdata_t *dC, const mdata_t *A, const mdata
   }
 
   if (flags & ARMAS_RIGHT) {
-    __kernel_ext_colblk_inner(C, dC, &cache->Bcpy, &cache->Acpy, alpha, nAC, nRE, nP);
+    __kernel_ext_colblk_inner(C, dC, &cache->Bcpy, &cache->Acpy, alpha, nAC, nRE, nP, cache->rb);
   } else {
-    __kernel_ext_colblk_inner(C, dC, &cache->Acpy, &cache->Bcpy, alpha, nSL, nAC, nP);
+    __kernel_ext_colblk_inner(C, dC, &cache->Acpy, &cache->Bcpy, alpha, nSL, nAC, nP, cache->rb);
   }
 }
 

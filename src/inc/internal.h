@@ -411,7 +411,7 @@ void __gemv_update_ext_unb(mvec_t *Y, mvec_t *dY, const mdata_t *A, const mvec_t
 
 extern 
 void __kernel_ext_colblk_inner(mdata_t *Cblk, mdata_t *dC, const mdata_t *Ablk, 
-                               const mdata_t *Bblk, DTYPE alpha, int nJ, int nR, int nP);
+                               const mdata_t *Bblk, DTYPE alpha, int nJ, int nR, int nP, int rb);
 
 extern
 void __kernel_ext_panel_inner(mdata_t *C, mdata_t *dC, const mdata_t *A, const mdata_t *B,
