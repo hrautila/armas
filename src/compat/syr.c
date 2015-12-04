@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__syr)
+#if defined(__syr)
 void __syr(char *uplo, int *n, DTYPE *alpha, DTYPE *X,
             int *incx, DTYPE *A, int *lda)
 {
@@ -43,10 +43,27 @@ void __syr(char *uplo, int *n, DTYPE *alpha, DTYPE *X,
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_syr)
-void __cblas_syr(int order, int uplo,  int N,
-                 DTYPE alpha, DTYPE *X, int incx, DTYPE *A, int lda)
+#if defined(__cblas_syr)
+void __cblas_syr(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,  const int N,
+                 const DTYPE alpha, DTYPE *X, const int incx, DTYPE *A, const int lda)
 {
+    armas_conf_t *conf = armas_conf_default();
+    __armas_dense_t Aa, x;
+    int flags = 0;
+    
+    if (order == CblasRowMajor) {
+        flags = uplo == CblasUpper ? ARMAS_LOWER : ARMAS_UPPER;
+    } else {
+        flags = uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
+    }
+
+    __armas_make(&Aa, N, N, lda, A);
+    if (incx == 1) {
+        __armas_make(&x, N, 1, N, X);
+    } else {
+        __armas_make(&x, 1, N, incx, X);
+    }
+    __armas_mvupdate_sym(&Aa, &x, alpha, flags, conf);
 }
 
 #endif

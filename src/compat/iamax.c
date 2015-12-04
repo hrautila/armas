@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_iamax)
+#if defined(COMPAT) && defined(__armas_iamax)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -23,23 +23,34 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__iamax)
-DTYPE __iamax(int *n, DTYPE *X, int *incx)
+#if defined(__iamax)
+int __iamax(int *n, DTYPE *X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t y, x;
+    __armas_dense_t x;
 
     if (*incx == 1) {
         __armas_make(&x, *n, 1, *n, X);
     } else {
         __armas_make(&x, 1, *n, *incx, X);
     }
-    return __armas_iamax(&y, conf);
+    return __armas_iamax(&x, conf);
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_iamax)
+#if defined(__cblas_iamax)
+int __cblas_iamax(int N, DTYPE *X, int incx)
+{
+    armas_conf_t *conf = armas_conf_default();
+    __armas_dense_t x;
 
+    if (incx == 1) {
+        __armas_make(&x, N, 1, N, X);
+    } else {
+        __armas_make(&x, 1, N, incx, X);
+    }
+    return __armas_iamax(&x, conf);
+}
 #endif
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

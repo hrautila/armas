@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2015
 
 // This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__gemv)
+#if defined(__gemv)
 void __gemv(char *trans, int *m, int *n, DTYPE *alpha, DTYPE *A,
             int *lda, DTYPE *X, int *incx, DTYPE *beta, DTYPE *Y, int *incy)
 {
@@ -53,11 +53,46 @@ void __gemv(char *trans, int *m, int *n, DTYPE *alpha, DTYPE *A,
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_gemv)
-void __cblas_gemv(int order, int trans,  int M, int N,
-                  DTYPE alpha, DTYPE *A, int lda, DTYPE *X,  int incx,
-                  DTYPE beta, DTYPE *Y, int incy)
+#if defined(__cblas_gemv)
+void __cblas_gemv(const enum CBLAS_ORDER order, const enum CBLAS_TRANS trans,  
+                  const int M, const int N, const DTYPE alpha, DTYPE *A, const int lda, 
+                  DTYPE *X,  const int incx, const DTYPE beta, DTYPE *Y, const int incy)
 {
+    armas_conf_t *conf = armas_conf_default();
+    __armas_dense_t y, Aa, x;
+    int ylen, xlen, flags = 0;
+
+    switch (order) {
+    case CblasRowMajor:
+        if (trans == CblasNoTrans)
+            flags |= ARMAS_TRANS;
+        ylen = flags & ARMAS_TRANS ? M : N;
+        xlen = flags & ARMAS_TRANS ? N : M;
+        __armas_make(&Aa, N, M, lda, A);
+        break;
+    case CblasColMajor:
+    default:
+        if (trans == CblasTrans)
+            flags |= ARMAS_TRANS;
+        ylen = flags & ARMAS_TRANS ? N : M;
+        xlen = flags & ARMAS_TRANS ? M : N;
+        __armas_make(&Aa, M, N, lda, A);
+        break;
+    }
+
+    if (incy == 1) {
+        // column vector
+        __armas_make(&y, ylen, 1, ylen, Y);
+    } else {
+        // row vector
+        __armas_make(&y, 1, ylen, incy, Y);
+    }
+    if (incx == 1) {
+        __armas_make(&x, xlen, 1, xlen, X);
+    } else {
+        __armas_make(&x, 1, xlen, incx, X);
+    }
+    __armas_mvmult(&y, &Aa, &x, alpha, beta, flags, conf);
 }
 
 #endif

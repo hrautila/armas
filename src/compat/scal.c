@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__scal)
+#if defined(__scal)
 void __scal(int *n, DTYPE *X, int *incx, DTYPE *alpha)
 {
     armas_conf_t *conf = armas_conf_default();
@@ -39,7 +39,20 @@ void __scal(int *n, DTYPE *X, int *incx, DTYPE *alpha)
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_scal)
+#if defined(__cblas_scal)
+void __cblas_scal(const int N, const DTYPE alpha, DTYPE *X, const int incx)
+{
+    armas_conf_t *conf = armas_conf_default();
+    __armas_dense_t x;
+
+    if (*incx == 1) {
+        __armas_make(&x, N, 1, N, X);
+    } else {
+        __armas_make(&x, 1, N, incx, X);
+    }
+    __armas_scale(&x, alpha, conf);
+    return;
+}
 
 #endif
 

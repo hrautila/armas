@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2015
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -29,6 +29,24 @@ enum cblas_const {
 
 
 #if defined(COMPAT)
+
+#define CBLAS_INDEX size_t 
+
+// from cblas.h
+enum CBLAS_ORDER 	{CblasRowMajor=101, CblasColMajor=102};
+enum CBLAS_TRANSPOSE 	{CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113};
+enum CBLAS_UPLO		{CblasUpper=121, CblasLower=122};
+enum CBLAS_DIAG		{CblasNonUnit=131, CblasUnit=132};
+enum CBLAS_SIDE		{CblasLeft=141, CblasRight=142};
+
+
+// from lapacke.h
+#define LAPACK_ROW_MAJOR               101
+#define LAPACK_COL_MAJOR               102
+
+#define LAPACK_WORK_MEMORY_ERROR       -1010
+#define LAPACK_TRANSPOSE_MEMORY_ERROR  -1011
+
 
 #ifdef COMPLEX128
 /* ---------------------------------------------------------------------------
@@ -72,6 +90,12 @@ enum cblas_const {
 #define __trsm  strsm_
 // lapack
 
+#define __cblas_trmm   cblas_strmm
+#define __cblas_trsm   cblas_strsm
+#define __cblas_gemm   cblas_sgemm
+#define __cblas_symm   cblas_ssymm
+
+
 #else  // default is double precision float (FLOAT64)
 /* ---------------------------------------------------------------------------
  * Definitions for double precision floating types.
@@ -105,10 +129,10 @@ enum cblas_const {
 // lapack
 
 
-#if defined(COMPAT_CBLAS)
+#define __cblas_trmm   cblas_dtrmm
+#define __cblas_trsm   cblas_dtrsm
 #define __cblas_gemm   cblas_dgemm
 #define __cblas_symm   cblas_dsymm
-#endif
 
 #endif  /* FLOAT64 */
 

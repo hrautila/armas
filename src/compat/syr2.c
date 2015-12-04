@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__syr2)
+#if defined(__syr2)
 void __syr2(char *uplo, int *n, DTYPE *alpha, DTYPE *X,
             int *incx, DTYPE *Y, int *incy, DTYPE *A, int *lda)
 {
@@ -42,18 +42,42 @@ void __syr2(char *uplo, int *n, DTYPE *alpha, DTYPE *X,
     if (*incy == 1) {
         __armas_make(&y, *n, 1, *n, Y);
     } else {
-        __armas_make(&y, 1, *n, *incx, Y);
+        __armas_make(&y, 1, *n, *incy, Y);
     }
     __armas_mvupdate2_sym(&a, &x, &y, *alpha, flags, conf);
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_syr2)
-void __cblas_syr2(int order, int uplo,  int N, DTYPE alpha,
-                  DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE *A, int lda)
+#if defined(__cblas_syr2)
+void __cblas_syr2(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo, int N,
+                  DTYPE alpha, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE *A, int lda)
 {
-}
+    armas_conf_t *conf = armas_conf_default();
+    __armas_dense_t Aa, x, y;
+    int flags = 0;
 
+    switch (order) {
+    case CblasRowMajor:
+        flags |= uplo == CblasUpper ? ARMAS_LOWER : ARMAS_UPPER;
+        break;
+    case CblasColMajor:
+    default:
+        flags |= uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
+        break;
+    }
+    __armas_make(&Aa, N, N, lda, A);
+    if (incx == 1) {
+        __armas_make(&x, N, 1, N, X);
+    } else {
+        __armas_make(&x, 1, N, incx, X);
+    }
+    if (incy == 1) {
+        __armas_make(&y, N, 1, N, Y);
+    } else {
+        __armas_make(&y, 1, N, incy, Y);
+    }
+    __armas_mvupdate2_sym(&Aa, &x, &y, alpha, flags, conf);
+}
 #endif
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

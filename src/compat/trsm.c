@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__trsm)
+#if defined(__trsm)
 void __trsm(char *side, char *uplo, char *transa, char *diag,int *m, int *n,
             DTYPE *alpha, DTYPE *A, int *lda, DTYPE *B, int *ldb)
 {
@@ -54,11 +54,54 @@ void __trsm(char *side, char *uplo, char *transa, char *diag,int *m, int *n,
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_trsm)
-void __cblas_trsm(int order, int side,  int uplo, int transa, int diag, int M, int N,
-                  DTYPE alpha, DTYPE *A, int lda, DTYPE *B,  int ldb)
+#if defined(__cblas_trsm)
+void __cblas_trsm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
+                  const enum CBLAS_UPLO uplo, const enum CBLAS_TRANSPOSE transa,
+                  const enum CBLAS_DIAG diag, int M, int N,
+                  DTYPE alpha, DTYPE *A, int lda, DTYPE *B, int ldb)
 {
-    printf("libarmas-compat.cblas_trmm: not implemented\n");
+    armas_conf_t conf = *armas_conf_default();
+    __armas_dense_t Aa, Ba;
+    int flags = 0;
+    switch (order) {
+    case CblasColMajor:
+        flags |= side == CblasRight ? ARMAS_RIGHT : ARMAS_LEFT;
+        flags |= uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
+        if (diag == CblasUnit)
+            flags |= ARMAS_UNIT;
+        if (transa == CblasTrans)
+            flags |= ARMAS_TRANSA;
+        // M > ldb --> error
+        __armas_make(&Ba, M, N, ldb, B);
+        if (side == CblasRight) {
+            // N > lda --> error
+            __armas_make(&Aa, N, N, lda, A);
+        } else {
+            // M > lda --> error
+            __armas_make(&Aa, M, M, lda, A);
+        }
+        break;
+    case CblasRowMajor:
+        flags |= side == CblasRight ? ARMAS_LEFT : ARMAS_RIGHT;
+        flags |= uplo == CblasUpper ? ARMAS_LOWER : ARMAS_UPPER;
+        if (diag == CblasUnit)
+            flags |= ARMAS_UNIT;
+        if (transa == CblasNoTrans)
+            flags |= ARMAS_TRANSA;
+        // N > ldb --> error
+        __armas_make(&Ba, N, M, ldb, B);
+        if (side == CblasRight) {
+            // N > lda --> error
+            __armas_make(&Aa, M, M, lda, A);
+        } else {
+            // M > lda --> error
+            __armas_make(&Aa, N, N, lda, A);
+        }
+        break;
+    default:
+        return;
+    }
+    __armas_solve_trm(&Ba, &Aa, alpha, flags, &conf);
 }
 
 #endif

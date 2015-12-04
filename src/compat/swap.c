@@ -23,9 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) || defined(COMPAT_CBLAS)
 static
-void __swap_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy)
+void __swap_compat(const int N, DTYPE *X, const int incx, DTYPE *Y, const int incy)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t y, x;
@@ -61,16 +60,19 @@ void __swap_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy)
         __armas_set_at_unsafe(&x, ix, yv);
     }
 }
-#endif
 
-#if defined(COMPAT) && defined(__swap)
+#if defined(__swap)
 void __swap(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy)
 {
     __swap_compat(*n, X, *incx, Y, *incy);
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_swap)
+#if defined(__cblas_swap)
+void __cblas_swap(const int N, DTYPE *X, const int incx, DTYPE *Y, const int incy)
+{
+    __swap_compat(N, X, incx, Y, incy);
+}
 
 #endif
 

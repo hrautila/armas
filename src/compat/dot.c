@@ -23,9 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) || defined(COMPAT_CBLAS)
 static
-DTYPE __dot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy)
+DTYPE __dot_compat(const int N, DTYPE *X, const int incx, DTYPE *Y, const int incy)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t y, x;
@@ -49,7 +48,8 @@ DTYPE __dot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy)
         return __armas_dot(&y, &x, conf);
     }
     DTYPE dval = __ZERO;
-    // if not same sign then iteration direction is different (so clever)
+
+    // if not same sign then iteration directions are different
     ix = incx < 0 ? N - 1 : 0;
     iy = incy < 0 ? N - 1 : 0;
     nx = ix == 0 ? 1 : -1;
@@ -61,20 +61,20 @@ DTYPE __dot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy)
     }
     return dval;
 }
-#endif
 
-#if defined(COMPAT) 
 #if defined(__dot)
 DTYPE __dot(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy)
 {
     return __dot_compat(*n, X, *incx, Y, *incy);
 }
 #endif
-#endif
 
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_dot)
-
+#if defined(__cblas_dot)
+DTYPE __cblas_dot(const int N, DTYPE *X, const int incx, DTYPE *Y, const int incy)
+{
+    return __dot_compat(N, X, incx, Y, incy);
+}
 #endif
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

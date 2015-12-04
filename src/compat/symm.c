@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__symm)
+#if defined(__symm)
 void __symm(char *side, char *uplo, int *m, int *n, DTYPE *alpha, DTYPE *A,
             int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
 {
@@ -51,12 +51,44 @@ void __symm(char *side, char *uplo, int *m, int *n, DTYPE *alpha, DTYPE *A,
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_symm)
-void __cblas_symm(int order, int side,  int uplo, int M, int N,
+#if defined(__cblas_symm)
+void __cblas_symm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,  
+                  const enum CBLAS_UPLO  uplo, int M, int N,
                   DTYPE alpha, DTYPE *A, int lda, DTYPE *B,  int ldb,
                   DTYPE beta, DTYPE *C, int ldc)
 {
-    printf("libarmas-compat.cblas_symm: not implemented\n");
+    armas_conf_t conf = *armas_conf_default();
+    __armas_dense_t Ca, Aa, Ba;
+    int flags = 0;
+
+    switch (order) {
+    case CblasRowMajor:
+        if (side == CblasRight) {
+            flags |= ARMAS_LEFT;
+            __armas_make(&Aa, N, N, lda, A);
+        } else {
+            flags |= ARMAS_RIGHT;
+            __armas_make(&Aa, M, M, lda, A);
+        }
+        __armas_make(&Ba, N, M, ldb, B);
+        __armas_make(&Ca, N, M, ldc, C);
+        flags |= uplo == CblasUpper ? ARMAS_LOWER : ARMAS_UPPER;
+        break;
+    case CblasColMajor:
+    default:
+        if (side == CblasRight) {
+            flags |= ARMAS_RIGHT;
+            __armas_make(&Aa, M, M, lda, A);
+        } else {
+            flags |= ARMAS_LEFT;
+            __armas_make(&Aa, N, N, lda, A);
+        }
+        __armas_make(&Ba, M, N, ldb, B);
+        __armas_make(&Ca, M, N, ldc, C);
+        flags |= uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
+        break;
+    }
+    __armas_mult_sym(&Ca, &Aa, &Ba, alpha, beta, flags, &conf);
 }
 
 #endif

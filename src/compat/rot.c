@@ -25,12 +25,12 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) || defined(COMPAT_CBLAS)
+
 static
 void __rot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE c, DTYPE s)
 {
     __armas_dense_t y, x;
-    int ix, iy, nx, ny, k, i;
+    int ix, iy, nx, ny, i;
     DTYPE x0, y0;
 
     ix = incx < 0 ? -incx : incx;
@@ -58,9 +58,7 @@ void __rot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE c, DTYPE 
         __armas_set_at_unsafe(&y, iy, y0);
     }
 }
-#endif  // rot
 
-#if defined(COMPAT)
 #if defined(__rot)
 void __rot(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy, DTYPE *c, DTYPE *s)
 {
@@ -75,7 +73,6 @@ void __rotg(DTYPE *sa, DTYPE *sb, DTYPE *c, DTYPE *s)
     __armas_gvcompute(c, s, &r, *sa, *sb);
 }
 #endif // rotg
-#endif // COMPAT
 
 #if defined(COMPAT_CBLAS) && defined(__cblas_rot)
 

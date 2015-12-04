@@ -23,9 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) || defined(COMPAT_CBLAS)
 static
-void __copy_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy)
+void __copy_compat(const int N, DTYPE *X, const int incx, DTYPE *Y, const int incy)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t y, x;
@@ -51,7 +50,7 @@ void __copy_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy)
         return;
     }
 
-    // if not same sign then iteration direction is different (so clever)
+    // if not same sign then iteration directions are different
     ix = incx < 0 ? N - 1 : 0;
     iy = incy < 0 ? N - 1 : 0;
     nx = ix == 0 ? 1 : -1;
@@ -60,18 +59,21 @@ void __copy_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy)
         __armas_set_at_unsafe(&y, iy,__armas_get_at_unsafe(&x, ix));
     }
 }
-#endif
 
-#if defined(COMPAT) && defined(__copy)
+#if defined(__copy)
 void __copy(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy)
 {
     __copy_compat(*n, X, *incx, Y, *incy);
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_copy)
-
+#if defined(__cblas_copy)
+void __copy(const int N, DTYPE *X, const int incx, DTYPE *Y, const int incy)
+{
+    __copy_compat(N, X, incx, Y, incy);
+}
 #endif
+
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 

@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_nrm2)
+#if defined(COMPAT) && defined(__armas_nrm2)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__nrm2)
+#if defined(__nrm2)
 DTYPE __nrm2(int *n, DTYPE *X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
@@ -38,7 +38,19 @@ DTYPE __nrm2(int *n, DTYPE *X, int *incx)
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_nrm2)
+#if defined(__cblas_nrm2)
+DTYPE __cblas_nrm2(int N, DTYPE *X, int incx)
+{
+    armas_conf_t *conf = armas_conf_default();
+    __armas_dense_t x;
+
+    if (incx == 1) {
+        __armas_make(&x, N, 1, N, X);
+    } else {
+        __armas_make(&x, 1, N, incx, X);
+    }
+    return __armas_nrm2(&x, conf);
+}
 
 #endif
 

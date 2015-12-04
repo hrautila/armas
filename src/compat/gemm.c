@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012-2014
+// Copyright (c) Harri Rautila, 2012-2015
 
 // This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__gemm)
+#if defined(__gemm)
 void __gemm(char *transa, char *transb, int *m, int *n, int *k, DTYPE *alpha, DTYPE *A,
             int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
 {
@@ -44,42 +44,54 @@ void __gemm(char *transa, char *transb, int *m, int *n, int *k, DTYPE *alpha, DT
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_gemm)
+#if defined(__cblas_gemm)
 void __cblas_gemm(int order, int transa,  int transb, int M, int N,
                   int K, DTYPE alpha, DTYPE *A, int lda, DTYPE *B,  int ldb,
                   DTYPE beta, DTYPE *C, int ldc)
 {
-    armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t c, a, b;
+    armas_conf_t conf = *armas_conf_default();
+    __armas_dense_t Ca, Aa, Ba;
     int flags = 0;
     
     switch (order) {
-    case CBLAS_ROW_MAJOR:
-        flags = ARMAS_TRANSA|ARMAS_TRANSB;
-        __armas_make(&c, *m, *n, *ldc, C);
-        __armas_make(&a, *m, *k, *lda, A);
-        __armas_make(&b, *k, *n, *ldb, B);
-        if (transa == CBLAS_TRANS)
-            flags |= ^ARMAS_TRANSB;
-        if (transb == CBLAS_TRANS)
-            flags |= ^ARMAS_TRANSA;
-        // C.T = (B.T)*(A.T)
-        __armas_mult(&c, &b, &a, *alpha, *beta, flags, conf);
-        break;
-
-    case CBLAS_COL_MAJOR:
-    default:
-        __armas_make(&c, *m, *n, *ldc, C);
-        __armas_make(&a, *m, *k, *lda, A);
-        __armas_make(&b, *k, *n, *ldb, B);
-        if (transa == CBLAS_TRANS)
+    case CblasColMajor:
+        if (transa == CblasTrans) {
             flags |= ARMAS_TRANSA;
-        if (transb == CBLAS_TRANS)
+            // error: K > lda
+            __armas_make(&Aa, K, M, lda, A);
+        } else {
+            // error: M > lda
+            __armas_make(&Aa, M, K, lda, A);
+        }
+        if (transb == CblasTrans) {
             flags |= ARMAS_TRANSB;
-        
-        __armas_mult(&c, &a, &b, *alpha, *beta, flags, conf);
+            __armas_make(&Ba, N, K, ldb, B);
+        } else {
+            __armas_make(&Ba, K, N, ldb, B);
+        }
+        __armas_make(&Ca, M, N, ldc, C);
         break;
+    case CblasRowMajor:
+        if (transa == CblasNoTrans) {
+            flags |= ARMAS_TRANSA;
+            // error: M > lda
+            __armas_make(&Aa, M, K, lda, A);
+        } else {
+            // error: K > lda
+            __armas_make(&Aa, K, M, lda, A);
+        }
+        if (transb == CblasNoTrans) {
+            flags |= ARMAS_TRANSB;
+            __armas_make(&Ba, K, N, ldb, B);
+        } else {
+            __armas_make(&Ba, N, K, ldb, B);
+        }
+        __armas_make(&Ca, N, M, ldc, C);
+        break;
+    default:
+        return;
     }
+    __armas_mult(&Ca, &Aa, &Ba, alpha, beta, flags, &conf);
 }
 #endif
 
