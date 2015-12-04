@@ -22,9 +22,17 @@ void copy_plain_mcpy1(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC
 static inline
 void copy_plain_abs(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC) {
   register int i, j;
-  for (j = 0; j < nC; j ++) {
+  for (j = 0; j < nC-3; j += 4) {
     for (i = 0; i < nR; i++) {
-      d[(j+0)+(i+0)*ldD] = __ABS(s[(i+0)+(j+0)*ldS]);
+      d[(i+0)+(j+0)*ldD] = __ABS(s[(i+0)+(j+0)*ldS]);
+      d[(i+0)+(j+1)*ldD] = __ABS(s[(i+0)+(j+1)*ldS]);
+      d[(i+0)+(j+2)*ldD] = __ABS(s[(i+0)+(j+2)*ldS]);
+      d[(i+0)+(j+3)*ldD] = __ABS(s[(i+0)+(j+3)*ldS]);
+    }
+  }
+  for (; j < nC; j++) {
+    for (i = 0; i < nR; i++) {
+      d[(i+0)+(j+0)*ldD] = __ABS(s[(i+0)+(j+0)*ldS]);
     }
   }
 }
@@ -313,7 +321,7 @@ void __CPBLK_TRANS(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
 
 static inline
 void __CPBLK(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
-  if (flags & (ARMAS_ABSA|ARMAS_ABSB)) {
+  if ((flags & (ARMAS_ABSA|ARMAS_ABSB)) != 0) {
     copy_plain_abs(d->md, d->step, s->md, s->step, nR, nC);
   } else {
     copy_plain_mcpy1(d->md, d->step, s->md, s->step, nR, nC);
@@ -342,7 +350,7 @@ void __CPBLK_TRIU_LFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int flags)
 
 static inline
 void __CPBLK_TRANS(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
-  if (flags & (ARMAS_CONJA|ARMAS_CONJB)) {
+  if (flags & (ARMAS_CTRANSA|ARMAS_CTRANSB|ARMAS_CONJA|ARMAS_CONJB)) {
     copy_trans_conj4x1(d->md, d->step, s->md, s->step, nR, nC);
   } else {
     copy_trans4x1(d->md, d->step, s->md, s->step, nR, nC);
@@ -351,7 +359,7 @@ void __CPBLK_TRANS(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
 
 static inline
 void __CPBLK(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
-  if (flags & (ARMAS_CONJA|ARMAS_CONJB)) {
+  if (flags & (ARMAS_CTRANSA|ARMAS_CTRANSB|ARMAS_CONJA|ARMAS_CONJB)) {
     copy_conj4x1(d->md, d->step, s->md, s->step, nR, nC);
   } else {
     copy_plain_mcpy1(d->md, d->step, s->md, s->step, nR, nC);
@@ -360,7 +368,7 @@ void __CPBLK(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
 
 static inline
 void __CPBLK_TRIL_UFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
-  if (flags & (ARMAS_CONJA|ARMAS_CONJB)) {
+  if (flags & (ARMAS_CTRANSA|ARMAS_CTRANSB|ARMAS_CONJA|ARMAS_CONJB)) {
   } else {
     colcpy_fill_up(d->md, d->step, s->md, s->step, nR, nC, (flags&ARMAS_UNIT));
   }
@@ -368,7 +376,7 @@ void __CPBLK_TRIL_UFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int flags)
 
 static inline
 void __CPBLK_TRIU_LFILL(mdata_t *d, const mdata_t *s, int nR, int nC, int flags) {
-  if (flags & (ARMAS_CONJA|ARMAS_CONJB)) {
+  if (flags & (ARMAS_CTRANSA|ARMAS_CTRANSB|ARMAS_CONJA|ARMAS_CONJB)) {
   } else {
     colcpy_fill_low(d->md, d->step, s->md, s->step, nR, nC, (flags&ARMAS_UNIT));
   }
