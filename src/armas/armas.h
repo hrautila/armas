@@ -37,9 +37,9 @@ enum armas_flags {
   ARMAS_TRANSA  = 0x80,         ///< operand A is transposed
   ARMAS_TRANSB  = 0x100,        ///< operand B is transposed
   ARMAS_TRANS   = ARMAS_TRANSA, ///< matrix operand is transposed
-  ARMAS_CONJA   = 0x200,        ///< operand A is conjugate transposed
-  ARMAS_CONJB   = 0x400,        ///< operand B is conjugate transposed
-  ARMAS_CONJ    = ARMAS_CONJA,  ///< matrix operand is conjugate transposed
+  ARMAS_CTRANSA = 0x200,        ///< operand A is conjugate transposed
+  ARMAS_CTRANSB = 0x400,        ///< operand B is conjugate transposed
+  ARMAS_CTRANS  = ARMAS_CTRANSA,///< matrix operand is conjugate transposed
   ARMAS_MULTQ   = 0x800,        ///< multiply with Q in bidiagonal 
   ARMAS_MULTP   = 0x1000,       ///< multiply with P in bidiagonal 
   ARMAS_WANTQ   = 0x2000,       ///< build the Q matrix in bidiagonal 
@@ -50,7 +50,10 @@ enum armas_flags {
   ARMAS_BACKWARD= 0x40000,      ///< apply backward
   ARMAS_ABSA    = 0x80000,      ///< compute with |A| 
   ARMAS_ABSB    = 0x100000,     ///< compute with |B|
-  ARMAS_ABS     = ARMAS_ABSA    ///< compute with |x|
+  ARMAS_ABS     = ARMAS_ABSA,   ///< compute with |x|
+  ARMAS_CONJA   = 0x200000,     ///< conjugate matrix A
+  ARMAS_CONJB   = 0x400000,     ///< conjugate matrix B
+  ARMAS_CONJ    = ARMAS_CONJA   ///< conjugate
 };
 
 enum armas_sort {

@@ -289,6 +289,8 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
  * > C = alpha*A*B.T + beta*C   if TRANSB\n
  * > C = alpha*A.T*B.T + beta*C if TRANSA and TRANSB
  *
+ * Uses |A| if flag ARMAS_ABSA set and |B| if flag ARMAS_ABSB is set.
+ *
  * @param[in,out] C result matrix
  * @param[in] A first operand matrix
  * @param[in] B second operand matrix
@@ -314,19 +316,19 @@ int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_den
     conf = armas_conf_default();
 
   // check consistency
-  switch (flags & (ARMAS_TRANSA|ARMAS_TRANSB|ARMAS_CONJA|ARMAS_CONJB)) {
+  switch (flags & (ARMAS_TRANSA|ARMAS_TRANSB|ARMAS_CTRANSA|ARMAS_CTRANSB)) {
   case ARMAS_TRANSA|ARMAS_TRANSB:
-  case ARMAS_TRANSA|ARMAS_CONJB:
-  case ARMAS_CONJA|ARMAS_CONJB:
-  case ARMAS_CONJA|ARMAS_TRANSB:
+  case ARMAS_TRANSA|ARMAS_CTRANSB:
+  case ARMAS_CTRANSA|ARMAS_CTRANSB:
+  case ARMAS_CTRANSA|ARMAS_TRANSB:
     ok = C->rows == A->cols && C->cols == B->rows && A->rows == B->cols;
     break;
   case ARMAS_TRANSA:
-  case ARMAS_CONJA:
+  case ARMAS_CTRANSA:
     ok = C->rows == A->cols && C->cols == B->cols && A->rows == B->rows;
     break;
   case ARMAS_TRANSB:
-  case ARMAS_CONJB:
+  case ARMAS_CTRANSB:
     ok = C->rows == A->rows && C->cols == B->rows && A->cols == B->cols;
     break;
   default:
@@ -352,7 +354,7 @@ int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_den
   mdata_t *_C = (mdata_t*)C;
   const mdata_t *_A = (const mdata_t *)A;
   const mdata_t *_B = (const mdata_t *)B;
-  int K = flags & (ARMAS_TRANSA|ARMAS_CONJA) ? A->rows : A->cols;
+  int K = flags & (ARMAS_TRANSA|ARMAS_CTRANSA) ? A->rows : A->cols;
 
   armas_cbuf_t *cbuf = armas_cbuf_get(conf);
 

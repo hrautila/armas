@@ -198,7 +198,7 @@ void __kernel_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mdata_t
     for (kp = 0; kp < P; kp += cache->KB) {
       nP = min(cache->KB, P-kp);
     
-      if (flags & (ARMAS_TRANSB|ARMAS_CONJB)) {
+      if (flags & (ARMAS_TRANSB|ARMAS_CTRANSB)) {
         __subblock(&Bc, B, jp, kp); 
         __CPBLK_TRANS(&cache->Bcpy, &Bc, nJ, nP, flags);
       } else {
@@ -208,7 +208,7 @@ void __kernel_colwise_inner_no_scale(mdata_t *C, const mdata_t *A, const mdata_t
 	  
       for (ip = 0; ip < nRE; ip += cache->MB) {
         nI = min(cache->MB, nRE-ip);
-        if (flags & (ARMAS_TRANSA|ARMAS_CONJA)) {
+        if (flags & (ARMAS_TRANSA|ARMAS_CTRANSA)) {
           __subblock(&Ac, A, kp, ip);
           __CPBLK(&cache->Acpy, &Ac, nP, nI, flags);
         } else {
@@ -251,7 +251,7 @@ void __kernel_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdata_t 
     for (kp = 0; kp < P; kp += KB) {
       nP = min(KB, P-kp);
 
-      if (flags & (ARMAS_TRANSB|ARMAS_CONJB)) {
+      if (flags & (ARMAS_TRANSB|ARMAS_CTRANSB)) {
         __subblock(&Bc, B, jp, kp);
         __CPBLK_TRANS(&cache->Bcpy, &Bc, nJ, nP, flags);
       } else {
@@ -261,7 +261,7 @@ void __kernel_colwise_inner_scale_c(mdata_t *C, const mdata_t *A, const mdata_t 
 	  
       for (ip = R; ip < E; ip += MB) {
         nI = min(MB, E-ip);
-        if (flags & (ARMAS_TRANSA|ARMAS_CONJA)) {
+        if (flags & (ARMAS_TRANSA|ARMAS_CTRANSA)) {
           __subblock(&Ac, A, kp, ip);
           __CPBLK(&cache->Acpy, &Ac, nP, nI, flags);
         } else {
