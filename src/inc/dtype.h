@@ -298,10 +298,10 @@ typedef float ABSTYPE;
 #define __armas_scale_plus    armas_s_scale_plus
 #define __armas_isvector      armas_s_isvector
 // element-wise functions
-#define __armas_add_elem      armas_s_add_elem
-#define __armas_sub_elem      armas_s_sub_elem
-#define __armas_mul_elem      armas_s_mul_elem
-#define __armas_div_elem      armas_s_div_elem
+#define __armas_add_elems     armas_s_add_elems
+#define __armas_sub_elems     armas_s_sub_elems
+#define __armas_mul_elems     armas_s_mul_elems
+#define __armas_div_elems     armas_s_div_elems
 #define __armas_apply         armas_s_apply
 #define __armas_apply2        armas_s_apply2
 
@@ -510,10 +510,10 @@ typedef double ABSTYPE;
 #define __armas_scale_plus    armas_d_scale_plus
 #define __armas_isvector      armas_d_isvector
 // element-wise functions
-#define __armas_add_elem      armas_d_add_elem
-#define __armas_sub_elem      armas_d_sub_elem
-#define __armas_mul_elem      armas_d_mul_elem
-#define __armas_div_elem      armas_d_div_elem
+#define __armas_add_elems     armas_d_add_elems
+#define __armas_sub_elems     armas_d_sub_elems
+#define __armas_mul_elems     armas_d_mul_elems
+#define __armas_div_elems     armas_d_div_elems
 #define __armas_apply         armas_d_apply
 #define __armas_apply2        armas_d_apply2
 
