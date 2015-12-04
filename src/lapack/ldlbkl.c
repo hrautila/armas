@@ -274,6 +274,7 @@ int __unblk_bkfactor_lower(__armas_dense_t *A, __armas_dense_t *W,
  * w(i) = l(i)d(i). Matrix WR will have updated values for next column.
  * Column WR(k) contains updated AR(c1) and WR(kp1) possible pivot row AR(r2).
  */
+static
 int __build_bkpivot_lower(__armas_dense_t *AL, __armas_dense_t *AR,
                           __armas_dense_t *WL, __armas_dense_t *WR,
                           int k, int *nr, int *np, armas_conf_t *conf)
