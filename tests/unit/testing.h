@@ -2,6 +2,7 @@
 #ifndef _UNIT_TESTING_H
 #define _UNIT_TESTING_H 1
 
+#include <math.h>
 #include <float.h>
 
 #if defined(FLOAT32)
@@ -9,6 +10,10 @@
 
 #define _EPS FLT_EPSILON
 #define _EPS2 FLT_EPSILON*FLT_EPSILON
+
+#ifndef __POW
+#define __POW powf
+#endif
 
 typedef armas_s_dense_t __Matrix ;
 typedef float __Dtype;
@@ -18,6 +23,13 @@ typedef float __Dtype;
 #define matrix_data            armas_s_data
 #define matrix_diag            armas_s_diag
 #define matrix_madd            armas_s_madd
+#define matrix_mscale          armas_s_mscale
+#define matrix_add_elem        armas_s_add_elem
+#define matrix_sub_elem        armas_s_sub_elem
+#define matrix_mul_elem        armas_s_mul_elem
+#define matrix_div_elem        armas_s_div_elem
+#define matrix_apply           armas_s_apply
+#define matrix_apply2          armas_s_apply2
 #define matrix_add             armas_s_add
 #define matrix_set_values      armas_s_set_values
 #define matrix_copy            armas_s_copy
@@ -45,6 +57,7 @@ typedef float __Dtype;
 #define matrix_update2_sym     armas_s_update2_sym
 #define matrix_transpose       armas_s_transpose
 #define matrix_release         armas_s_release
+#define matrix_pivot_rows      armas_s_pivot_rows
 #define matrix_mcopy           armas_s_mcopy
 #define matrix_mnorm           armas_s_mnorm
 #define matrix_col_as_row      armas_s_col_as_row
@@ -128,6 +141,9 @@ typedef float __Dtype;
 #define matrix_bdsvd_work      armas_s_bdsvd_work
 #define matrix_svd             armas_s_svd
 #define matrix_svd_work        armas_s_svd_work
+#define matrix_mult_rbt        armas_s_mult_rbt
+#define matrix_update2_rbt     armas_s_update2_rbt
+#define matrix_gen_rbt         armas_s_gen_rbt
 
 #else
 
@@ -138,11 +154,22 @@ typedef float __Dtype;
 typedef armas_d_dense_t __Matrix ;
 typedef double __Dtype;
 
+#ifndef __POW
+#define __POW pow
+#endif
+
 #define matrix_init            armas_d_init
 #define matrix_make            armas_d_make
 #define matrix_data            armas_d_data
 #define matrix_diag            armas_d_diag
+#define matrix_mscale          armas_d_mscale
 #define matrix_madd            armas_d_madd
+#define matrix_add_elems       armas_d_add_elems
+#define matrix_sub_elems       armas_d_sub_elems
+#define matrix_mul_elems       armas_d_mul_elems
+#define matrix_div_elems       armas_d_div_elems
+#define matrix_apply           armas_d_apply
+#define matrix_apply2          armas_d_apply2
 #define matrix_add             armas_d_add
 #define matrix_set_values      armas_d_set_values
 #define matrix_copy            armas_d_copy
@@ -153,6 +180,7 @@ typedef double __Dtype;
 #define matrix_get             armas_d_get
 #define matrix_set_at          armas_d_set_at
 #define matrix_get_at          armas_d_get_at
+#define matrix_pivot_rows      armas_d_pivot_rows
 #define matrix_submatrix       armas_d_submatrix
 #define matrix_subvector       armas_d_subvector
 #define matrix_mvmult          armas_d_mvmult
@@ -253,6 +281,9 @@ typedef double __Dtype;
 #define matrix_bdsvd_work      armas_d_bdsvd_work
 #define matrix_svd             armas_d_svd
 #define matrix_svd_work        armas_d_svd_work
+#define matrix_mult_rbt        armas_d_mult_rbt
+#define matrix_update2_rbt     armas_d_update2_rbt
+#define matrix_gen_rbt         armas_d_gen_rbt
 
 #endif
 #include "helper.h"
