@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__syr2k)
+#if defined(__syr2k)
 void __syr2k(char *uplo, char *trans, int *n, int *k, DTYPE *alpha, DTYPE *A,
              int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
 {
@@ -48,10 +48,40 @@ void __syr2k(char *uplo, char *trans, int *n, int *k, DTYPE *alpha, DTYPE *A,
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_syr2k)
-void __cblas_syr2k(int order, int uplo,  int trans, int N, int K, DTYPE alpha,
+#if defined(__cblas_syr2k)
+void __cblas_syr2k(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
+                   const enum CBLAS_TRANSPOSE trans, int N, int K, DTYPE alpha,
                    DTYPE *A, int lda, DTYPE *B, int ldb, DTYPE beta, DTYPE *C, int ldc)
 {
+    armas_conf_t conf = *armas_conf_default();
+    __armas_dense_t Ca, Aa, Ba;
+    int flags = 0;
+
+    switch (order) {
+    case CblasRowMajor:
+        flags |= uplo == CblasUpper ? ARMAS_LOWER : ARMAS_UPPER;
+        if (trans == CblasNoTrans) {
+            flags |= ARMAS_TRANS;
+            __armas_make(&Aa, K, N, lda, A);
+        } else {
+            __armas_make(&Aa, N, K, lda, A);
+        }
+        break;
+    case CblasColMajor:
+    default:
+        flags |= uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
+        if (trans == CblasTrans) {
+            flags |= ARMAS_TRANS;
+            __armas_make(&Aa, K, N, lda, A);
+            __armas_make(&Ba, K, N, ldb, B);
+        } else {
+            __armas_make(&Aa, N, K, lda, A);
+            __armas_make(&Ba, N, K, ldb, B);
+        }
+        break;
+    }
+    __armas_make(&Ca, N, N, ldc, C);
+    __armas_update2_sym(&Ca, &Aa, &Ba, alpha, beta, flags, conf);
 }
 
 #endif

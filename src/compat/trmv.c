@@ -23,12 +23,12 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__trmv)
+#if defined(__trmv)
 void __trmv(char *uplo, char *trans, char *diag, int *n, DTYPE *alpha, DTYPE *A,
             int *lda, DTYPE *X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t y, a, x;
+    __armas_dense_t a, x;
     int flags = 0;
 
     switch (toupper(*uplo)) {
@@ -55,10 +55,39 @@ void __trmv(char *uplo, char *trans, char *diag, int *n, DTYPE *alpha, DTYPE *A,
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_trmv)
-void __cblas_trmv(int order, int uplo, int trans,  int diag, int N,
+#if defined(__cblas_trmv)
+void __cblas_trmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo, 
+                  const enum CBLAS_TRANSPOSE trans,  const enum CBLAS_DIAG diag, int N,
                   DTYPE alpha, DTYPE *A, int lda, DTYPE *X,  int incx)
 {
+    armas_conf_t *conf = armas_conf_default();
+    __armas_dense_t Aa, x;
+    int flags = 0;
+
+    switch (order) {
+    case CblasRowMajor:
+        flags |= uplo == CblasUpper ? ARMAS_LOWER : ARMAS_UPPER;
+        if (trans == CblasNoTrans)
+            flags |= ARMAS_TRANS;
+        if (diag == CblasUnit)
+            flags |= ARMAS_UNIT;
+        break;
+    case CblasColMajor:
+    default:
+        flags |= uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
+        if (trans == CblasTrans)
+            flags |= ARMAS_TRANS;
+        if (diag == CblasUnit)
+            flags |= ARMAS_UNIT;
+        break;
+    }
+    if (incx == 1) {
+        __armas_make(&x, N, 1, N, X);
+    } else {
+        __armas_make(&x, 1, N, incx, X);
+    }
+    __armas_make(&Aa, N, N, lda, A);
+    __armas_mvmult_trm(&x, &Aa, alpha, flags, conf);
 }
 
 #endif
