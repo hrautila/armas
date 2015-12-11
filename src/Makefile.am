@@ -189,6 +189,8 @@ COMPAT = \
 	compat/scal.c \
 	compat/gemv.c \
 	compat/symv.c \
+	compat/trmv.c \
+	compat/trsv.c \
 	compat/ger.c \
 	compat/syr.c \
 	compat/syr2.c \
@@ -196,6 +198,8 @@ COMPAT = \
 	compat/symm.c \
 	compat/trmm.c \
 	compat/trsm.c \
+	compat/syrk.c \
+	compat/syr2k.c \
 	compat/potrf.c 
 
 ##noinst_LTLIBRARIES = libd.la libz.la libx.la libdext.la libdcompat.la
