@@ -51,10 +51,13 @@ static
 void __trmm_blk_upper(mdata_t *B, const mdata_t *A, const DTYPE alpha,
                       int flags, int N, int S, int L, cache_t *cache)
 {
-  register int i, j, nI, nJ;
+  register int i, j, nI, nJ, aflags = 0;
   mdata_t A0, A1, B0, B1;
   int NB = cache->NB;
 
+  if (flags & ARMAS_ABS)
+    aflags = ARMAS_ABSA|ARMAS_ABSB;
+  
   for (i = 0; i < N; i += NB) {
     nI = N - i < NB ? N - i : NB;
     // off diagonal part
@@ -70,7 +73,7 @@ void __trmm_blk_upper(mdata_t *B, const mdata_t *A, const DTYPE alpha,
       //__trmm_unb(&B1, &A1, alpha, flags, nI, 0, nJ);
       __trmm_blk_recursive(&B1, &A1, alpha, flags, nI, 0, nJ, cache);
       // update current part with rest of the A, B panels
-      __kernel_colwise_inner_no_scale(&B1, &A0, &B0, alpha, 0, N-i-nI, nJ, nI, cache);
+      __kernel_colwise_inner_no_scale(&B1, &A0, &B0, alpha, aflags, N-i-nI, nJ, nI, cache);
     }
   }
 }
@@ -90,9 +93,12 @@ static
 void __trmm_blk_u_trans(mdata_t *B, const mdata_t *A, DTYPE alpha,
                         int flags, int N, int S, int L,  cache_t *cache)
 {
-  register int i, j, nI, nJ;
+  register int i, j, nI, nJ, aflags = 0;
   mdata_t A0, A1, B0, B1;
   int NB = cache->NB;
+
+  if (flags & ARMAS_ABS)
+    aflags = ARMAS_ABSA|ARMAS_ABSB;
 
   for (i = N; i > 0; i -= NB) {
     nI = i < NB ? i : NB;
@@ -107,8 +113,8 @@ void __trmm_blk_u_trans(mdata_t *B, const mdata_t *A, DTYPE alpha,
       //__trmm_unb(&B1, &A1, alpha, flags, nI, 0, nJ);
       __trmm_blk_recursive(&B1, &A1, alpha, flags, nI, 0, nJ, cache);
       // update current part with rest of the A, B panels
-      __kernel_colwise_inner_no_scale(&B1, &A0, &B0, alpha, ARMAS_TRANSA, i-nI, nJ, nI,
-                                      cache); 
+      __kernel_colwise_inner_no_scale(&B1, &A0, &B0, alpha, ARMAS_TRANSA|aflags, 
+                                      i-nI, nJ, nI, cache); 
     }
   }
 }
@@ -130,9 +136,12 @@ static
 void __trmm_blk_lower(mdata_t *B, const mdata_t *A, DTYPE alpha,
                       int flags, int N, int S, int L,  cache_t *cache)
 {
-  register int i, j, nI, nJ;
+  register int i, j, nI, nJ, aflags = 0;
   mdata_t A0, A1, B0, B1;
   int NB = cache->NB;
+
+  if (flags & ARMAS_ABS)
+    aflags = ARMAS_ABSA|ARMAS_ABSB;
 
   for (i = N; i > 0; i -= NB) {
     nI = i < NB ? i : NB;
@@ -148,7 +157,7 @@ void __trmm_blk_lower(mdata_t *B, const mdata_t *A, DTYPE alpha,
       //__trmm_unb(&B1, &A1, alpha, flags, nI, 0, nJ);
       __trmm_blk_recursive(&B1, &A1, alpha, flags, nI, 0, nJ, cache);
       // update current part with rest of the A, B panels
-      __kernel_colwise_inner_no_scale(&B1, &A0, &B0, alpha, 0, i-nI, nJ, nI, cache); 
+      __kernel_colwise_inner_no_scale(&B1, &A0, &B0, alpha, aflags, i-nI, nJ, nI, cache); 
     }
   }
 }
@@ -169,9 +178,12 @@ static
 void __trmm_blk_l_trans(mdata_t *B, const mdata_t *A,
                         DTYPE alpha, int flags, int N, int S, int L,  cache_t *cache)
 {
-  register int i, j, nI, nJ;
+  register int i, j, nI, nJ, aflags = 0;
   mdata_t A0, A1, B0, B1;
   int NB = cache->NB;
+
+  if (flags & ARMAS_ABS)
+    aflags = ARMAS_ABSA|ARMAS_ABSB;
 
   for (i = 0; i < N; i += NB) {
     nI = N - i < NB ? N - i : NB;
@@ -189,7 +201,7 @@ void __trmm_blk_l_trans(mdata_t *B, const mdata_t *A,
       //__trmm_unb(&B0, &A0, alpha, flags, nI, 0, nJ);
       __trmm_blk_recursive(&B0, &A0, alpha, flags, nI, 0, nJ, cache);
       // update current part with rest of the A, B panels
-      __kernel_colwise_inner_no_scale(&B0, &A1, &B1, alpha, ARMAS_TRANSA,
+      __kernel_colwise_inner_no_scale(&B0, &A1, &B1, alpha, ARMAS_TRANSA|aflags,
                                       N-i-nI, nJ, nI, cache); 
     }
   }
@@ -212,9 +224,12 @@ static
 void __trmm_blk_r_upper(mdata_t *B, const mdata_t *A, DTYPE alpha,
                         int flags, int N, int S, int L, cache_t *cache)
 {
-  register int i, j, nI, nJ;
+  register int i, j, nI, nJ, aflags = 0;
   mdata_t A0, A1, B0, B1;
   int NB = cache->NB;
+
+  if (flags & ARMAS_ABS)
+    aflags = ARMAS_ABSA|ARMAS_ABSB;
 
   for (i = N; i > 0; i -= NB) {
     nI = i < NB ? i : NB;
@@ -231,7 +246,7 @@ void __trmm_blk_r_upper(mdata_t *B, const mdata_t *A, DTYPE alpha,
       //__trmm_unb(&B1, &A1, alpha, flags, nI, 0, nJ);
       __trmm_blk_recursive(&B1, &A1, alpha, flags, nI, 0, nJ, cache);
       // update current part with rest of the A, B panels
-      __kernel_colwise_inner_no_scale(&B1, &B0, &A0, alpha, 0, i-nI, nI, nJ, cache); 
+      __kernel_colwise_inner_no_scale(&B1, &B0, &A0, alpha, aflags, i-nI, nI, nJ, cache); 
     }
   }
 }
@@ -253,9 +268,12 @@ static
 void __trmm_blk_ru_trans(mdata_t *B, const mdata_t *A, DTYPE alpha,
                          int flags, int N, int S, int L, cache_t *cache)
 {
-  register int i, j, nI, nJ;
+  register int i, j, nI, nJ, aflags = 0;
   mdata_t A0, A1, B0, B1;
   int NB = cache->NB;
+
+  if (flags & ARMAS_ABS)
+    aflags = ARMAS_ABSA|ARMAS_ABSB;
 
   for (i = 0; i < N; i += NB) {
     nI = N - i < NB ? N - i : NB;
@@ -273,7 +291,7 @@ void __trmm_blk_ru_trans(mdata_t *B, const mdata_t *A, DTYPE alpha,
       __trmm_blk_recursive(&B0, &A0, alpha, flags, nI, 0, nJ, cache);
 
       // update current part with rest of the A, B panels
-      __kernel_colwise_inner_no_scale(&B0, &B1, &A1, alpha, ARMAS_TRANSB,
+      __kernel_colwise_inner_no_scale(&B0, &B1, &A1, alpha, ARMAS_TRANSB|aflags,
                                       N-i-nI, nI, nJ, cache); 
     }
   }
@@ -296,9 +314,12 @@ static
 void __trmm_blk_r_lower(mdata_t *B, const mdata_t *A, DTYPE alpha,
                         int flags, int N, int S, int L, cache_t *cache)
 {
-  register int i, j, nI, nJ;
+  register int i, j, nI, nJ, aflags = 0;
   mdata_t A0, A1, B0, B1;
   int NB = cache->NB;
+
+  if (flags & ARMAS_ABS)
+    aflags = ARMAS_ABSA|ARMAS_ABSB;
 
   for (i = 0; i < N; i += NB) {
     nI = N - i < NB ? N - i : NB;
@@ -315,7 +336,7 @@ void __trmm_blk_r_lower(mdata_t *B, const mdata_t *A, DTYPE alpha,
       //__trmm_unb(&B0, &A0, alpha, flags, nI, 0, nJ);
       __trmm_blk_recursive(&B0, &A0, alpha, flags, nI, 0, nJ, cache);
       // update current part with rest of the A, B panels
-      __kernel_colwise_inner_no_scale(&B0, &B1, &A1, alpha, 0,
+      __kernel_colwise_inner_no_scale(&B0, &B1, &A1, alpha, aflags,
                                       N-i-nI, nI, nJ, cache); 
     }
   }
@@ -338,9 +359,12 @@ static
 void __trmm_blk_rl_trans(mdata_t *B, const mdata_t *A, DTYPE alpha,
                          int flags, int N, int S, int L, cache_t *cache)
 {
-  register int i, j, nI, nJ;
+  register int i, j, nI, nJ, aflags = 0;
   mdata_t A0, A1, B0, B1;
   int NB = cache->NB;
+
+  if (flags & ARMAS_ABS)
+    aflags = ARMAS_ABSA|ARMAS_ABSB;
 
   for (i = N; i > 0; i -= NB) {
     nI = i < NB ? i : NB;
@@ -358,7 +382,7 @@ void __trmm_blk_rl_trans(mdata_t *B, const mdata_t *A, DTYPE alpha,
       //__trmm_unb(&B1, &A1, alpha, flags, nI, 0, nJ);
       __trmm_blk_recursive(&B1, &A1, alpha, flags, nI, 0, nJ, cache);
       // update current part with rest of the A, B panels
-      __kernel_colwise_inner_no_scale(&B1, &B0, &A0, alpha, ARMAS_TRANSB,
+      __kernel_colwise_inner_no_scale(&B1, &B0, &A0, alpha, ARMAS_TRANSB|aflags,
                                       i-nI, nI, nJ, cache); 
     }
   }

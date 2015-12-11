@@ -27,6 +27,7 @@
 
 #include "internal.h"
 #include "matrix.h"
+#include "linalg.h"
 #include "mvec_nosimd.h"
 
 #ifdef MIN_MVEC_SIZE
@@ -35,9 +36,11 @@
 #endif
 
 #if EXT_PRECISION && defined(__gemv_ext_unb)
-#define HAVE_EXT_PRECSION 1
+#define HAVE_EXT_PRECISION 1
 extern int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
                           DTYPE alpha, DTYPE beta, int flags, int nX, int nY);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -46,9 +49,8 @@ extern int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 // with S:L columns from A and correspoding elements from X.
 // length of X. With matrix-vector operation will avoid copying data.
 static
-void __gemv_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
-                DTYPE alpha, /*DTYPE beta,*/ int flags,
-                 int S, int L, int R, int E)
+void __gemv_unb_abs(mvec_t *Y, const mdata_t *A, const mvec_t *X,
+                    DTYPE alpha, int flags, int S, int L, int R, int E)
 {
   int i, j;
   register DTYPE *y;
@@ -61,6 +63,88 @@ void __gemv_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
     return;
   }
 
+  if ((flags & ARMAS_TRANSA) || (flags & ARMAS_TRANS)) {
+
+    x = &X->md[S*X->inc];
+    for (i = R; i < E-3; i += 4) {
+      y = &Y->md[i*Y->inc];
+      a0 = &A->md[(i+0)*A->step];
+      a1 = &A->md[(i+1)*A->step];
+      a2 = &A->md[(i+2)*A->step];
+      a3 = &A->md[(i+3)*A->step];
+      __vmult4dot_abs(y, Y->inc, a0, a1, a2, a3, x, X->inc, alpha, L-S);
+    }
+    if (i == E)
+      return;
+
+    switch (E-i) {
+    case 3:
+    case 2:
+      y = &Y->md[i*Y->inc];
+      a0 = &A->md[(i+0)*A->step];
+      a1 = &A->md[(i+1)*A->step];
+      __vmult2dot_abs(y, Y->inc, a0, a1, x, X->inc, alpha, L-S);
+      i += 2;
+    }
+    if (i < E) {
+      y = &Y->md[i*Y->inc];
+      a0 = &A->md[(i+0)*A->step];
+      __vmult1dot_abs(y, Y->inc, a0, x, X->inc, alpha, L-S);
+    }
+    return;
+  }
+
+  // Non-Transposed A here
+
+  y = &Y->md[R*Y->inc];
+  for (j = S; j < L-3; j += 4) {
+    x = &X->md[j*X->inc];
+    a0 = &A->md[R+(j+0)*A->step];
+    a1 = &A->md[R+(j+1)*A->step];
+    a2 = &A->md[R+(j+2)*A->step];
+    a3 = &A->md[R+(j+3)*A->step];
+    __vmult4axpy_abs(y, Y->inc, a0, a1, a2, a3, x, X->inc, alpha, E-R);
+  }
+
+  if (j == L)
+    return;
+
+  switch (L-j) {
+  case 3:
+  case 2:
+    x = &X->md[j*X->inc];
+    a0 = &A->md[R+(j+0)*A->step];
+    a1 = &A->md[R+(j+1)*A->step];
+    __vmult2axpy_abs(y, Y->inc, a0, a1, x, X->inc, alpha, E-R);
+    j += 2;
+  }
+  if (j < L) {
+    x = &X->md[j*X->inc];
+    a0 = &A->md[R+(j+0)*A->step];
+    __vmult1axpy_abs(y, Y->inc, a0, x, X->inc, alpha, E-R);
+  }
+}
+
+static
+void __gemv_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
+                DTYPE alpha, int flags, int S, int L, int R, int E)
+{
+  int i, j;
+  register DTYPE *y;
+  register const DTYPE *x;
+  register const DTYPE *a0, *a1, *a2, *a3;
+
+  // L - S is columns in A, elements in X
+  // E - R is rows in A, elements in Y 
+  if (L - S <= 0 || E - R <= 0) {
+    return;
+  }
+
+  if (flags & ARMAS_ABS) {
+    __gemv_unb_abs(Y, A, X, alpha, flags, S, L, R, E);
+    return;
+  }
+  
   if ((flags & ARMAS_TRANSA) || (flags & ARMAS_TRANS)) {
 
     x = &X->md[S*X->inc];
@@ -199,7 +283,9 @@ void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  * Computes
  *
  * > Y := alpha*A*X + beta*Y\n
- * > Y := alpha*A.T*X + beta*Y  if ARMAS_TRANS
+ * > Y := alpha*A.T*X + beta*Y      if ARMAS_TRANS\n
+ * > Y := alpha*|A|*|X|   + beta*Y  if ARMAS_ABS\n
+ * > Y := alpha*|A.T|*|X| + beta*Y  if ARMAS_ABS|ARMAS_TRANS
  *
  *  @param[in,out]  Y   target and source vector
  *  @param[in]      A   source operand matrix
@@ -253,9 +339,10 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enabled and requested
-
-  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                  __gemv_ext_unb(&y, &A0, &x, alpha, beta, flags, nx, ny));
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+    __gemv_ext_unb(&y, &A0, &x, alpha, beta, flags, nx, ny);
+    return 0;
+  }
 
   // single precision here
   if (beta != 1.0) {

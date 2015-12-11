@@ -29,6 +29,8 @@
 #if EXT_PRECISION && defined(__trmv_ext_unb)
 #define HAVE_EXT_PRECISION 1
 extern int __trmv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -53,6 +55,18 @@ void __trmv_unb_lu(DTYPE *X, const DTYPE *Ac, const DTYPE alpha, int unit,
     // update all previous b-values with current A column and current B
     __vmult1axpy(&X[0], incX, &Ac[i*ldA], &X[i*incX], 1, alpha, i);
     X[i*incX] = unit ? X[i*incX] : alpha*X[i*incX]*Ac[i+i*ldA];
+  }
+}
+
+static inline
+void __trmv_unb_lu_abs(DTYPE *X, const DTYPE *Ac, const DTYPE alpha, int unit,
+                       int incX, int ldA, int nRE)
+{
+  register int i;
+  for (i = 0; i < nRE; i++) {
+    // update all previous b-values with current A column and current B
+    __vmult1axpy_abs(&X[0], incX, &Ac[i*ldA], &X[i*incX], 1, alpha, i);
+    X[i*incX] = unit ? __ABS(X[i*incX]) : alpha*__ABS(X[i*incX])*__ABS(Ac[i+i*ldA]);
   }
 }
 
@@ -81,6 +95,20 @@ void __trmv_unb_lut(DTYPE *X, const DTYPE *Ac, const DTYPE alpha, int unit,
   }
 }
 
+static inline
+void __trmv_unb_lut_abs(DTYPE *X, const DTYPE *Ac, const DTYPE alpha, int unit,
+                        int incX, int ldA, int nRE)
+{
+  register int i;
+  DTYPE xtmp;
+
+  for (i = nRE; i > 0; i--) {
+    xtmp = unit ? alpha*__ABS(X[(i-1)*incX]) : 0.0;
+    __vmult1dot_abs(&xtmp, 1, &Ac[(i-1)*ldA], &X[0], incX, alpha, i-unit);
+    X[(i-1)*incX] = xtmp;
+  }
+}
+
 /*
  *  LEFT-LOWER
  *
@@ -102,6 +130,20 @@ void __trmv_unb_ll(DTYPE *X, const DTYPE *Ac, const DTYPE alpha, int unit,
     // update all b-values below with the current A column and current B
     __vmult1axpy(&X[i*incX], 1, &Ac[i+(i-1)*ldA], &X[(i-1)*incX], 1, alpha, nRE-i);
     X[(i-1)*incX] = alpha * (unit ? X[(i-1)*incX] : X[(i-1)*incX]*Ac[(i-1)+(i-1)*ldA]);
+  }
+}
+
+static inline
+void __trmv_unb_ll_abs(DTYPE *X, const DTYPE *Ac, const DTYPE alpha, int unit,
+                       int incX, int ldA, int nRE)
+{
+  register int i;
+
+  for (i = nRE; i > 0; i--) {
+    // update all b-values below with the current A column and current B
+    __vmult1axpy_abs(&X[i*incX], 1, &Ac[i+(i-1)*ldA], &X[(i-1)*incX], 1, alpha, nRE-i);
+    X[(i-1)*incX] = alpha * (unit ? __ABS(X[(i-1)*incX]) 
+                             : __ABS(X[(i-1)*incX])*__ABS(Ac[(i-1)+(i-1)*ldA]));
   }
 }
 
@@ -130,6 +172,20 @@ void __trmv_unb_llt(DTYPE *X, const DTYPE *Ac, const DTYPE alpha, int unit,
   }
 }
 
+static inline
+void __trmv_unb_llt_abs(DTYPE *X, const DTYPE *Ac, const DTYPE alpha, int unit,
+                        int incX, int ldA, int N)
+{
+  register int i;
+  DTYPE xtmp;
+
+  for (i = 0; i < N; i++) {
+    xtmp = unit ? alpha*__ABS(X[i*incX]) : 0.0;
+    __vmult1dot_abs(&xtmp, 1, &Ac[(i+unit)+i*ldA], &X[(i+unit)*incX], incX, alpha, N-unit-i);
+    X[i*incX] = xtmp;
+  }
+}
+
 
 
 static
@@ -138,17 +194,33 @@ void __trmv_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N)
   int unit = flags & ARMAS_UNIT ? 1 : 0;
   switch (flags & (ARMAS_TRANS|ARMAS_UPPER|ARMAS_LOWER)){
   case ARMAS_UPPER|ARMAS_TRANS:
-    __trmv_unb_lut(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    if (flags & ARMAS_ABS) {
+      __trmv_unb_lut_abs(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    } else {
+      __trmv_unb_lut(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    }
     break;
   case ARMAS_UPPER:
-    __trmv_unb_lu(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    if (flags & ARMAS_ABS) {
+      __trmv_unb_lu_abs(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    } else {
+      __trmv_unb_lu(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    }
     break;
   case ARMAS_LOWER|ARMAS_TRANS:
-    __trmv_unb_llt(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    if (flags & ARMAS_ABS) {
+      __trmv_unb_llt_abs(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    } else {
+      __trmv_unb_llt(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    }
     break;
   case ARMAS_LOWER:
   default:
-    __trmv_unb_ll(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    if (flags & ARMAS_ABS) {
+      __trmv_unb_ll_abs(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    } else {
+      __trmv_unb_ll(X->md, A->md, alpha, unit, X->inc, A->step, N);
+    }
     break;
   }
 }
@@ -244,7 +316,9 @@ void __trmv_recursive(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N
  * Computes
  *
  * > X = alpha*A*X\n
- * > X = alpha*A.T*X  if ARMAS_TRANS
+ * > X = alpha*A.T*X      if ARMAS_TRANS
+ * > X = alpha*|A|*|X|\n  if ARMAS_ABS
+ * > X = alpha*|A.T|*|X|  if ARMAS_ABS|ARMAS_TRANS
  *
  * where A is upper (lower) triangular matrix defined with flag bits ARMAS_UPPER
  * (ARMAS_LOWER).
@@ -287,8 +361,12 @@ int __armas_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A,
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enabled and requested
-  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                  __trmv_ext_unb(&x, &A0, alpha, flags, nx));
+  if (HAVE_EXT_PRECISION && (conf->optflags&ARMAS_OEXTPREC)) {
+    // trust that compiler dead-code pruning removes this block if extended
+    // precision is not enabled
+    __trmv_ext_unb(&x, &A0, alpha, flags, nx);
+    return 0;
+  }
 
   // normal precision here
   switch (conf->optflags) {

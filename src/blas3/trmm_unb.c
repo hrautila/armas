@@ -44,7 +44,7 @@
  *
  *    --> work it forwards as b00, b01 not need for later elements; AXPY
  */
-static void
+static inline void
 __trmm_unb_upper(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
                       int ldB, int ldA, int nRE, int nC)
 {
@@ -60,6 +60,23 @@ __trmm_unb_upper(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
   }
 }
 
+static inline void
+__trmm_unb_upper_abs(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
+                     int ldB, int ldA, int nRE, int nC)
+{
+  // Y is 
+  register int i, j;
+
+  for (i = 0; i < nRE; i++) {
+    // update all previous B-values with current A column and current B
+    for (j = 0; j < nC; j++) {
+      __vmult1axpy_abs(&Bc[j*ldB], 1, &Ac[i*ldA], &Bc[i+j*ldB], 1, alpha, i);
+      Bc[i+j*ldB] = unit ? __ABS(Bc[i+j*ldB]) : alpha*__ABS(Bc[i+j*ldB])*__ABS(Ac[i+i*ldA]);
+    }
+  }
+}
+
+
 /*
  *  LEFT-UPPER-TRANS
  *
@@ -73,9 +90,9 @@ __trmm_unb_upper(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
  *
  *  --> work it backwards with DOT products 
  */
-static void
+static inline void
 __trmm_unb_u_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
-                        int ldB, int ldA, int nRE, int nC)
+                   int ldB, int ldA, int nRE, int nC)
 {
   register int i, j;
   DTYPE xtmp;
@@ -84,6 +101,21 @@ __trmm_unb_u_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
     for (j = 0; j < nC; j++) {
       xtmp = unit ? alpha*Bc[(i-1)+j*ldB] : 0.0;
       __vmult1dot(&xtmp, 1, &Ac[(i-1)*ldA], &Bc[j*ldB], 1, alpha, i-unit);
+      Bc[(i-1)+j*ldB] = xtmp;
+    }
+  }
+}
+static inline void
+__trmm_unb_u_trans_abs(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
+                       int ldB, int ldA, int nRE, int nC)
+{
+  register int i, j;
+  DTYPE xtmp;
+
+  for (i = nRE; i > 0; i--) {
+    for (j = 0; j < nC; j++) {
+      xtmp = unit ? alpha*__ABS(Bc[(i-1)+j*ldB]) : 0.0;
+      __vmult1dot_abs(&xtmp, 1, &Ac[(i-1)*ldA], &Bc[j*ldB], 1, alpha, i-unit);
       Bc[(i-1)+j*ldB] = xtmp;
     }
   }
@@ -102,7 +134,7 @@ __trmm_unb_u_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
  *
  *  --> work it backwards as b20 is not needed for b10, ...
  */
-static void
+static inline void
 __trmm_unb_lower(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
                  int ldB, int ldA, int nRE, int nC)
 {
@@ -113,6 +145,22 @@ __trmm_unb_lower(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
       // update all b-values below with the current A column and current B
       __vmult1axpy(&Bc[i+j*ldB], 1, &Ac[i+(i-1)*ldA], &Bc[(i-1)+j*ldB], 1, alpha, nRE-i);
       Bc[(i-1)+j*ldB] = alpha * (unit ? Bc[(i-1)+j*ldB] : Bc[(i-1)+j*ldB]*Ac[(i-1)+(i-1)*ldA]);
+    }
+  }
+}
+
+static inline void
+__trmm_unb_lower_abs(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
+                     int ldB, int ldA, int nRE, int nC)
+{
+  register int i, j;
+
+  for (i = nRE; i > 0; i--) {
+    for (j = 0; j < nC; j++) {
+      // update all b-values below with the current A column and current B
+      __vmult1axpy_abs(&Bc[i+j*ldB], 1, &Ac[i+(i-1)*ldA], &Bc[(i-1)+j*ldB], 1, alpha, nRE-i);
+      Bc[(i-1)+j*ldB] = alpha * (unit ? __ABS(Bc[(i-1)+j*ldB]) 
+                                 : __ABS(Bc[(i-1)+j*ldB])*__ABS(Ac[(i-1)+(i-1)*ldA]));
     }
   }
 }
@@ -130,9 +178,9 @@ __trmm_unb_lower(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
  *
  *  --> work it forwards as b0 is not needed for b1, ...
  */
-static void
+static inline void
 __trmm_unb_l_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
-                        int ldB, int ldA, int nRE, int nC)
+                   int ldB, int ldA, int nRE, int nC)
 {
   register int i, j;
   DTYPE xtmp;
@@ -141,6 +189,21 @@ __trmm_unb_l_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
     for (j = 0; j < nC; j++) {
       xtmp = unit ? alpha*Bc[i+j*ldB] : 0.0;
       __vmult1dot(&xtmp, 1, &Ac[(i+unit)+i*ldA], &Bc[(i+unit)+j*ldB], 1, alpha, nRE-unit-i);
+      Bc[i+j*ldB] = xtmp;
+    }
+  }
+}
+static inline void
+__trmm_unb_l_trans_abs(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
+                       int ldB, int ldA, int nRE, int nC)
+{
+  register int i, j;
+  DTYPE xtmp;
+
+  for (i = 0; i < nRE; i++) {
+    for (j = 0; j < nC; j++) {
+      xtmp = unit ? alpha*__ABS(Bc[i+j*ldB]) : 0.0;
+      __vmult1dot_abs(&xtmp, 1, &Ac[(i+unit)+i*ldA], &Bc[(i+unit)+j*ldB], 1, alpha, nRE-unit-i);
       Bc[i+j*ldB] = xtmp;
     }
   }
@@ -160,9 +223,9 @@ __trmm_unb_l_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
  *    
  *    --> work it backwards as b12 & b02 are not needed for b11, b01, ...
  */
-static void
+static inline void
 __trmm_unb_r_upper(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
-                        int ldB, int ldA, int nRE, int nC)
+                   int ldB, int ldA, int nRE, int nC)
 {
   // Y is 
   register int i, j;
@@ -173,6 +236,24 @@ __trmm_unb_r_upper(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
       btmp = unit ? alpha*Bc[i+(j-1)*ldB] : 0.0;
       // calculate dot-product following Ar column and Br row
       __vmult1dot(&btmp, 1, &Ac[(j-1)*ldA], &Bc[i], ldB, alpha, j-unit);
+      Bc[i+(j-1)*ldB] = btmp;
+    }
+  }
+}
+
+static inline void
+__trmm_unb_r_upper_abs(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
+                       int ldB, int ldA, int nRE, int nC)
+{
+  // Y is 
+  register int i, j;
+  DTYPE btmp;
+
+  for (j = nC; j > 0; j--) {
+    for (i = 0; i < nRE; i++) {
+      btmp = unit ? alpha*__ABS(Bc[i+(j-1)*ldB]) : 0.0;
+      // calculate dot-product following Ar column and Br row
+      __vmult1dot_abs(&btmp, 1, &Ac[(j-1)*ldA], &Bc[i], ldB, alpha, j-unit);
       Bc[i+(j-1)*ldB] = btmp;
     }
   }
@@ -191,9 +272,9 @@ __trmm_unb_r_upper(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
  *    
  *    --> work it forward as b00 are not needed for b01, b02, ... with DOT
  */
-static void
+static inline void
 __trmm_unb_r_lower(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
-                         int ldB, int ldA, int nRE, int nC)
+                   int ldB, int ldA, int nRE, int nC)
 {
   register int i, j;
   DTYPE btmp;
@@ -204,6 +285,22 @@ __trmm_unb_r_lower(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
       // calculate dot-product following Ar column and Br row
       __vmult1dot(&btmp, 1, &Ac[(j+unit)+j*ldA], &Bc[i+(j+unit)*ldB], ldB, alpha, nC-j-unit);
       Bc[i+j*ldB] = unit ? btmp + alpha*Bc[i+j*ldB] : btmp;
+    }
+  }
+}
+static inline void
+__trmm_unb_r_lower_abs(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
+                       int ldB, int ldA, int nRE, int nC)
+{
+  register int i, j;
+  DTYPE btmp;
+
+  for (j = 0; j < nC; j++) {
+    for (i = 0; i < nRE; i++) {
+      btmp = 0.0;
+      // calculate dot-product following Ar column and Br row
+      __vmult1dot_abs(&btmp, 1, &Ac[(j+unit)+j*ldA], &Bc[i+(j+unit)*ldB], ldB, alpha, nC-j-unit);
+      Bc[i+j*ldB] = unit ? btmp + alpha*__ABS(Bc[i+j*ldB]) : btmp;
     }
   }
 }
@@ -219,9 +316,9 @@ __trmm_unb_r_lower(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
  *    b1 =           b'1*a11 + b'2*a12
  *    b2 =                     b'2*a22
  */
-static void
+static inline void
 __trmm_unb_ru_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
-                           int ldB, int ldA, int nRE, int nC)
+                    int ldB, int ldA, int nRE, int nC)
 {
   register int i, j;
 
@@ -231,6 +328,23 @@ __trmm_unb_ru_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
       __vmult1axpy(&Bc[i], ldB, &Ac[j*ldA], &Bc[i+j*ldB], ldB, alpha, j);
       // update current element on B rows
       Bc[i+j*ldB] *= unit ? alpha : alpha *Ac[j+j*ldA];
+    }
+  }
+}
+static inline void
+__trmm_unb_ru_trans_abs(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
+                        int ldB, int ldA, int nRE, int nC)
+{
+  register int i, j;
+
+  for (j = 0; j < nC; j++) {
+    for (i = 0; i < nRE; i++) {
+      // update preceeding elemnts
+      __vmult1axpy_abs(&Bc[i], ldB, &Ac[j*ldA], &Bc[i+j*ldB], ldB, alpha, j);
+      // update current element on B rows
+      Bc[i+j*ldB] = unit 
+        ? alpha*__ABS(Bc[i+j*ldB]) 
+        : alpha *__ABS(Ac[j+j*ldA])*__ABS(Bc[i+j*ldB]);
     }
   }
 }
@@ -246,9 +360,9 @@ __trmm_unb_ru_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
  *    b2 = b'0*a20 + b'1*a21 + b'2*a22
  *    
  */
-static void
+static inline void
 __trmm_unb_rl_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
-                         int ldB, int ldA, int nRE, int nC)
+                    int ldB, int ldA, int nRE, int nC)
 {
   register int i, j;
 
@@ -258,6 +372,23 @@ __trmm_unb_rl_trans(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
       __vmult1axpy(&Bc[i+j*ldB], ldB, &Ac[j+(j-1)*ldA], &Bc[i+(j-1)*ldB], ldB, alpha, nC-j);
       // update current element on B rows
       Bc[i+(j-1)*ldB] *= unit ? alpha : alpha*Ac[(j-1)+(j-1)*ldA];
+    }
+  }
+}
+static inline void
+__trmm_unb_rl_trans_abs(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int unit,
+                        int ldB, int ldA, int nRE, int nC)
+{
+  register int i, j;
+
+  for (j = nC; j > 0; j--) {
+    for (i = 0; i < nRE; i++) {
+      // update following elements on B row
+      __vmult1axpy_abs(&Bc[i+j*ldB], ldB, &Ac[j+(j-1)*ldA], &Bc[i+(j-1)*ldB], ldB, alpha, nC-j);
+      // update current element on B rows
+      Bc[i+(j-1)*ldB] = unit 
+        ? alpha*__ABS(Bc[i+(j-1)*ldB]) 
+        : alpha*__ABS(Ac[(j-1)+(j-1)*ldA])*__ABS(Bc[i+(j-1)*ldB]);
     }
   }
 }
@@ -275,15 +406,27 @@ void __trmm_unb(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int N, int
     if (flags & ARMAS_UPPER) {
       if (flags & ARMAS_TRANSA) {
         // axpy_left_fwd
-        __trmm_unb_ru_trans(Bc, A->md, alpha, unit, B->step, A->step, E-S, N);
+        if (flags & ARMAS_ABS) {
+          __trmm_unb_ru_trans_abs(Bc, A->md, alpha, unit, B->step, A->step, E-S, N);
+        } else {
+          __trmm_unb_ru_trans(Bc, A->md, alpha, unit, B->step, A->step, E-S, N);
+        }
       } else {
         // dot_bleft_backward
-        __trmm_unb_r_upper(Bc, A->md, alpha, unit, B->step, A->step, E-S, N);
+        if (flags & ARMAS_ABS) {
+          __trmm_unb_r_upper_abs(Bc, A->md, alpha, unit, B->step, A->step, E-S, N);
+        } else {
+          __trmm_unb_r_upper(Bc, A->md, alpha, unit, B->step, A->step, E-S, N);
+        }
       }
     } else {
       if (flags & ARMAS_TRANSA) {
         // axpy_bleft_backwd
-        __trmm_unb_rl_trans(Bc, A->md, alpha, unit, B->step, A->step, E-S, N);
+        if (flags & ARMAS_ABS) {
+          __trmm_unb_rl_trans_abs(Bc, A->md, alpha, unit, B->step, A->step, E-S, N);
+        } else {
+          __trmm_unb_rl_trans(Bc, A->md, alpha, unit, B->step, A->step, E-S, N);
+        }
       } else {
         // dot_bleft_fwd
         __trmm_unb_r_lower(Bc, A->md, alpha, unit, B->step, A->step, E-S, N);
@@ -295,18 +438,34 @@ void __trmm_unb(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int N, int
     if (flags & ARMAS_UPPER) {
       if (flags & ARMAS_TRANSA) {
         // dot_backward
-        __trmm_unb_u_trans(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        if (flags & ARMAS_ABS) {
+          __trmm_unb_u_trans_abs(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        } else {
+          __trmm_unb_u_trans(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        }
       } else {
         // axpy_forward
-        __trmm_unb_upper(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        if (flags & ARMAS_ABS) {
+          __trmm_unb_upper_abs(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        } else {
+          __trmm_unb_upper(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        }
       }
     } else {
       if (flags & ARMAS_TRANSA) {
         // dot_forward
-        __trmm_unb_l_trans(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        if (flags & ARMAS_ABS) {
+          __trmm_unb_l_trans_abs(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        } else {
+          __trmm_unb_l_trans(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        }
       } else {
         // axpy_backward
-        __trmm_unb_lower(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        if (flags & ARMAS_ABS) {
+          __trmm_unb_lower_abs(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        } else {
+          __trmm_unb_lower(Bc, A->md, alpha, unit, B->step, A->step, N, E-S);
+        }
       }
     }
   }

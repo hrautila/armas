@@ -35,12 +35,64 @@
 #include "matrix.h"
 #include "eft.h"
 
+static
+void __gemv_ext_unb_abs(mvec_t *Y, const mdata_t *A, const mvec_t *X,
+                        DTYPE alpha, DTYPE beta, int flags, int nX, int nY)
+{
+    int i, j;
+    DTYPE y0, c0, s0, x0, p0;
+
+    // A transposed
+    if (flags & ARMAS_TRANS) {
+        // here were proceed matrix A column wise and elements are close to each other
+        for (i = 0; i < nY; i++) {
+            y0 = 0.0; s0 = 0.0; 
+            for (j = 0; j < nX; j++) {
+                twoprod(&x0, &p0, __ABS(A->md[j+(i+0)*A->step]), __ABS(X->md[j*X->inc]));
+                twosum(&y0, &c0, y0, x0);
+                s0 += c0 + p0;
+            }
+            twoprod(&y0, &p0, y0+s0, alpha);
+            // here: y_i + p_i = alpha*sum(A_i,j*x_j)
+            twoprod(&x0, &s0, Y->md[(i+0)*Y->inc], beta);
+            // here: x_i + s_i = beta*y_i
+            p0 += s0;
+            twosum(&y0, &s0, x0, y0);
+            Y->md[(i+0)*Y->inc] = y0 + p0;
+        }
+        return 0;
+    }
+
+    // A not transposed; here were proceed matrix A rowwise and elements are at distance
+    for (i = 0; i < nY; i++) {
+        y0 = 0.0; s0 = 0.0; 
+        for (j = 0; j < nX; j++) {
+            twoprod(&x0, &p0, __ABS(A->md[(i+0)+j*A->step]), __ABS(X->md[j*X->inc]));
+            twosum(&y0, &c0, y0, x0);
+            s0 += c0 + p0;
+        }
+        twoprod(&y0, &p0, y0+s0, alpha);
+        // here: y_i + p_i = alpha*sum(A_i,j*x_j)
+        twoprod(&x0, &s0, Y->md[(i+0)*Y->inc], beta);
+        // here: x_i + s_i = beta*y_i
+        p0 += s0;
+        twosum(&y0, &s0, x0, y0);
+        Y->md[(i+0)*Y->inc] = y0 + p0;
+    }
+    return 0;
+}
+
 int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
                   DTYPE alpha, DTYPE beta, int flags, int nX, int nY)
 {
     int i, j;
     DTYPE y0, c0, s0, x0, p0;
 
+    if (flags & ARMAS_ABS) {
+        __gemv_ext_unb_abs(Y, A, X, alpha, beta, flags, nX, nY);
+        return 0;
+    }
+    
     // A transposed
     if (flags & ARMAS_TRANS) {
         // here were proceed matrix A column wise and elements are close to each other
