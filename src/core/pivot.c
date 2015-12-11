@@ -102,6 +102,22 @@ void __apply_row_pivots(__armas_dense_t *A, armas_pivot_t *P,
   }
 }
 
+/**
+ * \brief Apply row pivots in P to matrix A forward or backward.
+ *
+ * \ingroup lapackaux
+ */
+int __armas_pivot_rows(__armas_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf)
+{
+  if (A->rows < P->npivots)
+    return -1;
+  if (!conf)
+    conf = armas_conf_default();
+
+  __apply_row_pivots(A, P, flags, conf);
+  return 0;
+}
+
 #if 0
 void __apply_col_pivots(__armas_dense_t *A, armas_pivot_t *P,
                         int dir, armas_conf_t *conf)

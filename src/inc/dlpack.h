@@ -39,6 +39,8 @@
 #define __pivot_index             __s_pivot_index
 // marker for above function
 #define __lapack_pivots  1
+// public pivot functions
+#define __armas_pivot_rows      armas_s_pivot_rows
 
 // Additional
 #define __armas_qdroots         armas_s_qdroots
@@ -236,6 +238,9 @@
 #define __pivot_index             __d_pivot_index
 // marker for above function
 #define __lapack_pivots  1
+// public pivot functions
+#define __armas_pivot_rows      armas_d_pivot_rows
+
 
 // Bidiagonal reduction
 #define __armas_bdreduce         armas_d_bdreduce
