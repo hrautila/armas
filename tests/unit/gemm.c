@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <time.h>
 
+#if 0
 #if defined(FLOAT32)
 #include <armas/smatrix.h>
 typedef armas_s_dense_t __Matrix ;
@@ -29,6 +30,9 @@ typedef double __Dtype;
 
 #endif
 #include "helper.h"
+#endif
+#include "testing.h"
+
 /*
  * A = [M,K], B = [K,N] --> C = [M,N]
  *
@@ -74,6 +78,8 @@ int main(int argc, char **argv)
     
   if (optind < argc) {
     N = atoi(argv[optind]);
+    K = N;
+    M = N;
   }
 
   conf = *armas_conf_default();
@@ -122,7 +128,7 @@ int main(int argc, char **argv)
   n0 = rel_error((__Dtype *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
 
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-  printf("%6s: gemm(A, B.T)   == transpose(gemm(B, A.T))\n", PASS(ok));
+  printf("%6s: gemm(A, B.T) == transpose(gemm(B, A.T))\n", PASS(ok));
   if (verbose > 0) {
     printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
   }
@@ -144,11 +150,30 @@ int main(int argc, char **argv)
   n0 = rel_error((__Dtype *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
 
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-  printf("%6s: gemm(A.T, B)   == transpose(gemm(B.T, A))\n", PASS(ok));
+  printf("%6s: gemm(A.T, B) == transpose(gemm(B.T, A))\n", PASS(ok));
   if (verbose > 0) {
     printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
   }
   fails += 1 - ok;
+
+  // test 1: M != N != K
+  matrix_init(&A, M, K);
+  matrix_init(&B, K, N);
+  matrix_set_values(&A, unitrand, ARMAS_NULL);
+  matrix_set_values(&B, unitrand, ARMAS_NULL);
+
+  // C = A*B; C.T = B.T*A.T
+  matrix_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
+  matrix_mscale(&A, -1.0, 0);
+  matrix_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB|ARMAS_ABSB, &conf);
+  matrix_transpose(&T, &Ct);
+
+  n0 = rel_error(&n1, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  printf("%6s: gemm(A, B)   == transpose(gemm(B.T, |-A.T|))\n", PASS(ok));
+  if (verbose > 0) {
+    printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
+  }
 
   exit(fails);
 }
