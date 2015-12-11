@@ -10,8 +10,8 @@
 #define __ARMAS_PARTITION_H 1
 
 
-#ifndef __INLINE
-#define __INLINE extern inline
+#ifndef __ARMAS_INLINE
+#define __ARMAS_INLINE extern inline
 #endif
 
 
@@ -24,7 +24,7 @@
  *
  * Parameter nb is initial block size for AT (PTOP) or AB (PBOTTOM).  
  */
-__INLINE
+__ARMAS_INLINE
 void __partition_2x1(__armas_dense_t *AT, __armas_dense_t *AB,
                      const __armas_dense_t *A, int nb, int side)
 {
@@ -53,7 +53,7 @@ void __partition_2x1(__armas_dense_t *AT, __armas_dense_t *AB,
  *                   A2                     A2
  *
  */
-__INLINE
+__ARMAS_INLINE
 void __repartition_2x1to3x1(__armas_dense_t *AT, __armas_dense_t *A0,
                             __armas_dense_t *A1, __armas_dense_t *A2,
                             const __armas_dense_t *A, int nb, int direction)
@@ -87,7 +87,7 @@ void __repartition_2x1to3x1(__armas_dense_t *AT, __armas_dense_t *A0,
  *           AB      --            AB       A1
  *                   A2                     A2
  */
-__INLINE
+__ARMAS_INLINE
 void __continue_3x1to2x1(__armas_dense_t *AT, __armas_dense_t *AB,
                          __armas_dense_t *A0, __armas_dense_t *A1,
                          const __armas_dense_t *A, int direction)
@@ -114,7 +114,7 @@ void __continue_3x1to2x1(__armas_dense_t *AT, __armas_dense_t *AB,
  *
  * Parameter nb is initial block size for AL (PLEFT) or AR (PRIGHT).  
  */
-__INLINE
+__ARMAS_INLINE
 void __partition_1x2(__armas_dense_t *AL, __armas_dense_t *AR,
                      const __armas_dense_t *A, int nb, int side)
 {
@@ -142,7 +142,7 @@ void __partition_1x2(__armas_dense_t *AL, __armas_dense_t *AR,
  *
  * Parameter As is left or right block of original 1x2 block.
  */
-__INLINE
+__ARMAS_INLINE
 void __repartition_1x2to1x3(__armas_dense_t *AL, __armas_dense_t *A0,
                             __armas_dense_t *A1, __armas_dense_t *A2,
                             const __armas_dense_t *A, int nb, int direction)
@@ -175,7 +175,7 @@ void __repartition_1x2to1x3(__armas_dense_t *AL, __armas_dense_t *A0,
  * pLEFT:  AL | AR  <--  A0 | A1 A2 
  *
  */
-__INLINE
+__ARMAS_INLINE
 void __continue_1x3to1x2(__armas_dense_t *AL, __armas_dense_t *AR,
                          __armas_dense_t *A0, __armas_dense_t *A1,
                          const __armas_dense_t *A, int direction) 
@@ -204,7 +204,7 @@ void __continue_1x3to1x2(__armas_dense_t *AL, __armas_dense_t *AR,
  * Parameter nb is initial block size for ATL in column direction and mb in row direction.
  * ATR and ABL may be nil pointers.
  */
-__INLINE
+__ARMAS_INLINE
 void __partition_2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
                      __armas_dense_t *ABL, __armas_dense_t *ABR,
                      const __armas_dense_t *A, int mb, int nb, int side)
@@ -242,7 +242,7 @@ void __partition_2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
  * ATR, ABL, ABR implicitely defined by ATL and A.
  * It is valid to have either the strictly upper or lower submatrices as nil values.
  */
-__INLINE
+__ARMAS_INLINE
 void __repartition_2x2to3x3(__armas_dense_t *ATL,
                             __armas_dense_t *A00, __armas_dense_t *A01, __armas_dense_t *A02,
                             __armas_dense_t *A10, __armas_dense_t *A11, __armas_dense_t *A12,
@@ -312,7 +312,7 @@ void __repartition_2x2to3x3(__armas_dense_t *ATL,
  *
  * New division of ATL, ATR, ABL, ABR defined by diagonal entries A00, A11, A22
  */
-__INLINE
+__ARMAS_INLINE
 void __continue_3x3to2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
                          __armas_dense_t *ABL, __armas_dense_t *ABR,
                          __armas_dense_t *A00, __armas_dense_t *A11, __armas_dense_t *A22,
@@ -350,7 +350,7 @@ void __continue_3x3to2x2(__armas_dense_t *ATL, __armas_dense_t *ATR,
  * ABKL <-- --  
  *          AB  
  */
-__INLINE
+__ARMAS_INLINE
 void __merge2x1(__armas_dense_t *ABLK, __armas_dense_t *AT, __armas_dense_t *AB)
 {
   if (__armas_size(AT) == 0 && __armas_size(AB) == 0) {
@@ -371,7 +371,7 @@ void __merge2x1(__armas_dense_t *ABLK, __armas_dense_t *AT, __armas_dense_t *AB)
  * 
  * ABLK <--  AL | AR  
  */
-__INLINE
+__ARMAS_INLINE
 void __merge1x2(__armas_dense_t *ABLK, __armas_dense_t *AL, __armas_dense_t *AR)
 {
   if (__armas_size(AL) == 0 && __armas_size(AR) == 0) {

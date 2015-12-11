@@ -1,22 +1,22 @@
 
 // Copyright (c) Harri Rautila, 2012-2014
 
-// This file is part of github.com/hrautila/matops package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 
 
-#ifndef __PIVOT_H
-#define __PIVOT_H 1
+#ifndef __ARMAS_PIVOT_H
+#define __ARMAS_PIVOT_H 1
 
 #include <armas/armas.h>
 
-#ifndef __INLINE
-#define __INLINE extern inline
+#ifndef __ARMAS_INLINE
+#define __ARMAS_INLINE extern inline
 #endif
 
-__INLINE
+__ARMAS_INLINE
 void __subpivot(armas_pivot_t *pA, armas_pivot_t *pB, int K, int N)
 {
   pA->npivots = N;
@@ -32,7 +32,7 @@ void __subpivot(armas_pivot_t *pA, armas_pivot_t *pB, int K, int N)
  *
  * Parameter nb is initial block size for pT (pTOP) or pB (pBOTTOM).  
  */
-__INLINE
+__ARMAS_INLINE
 void __pivot_2x1(armas_pivot_t *pT, armas_pivot_t *pB,
 		 armas_pivot_t *P, int nb, int direction)
 {
@@ -60,7 +60,7 @@ void __pivot_2x1(armas_pivot_t *pT, armas_pivot_t *pB,
  *                   p2                     p2
  *
  */
-__INLINE
+__ARMAS_INLINE
 void __pivot_repart_2x1to3x1(armas_pivot_t *pT, armas_pivot_t *p0,
 			     armas_pivot_t *p1, armas_pivot_t *p2,
 			     armas_pivot_t *P, int nb, int direction)
@@ -96,7 +96,7 @@ void __pivot_repart_2x1to3x1(armas_pivot_t *pT, armas_pivot_t *p0,
  *                   p2                     p2
  *
  */
-__INLINE
+__ARMAS_INLINE
 void __pivot_cont_3x1to2x1(armas_pivot_t *pT, armas_pivot_t *pB,
 			   armas_pivot_t *p0, armas_pivot_t *p1,
 			   armas_pivot_t *P, int direction)

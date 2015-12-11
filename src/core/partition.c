@@ -14,13 +14,13 @@
 #include "internal.h"
 #include "matrix.h"
 
-// undefined __INLINE macro 
-#ifdef __INLINE
-#undef __INLINE
+// undefined __ARMAS_INLINE macro 
+#ifdef __ARMAS_INLINE
+#undef __ARMAS_INLINE
 #endif
-// define __INLINE as empty 
-#ifndef __INLINE
-#define __INLINE
+// define __ARMAS_INLINE as empty 
+#ifndef __ARMAS_INLINE
+#define __ARMAS_INLINE
 #endif
 
 #include "partition.h"

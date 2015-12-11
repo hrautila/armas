@@ -14,9 +14,9 @@
 #include "internal.h"
 
 // include inline functions without extern inline declaration
-#ifdef __INLINE
-#undef __INLINE
+#ifdef __ARMAS_INLINE
+#undef __ARMAS_INLINE
 #endif
-#define __INLINE
+#define __ARMAS_INLINE
 #include "matrix.h"
 

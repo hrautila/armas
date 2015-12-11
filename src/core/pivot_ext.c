@@ -4,13 +4,13 @@
 #include "dtype.h"
 #include "internal.h"
 
-#ifdef __INLINE
-#undef __INLINE
+#ifdef __ARMAS_INLINE
+#undef __ARMAS_INLINE
 #endif
 
 // define empty inline and include source
 
-#define __INLINE
+#define __ARMAS_INLINE
 
 #include "pivot.h"
 
