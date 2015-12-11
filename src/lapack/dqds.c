@@ -947,7 +947,7 @@ int __dqds_main(__armas_dense_t *Z, int N)
  *
  * lapack.xLASCL
  */
-int __armas_scale_to(__armas_dense_t *A, DTYPE from, DTYPE to, int flags)
+int __armas_scale_to(__armas_dense_t *A, DTYPE from, DTYPE to, int flags, armas_conf_t *conf)
 {
     DTYPE cfrom1, cto1, mul;
     int ready = 0;
@@ -1056,8 +1056,8 @@ int __armas_dqds(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t* W, arm
     scalemax = __SQRT(__EPS/__SAFEMIN);
     // scale values from QMAX to SCALEMAX
     /* missing */
-    __armas_scale_to(&sq, qmax, scalemax, ARMAS_ANY);
-    __armas_scale_to(&se, qmax, scalemax, ARMAS_ANY);
+    __armas_scale_to(&sq, qmax, scalemax, ARMAS_ANY, conf);
+    __armas_scale_to(&se, qmax, scalemax, ARMAS_ANY, conf);
 #endif
     // square scaled elements
     for (k = 0; k < N-1; k++) {
@@ -1078,7 +1078,7 @@ int __armas_dqds(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t* W, arm
         }
 #if defined(__DQDS_SCALING)      
         // rescale from SCALEMAX to QMAX
-        __armas_scale_to(D, scalemax, qmax, ARMAS_ANY);
+        __armas_scale_to(D, scalemax, qmax, ARMAS_ANY, conf);
 #endif
         // and sort elements
         __sort_eigenvec(D, __nil, __nil, __nil, ARMAS_DESC);
