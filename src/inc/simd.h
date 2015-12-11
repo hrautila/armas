@@ -8,6 +8,8 @@
 #ifndef __ARMAS_SIMD_H
 #define __ARMAS_SIMD_H 1
 
+#include <math.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,6 +51,108 @@ typedef __m256d float64x4_t;
 #if ! defined(__SIMD_LENGTH)
 #define __SIMD_LENGTH 256
 #endif
+
+/* -----------------------------------------------------------------------
+ * Simple single/double precision non-branching functions
+ */
+/**
+ * @brief Maximum of two single precision numbers without branching.
+ */
+static inline float __attribute__((__always_inline__))
+max_f32(float a, float b)
+{
+  return _mm_max_ss(_mm_set_ss(a), _mm_set_ss(b))[0];
+}
+
+/**
+ * @brief Absolute maximum of two single precision numbers without branching.
+ */
+static inline float __attribute__((__always_inline__))
+abs_max_f32(float a, float b)
+{
+  return _mm_max_ss(_mm_set_ss(fabs(a)), _mm_set_ss(fabs(b)))[0];
+}
+
+/**
+ * @brief minimum of two single precision numbers without branching.
+ */
+static inline float __attribute__((__always_inline__))
+min_f32(float a, float b)
+{
+  return _mm_min_ss(_mm_set_ss(a), _mm_set_ss(b))[0];
+}
+
+/**
+ * @brief Absolute minimum of two single precision numbers without branching.
+ */
+static inline float __attribute__((__always_inline__))
+abs_min_f32(float a, float b)
+{
+  return _mm_min_ss(_mm_set_ss(fabs(a)), _mm_set_ss(fabs(b)))[0];
+}
+
+/**
+ * @brief Return MIN(|a|,|b|)/MAX(|a|, |b|) and MAX(|a|,|b|) without branching.
+ */
+static inline float __attribute__((__always_inline__))
+abs_min_per_max_f32(float *max, float a, float b)
+{
+  __m128 _min, _max;
+  _min = _mm_min_ss(_mm_set_ss(fabs(a)), _mm_set_ss(fabs(b)));
+  _max = _mm_max_ss(_mm_set_ss(fabs(a)), _mm_set_ss(fabs(b)));
+  *max = _max[0];
+  return (_min/_max)[0];
+}
+
+/**
+ * @brief Maximum of two double precision numbers without branching.
+ */
+static inline double __attribute__((__always_inline__))
+max_f64(double a, double b)
+{
+  return _mm_max_sd(_mm_set_sd(a), _mm_set_sd(b))[0];
+}
+
+/**
+ * @brief Absolute maximum of two double precision numbers without branching.
+ */
+static inline double __attribute__((__always_inline__))
+abs_max_f64(double a, double b)
+{
+  return _mm_max_sd(_mm_set_sd(fabs(a)), _mm_set_sd(fabs(b)))[0];
+}
+
+/**
+ * @brief minimum of two double precision numbers without branching.
+ */
+static inline double __attribute__((__always_inline__))
+min_f64(double a, double b)
+{
+  return _mm_min_sd(_mm_set_sd(a), _mm_set_sd(b))[0];
+}
+
+/**
+ * @brief Absolute minimum of two double precision numbers without branching.
+ */
+static inline double __attribute__((__always_inline__))
+abs_min_f64(double a, double b)
+{
+  return _mm_min_sd(_mm_set_sd(fabs(a)), _mm_set_sd(fabs(b)))[0];
+}
+
+/**
+ * @brief Return MIN(|a|,|b|)/MAX(|a|, |b|) and MAX(|a|,|b|) without branching.
+ */
+static inline double __attribute__((__always_inline__))
+abs_min_per_max_f64(double *max, double a, double b)
+{
+  __m128d _min, _max;
+  _min = _mm_min_sd(_mm_set_sd(fabs(a)), _mm_set_sd(fabs(b)));
+  _max = _mm_max_sd(_mm_set_sd(fabs(a)), _mm_set_sd(fabs(b)));
+  *max = _max[0];
+  return (_min/_max)[0];
+}
+
 
 /* ------------------------------------------------------------------------
  * Single precision, 128bit, 4 elements
