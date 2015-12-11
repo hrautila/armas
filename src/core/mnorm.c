@@ -108,28 +108,39 @@ ABSTYPE __matrix_norm_inf(const __armas_dense_t *x, armas_conf_t *conf)
 }
 
 
-ABSTYPE __armas_mnorm(const __armas_dense_t *x, int which, armas_conf_t *conf)
+/**
+ * \brief Compute norm of general matrix A.
+ *
+ * \param[in] A 
+ *    Input matrix
+ * \param[in] which 
+ *    Norm to compute, one of ARMAS_NORM_ONE, ARMAS_NORM_TWO, ARMAS_NORM_INF or
+ *    ARMAS_NORM_FRB
+ * \param[in] conf 
+ *    Optional configuration block
+ */
+ABSTYPE __armas_mnorm(const __armas_dense_t *A, int which, armas_conf_t *conf)
 {
   ABSTYPE normval = __ABSZERO;
 
   if (!conf)
     conf = armas_conf_default();
 
-  if (! x || __armas_size(x) == 0)
+  if (! A || __armas_size(A) == 0)
     return __ABSZERO;
 
-  int is_vector = x->rows == 1 || x->cols == 1;
+  int is_vector = A->rows == 1 || A->cols == 1;
   switch (which) {
   case ARMAS_NORM_ONE:
     if (is_vector) {
-      normval = __armas_asum(x, conf);
+      normval = __armas_asum(A, conf);
     } else {
-      normval = __matrix_norm_one(x, conf);
+      normval = __matrix_norm_one(A, conf);
     }
     break;
   case ARMAS_NORM_TWO:
     if (is_vector) {
-      normval = __armas_nrm2(x, conf);
+      normval = __armas_nrm2(A, conf);
     } else {
       conf->error = ARMAS_EIMP;
       normval = __ABSZERO;
@@ -137,16 +148,16 @@ ABSTYPE __armas_mnorm(const __armas_dense_t *x, int which, armas_conf_t *conf)
     break;
   case ARMAS_NORM_INF:
     if (is_vector) {
-      normval = __ABS(__armas_amax(x, conf));
+      normval = __ABS(__armas_amax(A, conf));
     } else {
-      normval = __matrix_norm_inf(x, conf);
+      normval = __matrix_norm_inf(A, conf);
     }
     break;
   case ARMAS_NORM_FRB:
     if (is_vector) {
-      normval = __armas_nrm2(x, conf);
+      normval = __armas_nrm2(A, conf);
     } else {
-      normval = __matrix_norm_frb(x, conf);
+      normval = __matrix_norm_frb(A, conf);
     }
     break;
   default:
@@ -258,6 +269,23 @@ ABSTYPE __trm_norm_frb(const __armas_dense_t *A, int flags, armas_conf_t *conf)
     return scale*__SQRT(ssum);
 }
 
+/**
+ * \brief Compute norm of general or triangular matrix A.
+ *
+ * \param[in] A 
+ *    Input matrix
+ * \param[in] which 
+ *    Norm to compute, one of ARMAS_NORM_ONE, ARMAS_NORM_TWO, ARMAS_NORM_INF or
+ *    ARMAS_NORM_FRB. 
+ * \param[in] flags
+ *    Matrix type indicator, ARMAS_LOWER, ARMAS_UPPER or zero.
+ * \param[in] conf 
+ *    Optional configuration block
+ *
+ * \returns Computed norm. 
+ *
+ * (Note ARMAS_NORM_TWO not implemented.)
+ */
 ABSTYPE __armas_norm(const __armas_dense_t *A, int which, int flags, armas_conf_t *conf)
 {
   DTYPE normval = __ABSZERO;
