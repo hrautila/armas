@@ -61,6 +61,11 @@ enum armas_sort {
   ARMAS_DESC = -1       ///< Sort to descending order
 };
 
+enum armas_pivots {
+  ARMAS_PIVOT_FORWARD = 0,    ///< Pivots forwards
+  ARMAS_PIVOT_BACKWARD = 1    ///< Pivot backwards
+};
+
 enum armas_opts {
   ARMAS_BLOCKED   = 0,
   ARMAS_SNAIVE    = 0x1,
