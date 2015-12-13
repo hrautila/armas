@@ -35,8 +35,11 @@
  *    1/2* (R0*(A00+A10) R0*(A01+A11)) (S0  S1)  =>
  *         (R1*(A00-A10) R1*(A01-A11)) (S0 -S1)
  *
- *    1/2* (S0*R0*(A00+A01+A10+A11)  S1*R0*(A00+A10-A01-A11))  
- *         (S0*R1*(A00-A10+A01-A11)  S1*R1*(A00-A10-A01+A11))
+ *    1/2* (R0*(A00+A01+A10+A11)*S0  R0*(A00+A10-A01-A11)*S1)  
+ *         (R1*(A00-A10+A01-A11)*S0  R1*(A00-A10-A01+A11)*S1)
+ *
+ *    1/2* (R0*(A00+A01+A10+A11)*S0  R0*(A00-A01+A10-A11)*S1)  
+ *         (R1*(A00+A01-A10-A11)*S0  R1*(A00-A01-A10+A11)*S1)
  *
  *  Update A as if it were partition follow
  *
@@ -59,49 +62,46 @@ void __update2_rbt(__armas_dense_t *A, __armas_dense_t *R,
     lb = Nd/2;
     mb = A->rows - lb;
     nb = A->cols - lb;
-    //printf("..update2_rbt: lb=%d, nb=%d, mb=%d\n", lb, nb, mb);
     for (j = 0; j < nb; j++) {
+        s0  = __armas_get_at_unsafe(S, j);
+        s1  = __armas_get_at_unsafe(S, j+lb);
         for (i = 0; i < mb; i++) {
             r0  = __armas_get_at_unsafe(R, i);
             r1  = __armas_get_at_unsafe(R, i+lb);
-            s0  = __armas_get_at_unsafe(S, i);
-            s1  = __armas_get_at_unsafe(S, i+lb);
             a00 = __armas_get_unsafe(A, i,    j);
-            a10 = __armas_get_unsafe(A, i,    j+lb);
-            a01 = __armas_get_unsafe(A, i+lb, j);
+            a01 = __armas_get_unsafe(A, i,    j+lb);
+            a10 = __armas_get_unsafe(A, i+lb, j);
             a11 = __armas_get_unsafe(A, i+lb, j+lb);
-            __armas_set_unsafe(A, i,    j,    s0*r0*(a00+a01+a10+a11));
-            __armas_set_unsafe(A, i,    j+lb, s1*r0*(a00-a01+a10-a11));
-            __armas_set_unsafe(A, i+lb, j,    s0*r1*(a00+a01-a10-a11));
-            __armas_set_unsafe(A, i+lb, j+lb, s1*r1*(a00-a01-a10+a11));
-        }
+            __armas_set_unsafe(A, i,    j,    s0*r0*((a00+a01)+(a10+a11)));
+            __armas_set_unsafe(A, i,    j+lb, s1*r0*((a00+a10)-(a01+a11))); // a00-a01+a10-a11
+            __armas_set_unsafe(A, i+lb, j,    s0*r1*((a00+a01)-(a10+a11))); // a00+a01-a10-a11
+            __armas_set_unsafe(A, i+lb, j+lb, s1*r1*((a00+a11)-(a01+a10))); // a00-a01-a10+a11
+         }
         // for case when Nd > rows(A); here i+lb > rows(A)
         for (; i < lb; i++) {
             r0  = __armas_get_at_unsafe(R, i);
-            s0  = __armas_get_at_unsafe(S, i);
             a00 = __armas_get_unsafe(A, i,    j);
-            a10 = __armas_get_unsafe(A, i,    j+lb);
-            __armas_set_unsafe(A, i,    j,    s0*r0*(a00+a10));
+            a01 = __armas_get_unsafe(A, i,    j+lb);
+            __armas_set_unsafe(A, i,    j,    s0*r0*(a00+a01));
             // s1 == 0; s1*r0 == 0
             //__armas_set_unsafe(A, i,    j+lb, s1*r0*(a00-a01+a10-a11));
         }
     }
     // Nd > cols(A); here j+lb > cols(A); this updates first and second quadrant
     for (; j < lb; j++) {
+        s0  = __armas_get_at_unsafe(S, j);
+        //s1  = __armas_get_at_unsafe(S, j+lb);
         for (i = 0; i < mb; i++) {
             r0  = __armas_get_at_unsafe(R, i);
             r1  = __armas_get_at_unsafe(R, i+lb);
-            s0  = __armas_get_at_unsafe(S, i);
-            s1  = __armas_get_at_unsafe(S, i+lb);
             a00 = __armas_get_unsafe(A, i,    j);
-            a01 = __armas_get_unsafe(A, i+lb, j);
-            __armas_set_unsafe(A, i,    j,    s0*r0*(a00+a01));
-            __armas_set_unsafe(A, i+lb, j,    s0*r1*(a00+a01));
+            a10 = __armas_get_unsafe(A, i+lb, j);
+            __armas_set_unsafe(A, i,    j,    s0*r0*(a00+a10));
+            __armas_set_unsafe(A, i+lb, j,    s0*r1*(a00-a10));
         }
         // for case when Nd > rows(A)
         for (; i < lb; i++) {
             r0  = __armas_get_at_unsafe(R, i);
-            s0  = __armas_get_at_unsafe(S, i);
             a00 = __armas_get_unsafe(A, i,    j);
             __armas_set_unsafe(A, i,    j,    s0*r0*(a00));
         }
