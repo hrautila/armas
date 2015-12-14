@@ -29,6 +29,16 @@
 #include "matrix.h"
 #include "internal_lapack.h"
 
+/*
+ * References:
+ * (1) D.Scott Parker, 
+ *     Random Butterfly Transformations with Application in Computional Linear Algebra
+ *     1995
+ * (2) Marc Baboulin, Jack Dongarra,
+ *     Accelerating linear systems solutions using randomization techniques
+ *     LAPACK Working Note 246, May 2011
+ */
+
 #define __RSQRT2 0.7071067811865475
 
 /*
