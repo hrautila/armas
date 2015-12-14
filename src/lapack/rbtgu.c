@@ -25,6 +25,15 @@
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+/*
+ * References:
+ * (1) D.Scott Parker, 
+ *     Random Butterfly Transformations with Application in Computional Linear Algebra
+ *     1995
+ * (2) Marc Baboulin, Jack Dongarra,
+ *     Accelerating linear systems solutions using randomization techniques
+ *     LAPACK Working Note 246, May 2011
+ */
 
 /*
  * Compute R.T*A*S
@@ -47,7 +56,7 @@
  *     A =   -----+----  ; ATL [lb,lb], ATR [lb,nb], ABL [mb,lb] and ABR [mb,nb]
  *            ABL | ABR 
  *
- *     lb >= mb == nb
+ *     lb >= mb; lb >= nb
  */
 static
 void __update2_rbt(__armas_dense_t *A, __armas_dense_t *R,
@@ -58,7 +67,7 @@ void __update2_rbt(__armas_dense_t *A, __armas_dense_t *R,
     DTYPE a00, a01, a10, a11;
 
     // A00 = [lb.lb] A01 = [lb,A.cols-lb], A10 = [A.rows-lb,lb], A11=[A.rows-lb,A.cols-lb]
-    // lb >= mb && lb >= nb && mb == nb;
+    // lb >= mb && lb >= nb && lb >= nb;
     lb = Nd/2;
     mb = A->rows - lb;
     nb = A->cols - lb;
@@ -72,38 +81,36 @@ void __update2_rbt(__armas_dense_t *A, __armas_dense_t *R,
             a01 = __armas_get_unsafe(A, i,    j+lb);
             a10 = __armas_get_unsafe(A, i+lb, j);
             a11 = __armas_get_unsafe(A, i+lb, j+lb);
-            __armas_set_unsafe(A, i,    j,    s0*r0*((a00+a01)+(a10+a11)));
-            __armas_set_unsafe(A, i,    j+lb, s1*r0*((a00+a10)-(a01+a11))); // a00-a01+a10-a11
-            __armas_set_unsafe(A, i+lb, j,    s0*r1*((a00+a01)-(a10+a11))); // a00+a01-a10-a11
-            __armas_set_unsafe(A, i+lb, j+lb, s1*r1*((a00+a11)-(a01+a10))); // a00-a01-a10+a11
+            __armas_set_unsafe(A, i,    j,    __HALF*s0*r0*((a00+a01)+(a10+a11)));
+            __armas_set_unsafe(A, i,    j+lb, __HALF*s1*r0*((a00+a10)-(a01+a11)));
+            __armas_set_unsafe(A, i+lb, j,    __HALF*s0*r1*((a00+a01)-(a10+a11)));
+            __armas_set_unsafe(A, i+lb, j+lb, __HALF*s1*r1*((a00+a11)-(a01+a10)));
          }
         // for case when Nd > rows(A); here i+lb > rows(A)
         for (; i < lb; i++) {
             r0  = __armas_get_at_unsafe(R, i);
             a00 = __armas_get_unsafe(A, i,    j);
             a01 = __armas_get_unsafe(A, i,    j+lb);
-            __armas_set_unsafe(A, i,    j,    s0*r0*(a00+a01));
-            // s1 == 0; s1*r0 == 0
-            //__armas_set_unsafe(A, i,    j+lb, s1*r0*(a00-a01+a10-a11));
+            __armas_set_unsafe(A, i,    j,    __HALF*s0*r0*(a00+a01));
+            __armas_set_unsafe(A, i,    j+lb, __HALF*s1*r0*(a00-a01));
         }
     }
     // Nd > cols(A); here j+lb > cols(A); this updates first and second quadrant
     for (; j < lb; j++) {
         s0  = __armas_get_at_unsafe(S, j);
-        //s1  = __armas_get_at_unsafe(S, j+lb);
         for (i = 0; i < mb; i++) {
             r0  = __armas_get_at_unsafe(R, i);
             r1  = __armas_get_at_unsafe(R, i+lb);
             a00 = __armas_get_unsafe(A, i,    j);
             a10 = __armas_get_unsafe(A, i+lb, j);
-            __armas_set_unsafe(A, i,    j,    s0*r0*(a00+a10));
-            __armas_set_unsafe(A, i+lb, j,    s0*r1*(a00-a10));
+            __armas_set_unsafe(A, i,    j,    __HALF*s0*r0*(a00+a10));
+            __armas_set_unsafe(A, i+lb, j,    __HALF*s0*r1*(a00-a10));
         }
-        // for case when Nd > rows(A)
+        // for case when Nd > rows(A);
         for (; i < lb; i++) {
             r0  = __armas_get_at_unsafe(R, i);
             a00 = __armas_get_unsafe(A, i,    j);
-            __armas_set_unsafe(A, i,    j,    s0*r0*(a00));
+            __armas_set_unsafe(A, i,    j,    __HALF*s0*r0*(a00));
         }
 
     }
@@ -119,8 +126,6 @@ int __update2_rbt_descend(__armas_dense_t *A, __armas_dense_t *U,
 
     EMPTY(VL); EMPTY(VR);
     EMPTY(UL); EMPTY(UR);
-    
-    //printf("..update_descend: Nd=%d\n", Nd);
     
     if (U->cols == 1 || V->cols == 1) {
         // end of recursion; update current block
@@ -140,7 +145,7 @@ int __update2_rbt_descend(__armas_dense_t *A, __armas_dense_t *U,
                     &V1,  /**/ &VL, lb, ARMAS_PTOP);
 
     __partition_2x2(&A00, &A01,
-                    &A10, &A11, /**/ A, lb, lb, ARMAS_PTOP);
+                    &A10, &A11, /**/ A, lb, lb, ARMAS_PTOPLEFT);
 
     // compute subblocks;
     __update2_rbt_descend(&A00, &U0, &V0, Nd/2, conf);
@@ -180,19 +185,18 @@ int __armas_update2_rbt(__armas_dense_t *A,
     if (!conf)
         conf = armas_conf_default();
 
+    // extended size to multiple of 2^d
+    twod = 1 << U->cols;
+    Nd = (A->cols + twod - 1) & ~(twod-1);
+
     ok = A->cols == A->rows && U->rows == V->rows 
-        && U->cols == V->cols && U->rows == A->rows;
+        && U->cols == V->cols && U->rows >= A->rows;
     if (!ok) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
     
-    // extended size to multiple of 2^d
-    twod = 1 << U->cols;
-    Nd = (A->cols + twod - 1) & ~(twod-1);
-    
     __update2_rbt_descend(A, U, V, Nd, conf);
-    __armas_mscale(A, __POW(0.5, U->cols), 0);
     return 0;
 }
 
