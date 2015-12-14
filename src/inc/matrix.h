@@ -432,6 +432,9 @@ extern int __armas_mvmult(__armas_dense_t *Y,
 extern int __armas_mvupdate(__armas_dense_t *A,
                             const __armas_dense_t *X,  const __armas_dense_t *Y,  
                             DTYPE alpha, armas_conf_t *conf);
+extern int __armas_mvmult_sym(__armas_dense_t *Y, const __armas_dense_t *A,
+                              const __armas_dense_t *X, DTYPE alpha, DTYPE beta,
+                              int flags, armas_conf_t *conf);
 extern int __armas_mvupdate2_sym(__armas_dense_t *A,
                                  const __armas_dense_t *X,  const __armas_dense_t *Y,  
                                  DTYPE alpha, int flags, armas_conf_t *conf);
