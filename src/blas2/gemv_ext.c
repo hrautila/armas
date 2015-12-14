@@ -60,7 +60,7 @@ void __gemv_ext_unb_abs(mvec_t *Y, const mdata_t *A, const mvec_t *X,
             twosum(&y0, &s0, x0, y0);
             Y->md[(i+0)*Y->inc] = y0 + p0;
         }
-        return 0;
+        return;
     }
 
     // A not transposed; here were proceed matrix A rowwise and elements are at distance
@@ -79,7 +79,7 @@ void __gemv_ext_unb_abs(mvec_t *Y, const mdata_t *A, const mvec_t *X,
         twosum(&y0, &s0, x0, y0);
         Y->md[(i+0)*Y->inc] = y0 + p0;
     }
-    return 0;
+    return;
 }
 
 int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
