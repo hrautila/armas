@@ -27,7 +27,7 @@ endif
 if ENABLE_FLOAT64
 ##LDADD = ../../src/libarmasd.la
 
-UNIT_TESTS += dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dsyr2k dgemv dger dtrmv dtrsv diag
+UNIT_TESTS += dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dsyr2k dgemv dger dtrmv dtrsv diag dbase
 
 UNIT_TESTS +=  \
 	evd gesvd secular \
@@ -36,7 +36,7 @@ UNIT_TESTS +=  \
 	qrfact qrbld qrmult qrsol \
 	lqfact lqbld lqmult lqsol \
 	qlfact qlbld qlmult \
-	rqfact rqbld rqmult
+	rqfact rqbld rqmult rbt
 
 # GMP/MPFR libaries exits, can test extended precision
 if HAVE_GMP_MPFR
@@ -63,6 +63,10 @@ ext_dtrsv_LDADD   = ../../src/libarmasd.la
 check_PROGRAMS = $(UNIT_TESTS)
 
 efttest_SOURCES = efttest.c
+
+# Basic operations
+dbase_SOURCES = mbase.c ../helper.c
+dbase_LDADD    = ../../src/libarmasd.la
 
 # BLAS (double)
 dgemm_SOURCES  = gemm.c ../helper.c
@@ -147,6 +151,9 @@ rqbld_SOURCES  = rqbld.c ../helper.c
 rqbld_LDADD    = ../../src/libarmasd.la
 rqmult_SOURCES = rqmult.c ../helper.c
 rqmult_LDADD    = ../../src/libarmasd.la
+
+rbt_SOURCES = rbt.c ../helper.c
+rbt_LDADD    = ../../src/libarmasd.la
 
 # EXT PRECISION (double precision)
 ext_sgemm_SOURCES = ext_gemm.c ../helper.c ext_prec.c
