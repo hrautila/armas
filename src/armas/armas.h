@@ -180,14 +180,14 @@ typedef struct armas_pivot {
   int owner;      ///< Storage owner flag
 } armas_pivot_t;
 
-#ifndef __INLINE
-#define __INLINE extern inline
+#ifndef __ARMAS_INLINE
+#define __ARMAS_INLINE extern inline
 #endif
 
 /**
  * @brief Initialize pivot vector, allocates new storage.
  */
-__INLINE
+__ARMAS_INLINE
 armas_pivot_t *armas_pivot_init(armas_pivot_t *ptable, int sz)
 {
   if (!ptable)
@@ -205,7 +205,7 @@ armas_pivot_t *armas_pivot_init(armas_pivot_t *ptable, int sz)
 /**
  * @brief Create new pivot vector, allocates new storage.
  */
-__INLINE
+__ARMAS_INLINE
 armas_pivot_t *armas_pivot_new(int sz)
 {
   armas_pivot_t *ptable = (armas_pivot_t*)malloc(sizeof(armas_pivot_t));
@@ -222,7 +222,7 @@ armas_pivot_t *armas_pivot_new(int sz)
 /**
  * @brief Setup pivot vector with given storage.
  */
-__INLINE
+__ARMAS_INLINE
 armas_pivot_t *armas_pivot_make(armas_pivot_t *ptable, int sz, int *data)
 {
   ptable->npivots = sz;
@@ -234,7 +234,7 @@ armas_pivot_t *armas_pivot_make(armas_pivot_t *ptable, int sz, int *data)
 /**
  * @brief Release pivot vector storage.
  */
-__INLINE
+__ARMAS_INLINE
 void armas_pivot_release(armas_pivot_t *ptable)
 {
   if (ptable) {
@@ -248,7 +248,7 @@ void armas_pivot_release(armas_pivot_t *ptable)
 /**
  * @brief Free pivot vector.
  */
-__INLINE
+__ARMAS_INLINE
 void armas_pivot_free(armas_pivot_t *ptable)
 {
   if (!ptable)
@@ -261,7 +261,7 @@ void armas_pivot_free(armas_pivot_t *ptable)
 /**
  * @brief Pivot vector size.
  */
-__INLINE
+__ARMAS_INLINE
 int armas_pivot_size(armas_pivot_t *ptable)
 {
   return ptable ? ptable->npivots : 0;
@@ -270,7 +270,7 @@ int armas_pivot_size(armas_pivot_t *ptable)
 /**
  * @brief Get raw pivot storage.
  */
-__INLINE
+__ARMAS_INLINE
 int *armas_pivot_data(armas_pivot_t *ptable)
 {
   return ptable ? ptable->indexes : (int *)0;
@@ -279,7 +279,7 @@ int *armas_pivot_data(armas_pivot_t *ptable)
 /**
  * @brief Get pivot at index k.
  */
-__INLINE
+__ARMAS_INLINE
 int armas_pivot_get(armas_pivot_t *ptable, int k)
 {
   return ptable && k >= 0 && k < ptable->npivots ? ptable->indexes[k] : 0;
@@ -288,7 +288,7 @@ int armas_pivot_get(armas_pivot_t *ptable, int k)
 /**
  * @brief Set pivot at index k.
  */
-__INLINE
+__ARMAS_INLINE
 void armas_pivot_set(armas_pivot_t *ptable, int k, int val)
 {
   if (ptable && k >= 0 && k < ptable->npivots)
