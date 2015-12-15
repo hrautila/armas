@@ -29,8 +29,9 @@ LAPACK functions
    - Bidiagonal reduction
    - Tridiagonal reduction
    - Givens rotations
+   - Random Butterfly transformations
 
-Currently tested only for double precision real numbers. 
+Currently tested only for single and double precision real numbers. 
 
 ### Installation
 
@@ -41,7 +42,7 @@ For compiling and installing from GitHub tree.
   $ make
   $ sudo make install
 ```
-To run some tests
+To run some tests and see tests/unit directory.
 ```sh
   $ make check
 ```
