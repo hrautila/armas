@@ -62,8 +62,6 @@ void __solve_blk_lu_llt(mdata_t *B, const mdata_t *A, const  DTYPE alpha, int fl
     nI = i < NB ? i : NB;
     cI = i < NB ? 0 : i-NB;
 
-    //printf("blk_lu_llt: N=%d, cI=%d, nI=%d\n", N, cI, nI);
-
     // off-diagonal block
     if (flags & ARMAS_UPPER)
       __subblock(&A0, A, 0,  cI);
@@ -84,8 +82,10 @@ void __solve_blk_lu_llt(mdata_t *B, const mdata_t *A, const  DTYPE alpha, int fl
       // solve bottom block
       __solve_blk_recursive(&B1, &A1, 1.0, flags, nI, 0, nJ, cache);
       // update top with bottom solution; 
-      //printf("blk_lu_llt: update B0: cJ=%d, nJ=%d, cI=%d, nI=%d, %d\n", cJ, nJ, cI, nI, cI-nI);
       __kernel_colwise_inner_no_scale(&B0, &A0, &B1, -1.0, flags, nI, nJ, cI, cache); 
+      // scale current block
+      if (alpha != __ONE)
+        __blk_scale(&B1, alpha, nI, nJ);
     }
   }
 }
@@ -134,6 +134,9 @@ void __solve_blk_lut_ll(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
       // top block
       __subblock(&B0, B, 0, cJ);
       __subblock(&B1, B, cI, cJ);
+      // scale current block
+      if (alpha != __ONE)
+        __blk_scale(&B1, alpha, nI, nJ);
       // update block with old solutions
       __kernel_colwise_inner_no_scale(&B1, &A0, &B0, -1.0, flags, i, nJ, nI, cache);
       // solve diagonal block
@@ -187,6 +190,9 @@ void __solve_blk_ru_rlt(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
       __subblock(&B0, B, cJ, 0);
       // block on diagonal columns
       __subblock(&B1, B, cJ, cI);
+      // scale current block
+      if (alpha != __ONE)
+        __blk_scale(&B1, alpha, nI, nJ);
       // update block with old solutions
       __kernel_colwise_inner_no_scale(&B1, &B0, &A0, -1.0, transB,
                                       cI, nI, nJ, cache);
@@ -240,6 +246,9 @@ void __solve_blk_rut_rl(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
 
       __subblock(&B0, B, cJ, cI+nI);
       __subblock(&B1, B, cJ, cI);
+      // scale current block
+      if (alpha != __ONE)
+        __blk_scale(&B1, alpha, nI, nJ);
       // update solution
       __kernel_colwise_inner_no_scale(&B1, &B0, &A0, -1.0, transB,
                                       N-i, nI, nJ, cache); 
