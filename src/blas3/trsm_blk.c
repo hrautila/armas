@@ -183,7 +183,7 @@ void __solve_blk_ru_rlt(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
     // diagonal block
     __subblock(&A1, A, cI, cI);
 
-    // for B rows
+    // for B rows; nJ is row count
     for (j = S; j < E; j += NB) {
       nJ = j < E - NB ? NB : E - j;
       cJ = nJ < NB ? E - nJ : j;
@@ -192,7 +192,7 @@ void __solve_blk_ru_rlt(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
       __subblock(&B1, B, cJ, cI);
       // scale current block
       if (alpha != __ONE)
-        __blk_scale(&B1, alpha, nI, nJ);
+        __blk_scale(&B1, alpha, nJ, nI);
       // update block with old solutions
       __kernel_colwise_inner_no_scale(&B1, &B0, &A0, -1.0, transB,
                                       cI, nI, nJ, cache);
@@ -240,6 +240,7 @@ void __solve_blk_rut_rl(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
     // diagonal block
     __subblock(&A1, A, cI, cI);
 
+    // for B rows; nJ is row count
     for (j = S; j < E; j += NB) {
       nJ = j < E - NB ? NB : E - j;
       cJ = nJ < NB ? E - nJ : j;
@@ -248,7 +249,7 @@ void __solve_blk_rut_rl(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
       __subblock(&B1, B, cJ, cI);
       // scale current block
       if (alpha != __ONE)
-        __blk_scale(&B1, alpha, nI, nJ);
+        __blk_scale(&B1, alpha, nJ, nI);
       // update solution
       __kernel_colwise_inner_no_scale(&B1, &B0, &A0, -1.0, transB,
                                       N-i, nI, nJ, cache); 
@@ -263,7 +264,7 @@ void __solve_blocked(mdata_t *B, const mdata_t *A, DTYPE alpha,
 {
   cache_t mcache;
 
-  armas_cache_setup2(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
+  armas_cache_setup2(&mcache, cbuf, NB, NB, KB, sizeof(DTYPE));
 
   switch (flags&(ARMAS_UPPER|ARMAS_LOWER|ARMAS_RIGHT|ARMAS_TRANSA)) {
   case ARMAS_RIGHT|ARMAS_UPPER:
