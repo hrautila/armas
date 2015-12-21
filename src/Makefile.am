@@ -12,7 +12,6 @@ endif
 AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall $(USE_PTHREAD) -Iinc $(DEBUG)
 
 noinst_HEADERS = \
-	inc/avxfuncs.h \
 	inc/cond.h \
 	inc/dtype.h \
 	inc/dlpack.h \

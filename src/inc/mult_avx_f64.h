@@ -31,7 +31,6 @@
 #define mm_load_A _mm256_loadu_pd
 #endif
 
-//#include "avxfuncs.h"
 #include "simd.h"
 #include "debug.h"
 
