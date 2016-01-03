@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Symmetric matrix rank-2k update
+
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
@@ -258,7 +261,7 @@ void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
   int flags = kp->flags & ARMAS_TRANS ? ARMAS_TRANSA : ARMAS_TRANSB;
   flags |= kp->flags & ARMAS_UPPER ? ARMAS_UPPER : ARMAS_LOWER;
   
-  if (kp->optflags & ARMAS_BLAS_BLOCKED) {
+  if (kp->optflags & ARMAS_OBLAS_BLOCKED) {
     // C = beta*C + alpha*A*B.T || C = beta*C + alpha*A.T*B
     __update_trm_blocked(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, flags, 
                          kp->K, kp->S, kp->L, kp->R, kp->E, kp->MB, kp->NB, kp->KB, cbuf);
@@ -307,7 +310,7 @@ int __rank2_schedule(int nblk, __armas_dense_t *C,
 
   // number of tasks
   nT = nblk; rN = cN = 0;
-  if (conf->optflags & ARMAS_BLAS_TILED) {
+  if (conf->optflags & ARMAS_OBLAS_TILED) {
     nT = blocking(C->rows, C->cols, conf->wb, &rN, &cN);
     // substract the off-diagonal tile count
     nT -= ((rN - 1)*cN)/2;
@@ -321,7 +324,7 @@ int __rank2_schedule(int nblk, __armas_dense_t *C,
   armas_counter_init(&ready, nT);
   k = 0; 
 
-  if (conf->optflags & ARMAS_BLAS_BLOCKED) {
+  if (conf->optflags & ARMAS_OBLAS_BLOCKED) {
     // compute in nblk blocks (row stripes for upper/column stripes for lower)
     iR = 0; iE = C->rows;
     jS = 0; jL = C->cols;
@@ -384,11 +387,11 @@ int __rank2_schedule(int nblk, __armas_dense_t *C,
  * @brief Symmetric matrix rank-2k update
  *
  * Computes
- * > C = beta*C + alpha*A*B.T + alpha*B*A.T\n
- * > C = beta*C + alpha*A.T*B + alpha*B.T*A   if TRANSA
+ * - \f$ C = beta*C + alpha*A*B^T + alpha*B*A^T \f$
+ * - \f$ C = beta*C + alpha*A^T*B + alpha*B^T*A \f$ if *ARMAS_TRANSA* set
  *
  * Matrix C has elements stored in the  upper (lower) triangular part
- * if flag bit ARMAS_UPPER (ARMAS_LOWER) is set.
+ * if flag bit *ARMAS_UPPER* (*ARMAS_LOWER*) is set.
  * If matrix is upper (lower) then the strictly lower (upper) part is not referenced.
  *
  * @param[in,out] C result matrix
@@ -430,7 +433,7 @@ int __armas_update2_sym(__armas_dense_t *C,
   
 #if defined(ENABLE_THREADS)
   long nproc = armas_use_nproc(__armas_size(C), conf);
-  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
+  if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED)) {
     return __rank2_schedule(nproc, C, A, B, alpha, beta, flags, conf);
   }
   return __rank2_recursive(0, nproc, C, A, B, alpha, beta, flags, conf);

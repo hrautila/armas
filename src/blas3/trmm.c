@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Triangular matrix multiplication
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -57,11 +60,11 @@ void *__compute_recursive(void *arg)
       return (void *)0;
   }
 
-  switch (kp->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-  case ARMAS_SNAIVE:
+  switch (kp->optflags & (ARMAS_ONAIVE|ARMAS_ORECURSIVE)) {
+  case ARMAS_ONAIVE:
     __trmm_unb(&kp->C, &kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
     break;
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __trmm_recursive(&kp->C, &kp->A, kp->alpha, kp->flags,
                      kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
     break;
@@ -83,11 +86,11 @@ void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
       return (void *)0;
   }
 
-  switch (kp->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-  case ARMAS_SNAIVE:
+  switch (kp->optflags & (ARMAS_ONAIVE|ARMAS_ORECURSIVE)) {
+  case ARMAS_ONAIVE:
     __trmm_unb(&kp->C, &kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
     break;
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __trmm_recursive(&kp->C, &kp->A, kp->alpha, kp->flags,
                       kp->K, kp->S, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
     break;
@@ -138,11 +141,11 @@ int __mult_trm_threaded(int blknum, int nblk,
     }
 
     // normal precision
-    switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-    case ARMAS_SNAIVE:
+    switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_ORECURSIVE)) {
+    case ARMAS_ONAIVE:
       __trmm_unb(_B, _A, alpha, flags, A->cols, ir, ie);
       break;
-    case ARMAS_RECURSIVE:
+    case ARMAS_ORECURSIVE:
       __trmm_recursive(_B, _A, alpha, flags, A->cols, ir, ie, conf->kb, conf->nb, conf->mb, &cbuf);
       break;
     default:
@@ -238,18 +241,21 @@ int __mult_trm_schedule(int nblk,
 /**
  * @brief Triangular matrix-matrix multiply
  *
- * If flag bit LEFT is set then computes 
- * > B = alpha*A*B\n
- * > B = alpha*A.T*B  if TRANSA or TRANS
+ * If flag bit *ARMAS_LEFT* is set then computes 
+ * - \f$ B = alpha*A*B \f$
+ * - \f$ B = alpha*A^T*B  \f$ if *ARMAS_TRANS* set
  *
- * If flag bit RIGHT is set then computes
- * > B = alpha*B*A\n
- * > B = alpha*B*A.T  if TRANSA or TRANS
+ * If flag bit *ARMAS_RIGHT* is set then computes
+ * - \f$ B = alpha*B*A \f$
+ * - \f$ B = alpha*B*A^T \f$ if *ARMAS_TRANS*  set
  *
- * The matrix A is upper (lower) triangular matrix if ARMAS_UPPER (ARMAS_LOWER) is
+ * The matrix A is upper (lower) triangular matrix if *ARMAS_UPPER* (*ARMAS_LOWER*) is
  * set. If matrix A is upper (lowert) then the strictly lower (upper) part is not
- * referenced. Flag bit UNIT indicates that matrix A is unit diagonal and the diagonal
+ * referenced. Flag bit *ARMAS_UNIT* indicates that matrix A is unit diagonal and the diagonal
  * entries are not accessed.
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out] B  Result matrix
  * @param[in]   A Triangular operand matrix
@@ -290,13 +296,13 @@ int __armas_mult_trm(__armas_dense_t *B, const __armas_dense_t *A,
 
 #if defined(ENABLE_THREADS)
   int opts = conf->optflags;
-  if (opts & ARMAS_BLAS_TILED) {
-    opts ^= ~ARMAS_BLAS_TILED;
-    opts |= ARMAS_BLAS_BLOCKED;
+  if (opts & ARMAS_OBLAS_TILED) {
+    opts ^= ~ARMAS_OBLAS_TILED;
+    opts |= ARMAS_OBLAS_BLOCKED;
   }
   long nproc = armas_nblocks(__armas_size(B), conf->wb, conf->maxproc, opts);
 
-  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED) && nproc > 1) {
+  if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED) && nproc > 1) {
     return __mult_trm_schedule(nproc, B, A, alpha, flags, conf);
   }
   return __mult_trm_threaded(0, nproc, B, A, alpha, flags, conf);

@@ -5,9 +5,11 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
-/**
- * @defgroup blas3 BLAS level 3 functions
- */
+//! \file
+//! Matrix-matrix multiplication
+//!
+//! @defgroup blas3 BLAS level 3 functions
+
 #include <stdlib.h>
 #include <stdint.h>
 //#include <pthread.h>
@@ -204,7 +206,7 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
 
   K = flags & (ARMAS_TRANSA|ARMAS_CONJA) ? A->rows : A->cols;
 
-  if (conf->optflags & ARMAS_BLAS_BLOCKED) {
+  if (conf->optflags & ARMAS_OBLAS_BLOCKED) {
     nT = nblk;
   } else {
     nT = blocking(C->rows, C->cols, conf->wb, &rN, &cN);
@@ -217,7 +219,7 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
   armas_counter_init(&ready, nT);
   k = 0; 
 
-  if (conf->optflags & ARMAS_BLAS_BLOCKED) {
+  if (conf->optflags & ARMAS_OBLAS_BLOCKED) {
     iR = 0; iE = C->rows;
     jS = 0; jL = C->cols;
     for (j = 0; j < nblk; j++) {
@@ -284,12 +286,15 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
  * @brief General matrix-matrix multiplication
  *
  * Computes
- * > C = alpha*A*B + beta*C\n
- * > C = alpha*A.T*B + beta*C   if TRANSA\n
- * > C = alpha*A*B.T + beta*C   if TRANSB\n
- * > C = alpha*A.T*B.T + beta*C if TRANSA and TRANSB
+ * - \f$ C = alpha*A*B + beta*C \f$
+ * - \f$ C = alpha*A^T*B + beta*C \f$  if _ARMAS_TRANSA_ is set
+ * - \f$ C = alpha*A*B^T + beta*C \f$  if _ARMAS_TRANSB_ is set
+ * - \f$ C = alpha*A^T*B^T + beta*C \f$ if _ARMAS_TRANSA_ and _ARMAS_TRANSB_ are set
  *
- * Uses |A| if flag ARMAS_ABSA set and |B| if flag ARMAS_ABSB is set.
+ * Uses \f$|A|\f$ if flag ARMAS_ABSA set and \f$|B|\f$ if flag ARMAS_ABSB is set.
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out] C result matrix
  * @param[in] A first operand matrix
@@ -343,7 +348,7 @@ int __armas_mult(__armas_dense_t *C, const __armas_dense_t *A, const __armas_den
 #if defined(ENABLE_THREADS)
   long nproc = armas_use_nproc(__armas_size(C), conf);
   int colwise = C->rows <= C->cols;
-  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED) && nproc > 1) {
+  if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED) && nproc > 1) {
     return __mult_schedule(nproc, colwise, C, A, B, alpha, beta, flags, conf);
   }
   // default is recursive scheduling of threads

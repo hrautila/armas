@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Triangular/trapezoidal matrix rank update
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -359,11 +362,11 @@ void *__start_thread(void *arg)
   armas_cbuf_t *cbuf  = ((block_args_t *)arg)->cbuf;
 
   switch (kp->optflags) {
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
     __update_trm_naive(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
                        kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
     break;
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __update_trm_recursive(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
                            kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
     break;
@@ -380,11 +383,11 @@ void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
   kernel_param_t *kp = (kernel_param_t *)arg;
 
   switch (kp->optflags) {
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
     __update_trm_naive(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
                        kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
     break;
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __update_trm_recursive(&kp->C, &kp->A, &kp->B, kp->alpha, kp->beta, kp->flags,
                            kp->K, kp->S, kp->L, kp->R, kp->E, kp->KB, kp->NB, kp->MB, cbuf);
     break;
@@ -438,11 +441,11 @@ int __update_trm_threaded(int blk, int nblk, __armas_dense_t *C,
   if (blk == nblk-1) {
     armas_cbuf_init(&cbuf, conf->cmem, conf->l1mem);
     switch (conf->optflags) {
-    case ARMAS_SNAIVE:
+    case ARMAS_ONAIVE:
       __update_trm_naive(&C0, &A0, &B0, alpha, beta, flags,
                          K, 0, ce-cs, 0, re-rs, conf->kb, conf->nb, conf->mb, &cbuf);
       break;
-    case ARMAS_RECURSIVE:
+    case ARMAS_ORECURSIVE:
       __update_trm_recursive(&C0, &A0, &B0, alpha, beta, flags,
                              K, 0, ce-cs, 0, re-rs, conf->kb, conf->nb, conf->mb, &cbuf);
       break;
@@ -550,13 +553,13 @@ int __update_trm_schedule(int nblk, __armas_dense_t *C,
  * @brief Triangular or trapezoidial matrix rank-k update
  *
  * Computes
- * > C = beta*C + alpha*A*B\n
- * > C = beta*C + alpha*A.T*B   if TRANSA\n
- * > C = beta*C + alpha*A*B.T   if TRANSB\n
- * > C = beta*C + alpha*A.T*B.T if TRANSA and TRANSB
+ * - \f$ C = beta*C + alpha*A*B \f$
+ * - \f$ C = beta*C + alpha*A^T*B  \f$ if *ARMAS_TRANSA* set
+ * - \f$ C = beta*C + alpha*A*B^T  \f$ if *ARMAS_TRANSB* set
+ * - \f$ C = beta*C + alpha*A^T*B^T \f$ if *ARMAS_TRANSA* and *ARMAS_TRANSB* set
  *
  * Matrix C is upper (lower) triangular or trapezoidial if flag bit
- * ARMAS_UPPER (ARMAS_LOWER) is set. If matrix is upper (lower) then
+ * *ARMAS_UPPER* (*ARMAS_LOWER*) is set. If matrix is upper (lower) then
  * the strictly lower (upper) part is not referenced.
  *
  * @param[in,out] C triangular/trapezoidial result matrix
@@ -607,7 +610,7 @@ int __armas_update_trm(__armas_dense_t *C,
 
 #if defined(ENABLE_THREADS)
   long nproc = armas_use_nproc(__armas_size(C), conf);
-  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED) && nproc > 1) {
+  if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED) && nproc > 1) {
     return __update_trm_schedule(nproc, C, A, B, alpha, beta, flags, conf);
   }
   return __update_trm_threaded(0, nproc, C, A, B, alpha, beta, flags, conf);
@@ -620,11 +623,11 @@ int __armas_update_trm(__armas_dense_t *C,
   const mdata_t *_B = (const mdata_t *)B;
 
   switch (conf->optflags) {
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
     __update_trm_naive(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
                        conf->kb, conf->nb, conf->mb, cbuf);
     break;
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __update_trm_recursive(_C, _A, _B, alpha, beta, flags, K, 0, C->cols, 0, C->rows,
                            conf->kb, conf->nb, conf->mb, cbuf);
     break;
