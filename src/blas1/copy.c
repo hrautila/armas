@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Copy vector
+
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -58,7 +61,7 @@ void __vec_copy(mvec_t *X,  const mvec_t *Y, int N)
 }
 
 /**
- * @brief Copy vector X to Y.
+ * @brief Copy vector, \f$ Y := X \f$
  *
  * @param[out] Y target vector
  * @param[in]  X source vector

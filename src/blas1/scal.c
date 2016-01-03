@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! scaling of vector
+
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -134,7 +137,7 @@ void __vec_add(mvec_t *X,  const DTYPE alpha, int N)
 }
 
 /**
- * @brief Computes x = alpha*x
+ * @brief Computes \f$ x = alpha*x \f$
  *
  * @param[in,out] x vector
  * @param[in] alpha scalar multiplier
@@ -163,7 +166,7 @@ int __armas_scale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *con
 }
 
 /**
- * @brief Computes x = x/alpha
+ * @brief Computes \f$ x = x/alpha \f$
  *
  * @param[in,out] x vector
  * @param[in] alpha scalar divisor
@@ -187,12 +190,12 @@ int __armas_invscale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *
 
   mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
 
-  __vec_invscal(&X, alpha, __armas_size(x));
+  __vec_scal(&X, __ONE/alpha, __armas_size(x));
   return 0;
 }
 
 /**
- * @brief Computes x = x + alpha
+ * @brief Computes \f$ x = x + alpha \f$
  *
  * @param[in,out] x vector
  * @param[in] alpha scalar constant

@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! two norm of vector
+
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -136,7 +139,7 @@ ABSTYPE __vec_nrm2_scaled(const mvec_t *X,  int N)
 }
 
 /**
- * @brief Norm2 of vector
+ * @brief Norm2 of vector, \f$ ||x||_2 \f$
  *
  * @param[in] x vector
  * @param[in,out] conf configuration block
@@ -161,7 +164,7 @@ ABSTYPE __armas_nrm2(const __armas_dense_t *x, armas_conf_t *conf)
     return __ABS(x->elems[0]);
   }
   mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
-  if (conf && (conf->optflags & ARMAS_SNAIVE)) {
+  if (conf && (conf->optflags & ARMAS_ONAIVE)) {
     return __vec_nrm2(&X, __armas_size(x));
   }
   return __vec_nrm2_scaled(&X, __armas_size(x));

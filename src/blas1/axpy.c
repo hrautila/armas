@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! vector-vector summation
+
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -22,10 +25,12 @@
 #include "internal.h"
 #include "matrix.h"
 
-#if EXT_PRECISION && defined(__vec_axpy_ext) && defined(__vec_axpby_vec)
+#if EXT_PRECISION && defined(__vec_axpy_ext) && defined(__vec_axpby_ext)
 #define HAVE_EXT_PRECISION 1
 int __vec_axpy_ext(mvec_t *Y,  const mvec_t *X, DTYPE alpha, int N);
 int __vec_axpby_ext(mvec_t *Y,  const mvec_t *X, DTYPE alpha, DTYPE beta, int N);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -119,7 +124,10 @@ void __vec_axpby(mvec_t *Y,  const mvec_t *X, DTYPE alpha, DTYPE beta, int N)
 }
 
 /**
- * @brief Compute Y = Y + alpha*X
+ * @brief Compute \f$ y = y + alpha*x \f$
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out] y target and source vector
  * @param[in]     x source vector
@@ -153,10 +161,10 @@ int __armas_axpy(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, arma
   const mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
   mvec_t Y       = {y->elems, (y->rows == 1 ? y->step : 1)};
 
-#if defined(WITH_EXT_PREC)
-  IF_EXPR(conf->optflags&ARMAS_OEXTPREC,
-          __vec_axpy_ext(&Y, &X, alpha, __armas_size(y)));
-#endif
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+    __vec_axpy_ext(&Y, &X, alpha, __armas_size(y));
+    return 0;
+  }
   
   __vec_axpy(&Y, &X, alpha, __armas_size(y));
   return 0;
@@ -164,7 +172,10 @@ int __armas_axpy(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, arma
 
 
 /**
- * @brief Compute Y = beta*Y + alpha*X
+ * @brief Compute \f$ y = beta*y + alpha*x \f$
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out] y target and source vector
  * @param[in]     x source vector
@@ -200,9 +211,10 @@ int __armas_axpby(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, DTY
   mvec_t Y       = {y->elems, (y->rows == 1 ? y->step : 1)};
 
 
-  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                  __vec_axpby_ext(&Y, &X, alpha, beta, __armas_size(y)));
-
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+    __vec_axpby_ext(&Y, &X, alpha, beta, __armas_size(y));
+    return 0;
+  }
   
   __vec_axpby(&Y, &X, alpha, beta, __armas_size(y));
   return 0;

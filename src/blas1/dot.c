@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! dot product
+
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -25,6 +28,8 @@
 #if EXT_PRECISION && defined(__vec_dot_ext)
 #define HAVE_EXT_PRECISION 1
 extern DTYPE __vec_dot_ext(const mvec_t *X,  const mvec_t *Y, int N);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -97,7 +102,10 @@ DTYPE __vec_dot_recursive(const mvec_t *X, const mvec_t *Y, int n)
 }
 
 /**
- * @brief Computes inner product of two vectors.
+ * @brief Computes inner product of two vectors, \f$ v = x^T*y \f$
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in] x vector
  * @param[in] y vector
@@ -128,11 +136,12 @@ DTYPE __armas_dot(const __armas_dense_t *x, const __armas_dense_t *y, armas_conf
   const mvec_t Y = {y->elems, (y->rows == 1 ? y->step : 1)};
 
   // extended precision 
-  IF_EXTPREC(conf->optflags&ARMAS_OEXTPREC,
-             __vec_dot_ext(&Y, &X, __armas_size(y)));
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+    return __vec_dot_ext(&Y, &X, __armas_size(y));
+  }
   
   // single precision
-  if (conf->optflags & ARMAS_SNAIVE)
+  if (conf->optflags & ARMAS_ONAIVE)
     return __vec_dot(&Y, &X, __armas_size(y));
 
   return __vec_dot_recursive(&Y, &X, __armas_size(y));
