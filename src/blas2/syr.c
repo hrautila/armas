@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Symmetric matrix rank update
+
 #include <stdio.h>
 #include <stdint.h>
 #include "dtype.h"
@@ -31,6 +34,8 @@
 #define HAVE_EXT_PRECISION 1
 extern int __update_trmv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
                                  DTYPE alpha, int flags, int N, int M);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -38,12 +43,10 @@ extern int __update_trmv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
 /**
  * @brief Symmetric matrix rank-1 update.
  *
- * Computes 
- *
- * > A := A + alpha*X*X.T
+ * Computes \f$ A := A + alpha*X*X^T \f$
  *
  * where A is symmetric matrix stored in lower (upper) triangular part of matrix A.
- * If flag ARMAS_LOWER (ARMAR_UPPER) is set matrix is store in lower (upper) triangular
+ * If flag *ARMAS_LOWER* (*ARMAR_UPPER*) is set matrix is store in lower (upper) triangular
  * part of A and upper (lower) triangular part is not referenced.
  *
  * @param[in,out]  A target matrix
@@ -81,16 +84,18 @@ int __armas_mvupdate_sym(__armas_dense_t *A,
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enable and requested
-  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                  __update_trmv_ext_unb(&A0, &x, &x, alpha, flags, nx, nx));
+  if (HAVE_EXT_PRECISION && (conf->optflags&ARMAS_OEXTPREC)) {
+    __update_trmv_ext_unb(&A0, &x, &x, alpha, flags, nx, nx);
+    return 0;
+  }
 
   // default precision
   switch (conf->optflags) {
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __update_trmv_recursive(&A0, &x, &x, alpha, flags, nx, nx);
     break;
 
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
   default:
     __update_trmv_unb(&A0, &x, &x, alpha, flags, nx, nx);
     break;

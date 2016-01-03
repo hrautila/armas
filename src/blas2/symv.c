@@ -5,9 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
-/** @defgroup blas2 BLAS level 2 functions.
- *
- */
+//! \file
+//! symmetric matrix - vector multiplication
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -35,6 +35,8 @@
 #define HAVE_EXT_PRECISION 1
 extern int __symv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
                           DTYPE alpha, DTYPE beta, int flags, int N);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -172,11 +174,15 @@ void __symv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 
 
 /**
- * @brief Symmetic matrix-vector multiply.
+ * @brief Symmetric matrix-vector multiply.
  *
- * Computes
+ * Computes \f$ Y := alpha*A*X + beta*Y \f$
  *
- * > Y := alpha*A*X + beta*Y
+ * Matrix A elements are stored on lower (upper) triangular part of the matrix
+ * if flag bit *ARMAS_LOWER* (*ARMAS_UPPER*) is set.
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  *  @param[in,out]  Y   target and source vector
  *  @param[in]      A   symmetrix lower (upper) matrix
@@ -222,8 +228,10 @@ int __armas_mvmult_sym(__armas_dense_t *Y, const __armas_dense_t *A, const __arm
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enabled and requested
-  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                  __symv_ext_unb(&y, &A0, &x, alpha, beta, flags, nx));          
+  if (HAVE_EXT_PRECISION && (conf->optflags&ARMAS_OEXTPREC)) {
+    __symv_ext_unb(&y, &A0, &x, alpha, beta, flags, nx);
+    return 0;
+  }
 
   // normal precision here
   if (beta != 1.0) {

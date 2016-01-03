@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Triangular matrix update
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -33,6 +36,8 @@
 #define HAVE_EXT_PRECISION 1
 extern int __update_trmv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
                                  DTYPE alpha, int flags, int N, int M);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -130,12 +135,13 @@ void __update_trmv_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
 /**
  * @brief General triangular/trapezoidial matrix rank update.
  *
- * Computes
- *
- * > A := A + alpha*X*Y.T.
+ * Computes \f$ A := A + alpha*X*Y.T \f$
  *
  * where A is upper (lower) triangular or trapezoidial matrix as defined with
- * flag bits ARMAS_UPPER (ARMAS_LOWER).
+ * flag bits *ARMAS_UPPER* (*ARMAS_LOWER*).
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out]  A target matrix
  * @param[in]      X source vector
@@ -180,16 +186,18 @@ int __armas_mvupdate_trm(__armas_dense_t *A,
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enabled and requested
-  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                  __update_trmv_ext_unb(&A0, &x, &y, alpha, flags, ny, nx));
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+    __update_trmv_ext_unb(&A0, &x, &y, alpha, flags, ny, nx);
+    return 0;
+  }
 
   // normal precision here
-  switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-  case ARMAS_RECURSIVE:
+  switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_ORECURSIVE)) {
+  case ARMAS_ORECURSIVE:
     __update_trmv_recursive(&A0, &x, &y, alpha, flags, ny, nx);
     break;
 
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
   default:
     __update_trmv_unb(&A0, &x, &y, alpha, flags, ny, nx);
     break;

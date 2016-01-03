@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Matrix rank update
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -30,6 +33,8 @@
 #define HAVE_EXT_PRECISION 1
 extern int __update_ger_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
                                 DTYPE alpha, int flags, int N, int M);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -184,8 +189,10 @@ void __update_ger_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  * @brief General matrix rank update.
  *
  * Computes
+ * - \f$ A := A + alpha*X*Y^T \f$
  *
- * > A := A + alpha*X*Y.T.
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out]  A target matrix
  * @param[in]      X source vector
@@ -227,16 +234,18 @@ int __armas_mvupdate(__armas_dense_t *A,
   y = (mvec_t){Y->elems, (Y->rows == 1 ? Y->step : 1)};
   A0 = (mdata_t){A->elems, A->step};
 
-  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                  __update_ger_ext_unb(&A0, &x, &y, alpha, 0, ny, nx));
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+    __update_ger_ext_unb(&A0, &x, &y, alpha, 0, ny, nx);
+    return 0;
+  }
 
   // normal precision here
   switch (conf->optflags) {
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __update_ger_recursive(&A0, &x, &y, alpha, 0, ny, nx);
     break;
 
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
   default:
     __update_ger_unb(&A0, &x, &y, alpha, 0, ny, nx);
     break;
