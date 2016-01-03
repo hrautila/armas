@@ -168,7 +168,7 @@ int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
     if (conf->tolmult != __ZERO) {
         tol = ((ABSTYPE)conf->tolmult) * __EPS;
     }
-    if (conf->optflags & ARMAS_BSVD_GOLUB) {
+    if (conf->optflags & ARMAS_OBSVD_GOLUB) {
         err =__bdsvd_golub(D, E, uu, vv, &CS, tol,  conf);
     } else {
         err =__bdsvd_demmel(D, E, uu, vv, &CS, tol,  conf);
