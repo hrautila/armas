@@ -5,6 +5,11 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+/**
+ * \file 
+ * Matrix structure definition and public functions
+ */
+
 #ifndef __ARMAS_MATRIX_H
 #define __ARMAS_MATRIX_H 1
 
@@ -22,7 +27,7 @@ extern "C" {
 /**
  * @brief Column major matrix type.
  */
-typedef struct __armas_dense {
+typedef struct __armas_dense_s {
   DTYPE *elems;   ///< Matrix elements, 
   int step;       ///< Row stride 
   int rows;       ///< Number of rows
@@ -42,12 +47,13 @@ static inline int _N(__armas_dense_t *A) {
 // function that constants
 typedef DTYPE (*__armas_constfunc_t)();
 
-// function that returns value for element
+//! Return value for element at [i, j]
 typedef DTYPE (*__armas_valuefunc_t)(int, int);
 
-// element wise operator functions
-typedef DTYPE (*__armas_operator_t)(DTYPE);
-typedef DTYPE (*__armas_operator2_t)(DTYPE, DTYPE);
+//! element wise operator functions, v := oper(x)
+typedef DTYPE (*__armas_operator_t)(DTYPE x);
+//! element wise operator functions, v := oper(x, y)
+typedef DTYPE (*__armas_operator2_t)(DTYPE x, DTYPE y);
 
 extern __armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c);
 
@@ -56,8 +62,8 @@ extern void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m
 extern int __armas_set_consts(__armas_dense_t *m, __armas_constfunc_t func, int flags);
 extern int __armas_set_values(__armas_dense_t *m, __armas_valuefunc_t func, int flags);
 
-extern int __armas_allclose(__armas_dense_t *A, __armas_dense_t *B);
-extern int __armas_intolerance(__armas_dense_t *A, __armas_dense_t *B, ABSTYPE atol, ABSTYPE rtol);
+extern int __armas_allclose(const __armas_dense_t *A, const __armas_dense_t *B);
+extern int __armas_intolerance(const __armas_dense_t *A, const __armas_dense_t *B, ABSTYPE atol, ABSTYPE rtol);
 
 extern __armas_dense_t *__armas_mcopy(__armas_dense_t *d, __armas_dense_t *s);
 extern __armas_dense_t *__armas_newcopy(__armas_dense_t *s);
@@ -83,12 +89,18 @@ extern int __armas_apply2(__armas_dense_t *A, __armas_operator2_t func, DTYPE va
 #define __ARMAS_INLINE extern inline
 #endif
 
+/**
+ * \brief Test if matrix is a vector.
+ */
 __ARMAS_INLINE
 int __armas_isvector(const __armas_dense_t *m)
 {
   return m && (m->rows == 1 || m->cols == 1);
 }
 
+/** 
+ * \brief Get number of elements in matrix.
+ */
 __ARMAS_INLINE
 int64_t __armas_size(const __armas_dense_t *m)
 {
@@ -111,6 +123,7 @@ int __armas_index_valid(const __armas_dense_t *m, int64_t ix)
 
 
 
+//! \brief Release matrix allocated space
 __ARMAS_INLINE
 void __armas_release(__armas_dense_t *m)
 {
@@ -123,6 +136,7 @@ void __armas_release(__armas_dense_t *m)
   }
 }
 
+//! \brief Allocate a new matrix of size [r, c]
 __ARMAS_INLINE
 __armas_dense_t *__armas_alloc(int r, int c)
 {
@@ -135,6 +149,7 @@ __armas_dense_t *__armas_alloc(int r, int c)
   return __armas_init(m, r, c);
 }
 
+//! \brief Release matrix and its allocated space
 __ARMAS_INLINE
 void __armas_free(__armas_dense_t *m)
 {
@@ -144,6 +159,9 @@ void __armas_free(__armas_dense_t *m)
   free(m);
 }
 
+//! \brief Make matrix with provided buffer.
+//! Make **r-by-c** matrix with stride s from buffer elems. Assumes elems is at least
+//! of size **r*s**.
 __ARMAS_INLINE
 __armas_dense_t *__armas_make(__armas_dense_t *m, int r, int c, int s, DTYPE *elems)
 {
@@ -157,7 +175,7 @@ __armas_dense_t *__armas_make(__armas_dense_t *m, int r, int c, int s, DTYPE *el
 }
 
 
-// A = B[:, c], column vector as submatrix;
+// \brief Make A a column vector of B; A = B[:, c]
 __ARMAS_INLINE
 __armas_dense_t *__armas_column(__armas_dense_t *A, const __armas_dense_t *B, int c)
 {
@@ -175,7 +193,7 @@ __armas_dense_t *__armas_column(__armas_dense_t *A, const __armas_dense_t *B, in
   return A;
 }
 
-// A = B[r, :], row vector as submatrix;
+// \brief Make A a row vector of B; A = B[r, :]
 __ARMAS_INLINE
 __armas_dense_t *__armas_row(__armas_dense_t *A, const __armas_dense_t *B, int r)
 {
@@ -304,6 +322,7 @@ __armas_dense_t *__armas_diag_unsafe(__armas_dense_t *A, const __armas_dense_t *
   return __armas_make(A, 1, nk, B->step+1, &B->elems[0]);
 }
 
+//! \brief Get element at `[row, col]`
 __ARMAS_INLINE
 DTYPE __armas_get(const __armas_dense_t *m, int row, int col)
 {
@@ -316,12 +335,14 @@ DTYPE __armas_get(const __armas_dense_t *m, int row, int col)
   return m->elems[col*m->step+row];
 }
 
+//! \brief Get unsafely element at `[row, col]`
 __ARMAS_INLINE
 DTYPE __armas_get_unsafe(const __armas_dense_t *m, int row, int col)
 {
   return m->elems[col*m->step+row];
 }
 
+//! \brief Set element at `[row, col]` to `val`
 __ARMAS_INLINE
 void __armas_set(__armas_dense_t *m, int row, int col, DTYPE val)
 {
@@ -334,12 +355,14 @@ void __armas_set(__armas_dense_t *m, int row, int col, DTYPE val)
   m->elems[col*m->step+row] = val;
 }
 
+//! \brief Set element unsafely at `[row, col]` to `val`
 __ARMAS_INLINE
 void __armas_set_unsafe(__armas_dense_t *m, int row, int col, DTYPE val)
 {
   m->elems[col*m->step+row] = val;
 }
 
+//! \brief Set element of vector at index `ix` to `val`.
 __ARMAS_INLINE
 void __armas_set_at(__armas_dense_t *m, int ix, DTYPE val)
 {
@@ -350,12 +373,14 @@ void __armas_set_at(__armas_dense_t *m, int ix, DTYPE val)
   m->elems[__armas_real_index(m, ix)] = val;
 }
 
+//! \brief Set unsafely element of vector at index `ix` to `val`.
 __ARMAS_INLINE
 void __armas_set_at_unsafe(__armas_dense_t *m, int ix, DTYPE val)
 {
   m->elems[(m->rows == 1 ? ix*m->step : ix)] = val;
 }
 
+//! \brief Get element of vector at index `ix`.
 __ARMAS_INLINE
 DTYPE __armas_get_at(const __armas_dense_t *m, int ix)
 {
@@ -366,6 +391,7 @@ DTYPE __armas_get_at(const __armas_dense_t *m, int ix)
   return m->elems[__armas_real_index(m, ix)];
 }
 
+//! \brief Get unsafely element of vector at index `ix`.
 __ARMAS_INLINE
 DTYPE __armas_get_at_unsafe(const __armas_dense_t *m, int ix)
 {
@@ -384,6 +410,7 @@ int __armas_index(const __armas_dense_t *m, int row, int col)
   return col*m->step + row;
 }
 
+//! \brief Get data buffer
 __ARMAS_INLINE
 DTYPE *__armas_data(const __armas_dense_t *m)
 {
