@@ -1,10 +1,12 @@
 
 // Copyright (c) Harri Rautila, 2012,2013
 
-// This file is part of github.com/hrautila/matops package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Scaled summation
 
 #include "dtype.h"
 
@@ -120,7 +122,25 @@ void __scale_plus(mdata_t *A, const mdata_t *B,
 }
 
 
-// A := alpha*A + beta*op(B)
+/**
+ * \brief Matrix summation.
+ *
+ *  Compute \f$A := \alpha*A + \beta*B\f$ or \f$A := \alpha*A + \beta*B^{T}\f$ if 
+ *  flag bit ARMAS_TRANS or ARMAS_TRANSB is set.
+ *
+ * \param [in,out] A
+ *      On entry first operand matrix. On exit the result matrix.
+ * \param [in] B
+ *      Second operand matrix
+ * \param [in] alpha
+ *      Scaling constant for first operand.
+ * \param [in] beta
+ *      Scaling constant for second operand.
+ * \param [in] flags
+ *      Indicator flags
+ * \param [in] conf
+ *      Configuration block
+ */
 int __armas_scale_plus(__armas_dense_t *A, const __armas_dense_t *B,
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {

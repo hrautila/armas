@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Matrix element wise multiplication
+
 #include <stdio.h>
 
 #include "dtype.h"
@@ -259,7 +262,7 @@ void __mmul_abs(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC, in
 }
 
 /**
- * @brief Element wise multiplication of A = A * B
+ * @brief Element wise multiplication of \f$A_{i,j} = A_{i,j} * B_{i,j}\f$
  *
  * @param[in,out] A
  *    On entry, first input matrix. On exit result matrix.
