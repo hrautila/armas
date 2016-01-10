@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Library support functions
+
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -66,7 +69,7 @@ long armas_use_nproc(uint64_t nelems, armas_conf_t *conf)
     nproc = conf->maxproc;
   }
 
-  if (conf->optflags & ARMAS_BLAS_TILED) {
+  if (conf->optflags & ARMAS_OBLAS_TILED) {
     // work divided to tiles of wb*wb
     return nproc <= 1 || nelems < bsize ? 1 : nproc;
   }
@@ -90,7 +93,7 @@ int armas_nblocks(uint64_t nelems, int wb, int maxproc, int flags)
     nproc = maxproc;
   }
 
-  if (flags & ARMAS_BLAS_TILED) {
+  if (flags & ARMAS_OBLAS_TILED) {
     // work divided to tiles of wb*wb
     return nproc <= 1 || nelems < bsize ? 1 : nproc;
   }
@@ -151,13 +154,13 @@ void armas_parse_scheduling(char *str, cpu_set_t *cpus, armas_conf_t *conf)
   if (isalpha(*str)) {
     switch (toupper(*str)) {
     case 'B':
-      __default_conf.optflags |= ARMAS_BLAS_BLOCKED;
+      __default_conf.optflags |= ARMAS_OBLAS_BLOCKED;
       break;
     case 'T':
-      __default_conf.optflags |= ARMAS_BLAS_TILED;
+      __default_conf.optflags |= ARMAS_OBLAS_TILED;
       break;
     case 'R':
-      __default_conf.optflags |= ARMAS_BLAS_RECURSIVE;
+      __default_conf.optflags |= ARMAS_OBLAS_RECURSIVE;
       break;
     }
     str++;
@@ -168,10 +171,10 @@ void armas_parse_scheduling(char *str, cpu_set_t *cpus, armas_conf_t *conf)
   if (isalpha(*str)) {
     switch (toupper(*str)) {
     case 'R':
-      __default_sched.opts |= ARMAS_SCHED_ROUNDROBIN;
+      __default_sched.opts |= ARMAS_OSCHED_ROUNDROBIN;
       break;
     case 'Z':
-      __default_sched.opts |= ARMAS_SCHED_RANDOM;
+      __default_sched.opts |= ARMAS_OSCHED_RANDOM;
       break;
     }
     str++;
@@ -180,7 +183,7 @@ void armas_parse_scheduling(char *str, cpu_set_t *cpus, armas_conf_t *conf)
 
   if (isdigit(*str)) {
     if (*str == '2')
-      __default_sched.opts |= ARMAS_SCHED_TWO;
+      __default_sched.opts |= ARMAS_OSCHED_TWO;
     ++str;
   }
 
@@ -198,15 +201,17 @@ void armas_parse_scheduling(char *str, cpu_set_t *cpus, armas_conf_t *conf)
     if (! *tok)
       continue;
 
-    // KK>0xNNN = bitmask, N = number, K-L/N = from K to L with steps of N
+    // KK:0xNNN = bitmask, N = number, K-L/N = from K to L with steps of N
     if ((s0 = strchr(tok, ':')) || tolower(tok[1]) == 'x') {
       // hex mask (unsigned long) with optional starting offset
       start = 0;
       if (s0) {
+        // here is: kk:mask
 	*s0 = '\0';
 	start = strtol(tok, NULL, 10);
 	bits = strtoul(s0+1, NULL, 0);
       } else {
+        // here 0xmask
 	bits = strtoul(tok, NULL, 16);
       }
 
@@ -246,24 +251,36 @@ void armas_parse_scheduling(char *str, cpu_set_t *cpus, armas_conf_t *conf)
 /*!
  * \brief Initialize library configuration variables
  *
- * Reads configurations from environment variables ARMAS_CONFIG and ARMAS_SCHED.
+ * Reads configurations from environment variables _ARMAS_CONFIG_ and _ARMAS_SCHED_.
  *
- * ARMAS_CONFIG defines default blocking configuration and has format:
- * "MB,NB,KB,LB,WB,NPROC,TOLMULT".
+ * *ARMAS_CONFIG* defines the internal blocking parameters and has format:
+ * "MB,NB,KB,LB,WB,NPROC,TOLMULT". For matrix-matrix multiplication (gemm) _MB_ is
+ * the number of row of A, C matrices, _NB_ is number of columns of B, C matrices
+ * and _KB_ is the number of A columns and B rows. The parameter _LB_ defines the
+ * blocking factor for _LAPACK_ functions. _WB_ is to compute the number of threads
+ * needed or in _tiled_ scheduling the operation is divided to tasks of _WB_,_WB_ blocks.
  *
- * ARMAS_SCHED scheduling policy and list of available CPUs. It's format is
- * "[SCHEDSPEC,]CPUSPEC,CPUSPEC,..". SCHED is two character encoding of <TYPE> and <POLICY>.
+ * *ARMAS_SCHED* defines scheduling policy and list of available CPUs. It's format is
+ * "[SCHEDSPEC,]CPUSPEC,CPUSPEC,..". _SCHED_ is two character encoding of 
+ * \<TYPE> and \<POLICY>.
+ * \<TYPE> is either recursive (R), blocked (B) or tiled (T) scheduling. \<POLICY> is
+ *  either round-robin (R) or random (Z) and applies only to blocked or tiled scheduling.
  *
- * <TYPE> is either recursive (R), blocked (B) or tiled (T) scheduling. <POLICY> is either
- * round-robin (R) or random (Z) and applies only to blocked or tiled scheduling.
- *
- * CPUSPEC is one of following
- *   a) [<offset>'>']<64bit hexstring>
- *      - cpu bit mask optional <offset> is index to first cpu in mask
- *   b) <start>-<end>[/<step>]
- *      - inclusive cpu range with optional <step> 
- *   c) <index>
+ * _CPUSPEC_ is one of following
+ *   - [\<offset>':']\<64bit hexstring>
+ *      - cpu bit mask, optional \<offset> is index to first cpu in mask
+ *   - \<start>-\<end>[/\<step>]
+ *      - inclusive cpu range with optional \<step> 
+ *   - \<index>
  *      - cpu number
+ *
+ * _ARMAS_CACHE_ defines size of internal per thread cache memory sizes, _Cmem_ and _l1mem_.
+ * The _Cmem_ is the maximum memory available for blas3 function for internal caching.
+ * Functions compute the effective blocking factors by dividing this cache memory to internal
+ * buffers as needed and holding relative sizes of blocking parameter _MB_, _NB_ and _KB_ 
+ * fixed. The _L1mem_ defines a limit for accessing the inner most matrix in kernel 
+ * functions. Typical value for _Cmem_ is 512k and for _L1mem_ is 96k.
+ *
  */
 void armas_init()
 {
