@@ -353,15 +353,11 @@ int __armas_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A,
     return -1;
   }
 
-  if ((flags & ARMAS_TRANSA) && !(flags & ARMAS_TRANS)) {
-    flags |= ARMAS_TRANS;
-  }
-
   x = (mvec_t){X->elems, (X->rows == 1 ? X->step : 1)};
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enabled and requested
-  if (HAVE_EXT_PRECISION && (conf->optflags&ARMAS_OEXTPREC)) {
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC) != 0) {
     // trust that compiler dead-code pruning removes this block if extended
     // precision is not enabled
     __trmv_ext_unb(&x, &A0, alpha, flags, nx);
