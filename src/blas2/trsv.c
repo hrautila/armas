@@ -31,6 +31,8 @@
 #if EXT_PRECISION && defined(__trsv_ext_unb)
 #define HAVE_EXT_PRECISION 1
 extern int __trsv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -316,16 +318,14 @@ int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A,
     return -1;
   }
 
-  if ((flags & ARMAS_TRANSA) && !(flags & ARMAS_TRANS)) {
-    flags |= ARMAS_TRANS;
-  }
-
   x = (mvec_t){X->elems, (X->rows == 1 ? X->step : 1)};
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enabled and requested
-  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0,
-                  __trsv_ext_unb(&x, &A0, alpha, flags, nx));
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC) != 0) {
+    __trsv_ext_unb(&x, &A0, alpha, flags, nx);
+    return 0;
+  }
 
   // normal precision here
   switch (conf->optflags) {
@@ -350,7 +350,7 @@ int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A,
     break;
   }
   if (alpha != 1.0) {
-    __vscale(x.md, x.inc, nx, alpha);
+    __vscale(x.md, x.inc, alpha, nx);
   }
   return 0;
 }
