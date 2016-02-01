@@ -80,7 +80,7 @@ void __trmv_ex_unb_llt(mvec_t *X, const mdata_t *A, DTYPE alpha, int unit, int N
     register int i, j;
     DTYPE s0, u0, p0, r0, c0;
 
-    printf("..ex_unb_llt: LOWER-TRANSPOSE... unit=%d\n", unit);
+    //printf("..ex_unb_llt: LOWER-TRANSPOSE... unit=%d\n", unit);
     for (i = 0; i < N; i++) {
         s0 = unit ? X->md[i*X->inc] : 0.0;
         u0 = 0.0;
@@ -114,7 +114,7 @@ void __trmv_ex_unb_lu(mvec_t *X, const mdata_t *A, DTYPE alpha, int unit, int N)
     register int i, j;
     DTYPE s0, u0, p0, r0, c0;
 
-    printf("..ex_unb_lu: UPPER-NOTRANSPOSE...\n");
+    //printf("..ex_unb_lu: UPPER-NOTRANSPOSE...\n");
     for (i = 0; i < N; i++) {
         s0 = unit ? X->md[i*X->inc] : 0.0;
         u0 = 0.0;
@@ -148,7 +148,6 @@ void __trmv_ex_unb_lut(mvec_t *X, const mdata_t *A, DTYPE alpha, int unit, int N
     register int i, j;
     DTYPE s0, u0, p0, r0, c0;
 
-    printf("..ex_unb_lut: UPPER-TRANSPOSE...\n");
     for (i = N-1; i >= 0; i--) {
         s0 = unit ? X->md[i*X->inc] : 0.0;
         u0 = 0.0;
