@@ -5,23 +5,118 @@
 #include <time.h>
 
 #include "testing.h"
-//#include <armas/dmatrix.h>
-//#include "helper.h"
 
-main(int argc, char **argv) {
+int test_row_vector(int N, int verbose, int flags)
+{
+  armas_conf_t conf = *armas_conf_default();
+  armas_d_dense_t Z, X, A, X0;
+  int ok, fails = 0;
+  double n0, n1;
+  char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
+  
+  armas_d_init(&Z, N+2, N);
+  armas_d_row(&X0, &Z, 0);
+  armas_d_row(&X,  &Z, 1);
+  armas_d_submatrix(&A, &Z, 2, 0, N, N);
 
-  armas_conf_t conf;
-  armas_d_dense_t X, Y, X0, A, At;
+  armas_d_set_values(&X0, one, ARMAS_NULL);
+  armas_d_set_values(&X, one, ARMAS_NULL);
+  armas_d_set_values(&A, zeromean, flags);
 
-  int ok, opt;
-  int N = 611;
-  int flags = 0;
-  int nproc = 1;
+  if (verbose > 1 && N < 10) {
+    printf("Z:\n"); armas_d_printf(stdout, "%6.3f", &Z);
+  }
 
-  while ((opt = getopt(argc, argv, "a:t:T:p:")) != -1) {
+  armas_d_mvmult(&X, &A, &X0, 1.0, 0.0, 0, &conf);
+  armas_d_mvsolve_trm(&X, &A, 1.0, flags, &conf);
+  n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  if (verbose > 2 && N < 10) {
+    printf("X-X0:\n"); armas_d_printf(stdout, "%6.3f", &X);
+  }
+  printf("%6s : row(X) = trsv(trmv(X, A, %c|N), A, %c|N)\n", PASS(ok), uplo, uplo);
+  fails += 1 - ok;
+  if (verbose > 0) {
+    printf( "  || error ||: %e\n", n0);
+  }
+
+  armas_d_mvmult(&X, &A, &X0, 1.0, 0.0, ARMAS_TRANS, &conf);
+  armas_d_mvsolve_trm(&X, &A, 1.0, flags|ARMAS_TRANS, &conf);
+  n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  if (verbose > 2 && N < 10) {
+    printf("X-X0:\n"); armas_d_printf(stdout, "%6.3f", &X);
+  }
+  printf("%6s : row(X) = trsv(trmv(X, A, %c|T), A, %c|T)\n", PASS(ok), uplo, uplo);
+  if (verbose > 0) {
+    printf( "  || error ||: %e\n", n0);
+  }
+  fails += 1 - ok;
+
+  return fails;
+}
+
+
+int test_col_vector(int N, int verbose, int flags)
+{
+  armas_conf_t conf = *armas_conf_default();
+  armas_d_dense_t Z, X, A, X0, tmp;
+  int ok, fails = 0;
+  double n0, n1;
+  char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
+  
+  armas_d_init(&Z, N, N+2);
+  armas_d_column(&X0, &Z, 0);
+  armas_d_column(&X,  &Z, 1);
+  armas_d_submatrix(&A, &Z, 0, 2, N, N);
+
+  armas_d_set_values(&X0, one, ARMAS_NULL);
+  armas_d_set_values(&X, one, ARMAS_NULL);
+  armas_d_set_values(&A, zeromean, flags);
+
+  if (verbose > 1 && N < 10) {
+    printf("Z:\n"); armas_d_printf(stdout, "%6.3f", &Z);
+  }
+
+  armas_d_mvmult(&X, &A, &X0, 1.0, 0.0, 0, &conf);
+  armas_d_mvsolve_trm(&X, &A, 1.0, flags, &conf);
+  n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  if (verbose > 2 && N < 10) {
+    printf("X-X0:\n"); armas_d_printf(stdout, "%6.3f", armas_d_col_as_row(&tmp, &X));
+  }
+  printf("%6s : col(X) = trsv(trmv(X, A, %c|N), A, %c|N)\n", PASS(ok), uplo, uplo);
+  fails += 1 - ok;
+  if (verbose > 0) {
+    printf( "  || error ||: %e\n", n0);
+  }
+
+  armas_d_mvmult(&X, &A, &X0, 1.0, 0.0, ARMAS_TRANS, &conf);
+  armas_d_mvsolve_trm(&X, &A, 1.0, flags|ARMAS_TRANS, &conf);
+  n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+  ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+  if (verbose > 2 && N < 10) {
+    printf("X-X0:\n"); armas_d_printf(stdout, "%6.3f", armas_d_col_as_row(&tmp, &X));
+  }
+  printf("%6s : col(X) = trsv(trmv(X, A, %c|T), A, %c|T)\n", PASS(ok), uplo, uplo);
+  if (verbose > 0) {
+    printf( "  || error ||: %e\n", n0);
+  }
+  fails += 1 - ok;
+
+  return fails;
+}
+
+int main(int argc, char **argv) 
+{
+  int opt;
+  int N = 77;
+  int verbose = 0;
+  
+  while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
-    case 'P':
-      nproc = atoi(optarg);
+    case 'v':
+      verbose ++;
       break;
     default:
       fprintf(stderr, "usage: trsv [size]\n");
@@ -33,59 +128,14 @@ main(int argc, char **argv) {
      N = atoi(argv[optind]);
   }
 
-  conf.mb = 64;
-  conf.nb = 96;
-  conf.kb = 160;
-  conf.maxproc = 1;
-
   int fails = 0;
 
-  armas_d_init(&Y, N, 1);
-  armas_d_init(&X0, N, 1);
-  armas_d_init(&X, N, 1);
-  armas_d_init(&A, N, N);
-  armas_d_init(&At, N, N);
+  fails += test_row_vector(N, verbose, ARMAS_UPPER);
+  fails += test_col_vector(N, verbose, ARMAS_UPPER);
+  fails += test_row_vector(N, verbose, ARMAS_LOWER);
+  fails += test_col_vector(N, verbose, ARMAS_LOWER);
   
-  armas_d_set_values(&X0, one, ARMAS_NULL);
-  armas_d_set_values(&X, one, ARMAS_NULL);
-  armas_d_set_values(&A, zeromean, ARMAS_UPPER);
-  armas_d_set_values(&Y, zero, ARMAS_NULL);
-  armas_d_transpose(&At, &A);
-
-  // X = A*X
-  armas_d_mvmult_trm(&X, &A, 1.0, ARMAS_UPPER, &conf);
-  armas_d_mvsolve_trm(&X, &A, 1.0, ARMAS_UPPER, &conf);
-  ok = armas_d_allclose(&X0, &X);
-  printf("%6s : X = trsv(trmv(X, A, U|N), A, U|N)\n", ok ? "OK" : "FAILED");
-  fails += 1 - ok;
-
-  armas_d_set_values(&X, one, ARMAS_NULL);
-  // X = A*X
-  armas_d_mvmult_trm(&X, &A, 1.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
-  armas_d_mvsolve_trm(&X, &A, 1.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
-  ok = armas_d_allclose(&X0, &X);
-  printf("%6s : X = trsv(trmv(X, A, U|T), A, U|T)\n", ok ? "OK" : "FAILED");
-  fails += 1 - ok;
-
-  armas_d_set_values(&A, zero, ARMAS_NULL);
-  armas_d_set_values(&A, zeromean, ARMAS_LOWER);
-  armas_d_set_values(&X, one, ARMAS_NULL);
-
-  // X = A*X
-  armas_d_mvmult_trm(&X, &A, 1.0, ARMAS_LOWER, &conf);
-  armas_d_mvsolve_trm(&X, &A, 1.0, ARMAS_LOWER, &conf);
-  ok = armas_d_allclose(&X0, &X);
-  printf("%6s : X = trsv(trmv(X, A, L|N), A, L|N)\n", ok ? "OK" : "FAILED");
-  fails += 1 - ok;
-
-  armas_d_set_values(&X, one, ARMAS_NULL);
-  // X = A*X
-  armas_d_mvmult_trm(&X, &A, 1.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
-  armas_d_mvsolve_trm(&X, &A, 1.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
-  ok = armas_d_allclose(&X0, &X);
-  printf("%6s : X = trsv(trmv(X, A, L|T), A, L|T)\n", ok ? "OK" : "FAILED");
-  fails += 1 - ok;
-
+  
   exit(fails);
 }
 
