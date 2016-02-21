@@ -24,6 +24,7 @@ typedef float __Dtype;
 #define matrix_diag            armas_s_diag
 #define matrix_madd            armas_s_madd
 #define matrix_mscale          armas_s_mscale
+#define matrix_scale_plus      armas_s_scale_plus
 #define matrix_add_elem        armas_s_add_elem
 #define matrix_sub_elem        armas_s_sub_elem
 #define matrix_mul_elem        armas_s_mul_elem
@@ -163,6 +164,7 @@ typedef double __Dtype;
 #define matrix_data            armas_d_data
 #define matrix_diag            armas_d_diag
 #define matrix_mscale          armas_d_mscale
+#define matrix_scale_plus      armas_d_scale_plus
 #define matrix_madd            armas_d_madd
 #define matrix_add_elems       armas_d_add_elems
 #define matrix_sub_elems       armas_d_sub_elems
