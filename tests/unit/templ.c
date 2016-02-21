@@ -6,8 +6,7 @@
 #include <math.h>
 #include <float.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "testing.h"
 
 #define NAME "test"
 
@@ -19,14 +18,10 @@ main(int argc, char **argv)
   int K = N;
   int LB = 36;
   int ok = 0;
-  int nproc = 1;
   int verbose = 1;
 
-  while ((opt = getopt(argc, argv, "P:v")) != -1) {
+  while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
-    case 'P':
-      nproc = atoi(optarg);
-      break;
     case 'v':
       verbose += 1;
       break;
