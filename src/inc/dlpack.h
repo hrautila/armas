@@ -205,6 +205,11 @@
 #define __armas_update2_sym_rbt armas_s_update2_sym_rbt
 #define __update2_rbt_descend   __s_update2_rbt_descend
 
+// inverse
+#define __armas_inverse_trm     armas_s_inverse_trm
+#define __armas_inverse         armas_s_inverse
+#define __unblk_inverse_upper   __s_unblk_inverse_upper
+
 // internal
 #define __sym_eigen2x2          __s_sym_eigen2x2
 #define __sym_eigen2x2vec       __s_sym_eigen2x2vec
@@ -396,6 +401,11 @@
 #define __armas_update2_rbt     armas_d_update2_rbt
 #define __armas_update2_sym_rbt armas_d_update2_sym_rbt
 #define __update2_rbt_descend   __d_update2_rbt_descend
+
+// inverse
+#define __armas_inverse_trm     armas_d_inverse_trm
+#define __armas_inverse         armas_d_inverse
+#define __unblk_inverse_upper   __d_unblk_inverse_upper
 
 // internal
 #define __sym_eigen2x2          __d_sym_eigen2x2
