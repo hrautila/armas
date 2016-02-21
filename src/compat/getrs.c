@@ -9,11 +9,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__getrs) 
+#if defined(__getrs)  || defined(__lapacke_getrs)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_lufactor)
+#if defined(COMPAT) && defined(__armas_lufactor)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__getrs)
+#if defined(__getrs)
 void __getrs(int *n, int *nrhs, DTYPE *A, int *lda, int *ipiv, DTYPE *B, int *ldb, int *info)
 {
     __armas_dense_t a, b;
@@ -37,6 +37,26 @@ void __getrs(int *n, int *nrhs, DTYPE *A, int *lda, int *ipiv, DTYPE *B, int *ld
     err = __armas_lusolve(&b, &a, &piv, &conf);
     *info = err ? -conf.error : 0;
 }
+#endif
+
+#if defined(__lapacke_getrs)
+int __lapacke_getrs(int order, int N, int NRHS, DTYPE *A, int lda, int *ipv, DTYPE *B, int ldb)
+{
+    __armas_dense_t Aa, Ba;
+    armas_pivot_t piv;
+    armas_conf_t conf = *armas_conf_default();
+    int err, npiv = imin(M, N);
+
+    if (order == LAPACKE_ROW_MAJOR) {
+        return -1;
+    }
+    __armas_make(&Aa, M, N, lda, A);
+    __armas_make(&Ba, N, NRHS, ldb, B);
+    armas_pivot_make(&piv, npiv, ipv);
+    err = __armas_lusolve(&Ba, &Aa, &piv, &conf);
+    return err ? -conf.error : 0;
+}
+
 #endif
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

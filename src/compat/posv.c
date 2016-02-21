@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__posv)
+#if defined(__posv)
 void __posv(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *ldb,int *info)
 {
     __armas_dense_t a, b;
@@ -32,7 +32,7 @@ void __posv(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *ld
 
     __armas_make(&a, *n, *n, *lda, A);
     __armas_make(&b, *n, *nrhs, *ldb, B);
-    flags = toupper(*uplo) == 'L' | ARMAS_LOWER : ARMAS_UPPER;
+    flags = toupper(*uplo) == 'L' ? ARMAS_LOWER : ARMAS_UPPER;
     err = __armas_cholfactor(&a, flags, &conf);
     if (!err)
         err = __armas_cholsolve(&b, &a, flags, &conf);
@@ -40,9 +40,24 @@ void __posv(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *ld
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_posv)
+#if defined(__cblas_posv)
 int __cblas_posv(int order, int uplo, int n, DTYPE *A, int lda, DTYPE *B, int ldb)
 {
+    __armas_dense_t Aa, Ba;
+    armas_conf_t conf = *armas_conf_default();
+    int err, flags = 0;
+
+    if (order == LAPACKE_ROW_MAJOR) {
+        // solving needs copying; not yet implemented
+        return -1;
+    }
+    __armas_make(&Aa, n, n, lda, A);
+    __armas_make(&Ba, n, nrhs, ldb, B);
+    flags = uplo == CblasLower ? ARMAS_LOWER : ARMAS_UPPER;
+    err = __armas_cholfactor(&Aa, flags, &conf);
+    if (!err)
+        err = __armas_cholsolve(&Ba, &Aa, flags, &conf);
+    return err ? -conf.error : 0;
 }
 #endif
 

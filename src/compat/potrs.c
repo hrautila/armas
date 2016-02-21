@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__potrs) || defined(__cblas_potrs)
+#if defined(__potrs) || defined(__cblas_potrs) || defined(__lapacke_potrs)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__potrs)
+#if defined(__potrs)
 void __potrs(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *ldb,int *info)
 {
     __armas_dense_t a, b;
@@ -38,9 +38,29 @@ void __potrs(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *l
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_potrs)
+#if defined(__cblas_potrs)
 int __cblas_potrs(int order, int uplo, int n, DTYPE *A, int lda, DTYPE *B, int ldb)
 {
+}
+#endif
+
+#if defined(__lapacke_potrs)
+int __lapacke_potrs(int order, int uplo, int n, int nrhs, DTYPE *A, int lda, DTYPE *B, int ldb)
+{
+    __armas_dense_t a, b;
+    armas_conf_t conf = *armas_conf_default();
+    int err, flags = 0;
+
+    if (order == LAPACK_ROW_MAJOR) {
+        // needs copying; not yet implemented
+        return -1;
+    } else {
+        __armas_make(&a, n, n, lda, A);
+        __armas_make(&b, n, nrhs, ldb, B);
+        flags = toupper(uplo) == 'L' | ARMAS_LOWER : ARMAS_UPPER;
+    }
+    err = __armas_cholsolve(&b, &a, flags, &conf);
+    return err ? -conf.error : 0;
 }
 #endif
 
