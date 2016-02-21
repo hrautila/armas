@@ -5,6 +5,7 @@
 #include <time.h>
 #include <math.h>
 
+#if 0
 #if defined(FLOAT32)
 #include <armas/smatrix.h>
 typedef armas_s_dense_t __Matrix ;
@@ -19,8 +20,8 @@ typedef float __Dtype;
 #define matrix_release    armas_s_release
 #define matrix_mcopy      armas_s_mcopy
 #define matrix_printf     armas_s_printf
-#define __SCALING (__Dtype)((1 << 14) + 1)
 
+#define __SCALING (__Dtype)((1 << 14) + 1)
 #define STRTOF(arg)  strtof(arg, (char **)0);
 
 #else
@@ -43,6 +44,20 @@ typedef double __Dtype;
 
 #endif
 #include "helper.h"
+#endif
+
+#include "testing.h"
+#if FLOAT32
+
+#define __SCALING (__Dtype)((1 << 14) + 1)
+#define STRTOF(arg)  strtof(arg, (char **)0);
+
+#else
+
+#define __SCALING (__Dtype)((1 << 27) + 1)
+#define STRTOF(arg)  strtod(arg, (char **)0);
+
+#endif
 
 __Dtype scaledrand(int i, int j)
 {
@@ -57,13 +72,60 @@ __Dtype constant(int i, int j)
   return Aconstant;
 }
 
+__Dtype near_one(int i, int j)
+{
+  //if ((i & 0x1) == 0 && (j & 0x1) == 0)
+  //return 1.0;
+  //return (i & 0x1) == 0 || (j & 0x1) == 0 ? 1.0 - 10.*_EPS : 1.0 + 10.0*_EPS;
+  return ((i + j) & 0x1) == 0 ? 1.0 - _EPS : 1.0 + _EPS;
+}
+
+int test_left_right(int N, int verbose)
+{
+  int ok;
+  __Matrix A, At, B, Bt;
+  __Dtype n0, nrmB;
+  armas_conf_t conf = *armas_conf_default();
+  
+  matrix_init(&A,  N, N);
+  matrix_init(&At, N, N);
+  matrix_init(&B,  N, N);
+  matrix_init(&Bt, N, N);
+
+  matrix_set_values(&A, one, ARMAS_SYMM);
+  matrix_transpose(&At, &A);
+  matrix_set_values(&B, one, ARMAS_ANY);
+  matrix_mult_trm(&B, &A, 1.0, ARMAS_UPPER, ARMAS_ANY);
+  matrix_transpose(&Bt, &B);
+  if (N < 10) {
+    printf("A\n"); matrix_printf(stdout, "%6.3f", &A);
+    printf("At\n"); matrix_printf(stdout, "%6.3f", &At);
+  }
+  nrmB = matrix_mnorm(&B, ARMAS_NORM_INF, &conf);
+  // ||k*A.-1*B + (B.T*-k*A.-T).T|| ~ eps
+  matrix_solve_trm(&B, &A, 2.0, ARMAS_LEFT|ARMAS_UPPER, &conf);
+  matrix_solve_trm(&Bt, &At, -2.0, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANS, &conf);
+  if (N < 10) {
+    printf("B\n"); matrix_printf(stdout, "%6.3f", &B);
+    printf("Bt\n"); matrix_printf(stdout, "%6.3f", &Bt);
+  }
+  matrix_scale_plus(&B, &Bt, 1.0, 1.0, ARMAS_TRANSB, &conf);
+  if (N < 10) {
+    printf("B + B.T\n"); matrix_printf(stdout, "%6.3f", &B);
+  }
+  n0 = matrix_mnorm(&B, ARMAS_NORM_INF, &conf) / nrmB;
+  ok = isOK(n0, N) || n0 == 0.0;
+  printf("%4s : || k*A.-1*B + (-k*B.T*A.-T).T|| : %e\n", PASS(ok), n0);
+  return 1 - ok;
+}
+
 int main(int argc, char **argv)
 {
   armas_conf_t conf;
   __Matrix B0, A, B;
 
   int ok, opt;
-  int N = 601;
+  int N = 301;
   int verbose = 1;
   int fails = 0;
   __Dtype alpha = 1.0;
@@ -211,6 +273,7 @@ int main(int argc, char **argv)
   }
   fails += 1 - ok;
 
+  test_left_right(N, verbose);
   exit(fails);
 }
 
