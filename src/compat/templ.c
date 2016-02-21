@@ -1,7 +1,7 @@
 
 // Copyright (c) Harri Rautila, 2014
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__xxxx) || defined(__cblas_xxxx)
+#if defined(__xxxx) || defined(__lapacke_xxxx)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,15 +23,15 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(COMPAT) && defined(__xxxx)
+#if defined(__xxxx)
 void __xxxx(char *transa, char *transb, int *m, int *n, int *k, DTYPE *alpha, DTYPE *A,
             int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
 {
 }
 #endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_xxxx)
-void __cblas_xxxx(int order, int transa,  int transb, int M, int N,
+#if defined(__lapacke_xxxx)
+void __lapacke_xxxx(int order, int transa,  int transb, int M, int N,
                   int K, DTYPE alpha, DTYPE *A, int lda, DTYPE *B,  int ldb,
                   DTYPE beta, DTYPE *C, int ldc)
 {
