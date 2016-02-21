@@ -133,6 +133,8 @@ XBLAS3 = \
 	blas3/syrk_ext.c
 
 LAPACK = \
+	lapack/inv.c \
+	lapack/invtrm.c \
 	lapack/rbtgm.c \
 	lapack/rbtgu.c \
 	lapack/house.c \
@@ -174,7 +176,8 @@ LAPACK = \
 	lapack/evd.c \
 	lapack/svd.c \
 	lapack/qrt.c \
-	lapack/dqds.c
+	lapack/dqds.c 
+
 
 COMPAT = \
 	compat/asum.c \
