@@ -1,0 +1,122 @@
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Unblocked Upper Triangular Inverse
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% this is used in worksheets
+\renewcommand{\operation}{ 
+ A \becomes \textsc{InvTrmUpperUnblk(A)}
+}
+
+%% this is used in \FlaAlgorithm
+\renewcommand{\routinename}{
+ A \becomes \textsc{InvTrmUpperUnblk(A)}
+}
+
+\renewcommand{\precondition}{
+ A = \hat{A} \wedge A \in \mathbb{R}^{n x n} \wedge \sc{isTriU}(A)
+}
+
+\renewcommand{\postcondition}{
+ A = \hat{A}^{-1} \wedge A \hat{A} = I
+}
+
+\renewcommand{\guard}{
+  m( A_{TL} ) \leq m( A ) 
+}
+
+% invariant:
+
+\renewcommand{\invariant}{
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {*}    {A_{BR}}
+  =
+  \FlaTwoByTwo{\hat{A}_{TL}}{\hat{A}_{TR}}
+              {*}          {\hat{A}_{BR}}
+  \wedge
+  \begin{array}{l}
+    A_{TL} \hat{A}_{TL} = I \\
+    A_{TL} \hat{A}_{TR} + A_{TR} \hat{A}_{BR} = 0 \\
+    A_{BR} \hat{A}_{BR} = I
+  \end{array}
+}
+
+% Step 4: Initialize
+
+\renewcommand{\partitionings}{
+$
+  A
+  \rightarrow
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {*}    {A_{BR}}
+$
+}
+
+\renewcommand{\partitionsizes}{
+ $ A_{TL} $ are $ 0 \times 0 $
+}
+
+\renewcommand{\blocksizeftex}{1}
+
+\renewcommand{\repartitionings}{
+$
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {*}    {A_{BR}}
+  \rightarrow
+  \FlaThreeByThreeBR{A_{00}} {a_{01}}     {A_{02}}
+                    {*}     {\alpha_{11}}{a_{12}^T}
+                    {*}     {*}         {A_{22}}
+$
+}
+
+\renewcommand{\repartitionsizes}{
+$ \alpha_{11} $ is scalar 
+}
+
+\renewcommand{\moveboundaries}{
+$
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {*}    {A_{BR}}
+  \leftarrow
+  \FlaThreeByThreeTL{A_{00}} {a_{01}}      {A_{02}}
+                    {*}     {\alpha_{11}} {a_{12}^T}
+                    {*}     {*}          {A_{22}}
+$
+}
+
+\renewcommand{\beforeupdate}{
+  A_{00} \hat{A}_{00} = I
+}
+
+\renewcommand{\update}{
+ $
+  \begin{array}{ll}
+    \underline{Variant\ 1} 
+    \\
+    \alpha_{11} \becomes 1.0 / \alpha_{11} & \\
+    a_{01} \becomes - \alpha_{11} A_{00} a_{01}  & (\textsc{Trmv})
+    \\
+    \underline{Variant\ 2}
+    \\
+    \alpha_{11} \becomes 1.0 / \alpha_{11} & \\
+    a_{12} \becomes - \alpha_{11} A_{22}^{-T} a_{12} & (\text{Trsv})
+    \\
+ \end{array}
+ $
+}
+ 
+\renewcommand{\afterupdate}{
+  \FlaTwoByTwo{A_{00}} {a_{01}}
+              {*}     {\alpha_{11}}
+  \FlaTwoByTwo{\hat{A}_{00}} {\hat{a}_{01}}
+              {*}           {\hat{\alpha}_{11}}
+  = I
+  \vee
+  \FlaTwoByTwo{A_{00}} {a_{01}}
+              {*}     {\alpha_{11}}
+  \FlaTwoByOne{\hat{A}_{02}}{\hat{a}_{12}^T}
+  +              
+  \FlaTwoByOne{A_{02}}{a_{12}^T}
+  \hat{A}_{22}
+  = 0
+}
+

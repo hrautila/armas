@@ -1,0 +1,124 @@
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Blocked Upper Triangular Inverse; Bottom Right to Top Left iteration
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% this is used in worksheets
+\renewcommand{\operation}{ 
+ A := \textsc{InvtrmUpperBlkRev}(A)
+}
+
+%% this is used in \FlaAlgorithm
+\renewcommand{\routinename}{
+ A := \textsc{InvtrmUpperBlkRev}(A)
+}
+
+\renewcommand{\precondition}{
+ A = \hat{A} \wedge A \in \mathbb{R}^{n x n}
+}
+
+\renewcommand{\postcondition}{
+ \hat{A} A = I
+}
+
+\renewcommand{\guard}{
+  m( A_{BR} ) \leq m( A ) 
+}
+
+% invariant:
+
+\renewcommand{\invariant}{
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {*}    {A_{BR}}
+  =
+  \FlaTwoByTwo{\hat{A}_{TL}}{\hat{A}_{TR}}
+              {*}          {\hat{A}_{BR}}
+  \wedge
+  \begin{array}{l}              
+    \hat{A}_{TL}A_{TL} = I \\
+    \hat{A}_{TL}A_{TR} + \hat{A}_{TR}A_{BR} = 0 \\
+    \hat{A}_{BR}A_{BR} = I
+  \end{array}
+}
+
+% Step 4: Initialize
+
+\renewcommand{\partitionings}{
+$
+  A
+  \rightarrow
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {*}    {A_{BR}}
+$
+}
+
+\renewcommand{\partitionsizes}{
+ $ A_{BR} $ is $ 0 \times 0 $
+}
+
+\renewcommand{\blocksizeftex}{n_b}
+
+\renewcommand{\repartitionings}{
+$
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {*}    {A_{BR}}
+  \rightarrow
+  \FlaThreeByThreeTL{A_{00}} {A_{01}}  {A_{02}}
+                    {*}     {A_{11}}  {A_{12}}
+                    {*}     {*}      {A_{22}}
+$
+}
+
+\renewcommand{\repartitionsizes}{
+$ A_{11} $ is $ n_b \times n_b $
+}
+
+\renewcommand{\moveboundaries}{
+$
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {*}    {A_{BR}}
+  \leftarrow
+  \FlaThreeByThreeBR{A_{00}} {A_{01}} {A_{02}}
+                    {*}     {A_{11}} {A_{12}}
+                    {*}     {*}     {A_{22}}
+$
+}
+
+\renewcommand{\beforeupdate}{
+  \hat{A}_{22} A_{22} = I
+}
+
+\renewcommand{\update}{
+$
+  \begin{array}{ll}
+    \underline{Variant\ 1} 
+    \\
+    A_{11} := \textsc{InvTrmUpperUnblk}( A_{11} ) &  \\
+    A_{01} := A_{01} A_{11}       & (\textsc{Trmm}) \\
+    A_{01} := - A_{01} A_{00}^{-1} & (\textsc{Trsm}) \\
+    \\
+    \underline{Variant\ 2}
+    \\
+    A_{12} := A_{12} A_{22}       & (\textsc{Trmm}) \\
+    A_{12} := A_{11}^{-1} A_{12}   & (\textsc{Trsm}) \\
+    A_{11} := \textsc{InvTrmUpperUnblk}( A_{11} ) & \\
+    \\
+ \end{array}
+$
+}
+ 
+\renewcommand{\afterupdate}{
+  \FlaTwoByTwo{\hat{A}_{11}}{\hat{A}_{12}}
+              {*}          {\hat{A}_{22}}
+  \FlaTwoByTwo{A_{11}}{A_{12}}
+              {*}    {A_{22}}
+  = I
+  \vee
+  \hat{A}_{00}
+  \FlaOneByTwo{A_{01}}{A_{02}}
+  +
+  \FlaOneByTwo{\hat{A}_{01}}{\hat{A}_{02}}
+  \FlaTwoByTwo{A_{11}}{A_{12}}
+              {*}    {A_{22}}
+  = 0
+}
+
