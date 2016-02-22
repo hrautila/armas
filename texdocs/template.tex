@@ -1,0 +1,111 @@
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Unblocked Upper Triangular Inverse
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% this is used in worksheets
+\renewcommand{\operation}{ 
+ A, B := \textsc{Name(A, X)}
+}
+
+%% this is used in \FlaAlgorithm
+\renewcommand{\routinename}{
+ A, B := \textsc{Name(A, X)}
+}
+
+\renewcommand{\precondition}{
+  P_{\it pre}
+}
+
+\renewcommand{\postcondition}{
+ P_{\it post}
+}
+
+\renewcommand{\guard}{
+  G_{\it loop}
+}
+
+% invariant:
+
+\renewcommand{\invariant}{
+  P_{\it inv}
+}
+
+% Step 4: Initialize
+
+\renewcommand{\partitionings}{
+ $
+  A
+  \rightarrow
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {A_{BL}}{A_{BR}}
+ $
+}
+
+\renewcommand{\partitionsizes}{
+ $ A_{TL} $ are $ 0 \times 0 $
+}
+
+\renewcommand{\blocksizeftex}{n_b}
+
+\renewcommand{\repartitionings}{
+ $
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {A_{BL}}{A_{BR}}
+  \rightarrow
+  \FlaThreeByThreeBR{A_{00}}   {a_{01}}     {A_{02}}
+                    {a_{10}^T} {\alpha_{11}}{a_{12}^T}
+                    {A_{20}}   {a_{21}}     {A_{22}}
+ $
+}
+
+\renewcommand{\repartitionsizes}{
+ $ \alpha_{11} $ is scalar 
+}
+
+\renewcommand{\moveboundaries}{
+$
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {A_{BL}}{A_{BR}}
+  \rightarrow
+  \FlaThreeByThreeBR{A_{00}}   {a_{01}}     {A_{02}}
+                    {a_{10}^T} {\alpha_{11}}{a_{12}^T}
+                    {A_{20}}   {a_{21}}     {A_{22}}
+$
+}
+
+\renewcommand{\beforeupdate}{
+  \FlaThreeByThreeBR{A_{00}}   {a_{01}}     {A_{02}}
+                    {a_{10}^T} {\alpha_{11}}{a_{12}^T}
+                    {A_{20}}   {a_{21}}     {A_{22}}
+  =
+  \FlaThreeByThreeBR{A_{00}}   {a_{01}}     {A_{02}}
+                    {a_{10}^T} {\alpha_{11}}{a_{12}^T}
+                    {A_{20}}   {a_{21}}     {A_{22}}
+}
+
+\renewcommand{\update}{
+ $
+  \begin{array}{ll}
+    \underline{Variant\ 1} & \\
+    \alpha_{11} := \alpha_{11} & \\
+    a_{01} := - \alpha_{11} a_{01}  & (\textsc{Opname})
+    \\
+    \underline{Variant\ 2}
+    \\
+    \alpha_{11} := \alpha_{11} & \\
+    a_{12} := \alpha_{11} a_{12} & (\text{Opname})
+    \\
+ \end{array}
+ $
+}
+ 
+\renewcommand{\afterupdate}{
+  \FlaThreeByThreeBR{A_{00}}   {a_{01}}     {A_{02}}
+                    {a_{10}^T} {\alpha_{11}}{a_{12}^T}
+                    {A_{20}}   {a_{21}}     {A_{22}}
+  =
+  \FlaThreeByThreeBR{A_{00}}   {a_{01}}     {A_{02}}
+                    {a_{10}^T} {\alpha_{11}}{a_{12}^T}
+                    {A_{20}}   {a_{21}}     {A_{22}}
+}
+
