@@ -1,0 +1,122 @@
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Unblocked Lower Triangular Inverse, Backward iteration
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% this is used in worksheets
+\renewcommand{\operation}{ 
+ A := \textsc{InvTrmLowerBlkRev}(A)
+}
+
+%% this is used in \FlaAlgorithm
+\renewcommand{\routinename}{
+ A := \textsc{InvTrmLowerBlkRev}(A)
+}
+
+\renewcommand{\precondition}{
+ A = \hat{A} \wedge A \in \mathbb{R}^{n x n} \wedge \textsc{isTriL}(A)
+}
+
+\renewcommand{\postcondition}{
+ A \hat{A} = I
+}
+
+\renewcommand{\guard}{
+  m( A_{BR} ) \leq m( A ) 
+}
+
+% invariant:
+
+\renewcommand{\invariant}{
+  \FlaTwoByTwo{A_{TL}}{*}
+              {A_{BL}}{A_{BR}}
+  =
+  \FlaTwoByTwo{\hat{A}_{TL}}{*}
+              {\hat{A}_{BL}}{\hat{A}_{BR}}
+  \wedge
+  \begin{array}{l}
+    A_{TL}\hat{A}_{TL} = I \\
+    A_{BL}\hat{A}_{TL} + A_{BR}\hat{A}_{BL} = 0 \\
+    A_{BR}\hat{A}_{BR} = I
+  \end{array}
+}
+
+% Step 4: Initialize
+
+\renewcommand{\partitionings}{
+$
+  A
+  \rightarrow
+  \FlaTwoByTwo{A_{TL}}{*}
+              {A_{BL}}{A_{BR}}
+$
+}
+
+\renewcommand{\partitionsizes}{
+ $ A_{BR} $ is $ 0 \times 0 $
+}
+
+\renewcommand{\blocksizeftex}{1}
+
+\renewcommand{\repartitionings}{
+$
+  \FlaTwoByTwo{A_{TL}}{*}
+              {A_{BL}}{A_{BR}}
+  \rightarrow
+  \FlaThreeByThreeTL{A_{00}} {*}     {*}
+                    {A_{10}} {A_{11}} {*}
+                    {A_{20}} {A_{21}} {A_{22}}
+$
+}
+
+\renewcommand{\repartitionsizes}{
+$ A_{11} $ is $ n_b \times n_b $
+}
+
+\renewcommand{\moveboundaries}{
+$
+  \FlaTwoByTwo{A_{TL}}{*}
+              {A_{BL}}{A_{BR}}
+  \leftarrow
+  \FlaThreeByThreeBR{A_{00}} {*}     {*}
+                    {A_{10}} {A_{11}} {*}
+                    {A_{20}} {A_{21}} {A_{22}}
+$
+}
+
+\renewcommand{\beforeupdate}{
+ A_{22} \hat{A}_{22} = I
+}
+
+\renewcommand{\update}{
+  $
+  \begin{array}{ll}
+    \underline{Variant\ 1}  \\
+    A_{11}  := \textsc{InvLowerUnblkRev}(A11) & \\
+    A_{10}  := - A_{11} A_{10}      & (\textsc{Trmm}) \\
+    A_{10}  := A_{10} A_{00}^{-1}    & (\textsc{Trsm}) \\
+    \underline{Variant\ 2} \\
+    A_{21}  := - A_{22} A_{21}      & (\textsc{Trmm}) \\
+    A_{21}  :=  A_{21} A_{11}^{-1}   & (\textsc{Trsm}) \\
+    A_{11}  := \textsc{InvLowerUnblkRev}(A11) & \\
+  \end{array}
+  $
+}
+ 
+\renewcommand{\afterupdate}{
+  \FlaTwoByTwo{A_{11}}{*}
+              {A_{21}}{A_{22}}
+  \FlaTwoByTwo{\hat{A}_{11}}{*}
+              {\hat{A}_{21}}{\hat{A}_{22}}
+   = I
+   \wedge
+   \FlaTwoByOne{A_{10}}
+               {A_{20}}
+   \hat{A}_{00}
+   +
+   \FlaTwoByTwo{A_{11}} {*}
+               {A_{21}} {A_{22}}
+   \FlaTwoByOne{\hat{A}_{10}}
+               {\hat{A}_{20}}
+   = 0
+}
+
