@@ -1,0 +1,171 @@
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Unblocked General Matrix Inverse with Fused Triangular Matrix Inverse
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% this is used in worksheets
+\renewcommand{\operation}{ 
+ A := \textsc{Inverse}(L, U, P)
+}
+
+%% this is used in \FlaAlgorithm
+\renewcommand{\routinename}{
+ A := \textsc{Inverse}(L, U, P)
+}
+
+\renewcommand{\precondition}{
+  A \in \mathbb{R}^{nxn} \wedge
+  A = \hat{A} \wedge
+  \hat{A} = \{ \hat{L} \setminus \hat{U} \}
+}
+
+\renewcommand{\postcondition}{
+  \hat{U} U = I \wedge
+  A \hat{L} = U \wedge
+  A = \hat{A}^{-1}
+}
+
+\renewcommand{\guard}{
+  m( A_{BR} ) \leq m( A )
+}
+
+% invariant:
+
+\renewcommand{\invariant}{
+%  \FlaTwoByTwo{\hat{U}_{TL}}{\hat{U}_{TR}}
+%              {*}          {\hat{U}_{BR}}
+%  =
+%  \FlaTwoByTwo{U_{TL}}{U_{TR}}
+%              {*}    {U_{BR}}
+%  \wedge 
+  \begin{array}{l}
+  \hat{U}_{TL}U_{TL} = I \\
+  \hat{U}_{TL}U_{TR} + \hat{U}_{TR} U_{BR} = 0 \\
+  \hat{U}_{BR}U_{BR} = I \\
+  \end{array}
+
+  \wedge 
+  \begin{array}{l}
+  A_{TL}\hat{L}_{TL} + A_{TR}\hat{L}_{BL} = U_{TL} \\
+  A_{BL}\hat{L}_{TL} + A_{BR}\hat{L}_{BL} = 0 \\
+  A_{TR}\hat{L}_{BR} = U_{TR} \\
+  A_{BR}\hat{L}_{BR} = U_{BR}
+  \end{array}
+}
+
+% Step 4: Initialize
+
+\renewcommand{\partitionings}{
+$
+  A
+  \rightarrow
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {A_{BL}}{A_{BR}},
+  L
+  \rightarrow
+  \FlaTwoByTwo{L_{TL}}{0}
+              {L_{BL}}{L_{BR}},
+  U
+  \rightarrow
+  \FlaTwoByTwo{U_{TL}}{U_{TR}}
+              {0}    {U_{BR}}
+$
+}
+
+\renewcommand{\partitionsizes}{
+ $ A_{TL} $ are $ 0 \times 0 $
+}
+
+\renewcommand{\blocksizeftex}{1}
+
+\renewcommand{\repartitionings}{
+$
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {A_{BL}}{A_{BR}}
+  \rightarrow
+  \FlaThreeByThreeTL{A_{00}}   {a_{01}}     {A_{02}}
+                    {a_{10}^T} {\alpha_{11}}{a_{12}^T}
+                    {A_{20}}   {a_{21}}     {A_{22}} ,
+  \FlaTwoByTwo{L_{TL}}{*}
+              {L_{BL}}{L_{BR}}
+  \rightarrow
+  \FlaThreeByThreeTL{L_{00}}   {0}     {0}
+                    {l_{10}^T} {1}     {0}
+                    {L_{20}}   {l_{21}} {L_{22}} ,
+  \\
+  \FlaTwoByTwo{U_{TL}}{U_{TR}}
+              {0}    {U_{BR}}
+  \rightarrow
+  \FlaThreeByThreeTL{U_{00}} {u_{01}}       {U_{02}}
+                    {0}     {\upsilon_{11}}{u_{12}^T}
+                    {0}     {0}           {U_{22}}
+
+$
+}
+
+\renewcommand{\repartitionsizes}{
+$ \alpha_{11}, \upsilon_{11} $ are scalars
+}
+
+\renewcommand{\moveboundaries}{
+$
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {A_{BL}}{A_{BR}}
+  \leftarrow
+  \FlaThreeByThreeBR{A_{00}}   {a_{01}}     {A_{02}}
+                    {a_{10}^T} {\alpha_{11}}{a_{12}^T}
+                    {A_{20}}   {a_{21}}     {A_{22}}
+  \FlaTwoByTwo{L_{TL}}{0}
+              {L_{BL}}{L_{BR}}
+  \leftarrow
+  \FlaThreeByThreeBR{L_{00}}   {0}     {0}
+                    {l_{10}^T} {1}     {0}
+                    {L_{20}}   {l_{21}} {L_{22}}
+  \\                  
+  \FlaTwoByTwo{U_{TL}}{U_{TR}}
+              {0}    {U_{BR}}
+  \leftarrow
+  \FlaThreeByThreeBR{U_{00}} {u_{01}}       {U_{02}}
+                    {0}     {\upsilon_{11}}{u_{12}^T}
+                    {0}     {0}           {U_{22}}
+$
+}
+
+\renewcommand{\beforeupdate}{
+  \hat{U}_{22} U_{22} = I \wedge A_{22} = \hat{A}_{22}^{-1}
+}
+
+\renewcommand{\update}{
+  $
+  \begin{array}{lll}
+    Inverse\ u_{01} & & \\
+    \upsilon_{11} := 1.0 / \upsilon_{11}           & = 1.0 / \alpha_{11} & \\
+    u_{01}      := - \upsilon_{11} U_{00}^{-1} u_{01} & = a_{01} A_{00}^{-1} a_{01} & (\textsc{Trsv}) \\
+    \\ Inverse\ column\ of\ A  & \\
+    a_{01}      := u_{01} - U_{02} l_{21}            & = a_{01} - A_{02} l_{21}  & (\textsc{Gemv}) \\
+    \alpha_{11} := \upsilon_{11} - u_{12}^T l_{21}   & = \alpha_{11} - a_{12}^T a_{21} & \\
+    a_{21}      := - L_{22} l_{21}                  & = - A_{22} a_{21}   & (\textsc{Trmv})
+  \end{array}
+  $
+}
+ 
+\renewcommand{\afterupdate}{
+  \begin{array}{l}
+  \hat{U}_{00} \FlaOneByTwo{u_{01}}{U_{02}} + \FlaOneByTwo{\hat{u}_{01}}{\hat{U}_{02}}
+  \FlaTwoByTwo{\upsilon_{11}}{u_{12}^T}
+              {0}           {U_{22}}
+  \wedge \\
+  \FlaOneByTwo{a_{01}}{A_{02}}
+  \FlaTwoByTwo{1.0}  {0}
+              {\hat{l}_{21}}{\hat{L}_{22}}
+  =    \FlaOneByTwo{u_{01}}{U_{02}}
+  \wedge  \\
+  \FlaTwoByTwo{\alpha_{11}} {a_{12}^T}
+              {a_{21}}      {A_{22}}
+  \FlaTwoByTwo{1}          {0}
+              {\hat{l}_{21}}{\hat{L}_{22}}
+  =
+  \FlaTwoByTwo{\upsilon_{11}}{u_{12}^T}
+              {0}           {U_{22}}
+  \end{array}
+}
+
