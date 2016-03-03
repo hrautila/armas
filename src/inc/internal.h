@@ -261,6 +261,15 @@ void __add_at(mvec_t *A, int k, DTYPE v)
     A->md[k*A->inc] += v;
 }
 
+static inline
+void __vec_scale(mvec_t *X, int n, DTYPE val)
+{
+  register int i;
+  for (i = 0; i < n; i++) {
+    X->md[i*X->inc] *= val;
+  }
+}
+
 #ifdef DEBUG
 #define __DEBUG(a) do { a; } while (0)
 #else
@@ -399,6 +408,9 @@ extern
 void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
                       DTYPE alpha, DTYPE beta, int flags, int S, int L, int R, int E);
 
+extern
+void __gemv(mvec_t *Y, const mdata_t *A, const mvec_t *X,
+            DTYPE alpha, int flags, int M, int N);
 
 extern
 int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,

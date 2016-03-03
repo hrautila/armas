@@ -189,6 +189,7 @@ typedef float ABSTYPE;
 #define __kernel_inner           __s_kernel_inner
 #define __kernel_params          __s_kernel_params
 #define __gemv_recursive         __s_gemv_recursive
+#define __gemv                   __s_gemv
 #define __rank_diag              __s_rank_diag
 #define __rank2_blk              __s_rank2_blk
 #define __trmm_unb               __s_trmm_unb
@@ -401,6 +402,7 @@ typedef double ABSTYPE;
 #define __kernel_inner           __d_kernel_inner
 #define __kernel_params          __d_kernel_params
 #define __gemv_recursive         __d_gemv_recursive
+#define __gemv                   __d_gemv
 #define __rank_diag              __d_rank_diag
 #define __rank2_blk              __d_rank2_blk
 #define __trmm_unb               __d_trmm_unb
