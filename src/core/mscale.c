@@ -142,11 +142,13 @@ void __vec_print(const mvec_t *X, int N, const char *s, const char *efmt)
     printf("%s\n", s);
   if (!efmt)
     efmt = __DATA_FORMAT;
+  printf("[");
   for (i = 0; i < N; i++) {
-    printf("[");
+    if (i > 0)
+      printf(", ");
     printf(efmt, __PRINTABLE(X->md[i*X->inc]));
-    printf("]\n");
   }
+  printf("]\n");
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
