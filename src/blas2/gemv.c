@@ -68,10 +68,10 @@ void __gemv_unb_abs(mvec_t *Y, const mdata_t *A, const mvec_t *X,
     x = &X->md[S*X->inc];
     for (i = R; i < E-3; i += 4) {
       y = &Y->md[i*Y->inc];
-      a0 = &A->md[(i+0)*A->step];
-      a1 = &A->md[(i+1)*A->step];
-      a2 = &A->md[(i+2)*A->step];
-      a3 = &A->md[(i+3)*A->step];
+      a0 = &A->md[S+(i+0)*A->step];
+      a1 = &A->md[S+(i+1)*A->step];
+      a2 = &A->md[S+(i+2)*A->step];
+      a3 = &A->md[S+(i+3)*A->step];
       __vmult4dot_abs(y, Y->inc, a0, a1, a2, a3, x, X->inc, alpha, L-S);
     }
     if (i == E)
@@ -81,14 +81,14 @@ void __gemv_unb_abs(mvec_t *Y, const mdata_t *A, const mvec_t *X,
     case 3:
     case 2:
       y = &Y->md[i*Y->inc];
-      a0 = &A->md[(i+0)*A->step];
-      a1 = &A->md[(i+1)*A->step];
+      a0 = &A->md[S+(i+0)*A->step];
+      a1 = &A->md[S+(i+1)*A->step];
       __vmult2dot_abs(y, Y->inc, a0, a1, x, X->inc, alpha, L-S);
       i += 2;
     }
     if (i < E) {
       y = &Y->md[i*Y->inc];
-      a0 = &A->md[(i+0)*A->step];
+      a0 = &A->md[S+(i+0)*A->step];
       __vmult1dot_abs(y, Y->inc, a0, x, X->inc, alpha, L-S);
     }
     return;
@@ -147,31 +147,31 @@ void __gemv_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
   
   if ((flags & ARMAS_TRANSA) || (flags & ARMAS_TRANS)) {
 
-    x = &X->md[S*X->inc];
-    for (i = R; i < E-3; i += 4) {
+    x = &X->md[R*X->inc];
+    for (i = S; i < L-3; i += 4) {
       y = &Y->md[i*Y->inc];
-      a0 = &A->md[(i+0)*A->step];
-      a1 = &A->md[(i+1)*A->step];
-      a2 = &A->md[(i+2)*A->step];
-      a3 = &A->md[(i+3)*A->step];
-      __vmult4dot(y, Y->inc, a0, a1, a2, a3, x, X->inc, alpha, L-S);
+      a0 = &A->md[R+(i+0)*A->step];
+      a1 = &A->md[R+(i+1)*A->step];
+      a2 = &A->md[R+(i+2)*A->step];
+      a3 = &A->md[R+(i+3)*A->step];
+      __vmult4dot(y, Y->inc, a0, a1, a2, a3, x, X->inc, alpha, E-R);
     }
-    if (i == E)
+    if (i == L)
       return;
 
-    switch (E-i) {
+    switch (L-i) {
     case 3:
     case 2:
       y = &Y->md[i*Y->inc];
-      a0 = &A->md[(i+0)*A->step];
-      a1 = &A->md[(i+1)*A->step];
-      __vmult2dot(y, Y->inc, a0, a1, x, X->inc, alpha, L-S);
+      a0 = &A->md[R+(i+0)*A->step];
+      a1 = &A->md[R+(i+1)*A->step];
+      __vmult2dot(y, Y->inc, a0, a1, x, X->inc, alpha, E-R);
       i += 2;
     }
-    if (i < E) {
+    if (i < L) {
       y = &Y->md[i*Y->inc];
-      a0 = &A->md[(i+0)*A->step];
-      __vmult1dot(y, Y->inc, a0, x, X->inc, alpha, L-S);
+      a0 = &A->md[R+(i+0)*A->step];
+      __vmult1dot(y, Y->inc, a0, x, X->inc, alpha, E-R);
     }
     return;
   }
@@ -205,6 +205,16 @@ void __gemv_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
     a0 = &A->md[R+(j+0)*A->step];
     __vmult1axpy(y, Y->inc, a0, x, X->inc, alpha, E-R);
   }
+}
+
+
+void __gemv(mvec_t *Y, const mdata_t *A, const mvec_t *X,
+            DTYPE alpha, int flags, int M, int N)
+{
+  if (M <= 0 || N <= 0)
+    return;
+  
+  __gemv_unb(Y, A, X, alpha, flags, 0, N, 0, M);
 }
 
 
