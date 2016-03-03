@@ -28,23 +28,6 @@
 #include "matrix.h"
 #include "mvec_nosimd.h"
 
-static inline
-void __y1_sub0_dotax(DTYPE *y, int incy,
-                     const DTYPE *a0, int inca,
-                     const DTYPE *b, int incb, int nR)
-{
-  register int k;
-  register DTYPE s0, c0, y0, t0;
-
-  s0 = c0 = __ZERO;
-  for (k = 0; k < nR; k += 1) {
-    y0 = a0[(k+0)*inca]*b[(k+0)*incb] - c0;
-    t0 = s0 + y0;
-    c0 = (t0 - s0) - y0;
-    s0 = t0;
-  }
-  y[0] -= (s0 + c0);
-}
 
 static inline
 void __y1_sub_dotax(DTYPE *y, int incy,
@@ -78,47 +61,6 @@ void __y1_sub_dotax(DTYPE *y, int incy,
   y[0] -= (d0 + d1) + (d2 + d3);
 }
 
-static inline
-void __y2_sub_dotax(DTYPE *y, int incy, const DTYPE *a0, int inca,
-                    const DTYPE *b0, const DTYPE *b1,
-                    int incb, int nR)
-{
-  register int k;
-  register DTYPE d0, d1, d2, d3, d4, d5, d6, d7;
-
-  d0 = d1 = d2 = d3 = __ZERO;
-  d4 = d5 = d6 = d7 = __ZERO;
-  for (k = 0; k < nR-3; k += 4) {
-    d0 += a0[(k+0)*inca]*b0[(k+0)*incb];
-    d1 += a0[(k+1)*inca]*b0[(k+1)*incb];
-    d2 += a0[(k+2)*inca]*b0[(k+2)*incb];
-    d3 += a0[(k+3)*inca]*b0[(k+3)*incb];
-
-    d4 += a0[(k+0)*inca]*b1[(k+0)*incb];
-    d5 += a0[(k+1)*inca]*b1[(k+1)*incb];
-    d6 += a0[(k+2)*inca]*b1[(k+2)*incb];
-    d7 += a0[(k+3)*inca]*b1[(k+3)*incb];
-  }
-  if (k == nR)
-    goto update;
-
-  switch (nR-k) {
-  case 3:
-    d2 += a0[(k+0)*inca]*b0[(k+0)*incb];
-    d6 += a0[(k+0)*inca]*b1[(k+0)*incb];
-    k++;
-  case 2:
-    d1 += a0[(k+0)*inca]*b0[(k+0)*incb];
-    d5 += a0[(k+0)*inca]*b1[(k+0)*incb];
-    k++;
-  case 1:
-    d0 += a0[(k+0)*inca]*b0[(k+0)*incb];
-    d4 += a0[(k+0)*inca]*b1[(k+0)*incb];
-  }
- update:
-  y[0] -= d0 + d1 + d2 + d3;
-  y[incy] -= d4 + d5 + d6 + d7;
-}
 
 /*
  * Functions here solves the matrix equations
@@ -141,32 +83,27 @@ void __y2_sub_dotax(DTYPE *y, int incy, const DTYPE *a0, int inca,
  *
  */
 static
-void __solve_unb_lu(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags, 
-                  int ldB, int ldA, int nRE, int nB)
+void __solve_unblk_lu(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int nRE, int nB)
 {
-  // backward substitution
-  register int i, j;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-
-  // update with A bottom-right element
+  register int j;
+  mdata_t B2;
+  mvec_t a1, b1;
+  
   if (!unit) {
-    for (j = 0; j < nB; j++) {
-      Bc[(nRE-1)+j*ldB] /= Ac[(nRE-1)+(nRE-1)*ldA];
-    }
+    __rowvec(&b1, B, nRE-1, 0);
+    __vec_scale(&b1, nB, __ONE/__get(A, nRE-1, nRE-1));
   }
-
-  // rest of the elements
-  for (i = nRE-1; i > 0; i--) {
-    for (j = 0; j < nB; j++) {
-      // subtract from this row dot pwroduct of off-diagonal A and B elements below
-      __y1_sub_dotax(&Bc[(i-1)+j*ldB], 1, &Ac[(i-1)+i*ldA], ldA, &Bc[i+j*ldB], 1, nRE-i);
-      if (unit)
-        continue;
-      Bc[(i-1)+j*ldB] /= Ac[(i-1)+(i-1)*ldA];
-    }
+  for (j = nRE-2; j >= 0; j--) {
+    __subblock(&B2, B, j+1, 0);
+    __rowvec(&b1, B, j, 0);
+    __rowvec(&a1, A, j, j+1);
+    // b1 = (b1 - B2.T*a1) / a11
+    __gemv(&b1, &B2, &a1, -__ONE, ARMAS_TRANS, nRE-1-j, nB);
+    if (!unit)
+      __vec_scale(&b1, nB, __ONE/__get(A, j, j));
   }
 }
-
 
 
 /*
@@ -183,28 +120,24 @@ void __solve_unb_lu(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags,
  *   b2 = a02*b'0 + a12*b'1 + a22*b'2 --> b'2 = (b2 - a02*b'0 - a12*b'1)/a22
  */
 static
-void __solve_unb_lut(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags, 
-                     int ldB, int ldA, int nRE, int nB)
+void __solve_unblk_lut(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int nRE, int nB)
 {
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-  register int i, j;
-
-  if (!unit) {
-    for (j = 0; j < nB; j++) {
-      Bc[j*ldB] /= Ac[0];
-    }
-  }
-
-  for (i = 1; i < nRE; i++) {
-    for (j = 0; j < nB; j++) {
-      __y1_sub_dotax(&Bc[i+j*ldB], 1, &Ac[i*ldA], 1, &Bc[j*ldB], 1, i);
-      if (unit)
-        continue;
-      Bc[i+j*ldB] /= Ac[i+i*ldA];
-    }
+  register int j;
+  mdata_t B0;
+  mvec_t a1, b1;
+  
+  __subblock(&B0, B, 0, 0);
+  for (j = 0; j < nRE; j++) {
+    // j'th column
+    __rowvec(&b1, B, j, 0);
+    __colvec(&a1, A, 0, j);
+    // b1 = (b1 - B0*a1) / a11
+    __gemv(&b1, &B0, &a1, -__ONE, ARMAS_TRANS, j, nB);
+    if (!unit)
+      __vec_scale(&b1, nB, __ONE/__get(A, j, j));
   }
 }
-
 /*
  *    LEFT-LOWER
  *
@@ -219,31 +152,24 @@ void __solve_unb_lut(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags,
  *    b2 = a20*b'0 + a21*b'1 + a22*b'2 --> b'2 = (b2 - a20*b'0 - a21*b'1)/a22
  */
 static
-void __solve_unb_ll(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags, 
-                    int ldB, int ldA, int nRE, int nB)
+void __solve_unblk_ll(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int nRE, int nB)
 {
-  register int i, j;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-
-  // top-left
-  if (! unit) {
-    for (j = 0; j < nB; j++) {
-      Bc[j*ldB] /= Ac[0];
-    }
-  }
-
-  // rest of the elements
-  for (i = 1; i < nRE; i++) {
-    for (j = 0; j < nB; j++) {
-      // substact from this row dot product of off-diagonal A and B elements above
-      __y1_sub_dotax(&Bc[i+j*ldB], 1, &Ac[i], ldA, &Bc[j*ldB], 1, i);
-      if (unit)
-        continue;
-      Bc[i+j*ldB] /= Ac[i+i*ldA];
-    }
+  register int j;
+  mdata_t B0;
+  mvec_t a1, b1;
+  
+  __subblock(&B0, B, 0, 0);
+  for (j = 0; j < nRE; j++) {
+    // j'th column
+    __rowvec(&b1, B, j, 0);
+    __rowvec(&a1, A, j, 0);
+    // b1 = (b1 - B0*a1) / a11
+    __gemv(&b1, &B0, &a1, -__ONE, ARMAS_TRANS, j, nB);
+    if (!unit)
+      __vec_scale(&b1, nB, __ONE/__get(A, j, j));
   }
 }
-
 /*
  *   LEFT-LOWER-TRANS
  *
@@ -258,28 +184,27 @@ void __solve_unb_ll(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags,
  *    b2 = a22*b'2                     --> b'2 =  b2/a22
  */
 static
-void __solve_unb_llt(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags, 
-                     int ldB, int ldA, int nRE, int nB)
+void __solve_unblk_llt(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int nRE, int nB)
 {
-  register int i, j;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-
+  register int j;
+  mdata_t B2;
+  mvec_t a1, b1;
+  
   if (!unit) {
-    for (j = 0; j < nB; j++) {
-      Bc[(nRE-1)+j*ldB] /= Ac[(nRE-1)+(nRE-1)*ldA];
-    }
+    __rowvec(&b1, B, nRE-1, 0);
+    __vec_scale(&b1, nB, __ONE/__get(A, nRE-1, nRE-1));
   }
-
-  for (i = nRE-1; i > 0; i--) {
-    for (j = 0; j < nB; j++) {
-      __y1_sub_dotax(&Bc[(i-1)+j*ldB], 1, &Ac[i+(i-1)*ldA], 1, &Bc[i+j*ldB], 1, nRE-i);
-      if (unit)
-        continue;
-      Bc[(i-1)+j*ldB] /= Ac[(i-1)+(i-1)*ldA];
-    }
+  for (j = nRE-2; j >= 0; j--) {
+    __subblock(&B2, B, j+1, 0);
+    __rowvec(&b1, B, j,   0);
+    __colvec(&a1, A, j+1, j);
+    // b1 = (b1 - B2.T*a1) / a11
+    __gemv(&b1, &B2, &a1, -__ONE, ARMAS_TRANS, nRE-1-j, nB);
+    if (!unit)
+      __vec_scale(&b1, nB, __ONE/__get(A, j, j));
   }
 }
-
 /*
  *    RIGHT-UPPER
  *
@@ -295,27 +220,26 @@ void __solve_unb_llt(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags,
  *
  */
 static
-void __solve_unb_ru(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags, 
-                    int ldB, int ldA, int nRE, int nB)
+void __solve_unblk_ru(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int nRE, int nB)
 {
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-  register int i, j;
-
-  if (!unit) {
-    for (i = 0; i < nB; i++) {
-      Bc[i] /= Ac[0];
-    }
-  }
-  // nB is rows in B; nRE is rows/columns in A, cols in B
-  for (j = 1; j < nRE; j++) {
-    for (i = 0; i < nB; i++) {
-      __y1_sub_dotax(&Bc[i+j*ldB], 1, &Ac[j*ldA], 1, &Bc[i], ldB, j);
-      if (unit)
-        continue;
-      Bc[i+j*ldB] /= Ac[j+j*ldA];
-    }
+  register int j;
+  mdata_t B0;
+  mvec_t a1, b1;
+  
+  __subblock(&B0, B, 0, 0);
+  for (j = 0; j < nRE; j++) {
+    // j'th column
+    __colvec(&b1, B, 0, j);
+    __colvec(&a1, A, 0, j);
+    // b1 = (b1 - B0*a1) / a11
+    __gemv(&b1, &B0, &a1, -__ONE, 0, nB, j);
+    if (!unit)
+      __vec_scale(&b1, nB, __ONE/__get(A, j, j));
   }
 }
+
+
 /*
  *    RIGHT-UPPER-TRANS
  *
@@ -330,29 +254,28 @@ void __solve_unb_ru(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags,
  *    b2 = a22*b'2                     --> b'2 =  b2/a22
  */
 static
-void __solve_unb_rut(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags, 
-                     int ldB, int ldA, int nRE, int nB)
+void __solve_unblk_rut(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int nRE, int nB)
 {
-  register int i, j;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-
-  // if not unit then update rightmost with bottom-right of A
+  register int j;
+  mdata_t B2;
+  mvec_t a1, b1;
+  
   if (!unit) {
-    for (i = 0; i < nB; i++) {
-      Bc[i+(nRE-1)*ldB] /= Ac[(nRE-1)+(nRE-1)*ldA];
-    }
+    __colvec(&b1, B, 0, nRE-1);
+    __vec_scale(&b1, nB, __ONE/__get(A, nRE-1, nRE-1));
   }
-  for (j = nRE-1; j > 0; j--) {
-    for (i = 0; i < nB; i++) {
-      // update current B with dot-product of off-diagonal A and previous B
-      __y1_sub_dotax(&Bc[i+(j-1)*ldB], 1, &Ac[(j-1)+j*ldA], ldA, &Bc[i+j*ldB], ldB, nRE-j);
-      if (unit)
-        continue;
-      Bc[i+(j-1)*ldB] /= Ac[(j-1)+(j-1)*ldA];
-    }
+  for (j = nRE-2; j >= 0; j--) {
+    // j'th column
+    __subblock(&B2, B, 0, j+1);
+    __colvec(&b1, B, 0, j);
+    __rowvec(&a1, A, j, j+1);
+    // b1 = (b1 - B0*a1) / a11
+    __gemv(&b1, &B2, &a1, -__ONE, 0, nB, nRE-1-j);
+    if (!unit)
+      __vec_scale(&b1, nB, __ONE/__get(A, j, j));
   }
 }
-
 /*
  *    RIGHT-LOWER
  *                               a00 |  0  :  0  
@@ -366,25 +289,26 @@ void __solve_unb_rut(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags,
  *    b2 = a22*b'2                     --> b'2 =  b2/a22
  */
 static
-void __solve_unb_rl(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags, 
-                    int ldB, int ldA, int nRE, int nB)
+void __solve_unblk_rl(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int nRE, int nB)
 {
-  register int i, j;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-
+  register int j;
+  mdata_t B2;
+  mvec_t a1, b1;
+  
   if (!unit) {
-    for (i = 0; i < nB; i++) {
-      Bc[i+(nRE-1)*ldB] /= Ac[(nRE-1)+(nRE-1)*ldA];
-    }
+    __colvec(&b1, B, 0, nRE-1);
+    __vec_scale(&b1, nB, __ONE/__get(A, nRE-1, nRE-1));
   }
-  // backward along A diagonal from right to left
-  for (j = nRE-1; j > 0; j--) {
-    for (i = 0; i < nB; i++) {
-      __y1_sub_dotax(&Bc[i+(j-1)*ldB], 1, &Ac[j+(j-1)*ldA], 1, &Bc[i+j*ldB], ldB, nRE-j);
-      if (unit)
-        continue;
-      Bc[i+(j-1)*ldB] /= Ac[(j-1)+(j-1)*ldA];
-    }
+  for (j = nRE-2; j >= 0; j--) {
+    // j'th column
+    __subblock(&B2, B, 0, j+1);
+    __colvec(&b1, B, 0, j);
+    __colvec(&a1, A, j+1, j);
+    // b1 = (b1 - B0*a1) / a11
+    __gemv(&b1, &B2, &a1, -__ONE, 0, nB, nRE-1-j);
+    if (!unit)
+      __vec_scale(&b1, nB, __ONE/__get(A, j, j));
   }
 }
 
@@ -401,25 +325,22 @@ void __solve_unb_rl(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags,
  *    b02 = a20*b'00 + a21*b'01 + a22*b'02 --> b'02 = (b02 - a20*b'00 - a21*b'01)/a22
  */
 static
-void __solve_unb_rlt(DTYPE *Bc, const DTYPE *Ac, DTYPE alpha, int flags, 
-                     int ldB, int ldA, int nRE, int nB)
+void __solve_unblk_rlt(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags, int nRE, int nB)
 {
-  register int i, j;
   int unit = flags & ARMAS_UNIT ? 1 : 0;
-
-  if (!unit) {
-    // update left-most B with top-left A diagonal
-    for (i = 0; i < nB; i++) {
-      Bc[i] /= Ac[0];
-    }
-  }
-  for (j = 1; j < nRE; j++) {
-    for (i = 0; i < nB; i++) {
-      // update current elemnet with off-diagonal A and preceeding B elements
-      __y1_sub_dotax(&Bc[i+j*ldB], 1, &Ac[j], ldA, &Bc[i], ldB, j);
-
-      Bc[i+j*ldB] = unit ? Bc[i+j*ldB] : Bc[i+j*ldB]/Ac[j+j*ldA];
-    }
+  register int j;
+  mdata_t B0;
+  mvec_t a1, b1;
+  
+  __subblock(&B0, B, 0, 0);
+  for (j = 0; j < nRE; j++) {
+    // j'th column
+    __colvec(&b1, B, 0, j);
+    __rowvec(&a1, A, j, 0);
+    // b1 = (b1 - B0*a1) / a11
+    __gemv(&b1, &B0, &a1, -__ONE, 0, nB, j);
+    if (!unit)
+      __vec_scale(&b1, nB, __ONE/__get(A, j, j));
   }
 }
 
@@ -429,20 +350,20 @@ void __solve_left_unb(mdata_t *B, const mdata_t *A, DTYPE alpha,
 {
   switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANSA)) {
   case ARMAS_UPPER|ARMAS_TRANSA:
-    __solve_unb_lut(B->md, A->md, 1.0, flags, B->step, A->step, N, E-S);
+    __solve_unblk_lut(B, A, alpha, flags, N, E-S);
     break;
 
   case ARMAS_UPPER:
-    __solve_unb_lu(B->md, A->md, 1.0, flags, B->step, A->step, N, E-S);
+    __solve_unblk_lu(B, A, alpha, flags, N, E-S);
     break;
 
   case ARMAS_LOWER|ARMAS_TRANSA:
-    __solve_unb_llt(B->md, A->md, 1.0, flags, B->step, A->step, N, E-S);
+    __solve_unblk_llt(B, A, alpha, flags, N, E-S);
     break;
 
   case ARMAS_LOWER:
   default:
-    __solve_unb_ll(B->md, A->md, 1.0, flags, B->step, A->step, N, E-S);
+    __solve_unblk_ll(B, A, alpha, flags, N, E-S);
     break;
   }
 }
@@ -453,20 +374,20 @@ void __solve_right_unb(mdata_t *B, const mdata_t *A, DTYPE alpha,
 {
   switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANSA)) {
   case ARMAS_UPPER|ARMAS_TRANSA:
-    __solve_unb_rut(B->md, A->md, 1.0, flags, B->step, A->step, N, E-S);
+    __solve_unblk_rut(B, A, alpha, flags, N, E-S);
     break;
 
   case ARMAS_UPPER:
-    __solve_unb_ru(B->md, A->md, 1.0, flags, B->step, A->step, N, E-S);
+    __solve_unblk_ru(B, A, alpha, flags, N, E-S);
     break;
 
   case ARMAS_LOWER|ARMAS_TRANSA:
-    __solve_unb_rlt(B->md, A->md, 1.0, flags, B->step, A->step, N, E-S);
+    __solve_unblk_rlt(B, A, alpha, flags, N, E-S);
     break;
 
   case ARMAS_LOWER:
   default:
-    __solve_unb_rl(B->md, A->md, 1.0, flags, B->step, A->step, N, E-S);
+    __solve_unblk_rl(B, A, alpha, flags, N, E-S);
     break;
   }
 }
