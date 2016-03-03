@@ -80,7 +80,8 @@ void __solve_blk_lu_llt(mdata_t *B, const mdata_t *A, const  DTYPE alpha, int fl
       __subblock(&B1, B, cI, cJ);
 
       // solve bottom block
-      __solve_blk_recursive(&B1, &A1, 1.0, flags, nI, 0, nJ, cache);
+      //__solve_blk_recursive(&B1, &A1, 1.0, flags, nI, 0, nJ, cache);
+      __solve_left_unb(&B1, &A1, 1.0, flags, nI, 0, nJ);
       // update top with bottom solution; 
       __kernel_colwise_inner_no_scale(&B0, &A0, &B1, -1.0, flags, nI, nJ, cI, cache); 
       // scale current block
@@ -140,7 +141,8 @@ void __solve_blk_lut_ll(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
       // update block with old solutions
       __kernel_colwise_inner_no_scale(&B1, &A0, &B0, -1.0, flags, i, nJ, nI, cache);
       // solve diagonal block
-      __solve_blk_recursive(&B1, &A1, 1.0, flags, nI, 0, nJ, cache);
+      //__solve_blk_recursive(&B1, &A1, 1.0, flags, nI, 0, nJ, cache);
+      __solve_left_unb(&B1, &A1, 1.0, flags, nI, 0, nJ);
     }
   }
 }
@@ -197,7 +199,8 @@ void __solve_blk_ru_rlt(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
       __kernel_colwise_inner_no_scale(&B1, &B0, &A0, -1.0, transB,
                                       cI, nI, nJ, cache);
       // solve on diagonal 
-      __solve_blk_recursive(&B1, &A1, 1.0, flags, nI, 0, nJ, cache);
+      //__solve_blk_recursive(&B1, &A1, 1.0, flags, nI, 0, nJ, cache);
+      __solve_right_unb(&B1, &A1, 1.0, flags, nI, 0, nJ);
     }
   }
 }
@@ -254,7 +257,8 @@ void __solve_blk_rut_rl(mdata_t *B, const mdata_t *A, DTYPE alpha, int flags,
       __kernel_colwise_inner_no_scale(&B1, &B0, &A0, -1.0, transB,
                                       N-i, nI, nJ, cache); 
       // solve diagonal
-      __solve_blk_recursive(&B1, &A1, 1.0, flags, nI, 0, nJ, cache);
+      //__solve_blk_recursive(&B1, &A1, 1.0, flags, nI, 0, nJ, cache);
+      __solve_right_unb(&B1, &A1, 1.0, flags, nI, 0, nJ);
     }
   }
 }
