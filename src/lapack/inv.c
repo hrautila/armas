@@ -14,7 +14,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external functions
-#if defined(__unblk_inverse_upper) && defined(__armas_blas)
+#if defined(__armas_inverse_trm) && defined(__armas_blas)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -106,9 +106,8 @@ int __blk_inverse_fused(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_co
         __repartition_1x2to1x3(&AL, &A0, &A1, &A2,  /**/  A, lb, ARMAS_PLEFT);
         // ---------------------------------------------------------------------------
         // fused inverse upper triangular; 
-        // A11 := A11^-1  (use internal function)
-        e = __unblk_inverse_upper(&A11, 0, conf);
-        if (err == 0)
+        // A11 := A11^-1  
+        if ((e = __armas_inverse_trm(&A11, ARMAS_UPPER, conf)) < 0 && err == 0)
             err = e;
         // A01 := A01*A11
         __armas_mult_trm(&A01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER, conf);
@@ -188,7 +187,8 @@ int __armas_inverse(__armas_dense_t *A, __armas_dense_t *W, armas_pivot_t *P, ar
     }
 
     if (err == 0 && P) {
-        // apply row pivots
+        // apply col pivots ie. compute A := A*P
+        __apply_col_pivots(A, P, PIVOT_BACKWARD, conf);
     }
     return err;
 }
