@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_inverse_trm) && defined(__unblk_inverse_upper)
+#if defined(__armas_inverse_trm) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -35,6 +35,7 @@
  * loop of general matrix inverse.
  */
 
+static
 int __unblk_inverse_upper(__armas_dense_t *A, int flags, armas_conf_t *conf)
 {
     __armas_dense_t ATL, ABR, A00, a01, a11, A22;
