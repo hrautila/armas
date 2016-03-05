@@ -36,11 +36,13 @@
 #define __swap_cols               __s_swap_cols
 #define __apply_pivots            __s_apply_pivots
 #define __apply_row_pivots        __s_apply_row_pivots
+#define __apply_col_pivots        __s_apply_col_pivots
 #define __pivot_index             __s_pivot_index
 // marker for above function
 #define __lapack_pivots  1
 // public pivot functions
 #define __armas_pivot_rows      armas_s_pivot_rows
+#define __armas_pivot_cols      armas_s_pivot_cols
 
 // Additional
 #define __armas_qdroots         armas_s_qdroots
@@ -208,7 +210,7 @@
 // inverse
 #define __armas_inverse_trm     armas_s_inverse_trm
 #define __armas_inverse         armas_s_inverse
-#define __unblk_inverse_upper   __s_unblk_inverse_upper
+#define __armas_inverse_spd     armas_s_inverse_spd
 
 // internal
 #define __sym_eigen2x2          __s_sym_eigen2x2
@@ -240,11 +242,13 @@
 #define __swap_cols               __d_swap_cols
 #define __apply_pivots            __d_apply_pivots
 #define __apply_row_pivots        __d_apply_row_pivots
+#define __apply_col_pivots        __d_apply_col_pivots
 #define __pivot_index             __d_pivot_index
 // marker for above function
 #define __lapack_pivots  1
 // public pivot functions
 #define __armas_pivot_rows      armas_d_pivot_rows
+#define __armas_pivot_cols      armas_d_pivot_cols
 
 
 // Bidiagonal reduction
@@ -405,7 +409,7 @@
 // inverse
 #define __armas_inverse_trm     armas_d_inverse_trm
 #define __armas_inverse         armas_d_inverse
-#define __unblk_inverse_upper   __d_unblk_inverse_upper
+#define __armas_inverse_spd     armas_d_inverse_spd
 
 // internal
 #define __sym_eigen2x2          __d_sym_eigen2x2

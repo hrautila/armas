@@ -102,6 +102,36 @@ void __apply_row_pivots(__armas_dense_t *A, armas_pivot_t *P,
   }
 }
 
+/*
+ * \brief Apply column pivots forward or backward.
+ *
+ * \ingroup lapackaux internal
+ */
+void __apply_col_pivots(__armas_dense_t *A, armas_pivot_t *P,
+                        int dir, armas_conf_t *conf)
+{
+  int k, n;
+
+  if (A->cols == 0)
+    return;
+
+  if (dir == PIVOT_FORWARD) {
+    for (k = 0; k < P->npivots; k++) {
+      n = P->indexes[k];
+      if (n > 0 && n-1 != k) {
+        __swap_cols(A, n-1, k, conf);
+      }
+    }
+  } else {
+    for (k = P->npivots-1; k >= 0; k--) {
+      n = P->indexes[k];
+      if (n > 0 && n-1 != k) {
+        __swap_cols(A, n-1, k, conf);
+      }
+    }
+  }
+}
+
 /**
  * \brief Apply row pivots in P to matrix A forward or backward.
  *
@@ -118,12 +148,22 @@ int __armas_pivot_rows(__armas_dense_t *A, armas_pivot_t *P, int flags, armas_co
   return 0;
 }
 
-#if 0
-void __apply_col_pivots(__armas_dense_t *A, armas_pivot_t *P,
-                        int dir, armas_conf_t *conf)
+/**
+ * \brief Apply column pivots in P to matrix A forward or backward.
+ *
+ * \ingroup lapackaux
+ */
+int __armas_pivot_cols(__armas_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
+  if (A->rows < P->npivots)
+    return -1;
+  if (!conf)
+    conf = armas_conf_default();
+
+  __apply_col_pivots(A, P, flags, conf);
+  return 0;
 }
-#endif
+
 
 /*
  * \brief Find index to largest absolute of vector.
