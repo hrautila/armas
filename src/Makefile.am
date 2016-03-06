@@ -135,6 +135,7 @@ XBLAS3 = \
 LAPACK = \
 	lapack/inv.c \
 	lapack/invtrm.c \
+	lapack/invspd.c \
 	lapack/rbtgm.c \
 	lapack/rbtgu.c \
 	lapack/house.c \
