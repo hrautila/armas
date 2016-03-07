@@ -145,6 +145,10 @@ typedef float __Dtype;
 #define matrix_mult_rbt        armas_s_mult_rbt
 #define matrix_update2_rbt     armas_s_update2_rbt
 #define matrix_gen_rbt         armas_s_gen_rbt
+#define matrix_inverse_trm     armas_s_inverse_trm
+#define matrix_inverse         armas_s_inverse
+#define matrix_inverse_spd     armas_s_inverse_spd
+
 
 #else
 
@@ -286,6 +290,9 @@ typedef double __Dtype;
 #define matrix_mult_rbt        armas_d_mult_rbt
 #define matrix_update2_rbt     armas_d_update2_rbt
 #define matrix_gen_rbt         armas_d_gen_rbt
+#define matrix_inverse_trm     armas_d_inverse_trm
+#define matrix_inverse         armas_d_inverse
+#define matrix_inverse_spd     armas_d_inverse_spd
 
 #endif
 #include "helper.h"
