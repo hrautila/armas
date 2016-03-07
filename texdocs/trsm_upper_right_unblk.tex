@@ -1,0 +1,136 @@
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Unblocked Upper Triangular Solve from Right
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% this is used in worksheets
+\renewcommand{\operation}{ 
+ X := \textsc{TrsmUpperRightUnblk}(B, U)
+}
+
+%% this is used in \FlaAlgorithm
+\renewcommand{\routinename}{
+ X := \textsc{TrsmUpperRightUnblk}(B, U)
+}
+
+\renewcommand{\precondition}{
+  U \in \mathbb{R}^{n \times n} \wedge \textsc{isTriU}(U) \wedge X, B \in \mathbb{R}^{m \times n} 
+}
+
+\renewcommand{\postcondition}{
+ B = X \wedge X U = \hat{B}
+}
+
+\renewcommand{\guard}{
+  $ m( U_{TL} ) < m( U ) $
+}
+
+% invariant:
+
+\renewcommand{\invariant}{
+  \FlaOneByTwo{X_{L}}{X_{R}}
+  \FlaTwoByTwo{U_{TL}}{U_{TR}}
+              {*}    {U_{BR}}
+  =
+  \FlaOneByTwo{\hat{B}_{L}}{\hat{B}_{R}}
+  \wedge
+  \begin{array}{l}
+  X_{L} U_{TL} = \hat{B}_{L} \\
+  X_{L} U_{TR} + X_{R} U_{BR} = \hat{B}_{R} 
+  \end{array}
+}
+
+% Step 4: Initialize
+
+\renewcommand{\partitionings}{
+ $
+  A
+  \rightarrow
+  \FlaTwoByTwo{U_{TL}}{U_{TR}}
+              {*}    {U_{BR}} 
+  ,
+  X
+  \rightarrow
+  \FlaOneByTwo{X_{L}}{X_{R}} 
+  , 
+  B
+  \rightarrow
+  \FlaOneByTwo{B_{L}}{B_{R}}
+
+ $
+}
+
+\renewcommand{\partitionsizes}{
+ $ U_{TL} $ is $ 0 \times 0 $ and $ X_{L}, B_{L} $ are $ m \times 0 $
+}
+
+\renewcommand{\blocksizeftex}{1}
+
+\renewcommand{\repartitionings}{
+ $
+  \FlaTwoByTwo{U_{TL}}{U_{TR}}
+              {*}    {U_{BR}} 
+  \rightarrow 
+  \FlaThreeByThreeBR{U_{00}} {u_{01}}       {U_{02}}
+                    {*}     {\upsilon_{11}}{u_{12}^T}
+                    {*}     {*}           {U_{22}}   
+  , \\
+  \FlaOneByTwo{X_{L}}{X_{R}} 
+  \rightarrow                   
+  \FlaOneByThreeR{X_{0}}{x_{1}}{X_{2}} 
+  ,
+  \FlaOneByTwo{B_{L}}{B_{R}} 
+  \rightarrow                   
+  \FlaOneByThreeR{B_{0}}{b_{1}}{B_{2}} 
+ $
+}
+
+\renewcommand{\repartitionsizes}{
+ $ \upsilon_{11} $ is scalar 
+}
+
+\renewcommand{\moveboundaries}{
+$
+  \FlaTwoByTwo{A_{TL}}{A_{TR}}
+              {A_{BL}}{A_{BR}}
+  \leftarrow
+  \FlaThreeByThreeTL{A_{00}} {u_{01}}       {U_{02}}
+                    {*}     {\upsilon_{11}}{u_{12}^T}
+                    {*}     {*}           {U_{22}} 
+  , \\                    
+  \FlaOneByTwo{X_{L}}{X_{R}}
+  \leftarrow                    
+  \FlaOneByThreeL{X_{0}}{x_{1}}{X_{2}} 
+  , 
+  \FlaOneByTwo{B_{L}}{B_{R}}
+  \leftarrow                    
+  \FlaOneByThreeL{B_{0}}{b_{1}}{B_{2}} 
+
+$
+}
+
+\renewcommand{\beforeupdate}{
+  X_{L} U_{TL} = \hat{B}_{L}
+}
+
+\renewcommand{\update}{
+ $
+  \begin{array}{ll}
+    b_{1} := \hat{b_{1}} - B_{0} u_{01}  &  \textsc{Gemv} \\
+    b_{1} := b_{1} / \upsilon_{11} &
+  \end{array}
+ $
+}
+ 
+\renewcommand{\afterupdate}{
+  \FlaOneByTwo{X_{0}}{x_{1}}
+  \FlaTwoByTwo{U_{00}}{u_{01}}
+              {*}    {\upsilon_{11}}
+  =              
+  \FlaOneByTwo{\hat{B}_{0}}{\hat{b}_{1}}
+  \wedge
+  \begin{array}{l}
+  X_{0} U_{00} = \hat{B}_{0} \\
+  X_{0} u_{01} + x_{1} \upsilon_{11} = \hat{b}_{1}
+  \end{array}
+}
+

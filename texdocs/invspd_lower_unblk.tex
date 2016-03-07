@@ -1,0 +1,133 @@
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Unblocked Lower Symmetric Positive Definite Matrix Inverse
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\Brief}{
+  Unblocked algorithm for symmetric positive definite matrix inverse when
+  elements stored to lower triangular elements.
+}
+
+%% this is used in worksheets
+\renewcommand{\operation}{ 
+ A := \textsc{InvSpdLowerUnblk}(L)
+}
+
+%% this is used in \FlaAlgorithm
+\renewcommand{\routinename}{
+ A := \textsc{InvSpdLowerUnblk}(L)
+}
+
+\renewcommand{\precondition}{
+ A \in \mathbb{R}^{n x n} \wedge
+ \hat{A} = \hat{L} \hat{L}^T 
+}
+
+\renewcommand{\postcondition}{
+ A \hat{A} = I \wedge A \hat{L} = \hat{L}^{-T}
+}
+
+\renewcommand{\guard}{
+  m( A_{TL} ) \leq m( A ) 
+}
+
+% invariant:
+
+\renewcommand{\invariant}{
+  \begin{array}{l}
+  A_{TL}  \hat{L}_{TL} + A_{BL}^T\hat{L}_{BL} = L_{TL}^{-T} \\
+  A_{BL}  \hat{L}_{TL} + A_{BR}\hat{L}_{BL} = 0 \\
+  A_{BL}^T\hat{L}_{BR} = L_{BL}^{-T} \\
+  A_{BR}  \hat{L}_{BR} = L_{BR}^{-T}
+  \end{array}
+}
+
+% Step 4: Initialize
+
+\renewcommand{\partitionings}{
+$
+  A
+  \rightarrow
+  \FlaTwoByTwo{A_{TL}}{A_{BL}^T}
+              {A_{BL}}{A_{BR}} ,
+  L
+  \rightarrow
+  \FlaTwoByTwo{L_{TL}}{*}
+              {L_{BL}}{L_{BR}}
+$
+}
+
+\renewcommand{\partitionsizes}{
+ $ A_{BR} $ is $ 0 \times 0 $
+}
+
+\renewcommand{\blocksizeftex}{1}
+
+\renewcommand{\repartitionings}{
+$
+  \FlaTwoByTwo{A_{TL}}{A_{BL}^T}
+              {A_{BL}}{A_{BR}}
+  \rightarrow
+  \FlaThreeByThreeTL{A_{00}}  {a_{10}}     {A_{20}^T}
+                    {a_{10}^T}{\alpha_{11}}{a_{21}^T}
+                    {A_{20}}  {a_{21}}     {A_{22}}
+  ,
+  \FlaTwoByTwo{L_{TL}}{*}
+              {L_{BL}}{L_{BR}}
+  \rightarrow
+  \FlaThreeByThreeTL{L_{00}}  {*}         {*}
+                    {l_{10}^T}{\delta_{11}}{*}
+                    {L_{20}}  {l_{21}}     {L_{22}}
+$
+}
+
+\renewcommand{\repartitionsizes}{
+$ \alpha_{11} $ is scalar 
+}
+
+\renewcommand{\moveboundaries}{
+$
+  \FlaTwoByTwo{A_{TL}}{A_{BL}^T}
+              {A_{BL}}{A_{BR}}
+  \leftarrow
+  \FlaThreeByThreeBR{A_{00}}  {a_{10}}     {A_{20}^T}
+                    {a_{10}^T}{\alpha_{11}}{a_{21}^T}
+                    {A_{20}}  {a_{21}}     {A_{22}}
+  ,
+  \FlaTwoByTwo{L_{TL}}{*}
+              {L_{BL}}{L_{BR}}
+  \rightarrow
+  \FlaThreeByThreeBR{L_{00}}  {*}         {*}
+                    {l_{10}^T}{\delta_{11}}{*}
+                    {L_{20}}  {l_{21}}     {L_{22}}
+$
+}
+
+\renewcommand{\beforeupdate}{
+  A_{22} L_{22} = L_{22}^{-T}
+}
+
+\renewcommand{\update}{
+  $
+  \begin{array}{ll}
+    a_{21} := - A_{22} l_{21}  & \textsc{Symv} \\
+    a_{21} := a_{21} / \alpha_{11} &  \\
+    \alpha_{11} := \alpha_{11}^{-2} - a_{21}^T l_{21} / \alpha_{11} &
+  \end{array}
+  $
+}
+ 
+\renewcommand{\afterupdate}{
+  \FlaTwoByTwo{\alpha_{11}}{a_{21}^T}
+              {a_{21}}     {A_{22}}
+  \FlaTwoByTwo{\delta_{11}}{*}
+              {l_{21}}     {L_{22}}
+  =
+  \FlaTwoByTwo{\delta_{11}^{-1}}{l_{21}^{-T}}
+              {*}             {L_{22}^{-T}}
+  \wedge
+  \begin{array}{l}
+  \alpha_{11} \delta_{11} + a_{21}^T l_{21} = \delta_{11}^{-1} \\
+  a_{21} \delta_{11} + A_{22} l_{21} = 0
+  \end{array}
+}
+
