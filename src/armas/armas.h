@@ -62,8 +62,12 @@ enum armas_sort {
 };
 
 enum armas_pivots {
-  ARMAS_PIVOT_FORWARD = 0,    ///< Pivots forwards
-  ARMAS_PIVOT_BACKWARD = 1    ///< Pivot backwards
+  ARMAS_PIVOT_FORWARD = 0x0,    ///< Pivots forwards
+  ARMAS_PIVOT_BACKWARD = 0x1,   ///< Pivot backwards
+  ARMAS_PIVOT_ROWS = 0x2,       ///< Pivot rows
+  ARMAS_PIVOT_COLS = 0x4,       ///< Pivot columns
+  ARMAS_PIVOT_UPPER = 0x8,     ///< Pivot upper triangular symmetric matrix
+  ARMAS_PIVOT_LOWER = 0x10      ///< Pivot lower triangular symmetric matrix
 };
 
 enum armas_opts {
@@ -180,6 +184,9 @@ typedef struct armas_pivot {
   int owner;      ///< Storage owner flag
 } armas_pivot_t;
 
+///< No pivoting indicator
+#define ARMAS_NOPIVOT (armas_pivot_t *)0
+  
 #ifndef __ARMAS_INLINE
 #define __ARMAS_INLINE extern inline
 #endif
@@ -284,6 +291,11 @@ int armas_pivot_get(armas_pivot_t *ptable, int k)
 {
   return ptable && k >= 0 && k < ptable->npivots ? ptable->indexes[k] : 0;
 }
+__ARMAS_INLINE
+int armas_pivot_get_unsafe(armas_pivot_t *ptable, int k)
+{
+  return ptable->indexes[k];
+}
 
 /**
  * @brief Set pivot at index k.
@@ -293,6 +305,11 @@ void armas_pivot_set(armas_pivot_t *ptable, int k, int val)
 {
   if (ptable && k >= 0 && k < ptable->npivots)
     ptable->indexes[k] = val;
+}
+__ARMAS_INLINE
+void armas_pivot_set_unsafe(armas_pivot_t *ptable, int k, int val)
+{
+  ptable->indexes[k] = val;
 }
 
 extern void armas_pivot_printf(FILE* out, const char *fmt, armas_pivot_t *pivot);
