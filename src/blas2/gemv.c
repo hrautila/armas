@@ -63,7 +63,7 @@ void __gemv_unb_abs(mvec_t *Y, const mdata_t *A, const mvec_t *X,
     return;
   }
 
-  if ((flags & ARMAS_TRANSA) || (flags & ARMAS_TRANS)) {
+  if ((flags & ARMAS_TRANS) != 0) {
 
     x = &X->md[S*X->inc];
     for (i = R; i < E-3; i += 4) {
@@ -359,9 +359,9 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
     __armas_scale(Y, beta, conf);
   }
   if (conf->optflags & ARMAS_RECURSIVE) {
-    __gemv_recursive(&y, &A0, &x, alpha, beta, flags, 0, nx, 0, ny);
+    __gemv_recursive(&y, &A0, &x, alpha, beta, flags, 0, A->cols, 0, A->rows);
   } else {
-    __gemv_unb(&y, &A0, &x, alpha, flags, 0, nx, 0, ny);
+    __gemv_unb(&y, &A0, &x, alpha, flags, 0, A->cols, 0, A->rows);
   }
   return 0;
 }
