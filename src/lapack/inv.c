@@ -188,7 +188,7 @@ int __armas_inverse(__armas_dense_t *A, __armas_dense_t *W, armas_pivot_t *P, ar
 
     if (err == 0 && P) {
         // apply col pivots ie. compute A := A*P
-        __apply_col_pivots(A, P, PIVOT_BACKWARD, conf);
+        __armas_pivot(A, P, ARMAS_PIVOT_COLS|ARMAS_PIVOT_BACKWARD, conf);
     }
     return err;
 }
