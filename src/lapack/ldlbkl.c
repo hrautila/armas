@@ -27,41 +27,7 @@
 #include "pivot.h"
 #include "internal_lapack.h"
 
-/*
- * Apply diagonal pivot (row and column swapped) to symmetric matrix blocks.
- *
- * LOWER triangular; moving from top-left to bottom-right
- *
- *    -----------------------
- *    | d 
- *    | x P1 x  x  x  P2     -- current row/col 'srcix'
- *    | x S2 d  x  x  x
- *    | x S2 x  d  x  x
- *    | x S2 x  x  d  x
- *    | x P2 D2 D2 D2 P3     -- swap with row/col 'dstix'
- *    | x S3 x  x  x  D3 d
- *    | x S3 x  x  x  D3 x d
- *         (AR)
- */
-static
-void __apply_bkpivot_lower(__armas_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
-{
-  __armas_dense_t s, d;
-  DTYPE p1, p3;
-  // S2 -- D2
-  __armas_submatrix(&s, AR, srcix+1, srcix,   dstix-srcix-1, 1);
-  __armas_submatrix(&d, AR, dstix,   srcix+1, 1, dstix-srcix-1);
-  __armas_swap(&s, &d, conf);
-  // S3 -- D3
-  __armas_submatrix(&s, AR, dstix+1, srcix,  AR->rows-dstix-1, 1);
-  __armas_submatrix(&d, AR, dstix+1, dstix,  AR->rows-dstix-1, 1);
-  __armas_swap(&s, &d, conf);
-  // swap P1 and P3
-  p1 = __armas_get(AR, srcix, srcix);
-  p3 = __armas_get(AR, dstix, dstix);
-  __armas_set(AR, srcix, srcix, p3);
-  __armas_set(AR, dstix, dstix, p1);
-}
+#include "sym.h"
 
 
 /*
@@ -376,7 +342,7 @@ int __unblk_bkbounded_lower(__armas_dense_t *A, __armas_dense_t *W,
   //DTYPE abuf[4];
   int nc, r, np, pi;
 
-  EMPTY(A00); EMPTY(a11);
+  EMPTY(A00); EMPTY(a11); EMPTY(w10);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR, /**/  A, 0, 0, ARMAS_PTOPLEFT);

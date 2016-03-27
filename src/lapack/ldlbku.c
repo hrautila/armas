@@ -27,44 +27,7 @@
 #include "pivot.h"
 #include "internal_lapack.h"
 
-/*
- * Apply diagonal pivot (row and column swapped) to symmetric matrix blocks.
- *
- * UPPER triangular; moving from bottom-right to top-left
- *
- *    d x D3 x  x  x  S3 x |
- *      d D3 x  x  x  S3 x |
- *        P3 D2 D2 D2 P2 x |  -- dstinx
- *           d  x  x  S2 x |
- *              d  x  S2 x |
- *                 d  S2 x |
- *                    P1 x |  -- srcinx
- *                       d |
- *    ----------------------
- *               (ABR)
- */
-static
-void __apply_bkpivot_upper(__armas_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
-{
-  __armas_dense_t s, d;
-  DTYPE p1, p3;
-  if (srcix == dstix)
-    return;
-
-  // S2 -- D2
-  __armas_submatrix(&s, AR, dstix+1, srcix,   srcix-dstix-1, 1);
-  __armas_submatrix(&d, AR, dstix,   dstix+1, 1, srcix-dstix-1);
-  __armas_swap(&s, &d, conf);
-  // S3 -- D3
-  __armas_submatrix(&s, AR, 0, srcix,  dstix, 1);
-  __armas_submatrix(&d, AR, 0, dstix,  dstix, 1);
-  __armas_swap(&s, &d, conf);
-  // swap P1 and P3
-  p1 = __armas_get(AR, srcix, srcix);
-  p3 = __armas_get(AR, dstix, dstix);
-  __armas_set(AR, srcix, srcix, p3);
-  __armas_set(AR, dstix, dstix, p1);
-}
+#include "sym.h"
 
 
 /*
@@ -150,7 +113,7 @@ int __unblk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
   DTYPE abuf[4];
   int nc, r, np, nr, pi;
 
-  EMPTY(A00); EMPTY(a11);
+  EMPTY(A00); EMPTY(a11); EMPTY(ATL);
 
   __partition_2x2(&ATL,  &ATR,
                   __nil, &ABR, /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);
@@ -367,7 +330,7 @@ int __unblk_bkbounded_upper(__armas_dense_t *A, __armas_dense_t *W,
   DTYPE t1, tr, a11val, a, b, d, scale;
   int nc, r, np, pi;
 
-  EMPTY(A00); EMPTY(a11); EMPTY(w00);
+  EMPTY(A00); EMPTY(a11); EMPTY(ATL); EMPTY(w00); EMPTY(w01);
 
   __partition_2x2(&ATL, &ATR,
                   &ABL, &ABR, /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);
