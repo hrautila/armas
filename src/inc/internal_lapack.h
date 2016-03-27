@@ -68,22 +68,10 @@ long __IMIN(long a, long b) {
 }
 
 // helper functions
-extern
-void __swap_rows(__armas_dense_t *A, int src, int dst, armas_conf_t *conf);
 
-extern
-void __swap_cols(__armas_dense_t *A, int src, int dst, armas_conf_t *conf);
- 
 extern
 void __scale_pivots(armas_pivot_t *P, int offset);
 
-extern
-void __apply_pivots(__armas_dense_t *A, armas_pivot_t *P, armas_conf_t *conf);
-
-extern
-void __apply_row_pivots(__armas_dense_t *A, armas_pivot_t *P, int dir, armas_conf_t *conf);
-extern
-void __apply_col_pivots(__armas_dense_t *A, armas_pivot_t *P, int dir, armas_conf_t *conf);
 extern
 int __pivot_index(__armas_dense_t *A, armas_conf_t *conf);
 extern

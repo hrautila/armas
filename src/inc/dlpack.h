@@ -32,17 +32,13 @@
 
 
 // internal helpers
-#define __swap_rows               __s_swap_rows
-#define __swap_cols               __s_swap_cols
-#define __apply_pivots            __s_apply_pivots
-#define __apply_row_pivots        __s_apply_row_pivots
-#define __apply_col_pivots        __s_apply_col_pivots
 #define __pivot_index             __s_pivot_index
-// marker for above function
-#define __lapack_pivots  1
 // public pivot functions
 #define __armas_pivot_rows      armas_s_pivot_rows
 #define __armas_pivot_cols      armas_s_pivot_cols
+#define __armas_pivot           armas_s_pivot
+// marker for above function
+#define __lapack_pivots  1
 
 // Additional
 #define __armas_qdroots         armas_s_qdroots
@@ -64,6 +60,8 @@
 #define __armas_bkfactor_work   armas_s_bkfactor_work
 #define __armas_bksolve         armas_s_bksolve
 #define __armas_bksolve_work    armas_s_bksolve_work
+#define __armas_ldlfactor       armas_s_ldlfactor
+#define __armas_ldlsolve        armas_s_ldlsolve
 // visible internal functions
 #define __unblk_bkfactor_lower __s_unblk_bkfactor_lower
 #define __unblk_bkfactor_upper __s_unblk_bkfactor_upper
@@ -238,17 +236,13 @@
 #define __EPS         (DBL_EPSILON/2.0)
 
 // internal helpers
-#define __swap_rows               __d_swap_rows
-#define __swap_cols               __d_swap_cols
-#define __apply_pivots            __d_apply_pivots
-#define __apply_row_pivots        __d_apply_row_pivots
-#define __apply_col_pivots        __d_apply_col_pivots
 #define __pivot_index             __d_pivot_index
-// marker for above function
-#define __lapack_pivots  1
 // public pivot functions
 #define __armas_pivot_rows      armas_d_pivot_rows
 #define __armas_pivot_cols      armas_d_pivot_cols
+#define __armas_pivot           armas_d_pivot
+// marker for above function
+#define __lapack_pivots  1
 
 
 // Bidiagonal reduction
@@ -264,6 +258,9 @@
 #define __armas_bkfactor_work   armas_d_bkfactor_work
 #define __armas_bksolve         armas_d_bksolve
 #define __armas_bksolve_work    armas_d_bksolve_work
+#define __armas_ldlfactor       armas_d_ldlfactor
+#define __armas_ldlsolve        armas_d_ldlsolve
+
 // visible internal functions
 #define __unblk_bkfactor_lower __d_unblk_bkfactor_lower
 #define __unblk_bkfactor_upper __d_unblk_bkfactor_upper
