@@ -14,8 +14,8 @@ UNIT_TESTS += sgemm ssymm strmm strsm strmrk ssyrk ssyr2k sgemv ##strmv strsv
 
 UNIT_TESTS += \
 	sqrfact sqrmult sqrbld sqrsol sqlfact sqlmult sqlbld slqfact slqbld \
-	slqmult slqsol srqfact srqbld srqmult sldl slu schol sgivens sdiag \
-	sbidiag strdred shess sbdsvd ssecular strdevd sevd sgesvd sinvtrm sinv sinvspd
+	slqmult slqsol srqfact srqbld srqmult sldlbk slu schol sgivens sdiag \
+	sbidiag strdred shess sbdsvd ssecular strdevd sevd sgesvd sinvtrm sinv sinvspd sldlt
 
 # GMP/MPFR libaries exits, can test extended precision
 if HAVE_GMP_MPFR
@@ -32,11 +32,11 @@ UNIT_TESTS += dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dsyr2k dgemv dger dtrmv dtrsv
 UNIT_TESTS +=  \
 	evd gesvd secular \
 	trdevd bdsvd givens trdred \
-	bidiag chol hess lu ldl \
+	bidiag chol hess lu ldlbk \
 	qrfact qrbld qrmult qrsol \
 	lqfact lqbld lqmult lqsol \
 	qlfact qlbld qlmult \
-	rqfact rqbld rqmult rbt invtrm inv invspd
+	rqfact rqbld rqmult rbt invtrm inv invspd ldlt
 
 # GMP/MPFR libaries exits, can test extended precision
 if HAVE_GMP_MPFR
@@ -113,8 +113,10 @@ chol_SOURCES   = chol.c ../helper.c
 chol_LDADD    = ../../src/libarmasd.la
 lu_SOURCES     = lu.c ../helper.c
 lu_LDADD    = ../../src/libarmasd.la
-ldl_SOURCES    = ldl.c ../helper.c
-ldl_LDADD    = ../../src/libarmasd.la
+ldlbk_SOURCES    = ldlbk.c ../helper.c
+ldlbk_LDADD    = ../../src/libarmasd.la
+ldlt_SOURCES    = ldlt.c ../helper.c
+ldlt_LDADD    = ../../src/libarmasd.la
 hess_SOURCES   = hessred.c ../helper.c
 hess_LDADD    = ../../src/libarmasd.la
 trdred_SOURCES = trdred.c ../helper.c
@@ -260,9 +262,12 @@ srqbld_SOURCES = rqbld.c ../helper.c
 srqbld_CFLAGS  = -DFLOAT32 $(AM_CFLAGS)
 srqbld_LDADD   = ../../src/libarmass.la
 
-sldl_SOURCES = ldl.c ../helper.c
-sldl_CFLAGS  = -DFLOAT32 $(AM_CFLAGS)
-sldl_LDADD   = ../../src/libarmass.la
+sldlbk_SOURCES = ldlbk.c ../helper.c
+sldlbk_CFLAGS  = -DFLOAT32 $(AM_CFLAGS)
+sldlbk_LDADD   = ../../src/libarmass.la
+sldlt_SOURCES = ldlt.c ../helper.c
+sldlt_CFLAGS  = -DFLOAT32 $(AM_CFLAGS)
+sldlt_LDADD   = ../../src/libarmass.la
 slu_SOURCES = lu.c ../helper.c
 slu_CFLAGS  = -DFLOAT32 $(AM_CFLAGS)
 slu_LDADD   = ../../src/libarmass.la
