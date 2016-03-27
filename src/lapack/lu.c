@@ -125,7 +125,7 @@ int __unblk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int offset, armas_con
                             &p2,     /**/ P, 1, ARMAS_PBOTTOM);
     // ---------------------------------------------------------------------------
     // A. apply previous pivots and updates to current column   
-    __apply_pivots(&a1, &p0, conf);
+    __armas_pivot_rows(&a1, &p0, ARMAS_PIVOT_FORWARD, conf);
     // a. a01 = trilu(A00)\a01
     __armas_mvsolve_trm(&a01, &A00, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
     // b. a11 = a11 - a10*a01
@@ -141,7 +141,7 @@ int __unblk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int offset, armas_con
     __armas_column(&aB0, &ABR, 0);
     pi = __pivot_index(&aB0, conf);
     armas_pivot_set(&p1, 0, pi);
-    __apply_pivots(&aB0, &p1, conf);
+    __armas_pivot_rows(&aB0, &p1, ARMAS_PIVOT_FORWARD, conf);
 
     // a21 = a21 / a11
     a11val = __armas_get(&a11, 0, 0);
@@ -152,7 +152,7 @@ int __unblk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int offset, armas_con
       __armas_invscale(&a21, a11val, conf);
     }
     // apply pivots on left columns
-    __apply_pivots(&ABL, &p1, conf);
+    __armas_pivot_rows(&ABL, &p1, ARMAS_PIVOT_FORWARD, conf);
     // pivot index to origin of matrix row numbers
     armas_pivot_set(&p1, 0, pi+ATL.rows);
     // ---------------------------------------------------------------------------
@@ -165,7 +165,7 @@ int __unblk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int offset, armas_con
 
   if (ABR.cols > 0) {
     // here A.rows < A.cols; handle the right columns
-    __apply_pivots(&ATR, P, conf);
+    __armas_pivot_rows(&ATR, P, ARMAS_PIVOT_FORWARD, conf);
     __armas_solve_trm(&ATR, &ATL, 1.0, ARMAS_LEFT|ARMAS_UNIT|ARMAS_LOWER, conf);
   }
   return err;
@@ -205,7 +205,7 @@ int __blk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int lb, armas_conf_t *c
                             &p2,     /**/ P, A11.cols, ARMAS_PBOTTOM);
     // ---------------------------------------------------------------------------
     // A. apply previous pivots and updates to current column   
-    __apply_pivots(&A1, &p0, conf);
+    __armas_pivot_rows(&A1, &p0, ARMAS_PIVOT_FORWARD, conf);
     // a. A01 = trilu(A00) \ A01
     __armas_solve_trm(&A01, &A00, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
     // b. A11 = A11 - A10*A01
@@ -220,7 +220,7 @@ int __blk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int lb, armas_conf_t *c
     err = __unblk_lufactor(&AB0, &p1, ATL.rows, conf);
 
     // apply pivots on left columns
-    __apply_pivots(&ABL, &p1, conf);
+    __armas_pivot_rows(&ABL, &p1, ARMAS_PIVOT_FORWARD, conf);
 
     // shift pivot indicies to origin of matrix row numbers
     for (k = 0; k < armas_pivot_size(&p1); k++) {
@@ -237,7 +237,7 @@ int __blk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int lb, armas_conf_t *c
 
   if (ABR.cols > 0) {
     // here A.rows < A.cols; handle the right columns
-    __apply_pivots(&ATR, P, conf);
+    __armas_pivot_rows(&ATR, P, ARMAS_PIVOT_FORWARD, conf);
     __armas_solve_trm(&ATR, &ATL, 1.0, ARMAS_LEFT|ARMAS_UNIT|ARMAS_LOWER, conf);
   }
   return err;
@@ -314,7 +314,7 @@ int __armas_lusolve(__armas_dense_t *B, __armas_dense_t *A,
   }
   if (P) {
     // pivots; apply to B.
-    __apply_row_pivots(B, P, PIVOT_FORWARD, conf);
+    __armas_pivot_rows(B, P, ARMAS_PIVOT_FORWARD, conf);
   }
 
   if (flags & ARMAS_TRANS) {
