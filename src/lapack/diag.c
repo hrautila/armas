@@ -38,9 +38,10 @@
  * @param conf
  *      Optional blocking configuration
  */
-int __armas_mult_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_conf_t *conf)
+int __armas_mult_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t c, d0, *d;
+    __armas_dense_t c, d0;
+    const __armas_dense_t *d;
     int k;
 
     if (!conf)
@@ -90,9 +91,10 @@ int __armas_mult_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_c
  * @param conf
  *      Optional blocking configuration
  */
-int __armas_solve_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_conf_t *conf)
+int __armas_solve_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t c, d0, *d;
+    __armas_dense_t c, d0;
+    const __armas_dense_t *d;
     int k;
 
     if (!conf)
