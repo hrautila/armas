@@ -109,8 +109,8 @@ void __apply_pivot_upper(__armas_dense_t *A, int srcix, int dstix, armas_conf_t 
     }
   
     // S1 -- D1
-    __armas_submatrix_unsafe(&s, A, srcix, srcix+1, 1, A->cols-srcix);
-    __armas_submatrix_unsafe(&d, A, dstix, srcix+1, 1, A->cols-srcix);
+    __armas_submatrix_unsafe(&s, A, srcix, srcix+1, 1, A->cols-srcix-1);
+    __armas_submatrix_unsafe(&d, A, dstix, srcix+1, 1, A->cols-srcix-1);
     __armas_swap(&s, &d, conf);
     // S2 -- D2
     __armas_submatrix_unsafe(&s, A, dstix+1, srcix,   srcix-dstix-1, 1);
