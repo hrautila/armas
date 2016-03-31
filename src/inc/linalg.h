@@ -237,12 +237,18 @@ extern int __armas_svd_work(__armas_dense_t *D, int flags, armas_conf_t *conf);
   // DQDS
 extern int __armas_dqds(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *W, armas_conf_t *conf);
 
+// Recursive Butterfly
+extern int __armas_mult_rbt(__armas_dense_t *A, __armas_dense_t *U, int flags, armas_conf_t *conf);
+extern int __armas_update2_rbt(__armas_dense_t *A, __armas_dense_t *U, __armas_dense_t *V, armas_conf_t *conf);
+extern void __armas_gen_rbt(__armas_dense_t *U);
+
 // additional
 extern int __armas_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c);
 extern void __armas_discriminant(DTYPE *d, DTYPE a, DTYPE b, DTYPE c);
-extern int __armas_mult_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_conf_t *conf);
-extern int __armas_solve_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_conf_t *conf);
+extern int __armas_mult_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, armas_conf_t *conf);
+extern int __armas_solve_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, armas_conf_t *conf);
 
+extern int __armas_pivot_rows(__armas_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf);
 
 #ifdef __cplusplus
 }
