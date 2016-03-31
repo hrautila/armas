@@ -209,6 +209,7 @@
 #define __armas_inverse_trm     armas_s_inverse_trm
 #define __armas_inverse         armas_s_inverse
 #define __armas_inverse_spd     armas_s_inverse_spd
+#define __armas_ldlinverse_sym  armas_s_ldlinverse_sym
 
 // internal
 #define __sym_eigen2x2          __s_sym_eigen2x2
@@ -407,6 +408,7 @@
 #define __armas_inverse_trm     armas_d_inverse_trm
 #define __armas_inverse         armas_d_inverse
 #define __armas_inverse_spd     armas_d_inverse_spd
+#define __armas_ldlinverse_sym  armas_d_ldlinverse_sym
 
 // internal
 #define __sym_eigen2x2          __d_sym_eigen2x2
