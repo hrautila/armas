@@ -21,6 +21,7 @@ void __subpivot(armas_pivot_t *pA, armas_pivot_t *pB, int K, int N)
 {
   pA->npivots = N;
   pA->indexes = &pB->indexes[K];
+  pA->owner = 0;
 }
  
 /*
