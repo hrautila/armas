@@ -34,6 +34,7 @@ typedef float __Dtype;
 #define matrix_add             armas_s_add
 #define matrix_set_values      armas_s_set_values
 #define matrix_copy            armas_s_copy
+#define matrix_swap            armas_s_swap
 #define matrix_row             armas_s_row
 #define matrix_column          armas_s_column
 #define matrix_size            armas_s_size
@@ -148,7 +149,10 @@ typedef float __Dtype;
 #define matrix_inverse_trm     armas_s_inverse_trm
 #define matrix_inverse         armas_s_inverse
 #define matrix_inverse_spd     armas_s_inverse_spd
-
+#define matrix_ldlinverse_sym  armas_s_ldlinverse_sym
+#define matrix_pivot           armas_s_pivot
+#define matrix_ldlfactor       armas_s_ldlfactor
+#define matrix_ldlsolve        armas_s_ldlsolve
 
 #else
 
@@ -179,6 +183,7 @@ typedef double __Dtype;
 #define matrix_add             armas_d_add
 #define matrix_set_values      armas_d_set_values
 #define matrix_copy            armas_d_copy
+#define matrix_swap            armas_d_swap
 #define matrix_row             armas_d_row
 #define matrix_column          armas_d_column
 #define matrix_size            armas_d_size
@@ -293,6 +298,10 @@ typedef double __Dtype;
 #define matrix_inverse_trm     armas_d_inverse_trm
 #define matrix_inverse         armas_d_inverse
 #define matrix_inverse_spd     armas_d_inverse_spd
+#define matrix_ldlinverse_sym  armas_d_ldlinverse_sym
+#define matrix_pivot           armas_d_pivot
+#define matrix_ldlfactor       armas_d_ldlfactor
+#define matrix_ldlsolve        armas_d_ldlsolve
 
 #endif
 #include "helper.h"

@@ -15,7 +15,8 @@ UNIT_TESTS += sgemm ssymm strmm strsm strmrk ssyrk ssyr2k sgemv ##strmv strsv
 UNIT_TESTS += \
 	sqrfact sqrmult sqrbld sqrsol sqlfact sqlmult sqlbld slqfact slqbld \
 	slqmult slqsol srqfact srqbld srqmult sldlbk slu schol sgivens sdiag \
-	sbidiag strdred shess sbdsvd ssecular strdevd sevd sgesvd sinvtrm sinv sinvspd sldlt
+	sbidiag strdred shess sbdsvd ssecular strdevd sevd sgesvd sinvtrm sinv \
+	sinvspd sldlt sinvldlt
 
 # GMP/MPFR libaries exits, can test extended precision
 if HAVE_GMP_MPFR
@@ -36,7 +37,7 @@ UNIT_TESTS +=  \
 	qrfact qrbld qrmult qrsol \
 	lqfact lqbld lqmult lqsol \
 	qlfact qlbld qlmult \
-	rqfact rqbld rqmult rbt invtrm inv invspd ldlt
+	rqfact rqbld rqmult rbt invtrm inv invspd ldlt invldlt
 
 # GMP/MPFR libaries exits, can test extended precision
 if HAVE_GMP_MPFR
@@ -162,6 +163,8 @@ inv_SOURCES = inv.c ../helper.c
 inv_LDADD    = ../../src/libarmasd.la
 invspd_SOURCES = invspd.c ../helper.c
 invspd_LDADD    = ../../src/libarmasd.la
+invldlt_SOURCES    = invldlt.c ../helper.c
+invldlt_LDADD    = ../../src/libarmasd.la
 
 # EXT PRECISION (double precision)
 ext_sgemm_SOURCES = ext_gemm.c ../helper.c ext_prec.c
@@ -313,6 +316,9 @@ sinv_CFLAGS  = -DFLOAT32 $(AM_CFLAGS)
 sinvspd_SOURCES = invspd.c ../helper.c
 sinvspd_LDADD    = ../../src/libarmass.la
 sinvspd_CFLAGS  = -DFLOAT32 $(AM_CFLAGS)
+sinvldlt_SOURCES    = invldlt.c ../helper.c
+sinvldlt_LDADD    = ../../src/libarmass.la
+sinvldlt_CFLAGS  = -DFLOAT32 $(AM_CFLAGS)
 
 
 TESTS = $(check_PROGRAMS)
