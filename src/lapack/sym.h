@@ -15,7 +15,8 @@
 /*
  * Apply diagonal pivot (row and column swapped) to symmetric matrix blocks.
  *
- * UPPER triangular; moving from bottom-right to top-left
+ * UPPER triangular; moving from bottom-right to top-left (pivot root at the 
+ * bottom-right corner of the block).
  *
  *    d x D3 x  x  x  S3 x |
  *      d D3 x  x  x  S3 x |
@@ -56,8 +57,54 @@ void __apply_bkpivot_upper(__armas_dense_t *AR, int srcix, int dstix, armas_conf
 }
 
 /*
+ * Apply diagonal pivot (row and column swapped) to symmetric matrix blocks.
+ *
+ * UPPER triangular; moving from top-left to bottom-right eg. pivot root at
+ * top left corner (columns above pivot index are not moved)
+ *
+ *  ----------------------------
+ *  | d x  x  x  x  x  x  x  x  
+ *  |   P1 S2 S2 P2 S3 S3 S3 S3   srcix
+ *  |      d  x  D2 x  x  x  x  
+ *  |         x  D2 x  x  x  x    
+ *  |            P3 D3 D3 D2 D2   dstix
+ *  |               d  x  x  x  
+ *  |                  d  x  x  
+ *  |                     d  x    
+ *  |                        d 
+ *
+ */
+static inline
+void __apply_bkpivot_upper_top(__armas_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
+{
+    __armas_dense_t s, d;
+    DTYPE p1, p3;
+    if (srcix == dstix)
+        return;
+    if (srcix > dstix) {
+        int t = srcix;
+        srcix = dstix;
+        dstix = t;
+    }
+    // S2 -- D2
+    __armas_submatrix_unsafe(&s, AR, srcix,   srcix+1, 1, dstix-srcix-1);
+    __armas_submatrix_unsafe(&d, AR, srcix+1, dstix,   dstix-srcix-1, 1);
+    __armas_swap(&s, &d, conf);
+    // S3 -- D3
+    __armas_submatrix_unsafe(&s, AR, srcix, dstix+1, 1, AR->cols-dstix-1);
+    __armas_submatrix_unsafe(&d, AR, dstix, dstix+1, 1, AR->cols-dstix-1);
+    __armas_swap(&s, &d, conf);
+    // swap P1 and P3
+    p1 = __armas_get_unsafe(AR, srcix, srcix);
+    p3 = __armas_get_unsafe(AR, dstix, dstix);
+    __armas_set_unsafe(AR, srcix, srcix, p3);
+    __armas_set_unsafe(AR, dstix, dstix, p1);
+}
+
+/*
  * Apply diagonal pivot (row and column swapped) to symmetric LOWER triangular matrix blocks.
- * This is a partial swap; rows left srcix are not touched. 
+ * This is a partial swap; rows left srcix are not touched. (Pivot root is at the 
+ * top-left corner of the block.)
  *
  *    -----------------------
  *    | d 
@@ -89,6 +136,50 @@ void __apply_bkpivot_lower(__armas_dense_t *AR, int srcix, int dstix, armas_conf
     // S3 -- D3
     __armas_submatrix_unsafe(&s, AR, dstix+1, srcix,  AR->rows-dstix-1, 1);
     __armas_submatrix_unsafe(&d, AR, dstix+1, dstix,  AR->rows-dstix-1, 1);
+    __armas_swap(&s, &d, conf);
+    // swap P1 and P3
+    p1 = __armas_get_unsafe(AR, srcix, srcix);
+    p3 = __armas_get_unsafe(AR, dstix, dstix);
+    __armas_set_unsafe(AR, srcix, srcix, p3);
+    __armas_set_unsafe(AR, dstix, dstix, p1);
+}
+
+/*
+ * Apply diagonal pivot (row and column swapped) to symmetric LOWER triangular matrix blocks.
+ * This is a partial swap; Pivot root (P1) is assumed to be at the bottom-right corner of 
+ * the block. 
+ *
+ *
+ *     d                      |
+ *     x  d                   |
+ *     D3 D3 P3               |  - dst
+ *     x  x  D2 d             |
+ *     x  x  D2 x  d          |
+ *     x  x  D2 x  x  d       |
+ *     S3 S3 P2 S2 S2 S2 P1   | - src
+ *     x  x  x  x  x  x  x  d |
+ *     ------------------------
+ *
+ */
+static inline
+void __apply_bkpivot_lower_bottom(__armas_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
+{
+    __armas_dense_t s, d;
+    DTYPE p1, p3;
+    if (srcix == dstix)
+        return;
+    if (srcix < dstix) {
+        int t = srcix;
+        srcix = dstix;
+        dstix = t;
+    }
+    // S2 -- D2
+    __armas_submatrix_unsafe(&s, AR, srcix,   dstix+1, 1, srcix-dstix-1);
+    __armas_submatrix_unsafe(&d, AR, dstix+1, dstix,   srcix-dstix-1, 1);
+    __armas_swap(&s, &d, conf);
+    // S3 -- D3
+    __armas_submatrix_unsafe(&s, AR, srcix, 0, 1,  dstix);
+    __armas_submatrix_unsafe(&d, AR, dstix, 0, 1,  dstix);
     __armas_swap(&s, &d, conf);
     // swap P1 and P3
     p1 = __armas_get_unsafe(AR, srcix, srcix);
