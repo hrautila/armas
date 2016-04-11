@@ -59,12 +59,6 @@ int __unblk_ldlpv_lower(__armas_dense_t *A, armas_pivot_t *P, armas_conf_t *conf
                 &pB,  /**/  P, 0, ARMAS_PTOP);
 
     while (ABR.rows > 0 && ABR.cols > 0) {
-        __armas_diag(&D, &ABR, 0);
-        if ( (im = __armas_iamax(&D, conf)) != 0) {
-            // pivot
-            __apply_bkpivot_lower(&ABR, 0, im, conf);
-            __swap_rows(&ABL, 0, im, conf);
-        }
         // ---------------------------------------------------------------------------
         __repartition_2x2to3x3(&ATL,
                                &A00,  __nil, __nil,
@@ -73,6 +67,12 @@ int __unblk_ldlpv_lower(__armas_dense_t *A, armas_pivot_t *P, armas_conf_t *conf
         __pivot_repart_2x1to3x1(&pT,  /**/
                                 &p0, &p1, &p2,       /**/ P, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------------
+        __armas_diag(&D, &ABR, 0);
+        if ( (im = __armas_iamax(&D, conf)) != 0) {
+            // pivot
+            __apply_bkpivot_lower(&ABR, 0, im, conf);
+            __swap_rows(&ABL, 0, im, conf);
+        }
         // A22 = A22 - l21*d11*l21.T = A22 - a21*a21.T/a11
         a11val = __ONE/__armas_get_unsafe(&a11, 0, 0);
         __armas_mvupdate_trm(&A22, &a21, &a21, -a11val, ARMAS_LOWER, conf);
@@ -135,16 +135,6 @@ int __unblk_ldlpv_lower_ncol(__armas_dense_t *A, __armas_dense_t *Y,
                 &pB,  /**/  P, 0, ARMAS_PTOP);
 
     while (ncol-- > 0) {
-        if ( (im = __armas_iamax(&DB, conf)) != 0) {
-            // pivot
-            __apply_bkpivot_lower(&ABR, 0, im, conf);
-            __swap_rows(&ABL, 0, im, conf);
-            __swap_rows(&YBL, 0, im, conf);
-            a11val = __armas_get_at_unsafe(&DB, im);
-            __armas_set_at_unsafe(&DB, im, __armas_get_at_unsafe(&DB, 0));
-            __armas_set_at_unsafe(&DB, 0,  a11val);
-        }
-        // ---------------------------------------------------------------------------
         __repartition_2x2to3x3(&ATL, /**/
                                &A00,  __nil, __nil,
                                &a10,  &a11, __nil,
@@ -157,6 +147,16 @@ int __unblk_ldlpv_lower_ncol(__armas_dense_t *A, __armas_dense_t *Y,
                                &D0, &d1, &D2,  /**/  &D, 1, ARMAS_PBOTTOM);
         __pivot_repart_2x1to3x1(&pT,  /**/
                                 &p0, &p1, &p2,       /**/ P, 1, ARMAS_PBOTTOM);
+        // ---------------------------------------------------------------------------
+        if ( (im = __armas_iamax(&DB, conf)) != 0) {
+            // pivot
+            __apply_bkpivot_lower(&ABR, 0, im, conf);
+            __swap_rows(&ABL, 0, im, conf);
+            __swap_rows(&YBL, 0, im, conf);
+            a11val = __armas_get_at_unsafe(&DB, im);
+            __armas_set_at_unsafe(&DB, im, __armas_get_at_unsafe(&DB, 0));
+            __armas_set_at_unsafe(&DB, 0,  a11val);
+        }
         // ---------------------------------------------------------------------------
         a11val = __armas_get_at_unsafe(&d1, 0);
         // update a21 with prevous; a21 := a21 - A20*y10
@@ -266,19 +266,19 @@ int __unblk_ldlpv_upper(__armas_dense_t *A, armas_pivot_t *P, armas_conf_t *conf
                 &pB,  /**/  P, 0, ARMAS_PBOTTOM);
 
     while (ATL.rows > 0 && ATL.cols > 0) {
-        __armas_diag(&D, &ATL, 0);
-        if ( (im = __armas_iamax(&D, conf)) != ATL.rows-1) {
-            // pivot
-            __apply_bkpivot_upper(&ATL, ATL.rows-1, im, conf);
-            __swap_rows(&ATR, ATL.rows-1, im, conf);
-        }
-        // ---------------------------------------------------------------------------
         __repartition_2x2to3x3(&ATL,
                                &A00,   &a01, __nil,
                                __nil,  &a11, __nil,
                                __nil, __nil,  &A22,  /**/  A, 1, ARMAS_PTOPLEFT);
         __pivot_repart_2x1to3x1(&pT,  /**/
                                 &p0, &p1, &p2,       /**/ P, 1, ARMAS_PTOP);
+        // ---------------------------------------------------------------------------
+        __armas_diag(&D, &ATL, 0);
+        if ( (im = __armas_iamax(&D, conf)) != ATL.rows-1) {
+            // pivot
+            __apply_bkpivot_upper(&ATL, ATL.rows-1, im, conf);
+            __swap_rows(&ATR, ATL.rows-1, im, conf);
+        }
         // ---------------------------------------------------------------------------
         // A00 = A00 - u01*d1*u01.T = A00 - a01*a01.T/a11
         a11val = __ONE/__armas_get_unsafe(&a11, 0, 0);
@@ -331,16 +331,6 @@ int __unblk_ldlpv_upper_ncol(__armas_dense_t *A, __armas_dense_t *Y,
                 &pB,  /**/  P, 0, ARMAS_PBOTTOM);
 
     while (ncol-- > 0) {
-        if ( (im = __armas_iamax(&DT, conf)) != ATL.rows-1) {
-            // pivot
-            __apply_bkpivot_upper(&ATL, ATL.rows-1, im, conf);
-            __swap_rows(&ATR, ATL.rows-1, im, conf);
-            __swap_rows(&YTR, ATL.rows-1, im, conf);
-            a11val = __armas_get_at_unsafe(&DT, im);
-            __armas_set_at_unsafe(&DT, im, __armas_get_at_unsafe(&DT, ATL.rows-1));
-            __armas_set_at_unsafe(&DT, ATL.rows-1,  a11val);
-        }
-        // ---------------------------------------------------------------------------
         __repartition_2x2to3x3(&ATL, /**/
                                &A00,  &a01,  &A02,
                                __nil, &a11,  &a12,
@@ -353,6 +343,16 @@ int __unblk_ldlpv_upper_ncol(__armas_dense_t *A, __armas_dense_t *Y,
                                &D0, &d1, &D2,  /**/  &D, 1, ARMAS_PTOP);
         __pivot_repart_2x1to3x1(&pT,  /**/
                                 &p0, &p1, &p2,       /**/ P, 1, ARMAS_PTOP);
+        // ---------------------------------------------------------------------------
+        if ( (im = __armas_iamax(&DT, conf)) != ATL.rows-1) {
+            // pivot
+            __apply_bkpivot_upper(&ATL, ATL.rows-1, im, conf);
+            __swap_rows(&ATR, ATL.rows-1, im, conf);
+            __swap_rows(&YTR, ATL.rows-1, im, conf);
+            a11val = __armas_get_at_unsafe(&DT, im);
+            __armas_set_at_unsafe(&DT, im, __armas_get_at_unsafe(&DT, ATL.rows-1));
+            __armas_set_at_unsafe(&DT, ATL.rows-1,  a11val);
+        }
         // ---------------------------------------------------------------------------
         a11val = __armas_get_at_unsafe(&d1, 0);
         // update a01 with prevous; a01 := a01 - A02*y12
