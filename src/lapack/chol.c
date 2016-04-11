@@ -195,6 +195,14 @@ int __blk_cholfactor_upper(__armas_dense_t *A, int lb, armas_conf_t *conf)
   return err;
 }
 
+extern 
+int __cholfactor_pv(__armas_dense_t *A, __armas_dense_t *W, armas_pivot_t *P,
+                    int flags, armas_conf_t *conf);
+
+extern 
+int __cholsolve_pv(__armas_dense_t *B, __armas_dense_t *A, armas_pivot_t *P,
+                    int flags, armas_conf_t *conf);
+
 /*
  * Compute the Cholesky factorization of a symmetric positive definite
  * N-by-N matrix A.
@@ -215,12 +223,17 @@ int __blk_cholfactor_upper(__armas_dense_t *A, int lb, armas_conf_t *conf)
  *
  * Compatible with lapack.DPOTRF
  */
-int __armas_cholfactor(__armas_dense_t *A, int flags, armas_conf_t *conf)
+int __armas_cholfactor(__armas_dense_t *A, __armas_dense_t *W,
+                       armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
   int err = 0;
   if (!conf)
     conf = armas_conf_default();
 
+  if (P != ARMAS_NOPIVOT) {
+    return __cholfactor_pv(A, W, P, flags, conf);
+  }
+  
   if (A->rows != A->cols) {
     conf->error = ARMAS_ESIZE;
     return -1;
@@ -260,12 +273,16 @@ int __armas_cholfactor(__armas_dense_t *A, int flags, armas_conf_t *conf)
  *
  * Compatible with lapack.DPOTRS.
  */
-int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A,
-                      int flags, armas_conf_t *conf)
+int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A, 
+                      armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
   int ok;
   if (!conf)
     conf = armas_conf_default();
+  
+  if (P != ARMAS_NOPIVOT) {
+    return __cholsolve_pv(B, A, P, flags, conf);
+  }
   
   ok = B->rows == A->cols && A->rows == A->cols;
   if (!ok) {

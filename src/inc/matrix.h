@@ -31,6 +31,9 @@ typedef struct __armas_dense {
   int __nbytes;   ///< sizeof __data buffer
 } __armas_dense_t;
 
+///< Null matrix 
+#define ARMAS_NULL (__armas_dense_t *)0
+  
 static inline int _M(__armas_dense_t *A) {
   return A->rows;
 }
@@ -493,8 +496,8 @@ extern int __armas_bdmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf
 extern int __armas_bdbuild_work(__armas_dense_t *A, int flags, armas_conf_t *conf);
 
 // Cholesky
-extern int __armas_cholfactor(__armas_dense_t *A, int flags, armas_conf_t *conf);
-extern int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A, int flags,
+extern int __armas_cholfactor(__armas_dense_t *A, __armas_dense_t *W, armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A, armas_pivot_t *P, int flags,
                              armas_conf_t *conf);
 
 // Hessenberg reduction

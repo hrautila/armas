@@ -75,6 +75,9 @@
 // Cholesky 
 #define __armas_cholfactor       armas_s_cholfactor
 #define __armas_cholsolve        armas_s_cholsolve
+// internal pivoting versions
+#define __cholfactor_pv          __s_cholfactor_pv
+#define __cholsolve_pv           __s_cholsolve_pv
 
 // Givens
 #define __armas_gvcompute       armas_s_gvcompute
@@ -275,6 +278,9 @@
 // Cholesky 
 #define __armas_cholfactor       armas_d_cholfactor
 #define __armas_cholsolve        armas_d_cholsolve
+// internal pivoting versions
+#define __cholfactor_pv          __d_cholfactor_pv
+#define __cholsolve_pv           __d_cholsolve_pv
 
 // Hessenberg functions
 #define __armas_hessreduce       armas_d_hessreduce
