@@ -110,7 +110,7 @@ int test_ldlpv(int N, int lb, int flags, int verbose)
     armas_pivot_t P;
     __Dtype n0, n1;
     int ok, flags1, flags2;
-    char *fact = flags & ARMAS_LOWER ? "P*(LDL^T)*P^T" : "P*(UDU^T)*P^T";
+    char *fact = flags & ARMAS_LOWER ? "P^T*(LDL^T)*P" : "P^T*(UDU^T)*P";
     char *blk = lb == 0 ? "unblk" : "  blk";
     
     matrix_init(&A0, N, N);
@@ -208,7 +208,7 @@ int test_ldlpv_transpose(int N, int lb, int flags, int verbose)
     matrix_pivot(&C0, &P0, ARMAS_PIVOT_LOWER|ARMAS_PIVOT_BACKWARD, &conf);
 
     if (N < 10) {
-        printf("(1) P*(LDL^T)*P^T:\n"); matrix_printf(stdout, "%6.3f", &C0);
+        printf("(1) P^T*(LDL^T)*P:\n"); matrix_printf(stdout, "%6.3f", &C0);
         printf("P:\n"); armas_pivot_printf(stdout, "%d", &P0);
     }
     // C = ((I*U)*D)*U.T
@@ -219,13 +219,13 @@ int test_ldlpv_transpose(int N, int lb, int flags, int verbose)
     matrix_pivot(&C1, &P1, ARMAS_PIVOT_UPPER|ARMAS_PIVOT_FORWARD, &conf);
 
     if (N < 10) {
-        printf("(2) P*(UDU^T)*P^T:\n"); matrix_printf(stdout, "%6.3f", &C1);
+        printf("(2) P^T*(UDU^T)*P:\n"); matrix_printf(stdout, "%6.3f", &C1);
         printf("P:\n"); armas_pivot_printf(stdout, "%d", &P1);
     }
 
     n0 = rel_error(&n1, &C0, &C1, ARMAS_NORM_INF, ARMAS_TRANSB, &conf);
     ok = isFINE(n0, N*__ERROR);
-    printf("%s : %s.P*(LDL^T)*P^T = transpose(%s.P*(UDU^T)*P^T)\n", PASS(ok), blk, blk);
+    printf("%s : %s.P^T*(LDL^T)*P = transpose(%s.P^T*(UDU^T)*P)\n", PASS(ok), blk, blk);
     printf("   || rel error ||: %e [%d]\n", n0, ndigits(n0));
 
     matrix_release(&A0);
@@ -246,7 +246,7 @@ int test_ldlpv_solve(int N, int lb, int flags, int verbose)
     armas_pivot_t P0;
     __Dtype n0, n1;
     int ok;
-    char *fact = flags & ARMAS_LOWER ? "P*(LDL^T)*P^T" : "P*(UDU^T)*P^T";
+    char *fact = flags & ARMAS_LOWER ? "P^T*(LDL^T)*P" : "P^T*(UDU^T)*P";
     char *blk = lb == 0 ? "unblk" : "  blk";
     
     matrix_init(&A0, N, N);
