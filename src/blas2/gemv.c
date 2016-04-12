@@ -7,10 +7,11 @@
 
 //! \file
 //! matrix-vector multiplication
-//! @defgroup blas2 BLAS level 2 functions.
 
+//! \cond
 #include <stdio.h>
 #include <stdint.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -26,6 +27,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "linalg.h"
@@ -45,6 +47,7 @@ extern int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 #endif
 
 #include "cond.h"
+//! \endcond
 
 // Y = alpha*A*X + beta*Y for rows R:E, A is M*N and 0 < R < E <= M, Update
 // with S:L columns from A and correspoding elements from X.
@@ -282,10 +285,10 @@ void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  * @brief General matrix-vector multiply.
  *
  * Computes
- * - \f$ Y := alpha*A*X + beta*Y \f$
- * - \f$ Y := alpha*A^T*X + beta*Y  \f$   if *ARMAS_TRANS* set
- * - \f$ Y := alpha*|A|*|X|  + beta*Y \f$ if *ARMAS_ABS* set
- * - \f$ Y := alpha*|A^T|*|X| + beta*Y \f$ if *ARMAS_ABS* and *ARMAS_TRANS* set
+ *   - \f$ Y = alpha \times A X + beta \times Y \f$
+ *   - \f$ Y = alpha \times A^T X + beta \times Y  \f$   if *ARMAS_TRANS* set
+ *   - \f$ Y = alpha \times |A| |X|  + beta \times Y \f$ if *ARMAS_ABS* set
+ *   - \f$ Y = alpha \times |A^T| |X| + beta \times Y \f$ if *ARMAS_ABS* and *ARMAS_TRANS* set
  *
  * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
  * are executed in extended precision.
@@ -296,6 +299,9 @@ void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  *  @param[in]      alpha, beta scalars
  *  @param[in]      flags  flag bits
  *  @param[in]      conf   configuration block
+ *
+ *  @retval  0  Success
+ *  @retval <0  Failed
  *
  * @ingroup blas2
  */

@@ -8,8 +8,10 @@
 //! \file
 //! Matrix rank update
 
+//! \cond
 #include <stdio.h>
 #include <stdint.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -25,6 +27,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -38,6 +41,7 @@ extern int __update_ger_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
 #endif
 
 #include "cond.h"
+//! \endcond
 
 
 static inline
@@ -189,7 +193,7 @@ void __update_ger_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  * @brief General matrix rank update.
  *
  * Computes
- * - \f$ A := A + alpha*X*Y^T \f$
+ *   - \f$ A = A + alpha \times X Y^T \f$
  *
  * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
  * are executed in extended precision.

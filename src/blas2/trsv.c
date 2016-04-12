@@ -8,8 +8,10 @@
 //! \file
 //! Triangular solve
 
+//! \cond
 #include <stdio.h>
 #include <stdint.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -27,6 +29,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -39,6 +42,7 @@ extern int __trsv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, i
 #endif
 
 #include "cond.h"
+//! \endcond
 
 /*
  *  LEFT-UPPER
@@ -284,9 +288,8 @@ void __trsv_recursive(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N
  * @brief Triangular matrix-vector solve
  *
  * Computes
- *
- * - \f$ X = alpha*A^{-1}*X \f$
- * - \f$ X = alpha*A^{-T}*X \f$  if *ARMAS_TRANS* set
+ *    - \f$ X = alpha \times A^{-1} X \f$
+ *    - \f$ X = alpha \times A^{-T} X \f$  if *ARMAS_TRANS* set
  *
  * where A is upper (lower) triangular matrix defined with flag bits *ARMAS_UPPER*
  * (*ARMAS_LOWER*).
@@ -299,6 +302,9 @@ void __trsv_recursive(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N
  * @param[in]     alpha scalar multiplier
  * @param[in]     flags operand flags
  * @param[in]     conf  configuration block
+ *
+ * @retval  0 Success
+ * @retval <0 Failed
  *
  * @ingroup blas2
  */

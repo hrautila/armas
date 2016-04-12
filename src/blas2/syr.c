@@ -8,8 +8,10 @@
 //! \file
 //! Symmetric matrix rank update
 
+//! \cond
 #include <stdio.h>
 #include <stdint.h>
+//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -26,6 +28,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -39,11 +42,13 @@ extern int __update_trmv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
 #endif
 
 #include "cond.h"
+//! \endcond
 
 /**
  * @brief Symmetric matrix rank-1 update.
  *
- * Computes \f$ A := A + alpha*X*X^T \f$
+ * Computes 
+ *    - \f$ A = A + alpha \times X X^T \f$
  *
  * where A is symmetric matrix stored in lower (upper) triangular part of matrix A.
  * If flag *ARMAS_LOWER* (*ARMAR_UPPER*) is set matrix is store in lower (upper) triangular
@@ -54,6 +59,9 @@ extern int __update_trmv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  * @param[in]      alpha scalar multiplier
  * @param[in]      flags flag bits 
  * @param[in]      conf configuration block
+ *
+ * @retval  0  Success
+ * @retval <0  Failed
  *
  * @ingroup blas2
  */

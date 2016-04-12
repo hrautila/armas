@@ -8,8 +8,10 @@
 //! \file
 //! symmetric matrix - vector multiplication
 
+//! \cond
 #include <stdio.h>
 #include <stdint.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -27,6 +29,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -40,6 +43,7 @@ extern int __symv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 #endif
 
 #include "cond.h"
+//! \endcond
 
 
 /*
@@ -176,7 +180,8 @@ void __symv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 /**
  * @brief Symmetric matrix-vector multiply.
  *
- * Computes \f$ Y := alpha*A*X + beta*Y \f$
+ * Computes 
+ *    - \f$ Y = alpha \times A X + beta \times Y \f$
  *
  * Matrix A elements are stored on lower (upper) triangular part of the matrix
  * if flag bit *ARMAS_LOWER* (*ARMAS_UPPER*) is set.
@@ -190,6 +195,9 @@ void __symv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  *  @param[in]      alpha, beta scalars
  *  @param[in]      flags  flag bits
  *  @param[in]      conf   configuration block
+ *
+ *  @retval  0  Success
+ *  @retval <0  Failed
  *
  * @ingroup blas2
  */

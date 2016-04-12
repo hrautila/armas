@@ -206,7 +206,6 @@ int __trmv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N)
  * @param[in]     flags operand flags
  * @param[in]     conf  configuration block
  *
- * @ingroup blas2
  */
 int __armas_ex_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A, 
                           DTYPE alpha, int flags, armas_conf_t *conf)

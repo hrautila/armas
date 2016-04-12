@@ -9,9 +9,6 @@
 #include "config.h"
 #endif
 
-/** @defgroup xblas2 BLAS level 2 extended precision functions.
- *
- */
 #include <stdio.h>
 #include <stdint.h>
 
@@ -212,7 +209,6 @@ void __gemv_update_ext_unb(mvec_t *Y, mvec_t *dY,
  *  @param[in]      flags  flag bits
  *  @param[in]      conf   configuration block
  *
- * @ingroup xblas2
  */
 int __armas_ex_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_dense_t *X,
                       DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
