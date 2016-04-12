@@ -8,7 +8,9 @@
 //! \file
 //! Scaled summation
 
+//! \cond
 #include "dtype.h"
+//! \endcond
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
@@ -22,8 +24,10 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
+//! \endcond
 
 static inline
 void __scale_plus_notrans(DTYPE * __restrict dst, int ldD,
@@ -140,6 +144,7 @@ void __scale_plus(mdata_t *A, const mdata_t *B,
  *      Indicator flags
  * \param [in] conf
  *      Configuration block
+ * \ingroup matrix
  */
 int __armas_scale_plus(__armas_dense_t *A, const __armas_dense_t *B,
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)

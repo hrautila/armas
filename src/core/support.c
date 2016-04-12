@@ -8,6 +8,7 @@
 //! \file
 //! Library support functions
 
+//! \cond
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -22,6 +23,7 @@
 #include "scheduler.h"
 
 #define CMEMSIZE 384*1024L
+//! \endcond
 
 static int __armas_init_flag = 0;
 

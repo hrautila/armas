@@ -8,7 +8,9 @@
 //! \file
 //! Matrix norm functions
 
+//! \cond
 #include "dtype.h"
+//! \endcond
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
@@ -25,9 +27,11 @@
 // ------------------------------------------------------------------------------
 
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+//! \endcond
 
 static 
 void __sum_of_sq(ABSTYPE *ssum, ABSTYPE *scale, __armas_dense_t *X, ABSTYPE sum, ABSTYPE scl)
@@ -121,6 +125,7 @@ ABSTYPE __matrix_norm_inf(const __armas_dense_t *x, armas_conf_t *conf)
  *    ARMAS_NORM_FRB
  * \param[in] conf 
  *    Optional configuration block
+ * \ingroup matrix
  */
 ABSTYPE __armas_mnorm(const __armas_dense_t *A, int which, armas_conf_t *conf)
 {
@@ -288,6 +293,7 @@ ABSTYPE __trm_norm_frb(const __armas_dense_t *A, int flags, armas_conf_t *conf)
  * \returns Computed norm. 
  *
  * (Note ARMAS_NORM_TWO not implemented.)
+ * \ingroup matrix
  */
 ABSTYPE __armas_norm(const __armas_dense_t *A, int which, int flags, armas_conf_t *conf)
 {

@@ -8,9 +8,12 @@
 //! \file
 //! Matrix element wise multiplication
 
+//! \cond
 #include <stdio.h>
 
 #include "dtype.h"
+//! \endcond
+
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(__armas_mul_elems)
@@ -25,8 +28,10 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "matrix.h"
 #include "internal.h"
+//! \endcond
 
 static inline
 void __mmul_lower(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC)
@@ -274,6 +279,7 @@ void __mmul_abs(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC, in
  *
  * @return 
  *    0 for success, -1 for error
+ * \ingroup matrix
  */
 int __armas_mul_elems(__armas_dense_t *A, const __armas_dense_t *B, int flags)
 {

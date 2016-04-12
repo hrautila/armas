@@ -10,6 +10,7 @@
  * Matrix basic operators
  */
 
+//! \cond
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -29,6 +30,7 @@
 // return byte offset to first CPU cacheline aligned byte.
 #define ALIGNOFFSET(ptr) \
   (((unsigned long)(ptr) & CLMASK) ? CACHELINE-((unsigned long)(ptr) & CLMASK) : 0)
+//! \endcond
 
 // non-inline functions
 
@@ -47,6 +49,7 @@
  * is properly initialized to zero size.
  *
  * @return Pointer to initialized matrix.
+ * \ingroup matrix
  */
 __armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c)
 {
@@ -89,6 +92,7 @@ __armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c)
  *
  * @retval A Success
  * @retval NULL Failed
+ * \ingroup matrix
  */
 __armas_dense_t *__armas_transpose(__armas_dense_t *A, __armas_dense_t *B)
 {
@@ -112,6 +116,7 @@ __armas_dense_t *__armas_transpose(__armas_dense_t *A, __armas_dense_t *B)
  *
  * @retval A Success
  * @retval NULL Incompatible sizes
+ * \ingroup matrix
  */
 __armas_dense_t *__armas_mcopy(__armas_dense_t *A, __armas_dense_t *B)
 {
@@ -139,6 +144,7 @@ __armas_dense_t *__armas_mcopy(__armas_dense_t *A, __armas_dense_t *B)
  *
  * @retval NOT NULL Success, pointer to new matrix
  * @retval NULL Failed
+ * \ingroup matrix
  */
 __armas_dense_t *__armas_newcopy(__armas_dense_t *A)
 {
@@ -165,6 +171,7 @@ __armas_dense_t *__armas_newcopy(__armas_dense_t *A)
  *
  * @retval 0 not equal
  * @retval 1 equal
+ * \ingroup matrix
  */
 int __armas_intolerance(const __armas_dense_t *A, const __armas_dense_t *B, ABSTYPE atol, ABSTYPE rtol)
 {
@@ -203,6 +210,7 @@ static const ABSTYPE ATOL = 1e-8;
  *
  * @retval 0 not equal
  * @retval 1 equal
+ * \ingroup matrix
  */
 int __armas_allclose(const __armas_dense_t *A, const __armas_dense_t *B)
 {
@@ -270,6 +278,7 @@ void __armas_print(const __armas_dense_t *m, FILE *out)
  *
  * @returns 0  Succes
  * @returns -1 Failure
+ * \ingroup matrix
  */
 int __armas_set_values(__armas_dense_t *A, __armas_valuefunc_t value, int flags)
 {
@@ -329,6 +338,7 @@ int __armas_set_values(__armas_dense_t *A, __armas_valuefunc_t value, int flags)
  * @param [in] flags 
  *      flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
  *
+ * \ingroup matrix
  */
 void __armas_make_trm(__armas_dense_t *m, int flags)
 {
@@ -370,6 +380,7 @@ void __armas_make_trm(__armas_dense_t *m, int flags)
  * @param [in] flags
  *      flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
  *
+ * \ingroup matrix
  */
 int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
 {
@@ -415,6 +426,7 @@ int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
  * @param [in,out] m matrix
  * @param [in] alpha constant
  * @param [in] flags flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
+ * \ingroup matrix
  */
 int __armas_madd(__armas_dense_t *m, DTYPE alpha, int flags)
 {

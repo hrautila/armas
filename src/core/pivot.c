@@ -1,4 +1,5 @@
 
+//! \cond
 #include <armas/armas.h>
 #include "dtype.h"
 #include "dlpack.h"
@@ -21,6 +22,7 @@
 #include "internal.h"
 #include "internal_lapack.h"
 #include "pivot.h"
+//! \endcond
 
 /*
  * \brief Swap rows of matrix

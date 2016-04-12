@@ -89,18 +89,16 @@ extern int __armas_apply2(__armas_dense_t *A, __armas_operator2_t func, DTYPE va
 #define __ARMAS_INLINE extern inline
 #endif
 
-/**
- * \brief Test if matrix is a vector.
- */
+//! \brief Test if matrix is a vector.
+//! \ingroup matrix
 __ARMAS_INLINE
 int __armas_isvector(const __armas_dense_t *m)
 {
   return m && (m->rows == 1 || m->cols == 1);
 }
 
-/** 
- * \brief Get number of elements in matrix.
- */
+//! \brief Get number of elements in matrix.
+//! \ingroup matrix
 __ARMAS_INLINE
 int64_t __armas_size(const __armas_dense_t *m)
 {
@@ -124,6 +122,7 @@ int __armas_index_valid(const __armas_dense_t *m, int64_t ix)
 
 
 //! \brief Release matrix allocated space
+//! \ingroup matrix
 __ARMAS_INLINE
 void __armas_release(__armas_dense_t *m)
 {
@@ -137,6 +136,7 @@ void __armas_release(__armas_dense_t *m)
 }
 
 //! \brief Allocate a new matrix of size [r, c]
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_alloc(int r, int c)
 {
@@ -150,6 +150,7 @@ __armas_dense_t *__armas_alloc(int r, int c)
 }
 
 //! \brief Release matrix and its allocated space
+//! \ingroup matrix
 __ARMAS_INLINE
 void __armas_free(__armas_dense_t *m)
 {
@@ -162,6 +163,7 @@ void __armas_free(__armas_dense_t *m)
 //! \brief Make matrix with provided buffer.
 //! Make **r-by-c** matrix with stride s from buffer elems. Assumes elems is at least
 //! of size **r*s**.
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_make(__armas_dense_t *m, int r, int c, int s, DTYPE *elems)
 {
@@ -176,6 +178,7 @@ __armas_dense_t *__armas_make(__armas_dense_t *m, int r, int c, int s, DTYPE *el
 
 
 // \brief Make A a column vector of B; A = B[:, c]
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_column(__armas_dense_t *A, const __armas_dense_t *B, int c)
 {
@@ -194,6 +197,7 @@ __armas_dense_t *__armas_column(__armas_dense_t *A, const __armas_dense_t *B, in
 }
 
 // \brief Make A a row vector of B; A = B[r, :]
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_row(__armas_dense_t *A, const __armas_dense_t *B, int r)
 {
@@ -212,6 +216,7 @@ __armas_dense_t *__armas_row(__armas_dense_t *A, const __armas_dense_t *B, int r
 }
 
 //! \brief Make A a submatrix view of B with spesified row stride.
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_submatrix_ext(__armas_dense_t *A, const __armas_dense_t *B,
                                        int r, int c, int nr, int nc, int step)
@@ -237,6 +242,7 @@ __armas_dense_t *__armas_submatrix_ext(__armas_dense_t *A, const __armas_dense_t
 }
 
 //! \brief Make A submatrix view of B.
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_submatrix(__armas_dense_t *A, const __armas_dense_t *B,
                                    int r, int c, int nr, int nc)
@@ -245,6 +251,7 @@ __armas_dense_t *__armas_submatrix(__armas_dense_t *A, const __armas_dense_t *B,
 }
 
 //! \brief Make A submatrix view of B. (Unsafe version without any limit checks.)
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_submatrix_unsafe(__armas_dense_t *A, const __armas_dense_t *B,
                                           int r, int c, int nr, int nc)
@@ -253,6 +260,7 @@ __armas_dense_t *__armas_submatrix_unsafe(__armas_dense_t *A, const __armas_dens
 }
 
 //! \brief Make X subvector of Y
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_subvector(__armas_dense_t *X, const __armas_dense_t *Y,
                                    int n, int len)
@@ -270,6 +278,7 @@ __armas_dense_t *__armas_subvector(__armas_dense_t *X, const __armas_dense_t *Y,
 }
 
 //! \brief Make X subvector of Y (Unsafe version without any limit checks.)
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_subvector_unsafe(__armas_dense_t *X, const __armas_dense_t *Y,
                                           int n, int len)
@@ -283,6 +292,7 @@ __armas_dense_t *__armas_subvector_unsafe(__armas_dense_t *X, const __armas_dens
 }
 
 //! \brief Make A diagonal row vector of B.
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_diag(__armas_dense_t *A, const __armas_dense_t *B, int k)
 {
@@ -303,6 +313,7 @@ __armas_dense_t *__armas_diag(__armas_dense_t *A, const __armas_dense_t *B, int 
 }
 
 //! \brief Make A diagonal row vector of B. (unsafe version).
+//! \ingroup matrix
 __ARMAS_INLINE
 __armas_dense_t *__armas_diag_unsafe(__armas_dense_t *A, const __armas_dense_t *B, int k)
 {
@@ -336,6 +347,7 @@ DTYPE __armas_get(const __armas_dense_t *m, int row, int col)
 }
 
 //! \brief Get unsafely element at `[row, col]`
+//! \ingroup matrix
 __ARMAS_INLINE
 DTYPE __armas_get_unsafe(const __armas_dense_t *m, int row, int col)
 {
@@ -343,6 +355,7 @@ DTYPE __armas_get_unsafe(const __armas_dense_t *m, int row, int col)
 }
 
 //! \brief Set element at `[row, col]` to `val`
+//! \ingroup matrix
 __ARMAS_INLINE
 void __armas_set(__armas_dense_t *m, int row, int col, DTYPE val)
 {
@@ -356,6 +369,7 @@ void __armas_set(__armas_dense_t *m, int row, int col, DTYPE val)
 }
 
 //! \brief Set element unsafely at `[row, col]` to `val`
+//! \ingroup matrix
 __ARMAS_INLINE
 void __armas_set_unsafe(__armas_dense_t *m, int row, int col, DTYPE val)
 {
@@ -363,6 +377,7 @@ void __armas_set_unsafe(__armas_dense_t *m, int row, int col, DTYPE val)
 }
 
 //! \brief Set element of vector at index `ix` to `val`.
+//! \ingroup matrix
 __ARMAS_INLINE
 void __armas_set_at(__armas_dense_t *m, int ix, DTYPE val)
 {
@@ -374,6 +389,7 @@ void __armas_set_at(__armas_dense_t *m, int ix, DTYPE val)
 }
 
 //! \brief Set unsafely element of vector at index `ix` to `val`.
+//! \ingroup matrix
 __ARMAS_INLINE
 void __armas_set_at_unsafe(__armas_dense_t *m, int ix, DTYPE val)
 {
@@ -381,6 +397,7 @@ void __armas_set_at_unsafe(__armas_dense_t *m, int ix, DTYPE val)
 }
 
 //! \brief Get element of vector at index `ix`.
+//! \ingroup matrix
 __ARMAS_INLINE
 DTYPE __armas_get_at(const __armas_dense_t *m, int ix)
 {
@@ -392,6 +409,7 @@ DTYPE __armas_get_at(const __armas_dense_t *m, int ix)
 }
 
 //! \brief Get unsafely element of vector at index `ix`.
+//! \ingroup matrix
 __ARMAS_INLINE
 DTYPE __armas_get_at_unsafe(const __armas_dense_t *m, int ix)
 {
@@ -411,6 +429,7 @@ int __armas_index(const __armas_dense_t *m, int row, int col)
 }
 
 //! \brief Get data buffer
+//! \ingroup matrix
 __ARMAS_INLINE
 DTYPE *__armas_data(const __armas_dense_t *m)
 {
