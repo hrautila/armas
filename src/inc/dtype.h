@@ -5,8 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
-#ifndef __DTYPE_H
-#define __DTYPE_H 1
+#ifndef __DOXYGEN
+#ifndef __ARMAS_DTYPE_H
+#define __ARMAS_DTYPE_H 1
 
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -580,4 +581,10 @@ typedef double ABSTYPE;
 #endif
 
 
-#endif  /* DTYPE_H */
+#endif  /* __ARMAS_DTYPE_H */
+#else 
+
+// name defintions for Doxygen 
+#include "doxy.h"
+
+#endif /* __DOXYGEN */
