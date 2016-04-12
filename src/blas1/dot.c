@@ -22,8 +22,10 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
+//! \endcond
 
 #if EXT_PRECISION && defined(__vec_dot_ext)
 #define HAVE_EXT_PRECISION 1
@@ -32,7 +34,7 @@ extern DTYPE __vec_dot_ext(const mvec_t *X,  const mvec_t *Y, int N);
 #define HAVE_EXT_PRECISION 0
 #endif
 
-#include "cond.h"
+//#include "cond.h"
 
 
 static inline

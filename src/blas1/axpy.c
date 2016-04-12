@@ -22,8 +22,10 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
+//! \endcond
 
 #if EXT_PRECISION && defined(__vec_axpy_ext) && defined(__vec_axpby_ext)
 #define HAVE_EXT_PRECISION 1
@@ -33,7 +35,7 @@ int __vec_axpby_ext(mvec_t *Y,  const mvec_t *X, DTYPE alpha, DTYPE beta, int N)
 #define HAVE_EXT_PRECISION 0
 #endif
 
-#include "cond.h"
+//#include "cond.h"
 
 static inline
 void __vec_axpy(mvec_t *Y,  const mvec_t *X, DTYPE alpha, int N)

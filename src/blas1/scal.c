@@ -22,8 +22,10 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
+//! \endcond
 
 static inline
 void __vec_scal(mvec_t *X,  const DTYPE alpha, int N)

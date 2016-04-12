@@ -7,7 +7,6 @@
 
 //! \file
 //! Absolute sum
-//! @defgroup blas1 BLAS level 1 functions
 
 #include "dtype.h"
 
@@ -23,6 +22,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 
@@ -41,6 +41,7 @@ extern DTYPE __vec_sum_ext(const mvec_t *X,  int N);
 
 // include conditional code macros
 #include "cond.h"
+//! \endcond
 
 // return sum of absolute values
 static inline

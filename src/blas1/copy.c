@@ -22,8 +22,10 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
+//! \endcond
 
 static
 void __vec_copy(mvec_t *X,  const mvec_t *Y, int N)
