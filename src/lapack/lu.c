@@ -5,6 +5,11 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! General matrix factorization
+
+//! \ingroup lapack
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,10 +27,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "pivot.h"
+//! \endcond
 
 static
 int __unblk_lufactor_nopiv(__armas_dense_t *A, armas_conf_t *conf)
@@ -244,20 +251,26 @@ int __blk_lufactor(__armas_dense_t *A, armas_pivot_t *P, int lb, armas_conf_t *c
 }
 
 
-/*
+/**
+ * \brief LU factorization of a general MxN matrix
+ *
  * Compute an LU factorization of a general M-by-N matrix using
  * partial pivoting with row interchanges.
  *
- * Arguments:
- *   A      On entry, the M-by-N matrix to be factored. On exit the factors
- *          L and U from factorization A = P*L*U, the unit diagonal elements
- *          of L are not stored.
+ * \param[in,out]  A
+ *      On entry, the M-by-N matrix to be factored. On exit the factors
+ *      L and U from factorization A = P*L*U, the unit diagonal elements
+ *      of L are not stored.
+ * \param[out]  P
+ *      On exit the pivot indices. If `null` then factorization computed without
+ *      pivoting.
+ * \param[in,out]  conf
+ *      Blocking configuration.
  *
- *   pivots On exit the pivot indices. 
+ * \retval 0  success 
+ * \retval -1 error and `conf.error` holds last error code.
  *
- *   conf   Blocking configuration.
- *
- * Compatible with lapack.DGETRF
+ * Compatible with lapack.xGETRF
  */
 int __armas_lufactor(__armas_dense_t *A, armas_pivot_t *P, armas_conf_t *conf)
 {
@@ -282,21 +295,27 @@ int __armas_lufactor(__armas_dense_t *A, armas_pivot_t *P, armas_conf_t *conf)
   return err;
 }
 
-/*
- * Solve a system of linear equations A*X = B or A.T*X = B with general N-by-N
- * matrix A using the LU factorization computed by armas_lufactor().
+/**
+ * \brief Solves system of linear equations
  *
- * Arguments:
- *  B      On entry, the right hand side matrix B. On exit, the solution matrix X.
+ * Solve a system of linear equations \f$ AX = B \f$ or \f$ A^TX = B \f$ with general N-by-N
+ * matrix A using the LU factorization computed by `lufactor()`.
  *
- *  A      The factor L and U from the factorization A = P*L*U as computed by
- *         armas_lufactor()
+ * \param[in,out] B
+ *      On entry, the right hand side matrix B. On exit, the solution matrix X.
+ * \param[in] A
+ *      The factor L and U from the factorization A = P*L*U as computed by `lufactor()`.
+ * \param[in] P 
+ *      The pivot indices from `lufactor()`, if NULL then no pivoting applied
+ *      to matrix B.
+ * \param[in] flags
+ *      The indicator of the form of the system of equations.
+ *      If *ARMAS_TRANS*  set then system is transposed. 
+ * \param[in,out] conf
+ *      Blocking configuration
  *
- *  pivots The pivot indices from armas_lufactor(), if NULL then no pivoting applied
- *         to matrix B.
- *
- *  flags  The indicator of the form of the system of equations.
- *         If flags&TRANSA then system is transposed. 
+ * \retval 0  success 
+ * \retval -1 error and `conf.error` holds last error code.
  *
  * Compatible with lapack.DGETRS.
  */

@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Solve system of linear inequalities
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,46 +25,54 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
-
+//! \endcond
 static inline
 int __ws_lqsolve(int M, int N, int lb)
 {
   return lb == 0 ? M : lb*(M+lb);
 }
 
-/*
- * Solve a system of linear equations A*X = B with general M-by-N
- * matrix A using the QR factorization computed by __qrfactor().
+/**
+ * \brief Solve a system of linear equations
  *
- * If flags&TRANS != 0:
- *   find the minimum norm solution of an overdetermined system A.T * X = B.
- *   i.e min ||X|| s.t A.T*X = B
+ * Solve a system of linear equations A*X = B with general M-by-N (M < N)
+ * matrix A using the LQ factorization computed by lqfactor().
+ *
+ * If *ARMAS_TRANS is set:
+ *   find the minimum norm solution of an overdetermined system \f$ A^T X = B \f$
+ *   i.e \f$ min ||X|| s.t A^T X = B \f$
  *
  * Otherwise:
  *   find the least squares solution of an overdetermined system, i.e.,
- *   solve the least squares problem: min || B - A*X ||.
+ *   solve the least squares problem: \f$ min || B - A X || \f$
  *
- * Arguments:
- *  B     On entry, the right hand side N-by-P matrix B.
- *        On exit, the solution matrix X.
+ * \param[in,out] B
+ *     On entry, the right hand side N-by-P matrix B.
+ *     On exit, the solution matrix X.
  *
- *  A     The elements on and above the diagonal contain the min(M,N)-by-N upper
- *        trapezoidal matrix R. The elements below the diagonal with the vector 'tau', 
- *        represent the ortogonal matrix Q as product of elementary reflectors.
- *        Matrix A and T are as returned by DecomposeQR()
+ * \param[in] A
+ *     The elements on and below the diagonal contain the min(M,N)-by-N lower
+ *     trapezoidal matrix `L`. The elements right the diagonal with the vector `tau`, 
+ *     represent the ortogonal matrix Q as product of elementary reflectors.
+ *     Matrix `A` and `tau` are as returned by lqfactor()
  *
- *  tau   The vector of N scalar coefficients that together with trilu(A) define
- *        the ortogonal matrix Q as Q = H(1)H(2)...H(N)
+ * \param[in] tau
+ *   The vector of N scalar coefficients that together with triuu(A) define
+ *   the ortogonal matrix Q as \f$ Q = H_1 H_2...H_{N-1} \f$
  *
- *  W     Workspace, size required returned WorksizeMultQ().
+ * \param[out] W
+ *     Workspace, size required returned lqsolve_work().
  *
- *  flags Indicator flags
+ * \param[in] flags 
+ *    Indicator flags, *ARMAS_TRANS*
  *
- *  conf  Optinal blocking configuration. If not given default will be used. Unblocked
- *        invocation is indicated with conf.LB == 0.
+ * \param[in,out] conf
+ *     Optinal blocking configuration. If not given default will be used. Unblocked
+ *     invocation is indicated with conf.lb == 0.
  *
  * Compatible with lapack.GELS (the m >= n part)
  */
@@ -113,6 +124,7 @@ int __armas_lqsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau
 }
 
 
+//! \brief Workspace size for lqsolve.
 int __armas_lqsolve_work(__armas_dense_t *B, armas_conf_t *conf)
 {
   if (!conf)

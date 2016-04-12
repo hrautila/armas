@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Diagonal matrix
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,12 +25,14 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+//! \endcond
 
-/*
- * @brief Compute A = A*diag(D) or A = diag(D)*A
+/**
+ * @brief Compute \f$ A = A*diag(D) \f$ or \f$ A = diag(D)*A \f$
  *
  * @param A
  *      Target matrix
@@ -78,8 +83,8 @@ int __armas_mult_diag(__armas_dense_t *A, __armas_dense_t *D, int flags, armas_c
     return 0;
 }
 
-/*
- * @brief Compute A = A*diag(D).-1 or A = diag(D).-1*A
+/**
+ * @brief Compute \f$ A = A*diag(D)^-1 \f$ or \f$ A = diag(D)^-1*A \f$
  *
  * @param A
  *      Target matrix

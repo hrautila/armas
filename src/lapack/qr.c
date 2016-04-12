@@ -5,6 +5,10 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! QR factorization
+
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,10 +26,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "partition.h"
+//! \endcond
 
 
 static inline
@@ -299,45 +305,43 @@ int __armas_qrreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
 }
 
 /**
- * @brief Compute QR factorization of a M-by-N matrix A = Q * R.
+ * \brief Compute QR factorization of a M-by-N matrix \f$ A = QR \f$
  *
- * Arguments:
- *  A    On entry, the M-by-N matrix A, M >= N. On exit, upper triangular matrix R
- *       and the orthogonal matrix Q as product of elementary reflectors.
+ * \param[in,out] A
+ *      On entry, the M-by-N matrix A, M >= N. On exit, upper triangular matrix R
+ *      and the orthogonal matrix Q as product of elementary reflectors.
+ * \param[out] tau
+ *      On exit, the scalar factors of the elementary reflectors.
+ * \param[in] W 
+ *      Workspace, N-by-lb matrix used for work space in blocked invocations. 
+ * \param[in,out] conf 
+ *      The blocking configuration. If nil then default blocking configuration
+ *      is used. Member conf.lb defines blocking size of blocked algorithms.
+ *      If it is zero then unblocked algorithm is used.
+ * \retval 0 succes
+ * \retval -1 error and `conf.error` set to last error.
  *
- *  tau  On exit, the scalar factors of the elementary reflectors.
- *
- *  W    Workspace, N-by-nb matrix used for work space in blocked invocations. 
- *
- *  conf The blocking configuration. If nil then default blocking configuration
- *       is used. Member conf.LB defines blocking size of blocked algorithms.
- *       If it is zero then unblocked algorithm is used.
- *
- * @returns:
- *      0 if succesfull, -1 otherwise
- *
- * Additional information
+ * #### Additional information
  *
  *  Ortogonal matrix Q is product of elementary reflectors H(k)
  *
- *    Q = H(0)H(1),...,H(K-1), where K = min(M,N)
+ *      Q = H(0)H(1),...,H(K-1), where K = min(M,N) 
  *
  *  Elementary reflector H(k) is stored on column k of A below the diagonal with
- *  implicit unit value on diagonal entry. The vector TAU holds scalar factors
+ *  implicit unit value on diagonal entry. The vector `tau` holds scalar factors
  *  of the elementary reflectors.
  *
  *  Contents of matrix A after factorization is as follow:
  *
- *    ( r  r  r  r  )   for M=6, N=4
- *    ( v1 r  r  r  )
- *    ( v1 v2 r  r  )
- *    ( v1 v2 v3 r  )
- *    ( v1 v2 v3 v4 )
- *    ( v1 v2 v3 v4 )
- *
- *  where r is element of R, vk is element of H(k).
+ *      ( r  r  r  r )  M=6, N=4
+ *      ( v1 r  r  r )  r   in R
+ *      ( v1 v2 r  r )  vk  in H(k)
+ *      ( v1 v2 v3 r )
+ *      ( v1 v2 v3 v4)
+ *      ( v1 v2 v3 v4) 
  *
  *  Compatible with lapack.xGEQRF
+ * \ingroup lapack
  */
 int __armas_qrfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                      armas_conf_t *conf)
@@ -379,10 +383,16 @@ int __armas_qrfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
   return 0;
 }
 
-/*
- * Calculate required workspace to decompose matrix A with current blocking
- * configuration. If blocking configuration is not provided then default
- * configuation will be used.
+/**
+ * \brief Workspace size for factorization
+ *
+ * Calculate required workspace to factorize matrix A with provided blocking configuration.
+ *
+ * \param[in] A Input matrix
+ * \param[in] conf Blocking configuration, if null pointer then default configuration used.
+ *
+ * \returns Number of elements needed 
+ * \ingroup lapack
  */
 int __armas_qrfactor_work(__armas_dense_t *A, armas_conf_t *conf)
 {

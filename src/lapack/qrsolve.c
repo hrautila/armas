@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Least squares or minimum norm solution
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,9 +25,11 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+//! \endcond
 
 static inline
 int __ws_qrsolve(int M, int N, int lb)
@@ -32,38 +37,44 @@ int __ws_qrsolve(int M, int N, int lb)
   return lb == 0 ? N : lb*(N+lb);
 }
 
-/*
- * Solve a system of linear equations A*X = B with general M-by-N
- * matrix A using the QR factorization computed by __qrfactor().
+/**
+ * \brief Solve a system of linear equations \f$ AX = B \f$
  *
- * If flags&TRANS != 0:
- *   find the minimum norm solution of an overdetermined system A.T * X = B.
- *   i.e min ||X|| s.t A.T*X = B
+ * Solve a system of linear equations AX = B with general M-by-N
+ * matrix A using the QR factorization computed by qrfactor().
  *
- * Otherwise:
- *   find the least squares solution of an overdetermined system, i.e.,
- *   solve the least squares problem: min || B - A*X ||.
+ * If flag *ARMAS_TRANS* is set
+ * find the minimum norm solution of an overdetermined system \f$ A^TX = B \f$
+ * i.e \f$ min ||X|| s.t A^T X = B \f$
  *
- * Arguments:
- *  B     On entry, the right hand side N-by-P matrix B.
- *        On exit, the solution matrix X.
+ * Otherwise find the least squares solution of an overdetermined system, i.e.,
+ *   solve the least squares problem: \f$ min || B - A*X || \f$
  *
- *  A     The elements on and above the diagonal contain the min(M,N)-by-N upper
- *        trapezoidal matrix R. The elements below the diagonal with the vector 'tau', 
- *        represent the ortogonal matrix Q as product of elementary reflectors.
- *        Matrix A and T are as returned by DecomposeQR()
+ * \param[in,out] B     
+ *     On entry, the right hand side N-by-P matrix B.  On exit, the solution matrix X.
  *
- *  tau   The vector of N scalar coefficients that together with trilu(A) define
- *        the ortogonal matrix Q as Q = H(1)H(2)...H(N)
+ * \param[in] A
+ *     The elements on and above the diagonal contain the min(M,N)-by-N upper
+ *     trapezoidal matrix R. The elements below the diagonal with the vector 'tau', 
+ *     represent the ortogonal matrix Q as product of elementary reflectors.
+ *     Matrix A and T are as returned by qrfactor()
  *
- *  W     Workspace, size required returned WorksizeMultQ().
+ * \param[in] tau
+ *   The vector of N scalar coefficients that together with trilu(A) define
+ *   the ortogonal matrix Q as \f$ Q = H(1)H(2)...H(N) \f$
  *
- *  flags Indicator flags
+ * \param[in] W
+ *    Workspace, size required returned qrmult_work().
  *
- *  conf  Optinal blocking configuration. If not given default will be used. Unblocked
- *        invocation is indicated with conf.LB == 0.
+ * \param[in] flags
+ *    Indicator flags
+ *
+ * \param[in,out] conf  
+ *    Optinal blocking configuration. If not given default will be used. Unblocked
+ *    invocation is indicated with conf.lb == 0.
  *
  * Compatible with lapack.GELS (the m >= n part)
+ * \ingroup lapack
  */
 int __armas_qrsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
                     __armas_dense_t *W, int flags, armas_conf_t *conf)
@@ -112,7 +123,15 @@ int __armas_qrsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau
   return 0;
 }
 
-
+/**
+ * \brief Calculate size of work space for qrsolve().
+ *
+ * \param B
+ *   Matrix to solve.
+ * \param conf
+ *   Blocking configuration.
+ * \ingroup lapack
+ */
 int __armas_qrsolve_work(__armas_dense_t *B, armas_conf_t *conf)
 {
   if (!conf)

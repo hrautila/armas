@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Givens rotations
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -20,10 +23,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "auxiliary.h"
+//! \endcond
 
 /*
  * Notes about applying Givens rotation.
@@ -58,7 +63,7 @@
  *  if it is applied consistently. (19.8.2014)
  */
 
-/*
+/**
  * \brief Compute Givens rotation.
  *
  * Compatible to blas.DROTG and lapack.DLARTG.
@@ -70,16 +75,16 @@ void __armas_gvcompute(DTYPE *c, DTYPE *s, DTYPE *r, DTYPE a, DTYPE b)
     __gvrotg(c, s, r, a, b);
 }
 
-/*
+/**
  * \brief Apply Givens rotation.
  *
  * Computes
  *
- *    ( v0 )  = G(c, s) * ( y0 )  or ( v0 v1 ) = ( y0 y1 ) * G(c, s)
- *    ( v1 )              ( y1 )
+ *     ( v0 )  = G(c, s) * ( y0 )  or ( v0 v1 ) = ( y0 y1 ) * G(c, s)
+ *     ( v1 )              ( y1 )
  *
- *    G(c, s) = ( c  s )  => ( v0 ) = ( c*y0 + s*y1 )
- *              (-s  c )     ( v1 )   ( c*y1 - s*y0 )
+ *     G(c, s) = ( c  s )  => ( v0 ) = ( c*y0 + s*y1 )
+ *               (-s  c )     ( v1 )   ( c*y1 - s*y0 )
  *
  * \ingroup lapack givens
  */
@@ -88,7 +93,7 @@ void __armas_gvrotate(DTYPE *v0, DTYPE *v1, DTYPE c, DTYPE s, DTYPE y0, DTYPE y1
     __gvrot(v0, v1, c, s, y0, y1);
 }
 
-/*
+/**
  * \brief Apply Givens rotation (c, s) to rows of A.
  *
  * \param A
@@ -127,7 +132,7 @@ void __armas_gvleft(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int co
 }
 
 
-/*
+/**
  * \brief Apply Givens rotation (c, s) to columns of A.
  *
  * \param A
@@ -165,7 +170,7 @@ void __armas_gvright(__armas_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int r
     __gvright(A, c, s, c1, c2, row, nrow);
 }
 
-/*
+/**
  * \brief Apply multiple Givens rotations to matrix A from left or right.
  *
  * Applies sequence of plane rotations to matrix A from either left or right.
@@ -174,12 +179,12 @@ void __armas_gvright(__armas_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int r
  *
  * P is either forward (ARMAS_FORWARD) or backward (ARMAS_BACKWARD) sequence
  *
- *    P = P(k-1)*...P(1)*P(0),     P = P(0)*P(1)...*P(k-1)
+ *    \f$ P = P_{k-1}...P_1 P_0,     P = P_0 *P_1...P_{k-1} \f$
  *
- * where P(n) is plane rotation defined by 2x2 matrix
+ * where \f$ P_n \f$ is plane rotation defined by 2x2 matrix
  *
- *    R(n) = ( c(n), s(n) )
- *           (-s(n), c(n) )
+ *     P(n) = ( c(n), s(n) )
+ *            (-s(n), c(n) )
  *
  * Left/right is indicated with flags parameter.
  *

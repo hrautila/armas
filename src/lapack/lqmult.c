@@ -358,7 +358,9 @@ __blk_lqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
 }
 
 
-/*
+/**
+ * \brief Multiply with orthogonal matrix Q from LQ factorization
+ *
  * Multiply and replace C with Q*C or Q.T*C where Q is a real orthogonal matrix
  * defined as the product of k elementary reflectors.
  *
@@ -366,31 +368,41 @@ __blk_lqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
  *
  * as returned by lqfactor().
  *
- * Arguments:
- *  C     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
- *        N-by-M matrix.  On exit C is overwritten by Q*C or Q.T*C.
- *        If bit RIGHT is set then C is  overwritten by C*Q or C*Q.T
+ * \param[in,out] C
+ *     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
+ *     N-by-M matrix.  On exit C is overwritten by Q*C or Q.T*C.
+ *     If bit RIGHT is set then C is  overwritten by C*Q or C*Q.T
  *
- *  A     LQ factorization as returne by lqfactor() where the upper
- *        trapezoidal part holds the elementary reflectors.
+ * \param[in] A
+ *     LQ factorization as returne by lqfactor() where the upper
+ *     trapezoidal part holds the elementary reflectors.
  *
- *  tau   The scalar factors of the elementary reflectors.
+ * \param[in] tau
+ *   The scalar factors of the elementary reflectors.
  *
- *  W     Workspace matrix,  required size is returned by WorksizeMultQ().
+ * \param[out] W
+ *     Workspace matrix,  required size is returned by WorksizeMultQ().
  *
- *  flags Indicators. Valid indicators LEFT, RIGHT, TRANS
+ * \param[in] flags
+ *     Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
  *       
- *  conf  Blocking configuration. Field LB defines block sized. If it is zero
- *        unblocked invocation is assumed.
+ * \param[in,out] conf
+ *     Blocking configuration. Field LB defines block sized. If it is zero
+ *     unblocked invocation is assumed.
  *
+ * \retval  0 Success
+ * \retval -1 Error, `conf.error` holds error code
  * Compatible with lapack.DORMLQ
  *
- * Notes:
+ * #### Notes
  *   m(A) is number of elementary reflectors == A.rows
  *   n(A) is the order of the Q matrix == A.cols
  *
+ * \cond
  *   LEFT : m(C) == n(A)
  *   RIGHT: n(C) == n(A)
+ * \endcond
+ * \ingroup lapack
  */
 int __armas_lqmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                    int flags, armas_conf_t *conf)

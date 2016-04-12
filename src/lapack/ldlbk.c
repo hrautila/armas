@@ -5,6 +5,11 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Symmetric matrix factorization
+
+//! \ingroup lapack
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,9 +27,11 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+//! \endcond
 
 static inline
 int __ws_ldlfactor(int M, int N, int lb)
@@ -33,39 +40,41 @@ int __ws_ldlfactor(int M, int N, int lb)
 }
 
 
-/*
- * Compute LDL^T factorization of real symmetric matrix.
+/**
+ * \brief Compute LDL^T factorization of real symmetric matrix.
  *
  * Computes of a real symmetric matrix A using Bunch-Kauffman pivoting method.
  * The form of factorization is 
  *
- *    A = L*D*L.T  or A = U*D*U.T
+ *    \f$ A = LDL^T \f$ or \f$ A = UDU^T \f$
  *
  * where L (or U) is product of permutation and unit lower (or upper) triangular matrix
  * and D is block diagonal symmetric matrix with 1x1 and 2x2 blocks.
  *
- * Arguments
- *  A     On entry, the N-by-N symmetric matrix A. If flags bit LOWER (or UPPER) is set then
- *        lower (or upper) triangular matrix and strictly upper (or lower) part is not
- *        accessed. On exit, the block diagonal matrix D and lower (or upper) triangular
- *        product matrix L (or U).
+ * \param[in,out] A
+ *      On entry, the N-by-N symmetric matrix A. If flags bit *ARMAS_LOWER* (or *ARMSA_UPPER*)
+ *      is set then lower (or upper) triangular matrix and strictly upper (or lower) part
+ *      is not accessed. On exit, the block diagonal matrix D and lower (or upper) triangular
+ *      product matrix L (or U).
+ *  \param[in] W
+ *      Workspace, size as returned by `bkfactor_work()`.
+ *  \param[out] P
+ *      Pivot vector. On exit details of interchanges and the block structure of D. If
+ *      \f$ P[k] > 0 \f$ then \f$ D[k,k] \f$ is 1x1 and rows and columns k and \f$ P[k]-1 \f$ 
+ *      were changed. If \f$ P[k] == P[k+1] < 0 \f$ then \f$ D[k,k] \f$ is 2x2.
+ *      If A is lower then rows and columns \f$ k+1,  P[k]-1 \f$ were changed. 
+ *      And if A is upper then rows and columns \f$ k, P[k]-1 \f$ were changed.
+ * \param[in] flags 
+ *      Indicator bits, *ARMAS_LOWER* or *ARMAS_UPPER*.
+ *  \param[in,out] conf 
+ *      Optional blocking configuration. If not provided then default blocking
+ *      as returned by `armas_conf_default()` is used. 
  *
- *  W     Workspace, size as returned by WorksizeBK().
- *
- *  P     Pivot vector. On exit details of interchanges and the block structure of D. If
- *        P[k] > 0 then D[k,k] is 1x1 and rows and columns k and P[k]-1 were changed.
- *        If P[k] == P[k+1] < 0 then D[k,k] is 2x2. If A is lower then rows and
- *        columns k+1 and ipiv[k]-1  were changed. And if A is upper then rows and columns
- *        k and P[k]-1 were changed.
- *
- *  flags Indicator bits, LOWER or UPPER.
- *
- *  confs Optional blocking configuration. If not provided then default blocking
- *        as returned by DefaultConf() is used. 
- *
- *  Unblocked algorithm is used if blocking configuration LB is zero or if N < LB.
+ *  Unblocked algorithm is used if blocking configuration `conf.lb` is zero or 
+ *  if `N < conf.lb`.
  *
  *  Compatible with lapack.SYTRF.
+ * \ingroup lapack
  */
 int __armas_bkfactor(__armas_dense_t *A, __armas_dense_t *W,
                      armas_pivot_t *P, int flags, armas_conf_t *conf)
@@ -120,8 +129,17 @@ int __armas_bkfactor(__armas_dense_t *A, __armas_dense_t *W,
   return 0;
 }
 
-
-
+/**
+ * \brief Compute workspace size for `bkfactor()`
+ *
+ * \param[in] A
+ *    The input matrix
+ * \param[in] conf
+ *    Blocking configuration
+ *
+ * \return Workspace size as number of elements.
+ * \ingroup lapack
+ */
 int __armas_bkfactor_work(__armas_dense_t *A, armas_conf_t *conf)
 {
   if (!conf)
@@ -129,28 +147,28 @@ int __armas_bkfactor_work(__armas_dense_t *A, armas_conf_t *conf)
   return __ws_ldlfactor(A->rows, A->cols, conf->lb);
 }
 
-
-
-
-/*
- * Solve A*X = B with symmetric real matrix A.
+/**
+ * \brief Solve \f$ AX = B \f$ with symmetric real matrix A.
  *
- * Solves a system of linear equations A*X = B with a real symmetric matrix A using
- * the factorization A = U*D*U**T or A = L*D*L**T computed by ldlfactor().
+ * Solves a system of linear equations AX = B with a real symmetric matrix A using
+ * the factorization \f$ A = UDU^T \f$ or \f$ A = LDL^T \f$ computed by `bkfactor()`.
  *
- * Arguments
- *  B     On entry, right hand side matrix B. On exit, the solution matrix X.
- *
- *  A     Block diagonal matrix D and the multipliers used to compute factor U
- *        (or L) as returned by ldlfactor_sym().
- *
- *  P     Block structure of matrix D and details of interchanges.
- *
- *  flags Indicator bits, LOWER or UPPER.
- *
- *  confs Optional blocking configuration.
+ * \param[in,out] B
+ *      On entry, right hand side matrix B. On exit, the solution matrix X.
+ * \param[in] A
+ *      Block diagonal matrix D and the multipliers used to compute factor U
+ *      (or L) as returned by `bkfactor()`.
+ *  \param[in] W
+ *      Workspace, not used at the moment.
+ * \param[in] P
+ *      Block structure of matrix D and details of interchanges.
+ * \param[in] flags
+ *      Indicator bits, *ARMAS_LOWER* or *ARMAS_UPPER*.
+ * \param[in,out] conf 
+ *      Optional blocking configuration.
  *
  * Currently only unblocked algorightm implemented. Compatible with lapack.SYTRS.
+ * \ingroup lapack
  */
 int __armas_bksolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *W,
                     armas_pivot_t *P, int flags, armas_conf_t *conf)

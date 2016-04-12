@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Generate orthogonal Q matrix of LQ factorization
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -174,25 +177,32 @@ int __blk_lqbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *T,
   return 0;
 }
 
-/*
+/**
+ * \brief Generate orthogonal Q matrix of LQ factorization
+ *
  * Generate the M by N matrix Q with orthogonal rows which
  * are defined as the first M rows of the product of K first elementary
  * reflectors.
  *
- * Arguments
- *   A     On entry, the elementary reflectors as returned by DecomposeLQ().
- *         stored right of diagonal of the M by N matrix A.
- *         On exit, the orthogonal matrix Q
+ * \param[in,out]  A
+ *     On entry, the elementary reflectors as returned by DecomposeLQ().
+ *     stored right of diagonal of the M by N matrix A.
+ *     On exit, the orthogonal matrix Q
  *
- *   tau   Scalar coefficents of elementary reflectors
+ * \param[in]  tau
+ *     Scalar coefficents of elementary reflectors
  *
- *   W     Workspace
+ * \param[out]  W
+ *     Workspace
  *
- *   K     The number of elementary reflector whose product define the matrix Q
+ * \param[in]  K
+ *     The number of elementary reflector whose product define the matrix Q
  *
- *   conf  Optional blocking configuration.
+ * \param[in,out]  conf
+ *     Optional blocking configuration.
  *
  * Compatible with lapackd.ORGLQ.
+ * \ingroup lapack
  */
 int __armas_lqbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W, int K,
                     armas_conf_t *conf)

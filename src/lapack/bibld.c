@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Generate orthogonal matrix for bidiagonal reduction
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -20,19 +23,42 @@
 
 // compile if type dependent public function names defined
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+//! \endcond
 
-/*
- * Generate one of the orthogonal matrices Q or P.T determined by BDReduce() when
- * reducing a real matrix A to bidiagonal form. Q and P.T are defined as products
- * elementary reflectors H(i) or G(i) respectively.
+/**
+ * \brief Generate orthogonal matrix Q or P
  *
- * Orthogonal matrix Q is generated if flag WANTQ is set. And matrix P respectively
- * of flag WANTP is set.
+ * Generate one of the orthogonal matrices  Q or \f$ P^T \f$ determined by bdreduce() when
+ * reducing a real matrix A to bidiagonal form. Q and \f$ P^T \f$ are defined as products
+ * elementary reflectors \f$ H_i \f$ or \f$ G_i \f$ respectively.
+ *
+ * Orthogonal matrix Q is generated if flag *ARMSA_WANTQ* is set. And matrix P respectively
+ * of flag *ARMAS_WANTP* is set.
+ *
+ * \param[in,out] A
+ *   On entry the bidiagonal reduction as returned by bdreduce(). On exit the requested
+ *   orthogonal matrix defined as the product of K first elementary reflectors.
+ * \param[in] tau
+ *   Scalar coefficients of the elementary reflectors.
+ * \param[out] W
+ *   Workspace
+ * \param[in] K
+ *   Number elementary reflectors used to generate orthogonal matrix. \f$ 0 < K <= n(A) \f$
+ * \param[in] flags
+ *   Indicator flags, *ARMAS_WANTQ* or *ARMAS_WANTP*.
+ * \param[in,out] conf
+ *   Blocking configuration
+ *
+ * \retval 0 Success
+ * \retval -1 fail, `conf.error` set to error code.
+ *
+ * \ingroup lapack
  */
 int __armas_bdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                     int K, int flags, armas_conf_t *conf)
@@ -109,6 +135,8 @@ int __armas_bdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
     return err;
 }
 
+//! \brief Workspace size for bdbuild().
+//! \ingroup lapack
 int __armas_bdbuild_work(__armas_dense_t *A, int flags, armas_conf_t *conf)
 {
   if (!conf)

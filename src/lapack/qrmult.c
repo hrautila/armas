@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! QR orthogonal matrix multiplication
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -23,10 +26,12 @@
 // ------------------------------------------------------------------------------
 
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "partition.h"
+//! \endcond
 
 /*
  * Internal worksize calculation functions.
@@ -368,34 +373,42 @@ __blk_qrmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   return 0;
 }
 
-/*
- * Multiply and replace C with Q*C or Q.T*C where Q is a real orthogonal matrix
+/**
+ * \brief Multiply matrix with orthogonal matrix Q.
+ *
+ * Multiply and replace C with \f$ Q C \f$ or \f$ Q^T C \f$ where Q is a real orthogonal matrix
  * defined as the product of k elementary reflectors.
  *
- *    Q = H(1) H(2) . . . H(k)
+ *    \f$ Q = H_1 H_2 . . . H_k \f$
  *
- * as returned by __armas_qrfactor().
+ * as returned by qrfactor().
  *
- * Arguments:
- *  C     On entry, the M-by-N matrix C or if flag bit RIGHT is set then N-by-M matrix
- *        On exit C is overwritten by Q*C or Q.T*C. If bit RIGHT is set then C is
- *        overwritten by C*Q or C*Q.T
+ * \param[in,out] C
+ *   On entry, the M-by-N matrix C or if flag bit *ARMAS_RIGHT* is set then N-by-M matrix
+ *   On exit C is overwritten by \f$ Q C \f$ or \f$ Q^T C \f$. If bit *ARMAS_RIGHT* is 
+ *   set then C is overwritten by \f$ C Q \f$ or \f$ CQ^T \f$.
  *
- *  A     QR factorization as returne by DecomposeQR() where the lower trapezoidal
- *        part holds the elementary reflectors.
+ * \param[in] A 
+ *    QR factorization as returne by qrfactor() where the lower trapezoidal
+ *    part holds the elementary reflectors.
  *
- *  tau   The scalar factors of the elementary reflectors.
+ * \param[in] tau
+ *   The scalar factors of the elementary reflectors.
  *
- *  W     Workspace matrix,  required size is returned by WorksizeMultQ().
+ * \param[in,out] W
+ *    Workspace matrix, required size is returned by qrmult_work().
  *
- *  flags Indicators. Valid indicators LEFT, RIGHT, TRANS
+ * \param[in] flags 
+ *   Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
  *       
- *  conf  Blocking configuration. Field LB defines block size. If it is zero
- *        unblocked invocation is assumed. Actual blocking size is adjusted
- *        to available workspace size and minimum of configured block size and
- *        block size implied by workspace is used.
+ * \param conf
+ *   Blocking configuration. Field LB defines block size. If it is zero
+ *   unblocked invocation is assumed. Actual blocking size is adjusted
+ *   to available workspace size and minimum of configured block size and
+ *   block size implied by workspace is used.
  *
  * Compatible with lapack.DORMQR
+ * \ingroup lapack
  */
 int __armas_qrmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                    int flags, armas_conf_t *conf)
@@ -466,10 +479,20 @@ int __armas_qrmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
   return 0;
 }
 
-/*
+/**
+ * \brief Calculate workspace for qrmult().
+ *
  * Calculate required workspace with current blocking
  * configuration. If blocking configuration is not provided then default
  * configuation will be used.
+ *
+ * \param[in] A
+ *    Matrix holding the elementary reflectors.
+ * \param[in] flags
+ *    Indicator flags
+ * \param[in] conf
+ *    Blocking configuration
+ * \ingroup lapack
  */
 int __armas_qrmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf)
 {

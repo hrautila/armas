@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Orthogonal matrix Q of tridiagonally reduced matrix
+
 #include <stdio.h>
 #include "dtype.h"
 #include "dlpack.h"
@@ -23,9 +26,11 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+//! \endcond
 
 /**
  * @brief Generate orthogonal matrix Q for tridiagonally reduced matrix.

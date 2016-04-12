@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Multiply with Q matrix 
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,11 +25,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "partition.h"
-
+//! \endcond
 
 static inline
 int __ws_qlmult_left(int M, int N, int lb)
@@ -331,32 +335,42 @@ __blk_qlmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
 }
 
 
-/*
- * Multiply and replace C with Q*C or Q.T*C where Q is a real orthogonal matrix
+/**
+ * \brief Multiply with orthogonal Q matrix 
+ *
+ * Multiply and replace C with \f$ QC \f$ or \f$ Q^TC \f$ where Q is a real orthogonal matrix
  * defined as the product of K first elementary reflectors.
  *
- *    Q = H(k) H(k-1) . . . H(1)
+ *    \f$ Q = H_k H_{k-1} ... H_k \f$
  *
- * as returned by DecomposeQL().
+ * as returned by qlfactor().
  *
- * Arguments:
- *  C     On entry, the M-by-N matrix C or if flag bit RIGHT is set then N-by-M matrix
- *        On exit C is overwritten by Q*C or Q.T*C. If bit RIGHT is set then C is
- *        overwritten by C*Q or C*Q.T
+ * \param[in,out] C
+ *     On entry, the M-by-N matrix C or if flag bit *ARMAS_RIGHT* is set then N-by-M matrix
+ *     On exit C is overwritten by \f$ QC \f$ or \f$ Q^TC \f$. If bit *ARMAS_LEFT* is 
+ *     set then C is overwritten by \f$ CQ \f$ or \f$ CQ^T \f$
  *
- *  A     QL factorization as returned by DecomposeQL() where the upper trapezoidal
- *        part holds the elementary reflectors.
+ * \param[in] A
+ *     QL factorization as returned by qrfactor() where the upper trapezoidal
+ *     part holds the elementary reflectors.
  *
- *  tau   The scalar factors of the elementary reflectors.
+ * \param[in] tau
+ *    The scalar factors of the elementary reflectors.
  *
- *  W     Workspace matrix, size as returned by WorksizeMultQL().
+ * \param[out] W
+ *     Workspace matrix, size as returned by qrmult_work().
  *
- *  flags Indicators. Valid indicators LEFT, RIGHT, TRANS
+ * \param[in] flags
+ *    Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT* and *ARMAS_TRANS*
  *       
- *  conf  Blocking configuration. Field LB defines block size. If it is zero
- *        unblocked invocation is assumed. Actual blocking size is adjusted
- *        to available workspace size and the smaller of configured block size and
- *        block size implied by workspace is used.
+ * \param[in] conf
+ *   Blocking configuration. Field LB defines block size. If it is zero
+ *   unblocked invocation is assumed. Actual blocking size is adjusted
+ *   to available workspace size and the smaller of configured block size and
+ *   block size implied by workspace is used.
+ *
+ * \retval  0 Succes
+ * \retval -1 Failure, `conf.error` holds error code.
  *
  * Compatible with lapack.DORMQL
  */
