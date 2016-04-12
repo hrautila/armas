@@ -8,8 +8,10 @@
 //! \file
 //! Matrix-matrix multiplication with symmetric matrix
 
+//! \cond
 #include <stdio.h>
 #include <stdlib.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -27,10 +29,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "matcpy.h"
 #include "scheduler.h"
+//! \endcond
 
 extern
 void __kernel_colblk_inner2(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
@@ -440,16 +444,12 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
  * @brief Symmetric matrix-matrix multiplication
  *
  * If flag *ARMAS_LEFT* is set computes
- * - \f$ C = alpha*A*B + beta*C \f$
- * - \f$ C = alpha*A.T*B + beta*C   \f$ if *ARMAS_TRANSA* set
- * - \f$ C = alpha*A*B.T + beta*C   \f$ if *ARMAS_TRANSB* set
- * - \f$ C = alpha*A.T*B.T + beta*C \f$ if *ARMAS_TRANSA* and *ARMAS_TRANSB*
+ *   - \f$ C = alpha \times A B + beta \times C \f$
+ *   - \f$ C = alpha \times A B^T + beta \times C   \f$ if *ARMAS_TRANSB* set
  *
  * If flag *ARMAS_RIGHT* is set computes
- * - \f$ C = alpha*B*A + beta*C    \f$
- * - \f$ C = alpha*B*A^T + beta*C  \f$ if *ARMAS_TRANSA* set
- * - \f$ C = alpha*B^T*A + beta*C  \f$ if *ARMAS_TRANSB* set
- * - \f$ C = alpha*B^T*A^T + beta*C \f$ if *ARMAS_TRANSA* and *ARMAS_TRANSB* set
+ *   - \f$ C = alpha \times B A + beta \times C    \f$
+ *   - \f$ C = alpha \times B^T A + beta \times C  \f$ if *ARMAS_TRANSB* set
  *
  * Matrix A elements are stored on lower (upper) triangular part of the matrix
  * if flag bit *ARMAS_LOWER* (*ARMAS_UPPER*) is set.
@@ -465,8 +465,8 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
  * @param[in] flags matrix operand indicator flags
  * @param[in,out] conf environment configuration
  *
- * @retval 0 Operation succeeded
- * @retval -1 Failed, conf->error set to actual error code.
+ * @retval   0  Operation succeeded
+ * @retval < 0  Failed, conf.error set to actual error code.
  *
  * @ingroup blas3
  */

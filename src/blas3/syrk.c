@@ -8,8 +8,10 @@
 //! \file
 //! Symmetric matrix rank-k update
 
+//! \cond
 #include <pthread.h>
 #include <string.h>
+//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -26,10 +28,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
 #include "scheduler.h"
+//! \endcond
 
 extern
 void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
@@ -366,8 +370,8 @@ int __rank_schedule(int nblk, __armas_dense_t *C, const __armas_dense_t *A,
  * @brief Symmetric matrix rank-k update
  *
  * Computes
- * - \f$ C = beta*C + alpha*A*A^T \f$
- * - \f$ C = beta*C + alpha*A^T*A \f$  if *ARMAS_TRANS*
+ *    - \f$ C = beta \times C + alpha \times A A^T \f$
+ *    - \f$ C = beta \times C + alpha \times A^T A \f$  if *ARMAS_TRANS*
  *
  * Matrix C is upper (lower) triangular if flag bit *ARMAS_UPPER* (*ARMAS_LOWER*)
  * is set. If matrix is upper (lower) then
@@ -380,8 +384,8 @@ int __rank_schedule(int nblk, __armas_dense_t *C, const __armas_dense_t *A,
  * @param[in] flags matrix operand indicator flags
  * @param[in,out] conf environment configuration
  *
- * @retval 0 Operation succeeded
- * @retval -1 Failed, conf->error set to actual error code.
+ * @retval 0  Operation succeeded
+ * @retval <0 Failed, conf.error set to actual error code.
  *
  * @ingroup blas3
  */

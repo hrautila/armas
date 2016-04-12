@@ -7,12 +7,12 @@
 
 //! \file
 //! Matrix-matrix multiplication
-//!
-//! @defgroup blas3 BLAS level 3 functions
 
+//! \cond
 #include <stdlib.h>
 #include <stdint.h>
 //#include <pthread.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -30,9 +30,11 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "scheduler.h"
+//! \endcond
 
 #if EXT_PRECISION && defined(__kernel_inner_ext)
 extern int __kernel_inner_ext(mdata_t *C, const mdata_t *A, const mdata_t *B,
@@ -45,7 +47,7 @@ extern int __kernel_inner_ext(mdata_t *C, const mdata_t *A, const mdata_t *B,
 #endif
 
 // include conditional code macros; 
-#include "cond.h"
+//#include "cond.h"
 
 // code blocks for threaded execution
 #if defined(ENABLE_THREADS)
@@ -286,10 +288,10 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
  * @brief General matrix-matrix multiplication
  *
  * Computes
- * - \f$ C = alpha*A*B + beta*C \f$
- * - \f$ C = alpha*A^T*B + beta*C \f$  if _ARMAS_TRANSA_ is set
- * - \f$ C = alpha*A*B^T + beta*C \f$  if _ARMAS_TRANSB_ is set
- * - \f$ C = alpha*A^T*B^T + beta*C \f$ if _ARMAS_TRANSA_ and _ARMAS_TRANSB_ are set
+ *   - \f$ C = alpha \times A B + beta \times C \f$
+ *   - \f$ C = alpha \times A^T B + beta \times C \f$  if _ARMAS_TRANSA_ is set
+ *   - \f$ C = alpha \times A B^T + beta \times C \f$  if _ARMAS_TRANSB_ is set
+ *   - \f$ C = alpha \times A^T B^T + beta \times C \f$ if _ARMAS_TRANSA_ and _ARMAS_TRANSB_ are set
  *
  * Uses \f$|A|\f$ if flag ARMAS_ABSA set and \f$|B|\f$ if flag ARMAS_ABSB is set.
  *
@@ -305,7 +307,7 @@ int __mult_schedule(int nblk, int colwise, __armas_dense_t *C,
  * @param[in,out] conf environment configuration
  *
  * @retval 0 Operation succeeded
- * @retval -1 Failed, conf->error set to actual error code.
+ * @retval -1 Failed, conf.error set to actual error code.
  *
  * @ingroup blas3
  */

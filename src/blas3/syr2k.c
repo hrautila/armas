@@ -8,9 +8,11 @@
 //! \file
 //! Symmetric matrix rank-2k update
 
+//! \cond
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
+//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -27,9 +29,11 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "scheduler.h"
+//! \endcond
 
 // SYR2K;
 //   C = alpha*A*B.T + alpha*B*A.T + beta*C  
@@ -387,8 +391,8 @@ int __rank2_schedule(int nblk, __armas_dense_t *C,
  * @brief Symmetric matrix rank-2k update
  *
  * Computes
- * - \f$ C = beta*C + alpha*A*B^T + alpha*B*A^T \f$
- * - \f$ C = beta*C + alpha*A^T*B + alpha*B^T*A \f$ if *ARMAS_TRANSA* set
+ * - \f$ C = beta \times C + alpha \times A B^T + alpha \times B A^T \f$
+ * - \f$ C = beta \times C + alpha \times A^T B + alpha \times B^T A \f$ if *ARMAS_TRANSA* set
  *
  * Matrix C has elements stored in the  upper (lower) triangular part
  * if flag bit *ARMAS_UPPER* (*ARMAS_LOWER*) is set.
@@ -402,8 +406,8 @@ int __rank2_schedule(int nblk, __armas_dense_t *C,
  * @param[in] flags matrix operand indicator flags
  * @param[in,out] conf environment configuration
  *
- * @retval 0 Operation succeeded
- * @retval -1 Failed, conf->error set to actual error code.
+ * @retval 0  Operation succeeded
+ * @retval <0 Failed, conf.error set to actual error code.
  *
  * @ingroup blas3
  */

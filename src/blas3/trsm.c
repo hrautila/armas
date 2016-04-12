@@ -8,11 +8,12 @@
 //! \file
 //! Triangular matrix solve
 
+//! \cond
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
-
+//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -30,6 +31,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "scheduler.h"
@@ -45,6 +47,7 @@ __solve_ext(mdata_t *B, const mdata_t *A, DTYPE alpha,
 #endif
 
 #include "cond.h"
+//! \endcond
 
 // ------------------------------------------------------------------------------
 
@@ -263,12 +266,12 @@ int __solve_trm_schedule(int nblk,
  * @brief Triangular solve with multiple right hand sides
  *
  * If flag bit *ARMAS_LEFT* is set then computes 
- * - \f$ B = alpha*A^{-1}*B \f$
- * - \f$ B = alpha*A^{-T}*B \f$ if *ARMAS_TRANS* set
+ *    - \f$ B = alpha \times A^{-1} B \f$
+ *    - \f$ B = alpha \times A^{-T} B \f$ if *ARMAS_TRANS* set
  *
  * If flag bit *ARMAS_RIGHT* is set then computes
- * - \f$ B = alpha*B*A^{-1} \f$
- * - \f$ B = alpha*B*A^{-T} \f$ if *ARMAS_TRANS* set 
+ *    - \f$ B = alpha \times B A^{-1} \f$
+ *    - \f$ B = alpha \times B A^{-T} \f$ if *ARMAS_TRANS* set 
  *
  * The matrix A is upper (lower) triangular matrix if *ARMAS_UPPER* (*ARMAS_LOWER*) is
  * set. If matrix A is upper (lower) then the strictly lower (upper) part is not
@@ -285,7 +288,7 @@ int __solve_trm_schedule(int nblk,
  * @param[in,out] conf environment configuration
  *
  * @retval 0 Succeeded
- * @retval -1 Failed, *conf.error* set to error code.
+ * @retval <0 Failed, *conf.error* set to error code.
  *
  * @ingroup blas3
  */
