@@ -261,6 +261,7 @@ int __blk_cholpv_lower(__armas_dense_t *A, __armas_dense_t *W,
             return e + ATL.rows;
         }
     }
+    // full rank;
     return A->cols;
 }
 
@@ -282,6 +283,7 @@ int __blk_cholpv_lower(__armas_dense_t *A, __armas_dense_t *W,
  *   a12.T = u11*u12.T             => u12 = a12/u11
  *   A22   = u12*u12.T + U22.T*U22 => A22 = A22 - u12*u12.T
  */
+static
 int __unblk_cholpv_upper(__armas_dense_t *A, armas_pivot_t *P, DTYPE xstop, armas_conf_t *conf)
 {
     __armas_dense_t ATL, ATR, ABR, A00, a11, a12, A22, D; 
@@ -309,6 +311,7 @@ int __unblk_cholpv_upper(__armas_dense_t *A, armas_pivot_t *P, DTYPE xstop, arma
         im = __armas_iamax(&D, conf); 
         a11val = __armas_get_at_unsafe(&D, im);
         if (a11val <= xstop) {
+            // not full rank
             __armas_set_values(&ABR, __zeros, ARMAS_UPPER);
             return ATL.cols;
         }
@@ -465,7 +468,8 @@ int __blk_cholpv_upper(__armas_dense_t *A, __armas_dense_t *W,
             return e + ATL.cols;
 
     }
-    return ATL.cols;
+    // full rank; 
+    return A->cols;
 }
 
 
@@ -486,7 +490,7 @@ int __blk_cholpv_upper(__armas_dense_t *A, __armas_dense_t *W,
  *
  * \retval 0  ok; rank not changed
  * \retval >0 ok; computed rank of pivoted matrix
- * \retval <0 error, negative index of diagonal entry the goes negative or is zero.
+ * \retval <0 error
  */
 int __cholfactor_pv(__armas_dense_t *A, __armas_dense_t *W,
                     armas_pivot_t *P, int flags, armas_conf_t *conf)
@@ -531,7 +535,8 @@ int __cholfactor_pv(__armas_dense_t *A, __armas_dense_t *W,
             err = __blk_cholpv_lower(A, W, P, xstop, lb, conf);
         }
     }
-    return err;
+    // if full rank; 
+    return err == A->cols ? 0 : err;
 }
 
 
