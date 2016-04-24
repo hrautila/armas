@@ -35,6 +35,8 @@
 #define HAVE_EXT_PRECISION 1
 extern int __symv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
                           DTYPE alpha, DTYPE beta, int flags, int N);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
@@ -62,6 +64,42 @@ extern int __symv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  *  (y0) += (a01) * x1
  *  (y1)    (a11)
  */
+static
+void __symv_abs_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
+                    DTYPE alpha, int flags, int N)
+{
+  int j;
+  mvec_t yy, xx, aa;
+  
+  if ( N <= 0 )
+    return;
+
+  if (flags & ARMAS_LOWER) {
+    for (j = 0; j < N; j++) {
+      __subvector(&yy, Y, j);
+      __subvector(&xx, X, j);
+      __colvec(&aa, A, j, j);
+      __vmult1axpy_abs(yy.md, yy.inc, aa.md, xx.md, xx.inc, alpha, N-j);
+      __vmult1dot_abs(yy.md, yy.inc, &aa.md[1], &xx.md[xx.inc], xx.inc, alpha, N-j-1);
+    }
+    return;
+  }
+
+  // Upper here;
+  //  1. update elements 0:j with current column and x[j]
+  //  2. update current element y[j] with product of a[0:j-1]*x[0:j-1]
+  for (j = 0; j < N; j++) {
+    __subvector(&xx, X, j);
+    __colvec(&aa, A, 0, j);
+    __vmult1axpy_abs(Y->md, Y->inc, aa.md, xx.md, xx.inc, alpha, j+1);
+
+    __subvector(&yy, Y, j);
+    __vmult1dot_abs(yy.md, yy.inc, aa.md, X->md, X->inc, alpha, j);
+  }
+}
+
+
+
 static
 void __symv_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
                 DTYPE alpha, int flags, int N)
@@ -222,14 +260,19 @@ int __armas_mvmult_sym(__armas_dense_t *Y, const __armas_dense_t *A, const __arm
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enabled and requested
-  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                  __symv_ext_unb(&y, &A0, &x, alpha, beta, flags, nx));          
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC) != 0) {
+    __symv_ext_unb(&y, &A0, &x, alpha, beta, flags, nx);
+  }
 
   // normal precision here
-  if (beta != 1.0) {
+  if (beta != __ONE) {
     __armas_scale(Y, beta, conf);
   }
-  __symv_unb(&y, &A0, &x, alpha, flags, nx);
+  if (flags & ARMAS_ABS) {
+    __symv_abs_unb(&y, &A0, &x, alpha, flags, nx);
+  } else {
+    __symv_unb(&y, &A0, &x, alpha, flags, nx);
+  }
   return 0;
 }
 
