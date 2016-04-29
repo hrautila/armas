@@ -200,6 +200,13 @@ armas_pivot_t *armas_pivot_init(armas_pivot_t *ptable, int sz)
   if (!ptable)
     return ptable;
 
+  if (sz == 0) {
+    ptable->indexes = (int *)0;
+    ptable->npivots = 0;
+    ptable->owner = 0;
+    return;
+  }
+  
   ptable->indexes = (int *)calloc(sz, sizeof(int));
   if (!ptable->indexes) {
     return (armas_pivot_t *)0;
@@ -249,6 +256,7 @@ void armas_pivot_release(armas_pivot_t *ptable)
       free(ptable->indexes);
     ptable->indexes = (int *)0;
     ptable->npivots = 0;
+    ptable->owner = 0;
   }
 }
 
