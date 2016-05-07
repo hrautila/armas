@@ -5,9 +5,14 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Matrix operators
+
+//! \cond
 #include <stdio.h>
 
 #include "dtype.h"
+//! \endcond
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(__armas_apply) && defined(__armas_apply2)
@@ -20,8 +25,10 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "matrix.h"
 #include "internal.h"
+//! \endcond
 
 /**
  * @brief Apply function element wise to matrix A.
@@ -35,6 +42,7 @@
  *
  * @return 
  *    0 for success, -1 for error
+ * \ingroup matrix
  */
 int __armas_apply(__armas_dense_t *A, __armas_operator_t oper, int flags)
 {
@@ -83,6 +91,7 @@ int __armas_apply(__armas_dense_t *A, __armas_operator_t oper, int flags)
  *
  * @return 
  *    0 for success, -1 for error
+ * \ingroup matrix
  */
 int __armas_apply2(__armas_dense_t *A, __armas_operator2_t oper, DTYPE val, int flags)
 {

@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Singular value decomposition of general matrix
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -23,9 +26,11 @@
 // ------------------------------------------------------------------------------
 
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+//! \endcond
 
 static inline
 int crossover(int N1, int N2) {
@@ -439,7 +444,7 @@ int __armas_svd_wide(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *V,
     return 0;
 }
 
-/*
+/**
  * \brief Compute singular value decomposition and optionally singular vectors of a general matrix.
  *
  * \param[out] S

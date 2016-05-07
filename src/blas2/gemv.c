@@ -5,11 +5,13 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
-/** @defgroup blas2 BLAS level 2 functions.
- *
- */
+//! \file
+//! matrix-vector multiplication
+
+//! \cond
 #include <stdio.h>
 #include <stdint.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -25,6 +27,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "linalg.h"
@@ -44,6 +47,7 @@ extern int __gemv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 #endif
 
 #include "cond.h"
+//! \endcond
 
 // Y = alpha*A*X + beta*Y for rows R:E, A is M*N and 0 < R < E <= M, Update
 // with S:L columns from A and correspoding elements from X.
@@ -291,11 +295,13 @@ void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  * @brief General matrix-vector multiply.
  *
  * Computes
+ *   - \f$ Y = alpha \times A X + beta \times Y \f$
+ *   - \f$ Y = alpha \times A^T X + beta \times Y  \f$   if *ARMAS_TRANS* set
+ *   - \f$ Y = alpha \times |A| |X|  + beta \times Y \f$ if *ARMAS_ABS* set
+ *   - \f$ Y = alpha \times |A^T| |X| + beta \times Y \f$ if *ARMAS_ABS* and *ARMAS_TRANS* set
  *
- * > Y := alpha*A*X + beta*Y\n
- * > Y := alpha*A.T*X + beta*Y      if ARMAS_TRANS\n
- * > Y := alpha*|A|*|X|   + beta*Y  if ARMAS_ABS\n
- * > Y := alpha*|A.T|*|X| + beta*Y  if ARMAS_ABS|ARMAS_TRANS
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  *  @param[in,out]  Y   target and source vector
  *  @param[in]      A   source operand matrix
@@ -303,6 +309,9 @@ void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  *  @param[in]      alpha, beta scalars
  *  @param[in]      flags  flag bits
  *  @param[in]      conf   configuration block
+ *
+ *  @retval  0  Success
+ *  @retval <0  Failed
  *
  * @ingroup blas2
  */
@@ -358,8 +367,8 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
   if (beta != 1.0) {
     __armas_scale(Y, beta, conf);
   }
-  if (conf->optflags & ARMAS_RECURSIVE) {
-    __gemv_recursive(&y, &A0, &x, alpha, beta, flags, 0, A->cols, 0, A->rows);
+  if (conf->optflags & ARMAS_ORECURSIVE) {
+    __gemv_recursive(&y, &A0, &x, alpha, beta, flags, 0, nx, 0, ny);
   } else {
     __gemv_unb(&y, &A0, &x, alpha, flags, 0, A->cols, 0, A->rows);
   }

@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Eigenvalues of symmetric tridiagonal matrix
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,10 +25,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "auxiliary.h"
+//! \endcond
 
 
 
@@ -150,7 +155,7 @@ int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
     return maxiter > 0 ? 0 : -1;
 }
 
-/*
+/**
  * \brief Compute eigenvalues of a symmetric tridiagonal matrix T.
  *
  * Computes all eigenvalues and, optionally, eigenvectors of a symmetric
@@ -166,8 +171,13 @@ int __trdevd_qr(__armas_dense_t *D, __armas_dense_t *E,
  *      updated eigenvectors.
  * \param[out] W
  *      Workspace of size 2*N.
+ * \param[in] flags
+ *      Indicators *ARMAS_WANTV*
  * \param[in,out] conf
  *      Configuration block.
+ * \retval  0 Success
+ * \retval -1 Error, `conf.error` holds error code.
+ * \ingroup lapack
  */
 int __armas_trdeigen(__armas_dense_t *D, __armas_dense_t *E,
                      __armas_dense_t *V, __armas_dense_t *W, int flags, armas_conf_t *conf)

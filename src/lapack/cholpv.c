@@ -565,7 +565,7 @@ int __cholsolve_pv(__armas_dense_t *B, __armas_dense_t *A,
     if (__armas_size(B) == 0 || __armas_size(A) == 0)
         return 0;
 
-    if (A->rows != A->cols || A->cols != B->cols) {
+    if (A->rows != A->cols || A->cols != B->rows) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }

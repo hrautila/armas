@@ -5,8 +5,13 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Symmetric matrix rank-2 update
+
+//! \cond
 #include <stdio.h>
 #include <stdint.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -24,6 +29,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -32,9 +38,12 @@
 #define HAVE_EXT_PRECISION 1
 extern int __update2_symv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
                                   DTYPE alpha, int flags, int N);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 #include "cond.h"
+//! \endcond
 
 static
 void __update_syr2_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
@@ -93,18 +102,23 @@ void __update_syr2_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  * @brief Symmetric matrix rank-2 update.
  *
  * Computes 
- *
- * > A := A + alpha*X*Y.T + alpha*Y*X.T
+ *    -\f$ A = A + alpha \times X Y^T + alpha \times Y X^T \f$
  *
  * where A is symmetric matrix stored in lower (upper) triangular part of matrix A.
- * If flag ARMAS_LOWER (ARMAR_UPPER) is set matrix is store in lower (upper) triangular
+ * If flag *ARMAS_LOWER* (*ARMAR_UPPER*) is set matrix is store in lower (upper) triangular
  * part of A and upper (lower) triangular part is not referenced.
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out]  A target matrix
  * @param[in]      X, Y source vector
  * @param[in]      alpha scalar multiplier
  * @param[in]      flags flag bits 
  * @param[in]      conf configuration block
+ * 
+ * @retval  0  Success
+ * @retval <0  Failed
  *
  * @ingroup blas2
  */
@@ -141,16 +155,18 @@ int __armas_mvupdate2_sym(__armas_dense_t *A,
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enable and requested
-  IF_EXTPREC_RVAL(conf->optflags&ARMAS_OEXTPREC, 0, 
-                  __update2_symv_ext_unb(&A0, &x, &y, alpha, flags, nx));
+  if (HAVE_EXT_PRECISION && (conf->optflags&ARMAS_OEXTPREC)) {
+    __update2_symv_ext_unb(&A0, &x, &y, alpha, flags, nx);
+    return 0;
+  }
 
   // default precision here
   switch (conf->optflags) {
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __update_syr2_recursive(&A0, &x, &y, alpha, flags, nx);
     break;
 
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
   default:
     __update_trmv_unb(&A0, &x, &y, alpha, flags, nx, nx);
     __update_trmv_unb(&A0, &y, &x, alpha, flags, nx, nx);

@@ -5,6 +5,8 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Hessenberg reduction
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,10 +24,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "partition.h"
+//! \endcond
 
 static inline
 int __ws_hess_reduce(int M, int N, int lb)
@@ -397,23 +401,32 @@ int __blk_hess_gqvdg(__armas_dense_t *A, __armas_dense_t *tau,
   return 0;
 }
 
-/*
+/**
+ * \brief Hessenberg reduction of general matrix
+ *
  * Reduce general matrix A to upper Hessenberg form H by similiarity
- * transformation H = Q.T*A*Q.
+ * transformation \f$ H = Q^T A Q \f$.
  *
- * Arguments:
- *  A    On entry, the general matrix A. On exit, the elements on and
- *       above the first subdiagonal contain the reduced matrix H.
- *       The elements below the first subdiagonal with the vector tau
- *       represent the ortogonal matrix A as product of elementary reflectors.
+ * \param[in,out] A
+ *    On entry, the general matrix A. On exit, the elements on and
+ *    above the first subdiagonal contain the reduced matrix H.
+ *    The elements below the first subdiagonal with the vector tau
+ *    represent the ortogonal matrix A as product of elementary reflectors.
  *
- *  tau  On exit, the scalar factors of the elementary reflectors.
+ * \param[out] tau  
+ *    On exit, the scalar factors of the elementary reflectors.
  *
- *  W    Workspace, as defined by WorksizeHess()
+ * \param W
+ *    Workspace, size as defined by hessreduce_work()
  *
- *  conf The blocking configration. 
+ * \param[in,out] conf
+ *    The blocking configration. 
  * 
- * ReduceHess is compatible with lapack.DGEHRD.
+ * \retval 0 Succes
+ * \retval -1 Failure, conf.error set to error code
+ *
+ * Compatible with lapack.DGEHRD.
+ * \ingroup lapack
  */
 int __armas_hessreduce(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                        armas_conf_t *conf)
@@ -449,6 +462,8 @@ int __armas_hessreduce(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t
   return 0;
 }
 
+//! \brief Workspace size for Hessenberg reduction
+//! \ingroup lapack
 int __armas_hessreduce_work(__armas_dense_t *A, armas_conf_t *conf)
 {
   if (!conf)
@@ -456,36 +471,46 @@ int __armas_hessreduce_work(__armas_dense_t *A, armas_conf_t *conf)
   return __ws_hess_reduce(A->rows, A->cols, conf->lb);
 }
 
-/*
+/**
+ * \brief Multiply with the orthogonal matrix Q of Hessenberg reduction
+ *
  * Multiply and replace C with product of C and Q where Q is a real orthogonal matrix
- * defined as the product of k elementary reflectors.
+ * defined as the product of K = n(A) elementary reflectors.
  *
- *    Q = H(1) H(2) . . . H(k)
+ *    \f$ Q = H_1  H_2 . . . H_K \f$ 
  *
- * Arguments:
- *  C     On entry, the M-by-N matrix C or if flag bit RIGHT is set then N-by-M matrix
- *        On exit C is overwritten by Q*C or Q.T*C. If bit RIGHT is set then C is
- *        overwritten by C*Q or C*Q.T
+ * \param[in,out] C
+ *     On entry, the M-by-N matrix C or if flag bit *ARMAS_RIGHT* is set then N-by-M matrix
+ *     On exit C is overwritten by \f$ Q C \f$ or \f$ Q^T C \f$. If bit *ARMAS_RIGHT* is 
+ *     set then C is overwritten by \f$ CQ \f$ or \f$ C Q^T \f$
  *
- *  A     Hessenberg reduction as returned by __hess_reduce() where the lower trapezoidal
- *        part, on and below first subdiagonal, holds the elementary reflectors.
+ * \param[in] A
+ *      Hessenberg reduction as returned by hessreduce() where the lower trapezoidal
+ *      part, on and below first subdiagonal, holds the elementary reflectors.
  *
- *  tau   The scalar factors of the elementary reflectors. A column vector.
+ * \param[in] tau
+ *     The scalar factors of the elementary reflectors. A column vector.
  *
- *  W     Workspace matrix,  required size is returned by WorksizeMultHess().
+ * \param[out] W
+ *     Workspace matrix,  required size is returned by hessmult_work()
  *
- *  flags Indicators. Valid indicators LEFT, RIGHT, TRANS
+ * \param[in] flags 
+ *    Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT* and *ARMAS_TRANS*
  *       
- *  conf  Blocking configuration. Field LB defines block sized. If it is zero
- *        unblocked invocation is assumed.
+ * \param[in,out] conf  
+ *    Blocking configuration. Field conf.lb defines block size. If it is zero
+ *    unblocked invocation is assumed.
  *
+ * \cond
  *        flags        result
  *        -------------------------------------
  *        LEFT         C = Q*C     n(A) == m(C)
  *        RIGHT        C = C*Q     n(C) == m(A)
  *        TRANS|LEFT   C = Q.T*C   n(A) == m(C)
  *        TRANS|RIGHT  C = C*Q.T   n(C) == m(A)
+ * \endcond
  *
+ * \ingroup lapack
  */
 int __armas_hessmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                       __armas_dense_t *W, int flags, armas_conf_t *conf)

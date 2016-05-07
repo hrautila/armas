@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Secular function
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -33,10 +36,11 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
-
+//! \endcond
 
 /*
  * Compute value of rational function sum z(j)^2/delta(j) and its derivative
@@ -589,8 +593,8 @@ void __trdsec_eigenbuild_inplace(__armas_dense_t *Q, __armas_dense_t *z)
 // ---------------------------------------------------------------------------------
 // PUBLIC FUNCTIONS
 
-/*
- * \brief Solve secular function 1 + rho * sum k; z_k^2/(z_k - y)
+/**
+ * \brief Solve secular function \f$ 1 + rho * sum_k { z_k^2/(z_k - y) } \f$
  *
  * \param[out] y
  *      On exit, roots of secular function
@@ -600,9 +604,13 @@ void __trdsec_eigenbuild_inplace(__armas_dense_t *Q, __armas_dense_t *z)
  *      Workspace
  * \param[in] rho
  *      Coefficient
+ * \param[in] conf 
+ *      Connfiguration block
  *
- * \return
- *      Negative index of first non-converged root or zero if all converged.
+ * \retval  0 Success
+ * \retval <0 Error, `conf.error` holds error code and return value index of first 
+ *     non-convergent root.
+ * \ingroup lapack
  */
 int __armas_trdsec_solve(__armas_dense_t *y, __armas_dense_t *d,
                          __armas_dense_t *z, __armas_dense_t *delta, DTYPE rho,
@@ -634,7 +642,7 @@ int __armas_trdsec_solve(__armas_dense_t *y, __armas_dense_t *d,
 }
 
 
-/*
+/**
  * \brief Solve secular function and compute rank-1 update vector.
  *
  * \param[out] y
@@ -651,6 +659,7 @@ int __armas_trdsec_solve(__armas_dense_t *y, __armas_dense_t *d,
  *      Coefficient
  * \param[in] conf
  *      Optional configuration block
+ * \ingroup lapack
  */
 int __armas_trdsec_solve_vec(__armas_dense_t *y, __armas_dense_t *v, __armas_dense_t *Qd,
                              __armas_dense_t *d, __armas_dense_t *z,
@@ -682,7 +691,7 @@ int __armas_trdsec_solve_vec(__armas_dense_t *y, __armas_dense_t *v, __armas_den
     return err;
 }
 
-/*
+/**
  * \brief Compute the eigenvectors corresponding the updated eigenvalues.
  *
  * \param[in,out] Q
@@ -691,8 +700,14 @@ int __armas_trdsec_solve_vec(__armas_dense_t *y, __armas_dense_t *v, __armas_den
  *      Updated rank-one update vector
  * \param[in] Qd
  *      Precomputed deltas as returned by __trdsec_solve_vec().
+ * \param[in,out] conf
+ *      Configuration block
  *
  *  If Qd is null or same matrix as Q then eigenvectors are computed in-place. 
+ *
+ * \retval  0 Success
+ * \retval -1 Error, `conf.error` holds error code.
+ * \ingroup lapack
  */
 int __armas_trdsec_eigen(__armas_dense_t *Q, __armas_dense_t *v, __armas_dense_t *Qd,
                          armas_conf_t *conf)

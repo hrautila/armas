@@ -5,11 +5,13 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
-/** @defgroup blas2 BLAS level 2 functions.
- *
- */
+//! \file
+//! symmetric matrix - vector multiplication
+
+//! \cond
 #include <stdio.h>
 #include <stdint.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -27,6 +29,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -40,6 +43,7 @@ extern int __symv_ext_unb(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 #endif
 
 #include "cond.h"
+//! \endcond
 
 
 /*
@@ -210,11 +214,16 @@ void __symv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
 
 
 /**
- * @brief Symmetic matrix-vector multiply.
+ * @brief Symmetric matrix-vector multiply.
  *
- * Computes
+ * Computes 
+ *    - \f$ Y = alpha \times A X + beta \times Y \f$
  *
- * > Y := alpha*A*X + beta*Y
+ * Matrix A elements are stored on lower (upper) triangular part of the matrix
+ * if flag bit *ARMAS_LOWER* (*ARMAS_UPPER*) is set.
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  *  @param[in,out]  Y   target and source vector
  *  @param[in]      A   symmetrix lower (upper) matrix
@@ -222,6 +231,9 @@ void __symv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  *  @param[in]      alpha, beta scalars
  *  @param[in]      flags  flag bits
  *  @param[in]      conf   configuration block
+ *
+ *  @retval  0  Success
+ *  @retval <0  Failed
  *
  * @ingroup blas2
  */
@@ -262,6 +274,7 @@ int __armas_mvmult_sym(__armas_dense_t *Y, const __armas_dense_t *A, const __arm
   // if extended precision enabled and requested
   if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC) != 0) {
     __symv_ext_unb(&y, &A0, &x, alpha, beta, flags, nx);
+    return 0;
   }
 
   // normal precision here

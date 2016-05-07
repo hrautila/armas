@@ -6,6 +6,10 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+/**
+ * \file
+ * Type independent defintions.
+ */
 
 #ifndef _ARMAS_H_INCLUDED
 #define _ARMAS_H_INCLUDED
@@ -14,6 +18,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
+
+#ifndef __ARMAS_INLINE
+#  if __GNUC__
+#    if ! __STDC_VERSION__
+#      define __ARMAS_INLINE extern inline
+#    else
+#      define __ARMAS_INLINE inline
+#    endif
+#  else
+#    define __ARMAS_INLINE inline
+#  endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,11 +72,17 @@ enum armas_flags {
   ARMAS_CONJ    = ARMAS_CONJA   ///< conjugate
 };
 
+/**
+ * @brief Sorting orders.
+ */
 enum armas_sort {
   ARMAS_ASC  = 1,       ///< Sort to ascending order
   ARMAS_DESC = -1       ///< Sort to descending order
 };
 
+/**
+ * @brief Pivot directions.
+ */
 enum armas_pivots {
   ARMAS_PIVOT_FORWARD = 0x0,    ///< Pivots forwards
   ARMAS_PIVOT_BACKWARD = 0x1,   ///< Pivot backwards
@@ -70,21 +92,10 @@ enum armas_pivots {
   ARMAS_PIVOT_LOWER = 0x10      ///< Pivot lower triangular symmetric matrix
 };
 
+/**
+ * @brief Configuration options
+ */
 enum armas_opts {
-  ARMAS_BLOCKED   = 0,
-  ARMAS_SNAIVE    = 0x1,
-  ARMAS_KAHAN     = 0x2,
-  ARMAS_PAIRWISE  = 0x4,
-  ARMAS_RECURSIVE = 0x8,
-  ARMAS_BLAS_RECURSIVE = 0x10,  ///< recursive parallel threading
-  ARMAS_BLAS_BLOCKED = 0x20,    ///< parallel threading with variable blocksize
-  ARMAS_BLAS_TILED = 0x40,      ///< parallel threading with fixed blocksize
-  ARMAS_SCHED_ROUNDROBIN = 0x80,///< round-robin scheduling to workers
-  ARMAS_SCHED_RANDOM = 0x100,   ///< scheduling to random workers
-  ARMAS_SCHED_TWO = 0x200,      ///< scheduling in power-of-two fashion
-  ARMAS_BSVD_GOLUB = 0x400,     ///< use Golub algorithm in bidiagonal SVD
-  ARMAS_BSVD_DEMMEL = 0x800,    ///< use Demmel-Kahan algorithm in bidiagonal SVD
-  ARMAS_ABSTOL = 0x1000,        ///< compute using absolute tolerance
   // renamed versions
   ARMAS_ONAIVE    = 0x1,
   ARMAS_OKAHAN     = 0x2,
@@ -187,10 +198,6 @@ typedef struct armas_pivot {
 ///< No pivoting indicator
 #define ARMAS_NOPIVOT (armas_pivot_t *)0
   
-#ifndef __ARMAS_INLINE
-#define __ARMAS_INLINE extern inline
-#endif
-
 /**
  * @brief Initialize pivot vector, allocates new storage.
  */
@@ -204,7 +211,7 @@ armas_pivot_t *armas_pivot_init(armas_pivot_t *ptable, int sz)
     ptable->indexes = (int *)0;
     ptable->npivots = 0;
     ptable->owner = 0;
-    return;
+    return ptable;
   }
   
   ptable->indexes = (int *)calloc(sz, sizeof(int));

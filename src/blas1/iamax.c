@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Absolute maximum
+
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -19,8 +22,10 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
+//! \endcond
 
 // return index of max absolute value
 static inline
@@ -86,7 +91,7 @@ int __vec_iamin(const mvec_t *X,  int N)
 }
 
 /**
- * @brief Index of max(abs(X))
+ * @brief Index of \f$ \max_{k} |x| \f$
  *
  * @param[in] x vector
  * @param[in,out] conf configuration block
@@ -112,6 +117,9 @@ int __armas_iamax(const __armas_dense_t *x, armas_conf_t *conf)
   return __vec_iamax(&X, __armas_size(x));
 }
 
+/**
+ * @brief Maximum absolute value of vector.
+ */
 ABSTYPE __armas_amax(const __armas_dense_t *x, armas_conf_t *conf)
 {
   if (!conf)
@@ -128,7 +136,7 @@ ABSTYPE __armas_amax(const __armas_dense_t *x, armas_conf_t *conf)
 
 
 /**
- * @brief Index of min(abs(X))
+ * @brief Index of \f$ \min_{k} |x| \f$
  *
  * @param[in] x vector
  * @param[in,out] conf configuration block

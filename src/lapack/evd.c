@@ -22,9 +22,11 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+//! \endcond
 
 /*
  * \brief Eigenvalues and vectors of 2x2 matrix
@@ -56,8 +58,10 @@ int __eigen_sym_small(__armas_dense_t *D, __armas_dense_t *A,
     return 0;
 }
 
-/*
+/**
  * \brief Compute eigenvalue decomposition of symmetric N-by-N matrix
+ *
+ * Compute eigenvalue decomposition of symmetric N-by-N matrix
  *
  * \param[out] D
  *      Eigenvalues of A in increasing order
@@ -71,9 +75,10 @@ int __eigen_sym_small(__armas_dense_t *D, __armas_dense_t *A,
  *      is used. If eigenvectors wanted, set ARMAS_WANTV.
  * \param[in] conf
  *      Optional configuration block, if NULL then default configuration used. 
- * \return
- *      Zero for success, negative error for failure and .error field in configuration
- *      block is set.
+ * \retval  0 Success
+ * \retval -1 Error, `conf.error` holds error code.
+ *
+ * \ingroup lapack
  */
 int __armas_eigen_sym(__armas_dense_t *D, __armas_dense_t *A,
                       __armas_dense_t *W, int flags, armas_conf_t *conf)

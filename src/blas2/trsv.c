@@ -5,8 +5,13 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Triangular solve
+
+//! \cond
 #include <stdio.h>
 #include <stdint.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -24,6 +29,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -36,6 +42,7 @@ extern int __trsv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, i
 #endif
 
 #include "cond.h"
+//! \endcond
 
 /*
  *  LEFT-UPPER
@@ -281,18 +288,23 @@ void __trsv_recursive(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N
  * @brief Triangular matrix-vector solve
  *
  * Computes
+ *    - \f$ X = alpha \times A^{-1} X \f$
+ *    - \f$ X = alpha \times A^{-T} X \f$  if *ARMAS_TRANS* set
  *
- * > X = alpha*A.-1*X\n
- * > X = alpha*A.-T*X   if ARMAS_TRANS 
+ * where A is upper (lower) triangular matrix defined with flag bits *ARMAS_UPPER*
+ * (*ARMAS_LOWER*).
  *
- * where A is upper (lower) triangular matrix defined with flag bits ARMAS_UPPER
- * (ARMAS_LOWER).
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out] X target and source vector
  * @param[in]     A matrix
  * @param[in]     alpha scalar multiplier
  * @param[in]     flags operand flags
  * @param[in]     conf  configuration block
+ *
+ * @retval  0 Success
+ * @retval <0 Failed
  *
  * @ingroup blas2
  */
@@ -322,6 +334,7 @@ int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A,
   A0 = (mdata_t){A->elems, A->step};
 
   // if extended precision enabled and requested
+
   if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC) != 0) {
     __trsv_ext_unb(&x, &A0, alpha, flags, nx);
     return 0;
@@ -329,7 +342,7 @@ int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A,
 
   // normal precision here
   switch (conf->optflags) {
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
 
     switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {
     case ARMAS_LOWER|ARMAS_TRANS:
@@ -344,7 +357,7 @@ int __armas_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A,
     }
     break;
 
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
   default:
     __trsv_unb(&x, &A0, flags, nx);
     break;

@@ -42,7 +42,7 @@ int test_ident(int N, int lb, int flags, int verbose)
     matrix_set_values(&D, one, 0);
 
     conf.lb = lb;
-    matrix_cholfactor(&A1, flags, &conf);
+    matrix_cholfactor(&A1, (__Matrix *)0, ARMAS_NOPIVOT, flags, &conf);
     matrix_inverse_spd(&A1, &W, flags, &conf);
 
     // A2 = A1*I
@@ -85,10 +85,10 @@ int test_equal(int N, int lb, int flags, int verbose)
     matrix_mcopy(&A0, &A1);
 
     conf.lb = lb;
-    matrix_cholfactor(&A1, flags, &conf);
+    matrix_cholfactor(&A1, (__Matrix *)0, ARMAS_NOPIVOT, flags, &conf);
     matrix_inverse_spd(&A1, &W, flags, &conf);
 
-    matrix_cholfactor(&A1, flags, &conf);
+    matrix_cholfactor(&A1, (__Matrix *)0, ARMAS_NOPIVOT, flags, &conf);
     matrix_inverse_spd(&A1, &W, flags, &conf);
     
     n0 = rel_error(&n0, &A1, &A0, ARMAS_NORM_INF, 0, &conf);

@@ -200,14 +200,14 @@ void armas_sched_schedule(armas_scheduler_t *S, armas_task_t *T)
         return;
     }
 
-    if (S->opts & ARMAS_SCHED_TWO) {
+    if (S->opts & ARMAS_OSCHED_TWO) {
         T->wcnt = 2;
         if (S->nworker == 2) {
             taskq_write(&S->workers[0].inqueue, T);
             taskq_write(&S->workers[1].inqueue, T);
             return;
         }
-        if ((S->opts & ARMAS_SCHED_ROUNDROBIN) != 0) {
+        if ((S->opts & ARMAS_OSCHED_ROUNDROBIN) != 0) {
             k = S->rrindex;
             S->rrindex = (S->rrindex + 1) % S->nworker;
             j = S->rrindex;
@@ -222,7 +222,7 @@ void armas_sched_schedule(armas_scheduler_t *S, armas_task_t *T)
     }
     
     T->wcnt = 1;
-    if ((S->opts & ARMAS_SCHED_ROUNDROBIN) != 0) {
+    if ((S->opts & ARMAS_OSCHED_ROUNDROBIN) != 0) {
         k = S->rrindex;
         S->rrindex = (S->rrindex + 1) % S->nworker;
     } else {

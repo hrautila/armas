@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Roots of quadratic function
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -20,8 +23,10 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
+//! \endcond
 
 /*
  * This only works for double precision reals. (At the moment).
@@ -108,11 +113,12 @@ DTYPE discriminant(DTYPE a, DTYPE b, DTYPE c)
 #endif	// defined(__x86_64__) && defined(__FMA__)
 
 
-/*
+/**
  * @brief Compute roots of quadratic equation.
  *
- * Computes roots of quadratic equation A*x^2 - 2B*x + C = 0 with precission as described in
- * "W. Kahan, On the Cost of Floating-Point Computation Without Extra-Precise Arithmetic, 2004"
+ * Computes roots of quadratic equation \f$ A*x^2 - 2B*x + C = 0 \f$ with precission as 
+ * described in "W. Kahan, On the Cost of Floating-Point Computation Without 
+ * Extra-Precise Arithmetic, 2004"
  *
  * @param x1, x2 [out]
  *	Computed roots, |x1| >= |x2|
@@ -141,8 +147,8 @@ int __armas_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c)
     return 0;
 }
 
-/*
- * \brief Compute, with precission, value of discriminant in quadractic equation A*x^2 + 2B*x + C
+/**
+ * \brief Compute, with precission, value of discriminant in \f$ A x^2 + 2B x + C \f$
  *
  * \param[out] dval
  *      Value of discriminant

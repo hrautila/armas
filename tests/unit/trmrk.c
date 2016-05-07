@@ -70,11 +70,11 @@ int main(int argc, char **argv)
   switch (algo) {
   case 'r':
   case 'R':
-    conf.optflags |= ARMAS_RECURSIVE;
+    conf.optflags |= ARMAS_ORECURSIVE;
     break;
   case 'n':
   case 'N':
-    conf.optflags |= ARMAS_SNAIVE;
+    conf.optflags |= ARMAS_ONAIVE;
     break;
   }
 

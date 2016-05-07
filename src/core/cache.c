@@ -1,5 +1,14 @@
 
+// Copyright (c) Harri Rautila, 2015
 
+// This file is part of github.com/hrautila/armas. It is free software,
+// distributed under the terms of GNU Lesser General Public License Version 3, or
+// any later version. See the COPYING tile included in this archive.
+
+/**
+ * \file
+ * Cache memory functions.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -56,9 +65,15 @@ size_t cache_aligned(void **aligned, void *ptr, size_t len)
 /**
  * @brief Initialize cache buffer
  *
- * @param cbuf [out]    Cache buffer
- * @param cmem [in]     Requested aligned size
- * @param limem [in]    L1 cache size
+ * Allocates a memory block of at least cmem bytes. Makes cache buffer to start
+ * on first cache line aligned element of allocated memory block. 
+ *
+ * @param [out] cbuf   Cache buffer
+ * @param [in]  cmem   Requested aligned size
+ * @param [in]  l1mem  L1 cache size
+ *
+ * @returns 
+ *   Null if initialization fails, otherwise pointer to initialized cache buffer.
  */
 armas_cbuf_t *armas_cbuf_init(armas_cbuf_t *cbuf, size_t cmem, size_t l1mem)
 {
@@ -77,6 +92,17 @@ armas_cbuf_t *armas_cbuf_init(armas_cbuf_t *cbuf, size_t cmem, size_t l1mem)
 
 /**
  * @brief Make cache buffer from provided buffer space
+ *
+ * Makes cache buffer to start on first cache line aligned element of 
+ * provided memory block. 
+ *
+ * @param [out] cbuf   Cache buffer
+ * @param [in]  buf    Buffer space, at least cmem+CACHELINE bytes
+ * @param [in]  cmem   Requested aligned size
+ * @param [in]  l1mem  L1 cache size
+ *
+ * @returns
+ *      Initialized cache buffer.
  */
 armas_cbuf_t *armas_cbuf_make(armas_cbuf_t *cbuf, void *buf, size_t cmem, size_t l1mem)
 {
@@ -118,6 +144,28 @@ void armas_cbuf_release(armas_cbuf_t *cbuf)
  *
  *  assume: kb >= nb; nb >= mb
  */
+/**
+ * \brief Two way split of cache buffer.
+ *
+ * Divide cache buffer two blocks of size 'kb*mb' and 'kb*nb' items where
+ * item size is 'p' bytes. Ensure that each columns of kb items starts at cpu cache line.
+ * (ie. kb*p mod CACHELINE == 0). 
+ *
+ * \param [in] cbuf 
+ *      Cache buffer
+ * \param [out] aptr 
+ *      Pointer to first cache block. If null no value is returned.
+ * \param [out] bptr 
+ *      Pointer to second cache block. If null no value is returned.
+ * \param [in,out] mb 
+ *      On entry initial size of mb, on exit calculated cache line aligned size
+ * \param [in,out] nb
+ *      On entry initial size of nb, on exit calculated cache line aligned size
+ * \param [in,out] kb
+ *      On entry initial size of kb, on exit calculated cache line aligned size
+ * \param [in] p
+ *      item size in bytes
+ */
 void armas_cbuf_split2(armas_cbuf_t *cbuf,
                        void **aptr, void **bptr, size_t *mb, size_t *nb, size_t *kb, size_t p)
 {
@@ -151,8 +199,10 @@ void armas_cbuf_split2(armas_cbuf_t *cbuf,
     // *aptr and *bptr aligned to cacheline
 }
 
-/*
- * Setup cache for two-way split buffer
+/**
+ * \brief Setup cache for two-way split cache buffer
+ *
+ * 
  */
 void armas_cache_setup2(cache_t *cache, armas_cbuf_t *cbuf, size_t mb, size_t nb, size_t kb, size_t p)
 {

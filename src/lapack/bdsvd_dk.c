@@ -127,7 +127,7 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
     N = __armas_size(D);
     maxit = 6*N*N;
     saves = 0;
-    abstol = conf->optflags & ARMAS_ABSTOL;
+    abstol = conf->optflags & ARMAS_OABSTOL;
     
     if (U || V) {
         __armas_subvector(&Cr, CS, 0, N);
@@ -138,7 +138,7 @@ int __bdsvd_demmel(__armas_dense_t *D, __armas_dense_t *E,
     }
 
     estimate_sval(&slow, &shigh, D, E);
-    if (conf->optflags & ARMAS_ABSTOL) {
+    if (conf->optflags & ARMAS_OABSTOL) {
         threshold = maxit*__SAFEMIN;
         if (tol*shigh < threshold)
             threshold = tol*shigh;

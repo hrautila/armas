@@ -5,8 +5,13 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Symmetric matrix rank-k update
+
+//! \cond
 #include <pthread.h>
 #include <string.h>
+//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -23,10 +28,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
 #include "scheduler.h"
+//! \endcond
 
 extern
 void __update_trm_blk(mdata_t *C, const mdata_t *A, const mdata_t *B,
@@ -247,7 +254,7 @@ void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
   int flags = kp->flags & ARMAS_TRANSA ? ARMAS_TRANSA : ARMAS_TRANSB;
   flags |= kp->flags & ARMAS_UPPER ? ARMAS_UPPER : ARMAS_LOWER;
   
-  if (kp->optflags & ARMAS_BLAS_BLOCKED) {
+  if (kp->optflags & ARMAS_OBLAS_BLOCKED) {
     __update_trm_blocked(&kp->C, &kp->A, &kp->A, kp->alpha, kp->beta, flags, 
                          kp->K, kp->S, kp->L, kp->R, kp->E, kp->MB, kp->NB, kp->KB, cbuf);
   } else {
@@ -282,7 +289,7 @@ int __rank_schedule(int nblk, __armas_dense_t *C, const __armas_dense_t *A,
 
   // number of tasks
   nT = nblk; rN = cN = 0;
-  if (conf->optflags & ARMAS_BLAS_TILED) {
+  if (conf->optflags & ARMAS_OBLAS_TILED) {
     nT = blocking(C->rows, C->cols, conf->wb, &rN, &cN);
     // substract the off-diagonal tile count
     nT -= ((rN - 1)*cN)/2;
@@ -296,7 +303,7 @@ int __rank_schedule(int nblk, __armas_dense_t *C, const __armas_dense_t *A,
   armas_counter_init(&ready, nT);
   k = 0; 
 
-  if (conf->optflags & ARMAS_BLAS_BLOCKED) {
+  if (conf->optflags & ARMAS_OBLAS_BLOCKED) {
     // compute in nblk blocks (row stripes for upper/column stripes for lower)
     iR = 0; iE = C->rows;
     jS = 0; jL = C->cols;
@@ -363,10 +370,10 @@ int __rank_schedule(int nblk, __armas_dense_t *C, const __armas_dense_t *A,
  * @brief Symmetric matrix rank-k update
  *
  * Computes
- * > C = beta*C + alpha*A*A.T\n
- * > C = beta*C + alpha*A.T*A   if TRANS
+ *    - \f$ C = beta \times C + alpha \times A A^T \f$
+ *    - \f$ C = beta \times C + alpha \times A^T A \f$  if *ARMAS_TRANS*
  *
- * Matrix C is upper (lower) triangular if flag bit ARMAS_UPPER (ARMAS_LOWER)
+ * Matrix C is upper (lower) triangular if flag bit *ARMAS_UPPER* (*ARMAS_LOWER*)
  * is set. If matrix is upper (lower) then
  * the strictly lower (upper) part is not referenced.
  *
@@ -377,8 +384,8 @@ int __rank_schedule(int nblk, __armas_dense_t *C, const __armas_dense_t *A,
  * @param[in] flags matrix operand indicator flags
  * @param[in,out] conf environment configuration
  *
- * @retval 0 Operation succeeded
- * @retval -1 Failed, conf->error set to actual error code.
+ * @retval 0  Operation succeeded
+ * @retval <0 Failed, conf.error set to actual error code.
  *
  * @ingroup blas3
  */
@@ -408,7 +415,7 @@ int __armas_update_sym(__armas_dense_t *C,  const __armas_dense_t *A,
 
 #if defined(ENABLE_THREADS)
   long nproc = armas_use_nproc(__armas_size(C), conf);
-  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED)) {
+  if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED)) {
     return __rank_schedule(nproc, C, A, alpha, beta, flags, conf);
   }
   return __rank_recursive(0, nproc, C, A, alpha, beta, flags, conf);

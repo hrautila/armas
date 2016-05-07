@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Cholesky factorization
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,10 +25,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "partition.h"
+//! \endcond
 
 static
 int __unblk_cholfactor_lower(__armas_dense_t *A, armas_conf_t *conf)
@@ -203,25 +208,33 @@ extern
 int __cholsolve_pv(__armas_dense_t *B, __armas_dense_t *A, armas_pivot_t *P,
                     int flags, armas_conf_t *conf);
 
-/*
- * Compute the Cholesky factorization of a symmetric positive definite
- * N-by-N matrix A.
+/**
+ * \brief Cholesky factorization
  *
- * Arguments:
- *  A     On entry, the symmetric matrix A. If flags&UPPER the upper triangular part
- *        of A contains the upper triangular part of the matrix A, and strictly
- *        lower part A is not referenced. If flags&LOWER the lower triangular part
- *        of a contains the lower triangular part of the matrix A. Likewise, the
- *        strictly upper part of A is not referenced. On exit, factor U or L from the
- *        Cholesky factorization A = U.T*U or A = L*L.T
- *      
- *  flags The matrix structure indicator, UPPER for upper tridiagonal and LOWER for
- *        lower tridiagonal matrix.
+ * Compute the Cholesky factorization of a symmetric positive definite N-by-N matrix A.
  *
- *  confs Optional blocking configuration. If not provided default blocking configuration
- *        will be used.
+ * \param[in,out] A     
+ *     On entry, the symmetric matrix A. If *ARMAS_UPPER* is set the upper triangular part
+ *     of A contains the upper triangular part of the matrix A, and strictly
+ *     lower part A is not referenced. If *ARMAS_LOWER* is set the lower triangular part
+ *     of a contains the lower triangular part of the matrix A. Likewise, the
+ *     strictly upper part of A is not referenced. On exit, factor U or L from the
+ *     Cholesky factorization \f$ A = U^T U \f$ or \f$ A = L L^T \f$
+ * \param[in] W
+ *     Workspace for pivoting factorization.
+ * \param[out] P
+ *     Optional pivot array. If non null then pivoting factorization is computed. 
+ * \param[in] flags 
+ *      The matrix structure indicator, *ARMAS_UPPER* for upper tridiagonal and 
+ *      *ARMAS_LOWER* for lower tridiagonal matrix.
+ * \param[in,out] conf 
+ *     Optional blocking configuration. If not provided default blocking configuration
+ *     will be used.
+ * \retval  0 Success
+ * \retval -1 Error, `conf.error` holds error code
  *
  * Compatible with lapack.DPOTRF
+ * \ingroup lapack
  */
 int __armas_cholfactor(__armas_dense_t *A, __armas_dense_t *W,
                        armas_pivot_t *P, int flags, armas_conf_t *conf)
@@ -255,23 +268,29 @@ int __armas_cholfactor(__armas_dense_t *A, __armas_dense_t *W,
   return err;
 }
 
-/*
- * Solves a system system of linear equations A*X = B with symmetric positive
- * definite matrix A using the Cholesky factorization A = U.T*U or A = L*L.T
- * computed by DecomposeCHOL().
+/**
+ * \brief Solve symmetric positive definite system of linear equations 
  *
- * Arguments:
- *  B     On entry, the right hand side matrix B. On exit, the solution
- *        matrix X.
+ * Solves a system of linear equations \f$ AX = B \f$ with symmetric positive
+ * definite matrix A using the Cholesky factorization \f$ A = U^TU \f$ or \f$ A = LL^T \f$
+ * computed by `cholfactor()`.
  *
- *  A     The triangular factor U or L from Cholesky factorization as computed by
- *        cholfactor().
+ *  \param[in,out] B
+ *      On entry, the right hand side matrix B. On exit, the solution matrix X.
+ *  \param[in] A 
+ *      The triangular factor U or L from Cholesky factorization as computed by
+ *      `cholfactor().`
+ *  \param[in] flags 
+ *      Indicator of which factor is stored in A. If *ARMAS_UPPER* (*ARMAS_LOWER) then upper
+ *      (lower) triangle of A is stored. 
+ *  \param[in,out] conf
+ *      Optional blocking configuration. 
  *
- *  flags Indicator of which factor is stored in A. If flags&UPPER then upper
- *        triangle of A is stored. If flags&LOWER then lower triangle of A is
- *        stored.
+ * \retval  0 Succes
+ * \retval -1 Error, `conf.error` holds last error code
  *
  * Compatible with lapack.DPOTRS.
+ * \ingroup lapack
  */
 int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A, 
                       armas_pivot_t *P, int flags, armas_conf_t *conf)

@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Bidiagonal reduction
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -742,62 +745,73 @@ int __blk_bdreduce_right(__armas_dense_t *A, __armas_dense_t *tauq,
 
 
 
-/*
+/**
+ * \brief Bidiagonal reduction of general matrix
+ *
  * Reduce a general M-by-N matrix A to upper or lower bidiagonal form B
- * by an ortogonal transformation A = Q*B*P.T,  B = Q.T*A*P
+ * by an ortogonal transformation \f$ A = QBP^T \f$,  \f$ B = Q^TAP \f$
  *
  *
- * Arguments
- *   A     On entry, the real M-by-N matrix. On exit the upper/lower
- *         bidiagonal matrix and ortogonal matrices Q and P.
+ * \param[in,out]  A
+ *     On entry, the real M-by-N matrix. On exit the upper/lower
+ *     bidiagonal matrix and ortogonal matrices Q and P.
  *
- *   tauq  Scalar factors for elementary reflector forming the
- *         ortogonal matrix Q.
+ * \param[out]  tauq  
+ *    Scalar factors for elementary reflector forming the
+ *    ortogonal matrix Q.
  *
- *   taup  Scalar factors for elementary reflector forming the
- *         ortogonal matrix P.
+ * \param[out]  taup  
+ *    Scalar factors for elementary reflector forming the
+ *    ortogonal matrix P.
  *
- *   W     Workspace needed for reduction.
+ * \param[out]  W
+ *     Workspace needed for reduction.
  *
- *   conf  Current blocking configuration. Optional.
+ * \param[in,out]  conf  
+ *     Current blocking configuration. Optional.
  *
  *
- * Details
+ * #### Details
  *
- * Matrices Q and P are products of elementary reflectors H(k) and G(k)
+ * Matrices Q and P are products of elementary reflectors \f$ H_k \f$ and \f$ G_k \f$
  *
  * If M > N:
- *     Q = H(1)*H(2)*...*H(N)   and P = G(1)*G(2)*...*G(N-1)
+ *   \f$  Q = H_1 H_2 ... H_N \f$  and \f$ P = G_1 G_2 ... G_{N-1} \f$
  *
- * where H(k) = 1 - tauq*u*u.T and G(k) = 1 - taup*v*v.T
+ * where \f$ H_k = 1 - tauq*u*u^T \f$ and \f$ G_k = 1 - taup*v*v^T \f$
  *
- * Elementary reflector H(k) are stored on columns of A below the diagonal with
- * implicit unit value on diagonal entry. Vector TAUQ holds corresponding scalar
- * factors. Reflector G(k) are stored on rows of A right of first superdiagonal
+ * Elementary reflector \f$ H_k \f$ are stored on columns of A below the diagonal with
+ * implicit unit value on diagonal entry. Vector 'tauq` holds corresponding scalar
+ * factors. Reflector \f$ G_k \f$ are stored on rows of A right of first superdiagonal
  * with implicit unit value on superdiagonal. Corresponding scalar factors are
- * stored on vector TAUP.
+ * stored on vector `taup`.
  * 
  * If M < N:
- *   Q = H(1)*H(2)*...*H(N-1)   and P = G(1)*G(2)*...*G(N)
+ *  \f$ Q = H_1 H_2 ...H_{N-1} \f$  and \f$ P = G_1 G_2 ... G_N \f$
  *
- * where H(k) = 1 - tauq*u*u.T and G(k) = 1 - taup*v*v.T
+ * where \f$ H_k = 1 - tauq*u*u^T \f$ and \f$ G_k = 1 - taup*v*v^T \f$
  *
- * Elementary reflector H(k) are stored on columns of A below the first sub diagonal 
- * with implicit unit value on sub diagonal entry. Vector TAUQ holds corresponding 
- * scalar factors. Reflector G(k) are sotre on rows of A right of diagonal with
+ * Elementary reflector \f$ H_k \f$ are stored on columns of A below the first sub diagonal 
+ * with implicit unit value on sub diagonal entry. Vector `tauq` holds corresponding 
+ * scalar factors. Reflector \f$ G_k \f$ are stored on rows of A right of diagonal with
  * implicit unit value on superdiagonal. Corresponding scalar factors are stored
- * on vector TAUP.
+ * on vector `taup`.
  *
  * Contents of matrix A after reductions are as follows.
  *
- *    M = 6 and N = 5:                  M = 5 and N = 6:
+ *      M = 6 and N = 5:                  M = 5 and N = 6:
  *
- *    (  d   e   v1  v1  v1 )           (  d   v1  v1  v1  v1  v1 )
- *    (  u1  d   e   v2  v2 )           (  e   d   v2  v2  v2  v2 )
- *    (  u1  u2  d   e   v3 )           (  u1  e   d   v3  v3  v3 )
- *    (  u1  u2  u3  d   e  )           (  u1  u2  e   d   v4  v4 )
- *    (  u1  u2  u3  u4  d  )           (  u1  u2  u3  e   d   v5 )
- *    (  u1  u2  u3  u4  u5 )
+ *      (  d   e   v1  v1  v1 )           (  d   v1  v1  v1  v1  v1 )
+ *      (  u1  d   e   v2  v2 )           (  e   d   v2  v2  v2  v2 )
+ *      (  u1  u2  d   e   v3 )           (  u1  e   d   v3  v3  v3 )
+ *      (  u1  u2  u3  d   e  )           (  u1  u2  e   d   v4  v4 )
+ *      (  u1  u2  u3  u4  d  )           (  u1  u2  u3  e   d   v5 )
+ *      (  u1  u2  u3  u4  u5 )
+ *
+ *  G.Van Zee, R. van de Geijn, 
+ *       Algorithms for Reducing a Matrix to Condensed Form
+ *       2010, Flame working note #53 
+ * \ingroup lapack
  */
 int __armas_bdreduce(__armas_dense_t *A, __armas_dense_t *tauq,
                      __armas_dense_t *taup, __armas_dense_t *W,
@@ -888,6 +902,7 @@ int __armas_bdreduce_work(__armas_dense_t *A, armas_conf_t *conf)
  *        MULTP,TRANS,LEFT   C = P.T*C   n(A) == m(C)
  *        MULTP,TRANS,RIGHT  C = C*P.T   n(C) == m(A)
  *
+ * \ingroup lapack
  */
 int __armas_bdmult(__armas_dense_t *C, __armas_dense_t *A,
                    __armas_dense_t *tau, __armas_dense_t *W,

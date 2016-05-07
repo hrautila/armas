@@ -5,8 +5,13 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Matrix-matrix multiplication with symmetric matrix
+
+//! \cond
 #include <stdio.h>
 #include <stdlib.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -24,10 +29,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "matcpy.h"
 #include "scheduler.h"
+//! \endcond
 
 extern
 void __kernel_colblk_inner2(mdata_t *Cblk, const mdata_t *Ablk, const mdata_t *Bblk,
@@ -365,7 +372,7 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
   K = flags & ARMAS_TRANSA ? A->rows : A->cols;
 
   // number of tasks
-  nT = conf->optflags & ARMAS_BLAS_BLOCKED
+  nT = conf->optflags & ARMAS_OBLAS_BLOCKED
     ? nblk
     : blocking(C->rows, C->cols, conf->wb, &rN, &cN);
 
@@ -377,7 +384,7 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
   armas_counter_init(&ready, nT);
   k = 0; 
 
-  if (conf->optflags & ARMAS_BLAS_BLOCKED) {
+  if (conf->optflags & ARMAS_OBLAS_BLOCKED) {
     // compute in nblk blocks
     iR = 0; iE = C->rows;
     jS = 0; jL = C->cols;
@@ -436,20 +443,19 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
 /**
  * @brief Symmetric matrix-matrix multiplication
  *
- * If flag LEFT is set computes
- * > C = alpha*A*B + beta*C     \n
- * > C = alpha*A.T*B + beta*C   if TRANSA\n
- * > C = alpha*A*B.T + beta*C   if TRANSB\n
- * > C = alpha*A.T*B.T + beta*C if TRANSA and TRANSB
+ * If flag *ARMAS_LEFT* is set computes
+ *   - \f$ C = alpha \times A B + beta \times C \f$
+ *   - \f$ C = alpha \times A B^T + beta \times C   \f$ if *ARMAS_TRANSB* set
  *
- * If flag RIGHT is set computes
- * > C = alpha*B*A + beta*C    \n
- * > C = alpha*B*A.T + beta*C   if TRANSA\n
- * > C = alpha*B.T*A + beta*C   if TRANSB\n
- * > C = alpha*B.T*A.T + beta*C if TRANSA and TRANSB
+ * If flag *ARMAS_RIGHT* is set computes
+ *   - \f$ C = alpha \times B A + beta \times C    \f$
+ *   - \f$ C = alpha \times B^T A + beta \times C  \f$ if *ARMAS_TRANSB* set
  *
  * Matrix A elements are stored on lower (upper) triangular part of the matrix
- * if flag bit ARMAS_LOWER (ARMAS_UPPER) is set.
+ * if flag bit *ARMAS_LOWER* (*ARMAS_UPPER*) is set.
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out] C result matrix
  * @param[in] A symmetric matrix
@@ -459,8 +465,8 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
  * @param[in] flags matrix operand indicator flags
  * @param[in,out] conf environment configuration
  *
- * @retval 0 Operation succeeded
- * @retval -1 Failed, conf->error set to actual error code.
+ * @retval   0  Operation succeeded
+ * @retval < 0  Failed, conf.error set to actual error code.
  *
  * @ingroup blas3
  */
@@ -497,7 +503,7 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
   int colwise = C->rows < C->cols;
   long nproc = armas_use_nproc(__armas_size(C), conf);
 
-  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED) && nproc > 1) {
+  if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED) && nproc > 1) {
     return __mult_sym_schedule(nproc, colwise,
                                C, A, B, alpha, beta, flags, conf);
   }

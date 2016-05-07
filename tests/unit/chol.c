@@ -161,7 +161,7 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     matrix_release(&C);
     matrix_release(&W);
     armas_pivot_release(&P);
-    return 1 - ok;
+    return ok;
 }
 
 int test_cholpv_solve(int M, int N, int lb, int flags, int verbose)
@@ -212,7 +212,7 @@ int test_cholpv_solve(int M, int N, int lb, int flags, int verbose)
     matrix_release(&B0);
     matrix_release(&W);
     armas_pivot_release(&P0);
-    return 1 - ok;
+    return ok;
 }
 
 int main(int argc, char **argv)

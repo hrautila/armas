@@ -5,9 +5,8 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
-/**
- * @defgroup blas1 BLAS level 1 functions
- */
+//! \file
+//! Absolute sum
 
 #include "dtype.h"
 
@@ -23,6 +22,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 
@@ -35,10 +35,13 @@
 #define HAVE_EXT_PRECISION 1
 extern ABSTYPE __vec_asum_ext(const mvec_t *X,  int N);
 extern DTYPE __vec_sum_ext(const mvec_t *X,  int N);
+#else
+#define HAVE_EXT_PRECISION 0
 #endif
 
 // include conditional code macros
 #include "cond.h"
+//! \endcond
 
 // return sum of absolute values
 static inline
@@ -242,7 +245,10 @@ DTYPE __vec_sum_recursive(const mvec_t *X, int n)
 
 
 /**
- * @brief Compute sum(abs(x))
+ * @brief Compute \f$ \sum_{i=0}^{len(x)-1} |x| \f$
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @retval sum of absolute values of x elements
  *
@@ -263,15 +269,16 @@ ABSTYPE __armas_asum(const __armas_dense_t *x, armas_conf_t *conf)
 
 
   // if extended precision enabled and requested
-  IF_EXTPREC(conf->optflags&ARMAS_OEXTPREC,
-             __vec_asum_ext(&X, __armas_size(x)));
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+    return __vec_asum_ext(&X, __armas_size(x));
+  }
 
   // this executed if extended precision not requested
-  switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_KAHAN|ARMAS_RECURSIVE)) {
-  case ARMAS_KAHAN:
+  switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_OKAHAN|ARMAS_ORECURSIVE)) {
+  case ARMAS_OKAHAN:
     return __vec_asum_kahan(&X, __armas_size(x));
 
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
     return __vec_asum(&X, __armas_size(x));
   }
   return __vec_asum_recursive(&X, __armas_size(x));
@@ -279,7 +286,10 @@ ABSTYPE __armas_asum(const __armas_dense_t *x, armas_conf_t *conf)
 
 
 /**
- * @brief Compute sum(x)
+ * @brief Compute \f$ \sum_{i=0}^{len(x)-1} x \f$
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @retval sum of x elements
  *
@@ -300,16 +310,16 @@ DTYPE __armas_sum(const __armas_dense_t *x, armas_conf_t *conf)
   
 
   // if extended precision enabled and requested
-  IF_EXTPREC(conf->optflags&ARMAS_OEXTPREC,
-             __vec_sum_ext(&X, __armas_size(x)));
-
+  if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
+    return __vec_sum_ext(&X, __armas_size(x));
+  }
   
   // this executed if extended precision not requested
-  switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_KAHAN|ARMAS_RECURSIVE)) {
-  case ARMAS_KAHAN:
+  switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_OKAHAN|ARMAS_ORECURSIVE)) {
+  case ARMAS_OKAHAN:
     return __vec_sum_kahan(&X, __armas_size(x));
 
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
     return __vec_sum(&X, __armas_size(x));
 
   default:

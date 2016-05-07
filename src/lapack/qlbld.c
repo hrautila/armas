@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Generate orthogonal matrix Q of QL factorization
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,12 +25,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "partition.h"
-
+//! \endcond
 
 static inline
 int __ws_qlbuild(int M, int N, int lb)
@@ -179,21 +182,32 @@ int __blk_qlbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *T,
 }
 
 
-/*
- * Generate the M by N matrix Q with orthogonal columns which
+/**
+ * \brief Generate orthogonal Q matrix of QL factorization
+ *
+ * Generate the M-by-N matrix Q with orthogonal columns which
  * are defined as the first N columns of the product of K first elementary
  * reflectors.
  *
- * Arguments
- *   A     On entry, the elementary reflectors as returned by DecomposeQR().
- *         stored below diagonal of the M by N matrix A.
- *         On exit, the orthogonal matrix Q
+ * \param[in,out]  A
+ *     On entry, the elementary reflectors as returned by qlfactor().
+ *     stored below diagonal of the M by N matrix A.
+ *     On exit, the orthogonal matrix Q
  *
- *   tau   Scalar coefficents of elementary reflectors
+ * \param[in]  tau
+ *    Scalar coefficents of elementary reflectors
  *
- *   W     Workspace
+ * \param[out] W
+ *     Workspace
  *
- *   K     The number of elementary reflector whose product define the matrix Q
+ * \param[in]   K
+ *     The number of elementary reflector whose product define the matrix Q
+ *
+ * \param[in,out] conf
+ *     Blocking configuration
+ *
+ * \retval  0 Succes
+ * \retval -1 Failure, conf.error holds error code.
  *
  * Compatible with lapackd.ORGQL.
  */

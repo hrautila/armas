@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Generate the orthogonal matrix of QR factorization
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -23,10 +26,12 @@
 // ------------------------------------------------------------------------------
 
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "partition.h"
+//! \endcond
 
 static inline
 int __ws_qrbuild(int M, int N, int lb)
@@ -186,23 +191,28 @@ int __blk_qrbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *T,
 }
 
 
-/*
+/**
+ * \brief Generate the orthogonal matrix Q
+ *
  * Generate the M by N matrix Q with orthogonal columns which
  * are defined as the first N columns of the product of K first elementary
  * reflectors.
  *
- * Arguments
- *   A     On entry, the elementary reflectors as returned by DecomposeQR().
- *         stored below diagonal of the M by N matrix A.
- *         On exit, the orthogonal matrix Q
- *
- *   tau   Scalar coefficents of elementary reflectors
- *
- *   W     Workspace
- *
- *   K     The number of elementary reflector whose product define the matrix Q
+ * \param[in,out]  A
+ *   On entry, the elementary reflectors as returned by qrfactor().
+ *   stored below diagonal of the M by N matrix A.
+ *   On exit, the orthogonal matrix Q
+ * \param[in]  tau
+ *   Scalar coefficents of elementary reflectors
+ * \param[out]   W
+ *    Workspace
+ * \param[in]  K
+ *    The number of elementary reflectors whose product define the matrix Q
+ * \param[in,out] conf
+ *    Blocking configuration
  *
  * Compatible with lapackd.ORGQR.
+ * \ingroup lapack
  */
 int __armas_qrbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W, int K,
                     armas_conf_t *conf)

@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! QL factorization
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,10 +25,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "partition.h"
+//! \endcond
 
 #ifndef IFERROR
 #define IFERROR(exp) do { \
@@ -330,28 +335,31 @@ int __armas_qlreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
 }
 
 /**
- * Compute QL factorization of a M-by-N matrix A: A = Q * L.
+ * \brief Compute QL factorization of a M-by-N matrix A
  *
- * Arguments:
- *  A    On entry, the M-by-N matrix A, M >= N. On exit, lower triangular matrix L
- *       and the orthogonal matrix Q as product of elementary reflectors.
+ * \param[in,out] A    
+ *    On entry, the M-by-N matrix A, M >= N. On exit, lower triangular matrix L
+ *    and the orthogonal matrix Q as product of elementary reflectors.
  *
- *  tau  On exit, the scalar factors of the elemenentary reflectors.
+ * \param[out] tau  
+ *   On exit, the scalar factors of the elemenentary reflectors.
  *
- *  W    Workspace, N-by-nb matrix used for work space in blocked invocations. 
+ * \param[out] W    
+ *   Workspace, N-by-nb matrix used for work space in blocked invocations. 
  *
- *  conf The blocking configuration. If nil then default blocking configuration
- *       is used. Member conf.LB defines blocking size of blocked algorithms.
- *       If it is zero then unblocked algorithm is used.
+ * \param[in,out] conf 
+ *    The blocking configuration. If nil then default blocking configuration
+ *    is used. Member conf.LB defines blocking size of blocked algorithms.
+ *    If it is zero then unblocked algorithm is used.
  *
- * Returns:
- *      Error indicator.
+ * \retval  0 Success
+ * \retval -1 Error, conf.error holds error code
  *
- * Additional information
+ * #### Additional information
  *
  *  Ortogonal matrix Q is product of elementary reflectors H(k)
  *
- *    Q = H(K-1)...H(1)H(0), where K = min(M,N)
+ *    \f$ Q = H_{k-1}...H_1 H_0, where K = min(M,N) \f$
  *
  *  Elementary reflector H(k) is stored on column k of A above the diagonal with
  *  implicit unit value on diagonal entry. The vector TAU holds scalar factors
@@ -359,14 +367,12 @@ int __armas_qlreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
  *
  *  Contents of matrix A after factorization is as follow:
  *
- *    ( v0 v1 v2 v3 )   for M=6, N=4
- *    ( v0 v1 v2 v3 )
- *    ( l  v1 v2 v3 )
- *    ( l  l  v2 v3 )
- *    ( l  l  l  v3 )
- *    ( l  l  l  l  )
- *
- *  where l is element of L, vk is element of H(k).
+ *      ( v0 v1 v2 v3 )   for M=6, N=4
+ *      ( v0 v1 v2 v3 )   l is element of L
+ *      ( l  v1 v2 v3 )   vk is element of H(k)
+ *      ( l  l  v2 v3 )
+ *      ( l  l  l  v3 )
+ *      ( l  l  l  l  )
  *
  *  qlfactor() is compatible with lapack.DGEQLF
  */
@@ -410,7 +416,9 @@ int __armas_qlfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
   return 0;
 }
 
-/*
+/**
+ * \brief Calculate work space for QL factorization
+ *
  * Calculate required workspace to decompose matrix A with current blocking
  * configuration. If blocking configuration is not provided then default
  * configuation will be used.

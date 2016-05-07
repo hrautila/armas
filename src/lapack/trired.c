@@ -22,11 +22,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "partition.h"
-
+//! \endcond
 static inline
 int __ws_trdreduce(int M, int N, int lb)
 {
@@ -521,7 +522,7 @@ int __blk_trdreduce_upper(__armas_dense_t *A, __armas_dense_t *tauq,
 }
 
 /**
- * \brief Reduce symmetric matrix to tridiagonal form by similiarity transformation A = Q*T*Q.T
+ * \brief Reduce symmetric matrix to tridiagonal form by similiarity transformation A = QTQ^T
  *
  * \param[in,out]  A
  *      On entry, symmetric matrix with elemets stored in upper (lower) triangular
@@ -543,24 +544,20 @@ int __blk_trdreduce_upper(__armas_dense_t *A, __armas_dense_t *tauq,
  *
  * If LOWER, then the matrix Q is represented as product of elementary reflectors
  *
- *   Q = H(1)H(2)...H(n-1).
+ *   \f$ Q = H_1 H_2...H_{n-1}. \f$
  *
  * If UPPER, then the matrix Q is represented as product 
  * 
- *   Q = H(n-1)...H(2)H(1).
- *
- * Each H(k) has form I - tau*v*v.T.
+ *   \f$ Q = H_{n-1}...H_2 H_1,  H_k = I - tau*v_k*v_k^T. \f$
  *
  * The contents of A on exit is as follow for N = 5.
  *
- * \verbatim
- *  LOWER                    UPPER
- *   ( d  .  .  .  . )         ( d  e  v3 v2 v1 )
- *   ( e  d  .  .  . )         ( .  d  e  v2 v1 )
- *   ( v1 e  d  .  . )         ( .  .  d  e  v1 )
- *   ( v1 v2 e  d  . )         ( .  .  .  d  e  )
- *   ( v1 v2 v3 e  d )         ( .  .  .  .  d  )
- * \endverbatim
+ *    LOWER                    UPPER
+ *     ( d  .  .  .  . )         ( d  e  v3 v2 v1 )
+ *     ( e  d  .  .  . )         ( .  d  e  v2 v1 )
+ *     ( v1 e  d  .  . )         ( .  .  d  e  v1 )
+ *     ( v1 v2 e  d  . )         ( .  .  .  d  e  )
+ *     ( v1 v2 v3 e  d )         ( .  .  .  .  d  )
  */
 int __armas_trdreduce(__armas_dense_t *A, __armas_dense_t *tauq,
                       __armas_dense_t *W, int flags, armas_conf_t *conf)
@@ -608,6 +605,7 @@ int __armas_trdreduce(__armas_dense_t *A, __armas_dense_t *tauq,
   return err;
 }
 
+//! \brief Workspace size for trdreduce().
 int __armas_trdreduce_work(__armas_dense_t *A, armas_conf_t *conf)
 {
   if (!conf)
@@ -615,9 +613,26 @@ int __armas_trdreduce_work(__armas_dense_t *A, armas_conf_t *conf)
   return __ws_trdreduce(A->rows, A->cols, conf->lb);
 }
 
-/*
+/**
  * \brief Multiply matrix C with orthogonal matrix Q.
  *
+ * \param[in,out] C
+ *    On entry matrix C. On exit product of C and orthogonal matrix Q.
+ * \param[in] A
+ *    Orthogonal matrix C as elementary reflectors saved in upper (lower) triangular
+ *    part of A. See trdreduce().
+ * \param[in] tau
+ *    Scalar coeffients of elementary reflectors.
+ * \param[out] W
+ *    Workspace
+ * \param[in] flags
+ *    Indicator flags, combination of *ARMAS_LOWER*, *ARMAS_UPPER*, *ARMAS_LEFT*,
+ *    *ARMAS_RIGHT* and *ARMAS_TRANS*.
+ * \param[in] conf
+ *    Blocking configuration
+ *
+ * \retval 0 Sucess
+ * \retval -1 Error
  */
 int __armas_trdmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
                     __armas_dense_t *W, int flags, armas_conf_t *conf)
@@ -654,6 +669,7 @@ int __armas_trdmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau
   return err;
 }
 
+//! \brief Workspace size for trdmult().
 int __armas_trdmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf)
 {
   if (flags & ARMAS_UPPER)

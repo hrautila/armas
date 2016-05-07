@@ -5,11 +5,15 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Triangular matrix solve
+
+//! \cond
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
-
+//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -27,6 +31,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "scheduler.h"
@@ -42,6 +47,7 @@ __solve_ext(mdata_t *B, const mdata_t *A, DTYPE alpha,
 #endif
 
 #include "cond.h"
+//! \endcond
 
 // ------------------------------------------------------------------------------
 
@@ -60,8 +66,8 @@ void *__compute_recursive(void *arg)
     return (void *)0;
   }
 
-  switch (kp->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-  case ARMAS_SNAIVE:
+  switch (kp->optflags & (ARMAS_ONAIVE|ARMAS_ORECURSIVE)) {
+  case ARMAS_ONAIVE:
     if (kp->flags & ARMAS_RIGHT) {
       __solve_right_unb(&kp->C, &kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
     } else {
@@ -69,7 +75,7 @@ void *__compute_recursive(void *arg)
     }
     break;
 
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __solve_recursive(&kp->C, &kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E,
                        kp->KB, kp->NB, kp->MB, cbuf);
     break;
@@ -93,8 +99,8 @@ void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
     return (void *)0;
   }
 
-  switch (kp->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-  case ARMAS_SNAIVE:
+  switch (kp->optflags & (ARMAS_ONAIVE|ARMAS_ORECURSIVE)) {
+  case ARMAS_ONAIVE:
     if (kp->flags & ARMAS_RIGHT) {
       __solve_right_unb(&kp->C, &kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E);
     } else {
@@ -102,7 +108,7 @@ void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
     }
     break;
 
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __solve_recursive(&kp->C, &kp->A, kp->alpha, kp->flags, kp->K, kp->S, kp->E,
                        kp->KB, kp->NB, kp->MB, cbuf);
     break;
@@ -153,8 +159,8 @@ int __solve_trm_threaded(int blknum, int nblk,
     }
 
     // otherwise; normal precision here
-    switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-    case ARMAS_SNAIVE:
+    switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_ORECURSIVE)) {
+    case ARMAS_ONAIVE:
       if (flags & ARMAS_RIGHT) {
         __solve_right_unb(_B, _A, alpha, flags, A->cols, ir, ie);
       } else {
@@ -162,7 +168,7 @@ int __solve_trm_threaded(int blknum, int nblk,
       }
       break;
 
-    case ARMAS_RECURSIVE:
+    case ARMAS_ORECURSIVE:
       __solve_recursive(_B, _A, alpha, flags, A->cols, ir, ie, conf->kb, conf->nb, conf->mb, &cbuf);
       break;
 
@@ -259,18 +265,21 @@ int __solve_trm_schedule(int nblk,
 /**
  * @brief Triangular solve with multiple right hand sides
  *
- * If flag bit LEFT is set then computes 
- * > B = alpha*A.-1*B\n
- * > B = alpha*A.-T*B  if TRANSA or TRANS
+ * If flag bit *ARMAS_LEFT* is set then computes 
+ *    - \f$ B = alpha \times A^{-1} B \f$
+ *    - \f$ B = alpha \times A^{-T} B \f$ if *ARMAS_TRANS* set
  *
- * If flag bit RIGHT is set then computes
- * > B = alpha*B*A.-1\n
- * > B = alpha*B*A.-T  if TRANSA or TRANS
+ * If flag bit *ARMAS_RIGHT* is set then computes
+ *    - \f$ B = alpha \times B A^{-1} \f$
+ *    - \f$ B = alpha \times B A^{-T} \f$ if *ARMAS_TRANS* set 
  *
- * The matrix A is upper (lower) triangular matrix if ARMAS_UPPER (ARMAS_LOWER) is
+ * The matrix A is upper (lower) triangular matrix if *ARMAS_UPPER* (*ARMAS_LOWER*) is
  * set. If matrix A is upper (lower) then the strictly lower (upper) part is not
- * referenced. Flag bit UNIT indicates that matrix A is unit diagonal and the diagonal
+ * referenced. Flag bit *ARMAS_UNIT* indicates that matrix A is unit diagonal and the diagonal
  * elements are not accessed.
+ *
+ * If configuation option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out] B  Result matrix
  * @param[in]   A Triangular operand matrix
@@ -279,7 +288,7 @@ int __solve_trm_schedule(int nblk,
  * @param[in,out] conf environment configuration
  *
  * @retval 0 Succeeded
- * @retval -1 Failed, conf->error set to error code.
+ * @retval <0 Failed, *conf.error* set to error code.
  *
  * @ingroup blas3
  */
@@ -312,13 +321,13 @@ int __armas_solve_trm(__armas_dense_t *B, const __armas_dense_t *A,
 #if defined(ENABLE_THREADS)
   // tiled scheduling not supported
   int opts = conf->optflags;
-  if (opts & ARMAS_BLAS_TILED) {
-    opts |= ARMAS_BLAS_BLOCKED;
-    opts ^= ARMAS_BLAS_TILED;
+  if (opts & ARMAS_OBLAS_TILED) {
+    opts |= ARMAS_OBLAS_BLOCKED;
+    opts ^= ARMAS_OBLAS_TILED;
   }
 
   long nproc = armas_nblocks(__armas_size(B), conf->wb, conf->maxproc, opts);
-  if (conf->optflags & (ARMAS_BLAS_BLOCKED|ARMAS_BLAS_TILED) && nproc > 1) {
+  if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED) && nproc > 1) {
     return __solve_trm_schedule(nproc, B, A, alpha, flags, conf);
   }
   return __solve_trm_threaded(0, nproc, B, A, alpha, flags, conf);

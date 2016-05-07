@@ -5,8 +5,13 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Triangular multiply
+
+//! \cond
 #include <stdio.h>
 #include <stdint.h>
+//! \endcond
 
 #include "dtype.h"
 
@@ -22,6 +27,7 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "mvec_nosimd.h"
@@ -34,6 +40,7 @@ extern int __trmv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, i
 #endif
 
 #include "cond.h"
+//! \endcond
 
 /*
  *  LEFT-UPPER
@@ -314,20 +321,25 @@ void __trmv_recursive(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N
  * @brief Triangular matrix-vector multiply
  *
  * Computes
+ *    - \f$ X = alpha \times A X \f$
+ *    - \f$ X = alpha \times A^T X  \f$   if *ARMAS_TRANS* set
+ *    - \f$ X = alpha \times |A| |X| \f$  if *ARMAS_ABS* set
+ *    - \f$ X = alpha \times |A^T| |X| \f$ if *ARMAS_ABS* and *ARMAS_TRANS* set
  *
- * > X = alpha*A*X\n
- * > X = alpha*A.T*X      if ARMAS_TRANS
- * > X = alpha*|A|*|X|\n  if ARMAS_ABS
- * > X = alpha*|A.T|*|X|  if ARMAS_ABS|ARMAS_TRANS
+ * where A is upper (lower) triangular matrix defined with flag bits *ARMAS_UPPER*
+ * (*ARMAS_LOWER*).
  *
- * where A is upper (lower) triangular matrix defined with flag bits ARMAS_UPPER
- * (ARMAS_LOWER).
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
  *
  * @param[in,out] X target and source vector
  * @param[in]     A matrix
  * @param[in]     alpha scalar multiplier
  * @param[in]     flags operand flags
  * @param[in]     conf  configuration block
+ *
+ * @retval  0  Success
+ * @retval <0  Failed
  *
  * @ingroup blas2
  */
@@ -366,7 +378,7 @@ int __armas_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A,
 
   // normal precision here
   switch (conf->optflags) {
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {
     case ARMAS_LOWER|ARMAS_TRANS:
     case ARMAS_UPPER:
@@ -380,7 +392,7 @@ int __armas_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A,
     }
     break;
 
-  case ARMAS_SNAIVE:
+  case ARMAS_ONAIVE:
   default:
     __trmv_unb(&x, &A0, alpha, flags, nx);
     break;

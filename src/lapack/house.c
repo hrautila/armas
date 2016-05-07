@@ -23,8 +23,10 @@
 // ------------------------------------------------------------------------------
 
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
+//! \endcond
 
 
 static inline

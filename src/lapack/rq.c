@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! RQ factorization
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,10 +25,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h" 
 #include "internal_lapack.h"
 #include "partition.h"
+//! \endcond
 
 #define IFERROR(exp) do { \
   int _e = (exp); \
@@ -330,28 +335,31 @@ int __armas_rqreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
 }
 
 /**
- * Compute RQ factorization of a M-by-N matrix A: A = R*Q 
+ * \brief Compute RQ factorization of a M-by-N matrix A
  *
- * Arguments:
- *  A    On entry, the M-by-N matrix A, M <= N. On exit, upper triangular matrix R
- *       and the orthogonal matrix Q as product of elementary reflectors.
+ * \param[in,out] A
+ *    On entry, the M-by-N matrix A, M <= N. On exit, upper triangular matrix R
+ *    and the orthogonal matrix Q as product of elementary reflectors.
  *
- *  tau  On exit, the scalar factors of the elemenentary reflectors.
+ * \param[out] tau  
+ *    On exit, the scalar factors of the elemenentary reflectors.
  *
- *  W    Workspace, M-by-nb matrix used for work space in blocked invocations. 
+ * \param[out]  W    
+ *    Workspace, M-by-nb matrix used for work space in blocked invocations. 
  *
- *  conf The blocking configuration. If nil then default blocking configuration
- *       is used. Member conf.lb defines blocking size of blocked algorithms.
- *       If it is zero then unblocked algorithm is used.
+ * \param[in,out] conf 
+ *    The blocking configuration. If nil then default blocking configuration
+ *    is used. Member conf.lb defines blocking size of blocked algorithms.
+ *    If it is zero then unblocked algorithm is used.
  *
- * Returns:
- *      0 for success, -1 for error.
+ * \retval  0 Success
+ * \retval -1 Error.
  *
- * Additional information
+ * #### Additional information
  *
  * Ortogonal matrix Q is product of elementary reflectors H(k)
  *
- *   Q = H(0)H(1),...,H(K-1), where K = min(M,N)
+ *   \f$ Q = H_0 H-1,...,H_{K-1} \f$ , where \f$ K = \min M N \f$
  *
  * Elementary reflector H(k) is stored on first N-M+k elements of row k of A.
  * with implicit unit value on element N-M+k entry. The vector TAU holds scalar
@@ -359,12 +367,10 @@ int __armas_rqreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
  *
  * Contents of matrix A after factorization is as follow:
  *
- *    ( v0 v0 r  r  r  r )  M=4, N=6
- *    ( v1 v1 v1 r  r  r )  
- *    ( v2 v2 v2 v2 r  r )  
- *    ( v3 v3 v3 v3 v3 r )  
- *
- * where r is element of R and vk is element of H(k).
+ *      ( v0 v0 r  r  r  r )  M=4, N=6
+ *      ( v1 v1 v1 r  r  r )  r  is element of R
+ *      ( v2 v2 v2 v2 r  r )  vk is element of H(k)
+ *      ( v3 v3 v3 v3 v3 r )  
  *
  * rqfactor() is compatible with lapack.DGERQF
  */
@@ -406,10 +412,8 @@ int __armas_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
   return 0;
 }
 
-/*
- * Calculate required workspace to decompose matrix A with current blocking
- * configuration. If blocking configuration is not provided then default
- * configuation will be used.
+/**
+ * \brief Calculate worksize for RQ factorization
  */
 int __armas_rqfactor_work(__armas_dense_t *A, armas_conf_t *conf)
 {

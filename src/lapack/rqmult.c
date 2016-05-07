@@ -356,39 +356,49 @@ __blk_rqmult_right(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
 }
 
 
-/*
+/**
  * Multiply and replace C with Q*C or Q.T*C where Q is a real orthogonal matrix
  * defined as the product of k elementary reflectors.
  *
- *    Q = H(1)H(2)...H(k)
+ *    \f$ Q = H_1 H_2 ...H_k \f$
  *
  * as returned by rqfactor().
  *
- * Arguments:
- *  C     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
- *        N-by-M matrix.  On exit C is overwritten by Q*C or Q.T*C.
- *        If bit RIGHT is set then C is  overwritten by C*Q or C*Q.T
+ * \param[in,out] C
+ *     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
+ *     N-by-M matrix.  On exit C is overwritten by Q*C or Q.T*C.
+ *     If bit RIGHT is set then C is  overwritten by C*Q or C*Q.T
  *
- *  A     RQ factorization as returned by rqfactor() where the upper
- *        trapezoidal part holds the elementary reflectors.
+ * \param[in] A
+ *     RQ factorization as returned by rqfactor() where the upper
+ *     trapezoidal part holds the elementary reflectors.
  *
- *  tau   The scalar factors of the elementary reflectors.
+ * \param[in] tau
+ *    The scalar factors of the elementary reflectors.
  *
- *  W     Workspace matrix,  required size is returned by rqmult_work().
+ * \param[out] W
+ *     Workspace matrix,  required size is returned by rqmult_work().
  *
- *  flags Indicators. Valid indicators LEFT, RIGHT, TRANS
+ * \param[in] flags
+ *    Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT* and *ARMAS_TRANS*
  *       
- *  conf  Blocking configuration. Field LB defines block sized. If it is zero
- *        unblocked invocation is assumed.
+ * \param[in,out] conf
+ *     Blocking configuration. Field LB defines block sized. If it is zero
+ *    unblocked invocation is assumed.
+ *
+ * \retval  0 Succes
+ * \retval -1 Failure, `conf.error` holds error code
  *
  * Compatible with lapack.DORMRQ
  *
- * Notes:
+ * #### Notes
  *   m(A) is number of elementary reflectors == A.rows
  *   n(A) is the order of the Q matrix == A.cols
  *
+ * \cond
  *   LEFT : m(C) == m(A)
  *   RIGHT: n(C) == m(A)
+ * \endcond
  */
 int __armas_rqmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
                    int flags, armas_conf_t *conf)
@@ -460,6 +470,7 @@ int __armas_rqmult(__armas_dense_t *C, __armas_dense_t *A, __armas_dense_t *tau,
  * configuration. If blocking configuration is not provided then default
  * configuation will be used.
  */
+//! \brief Calculate workspace size for RQ multiplication
 int __armas_rqmult_work(__armas_dense_t *A, int flags, armas_conf_t *conf)
 {
   if (!conf)

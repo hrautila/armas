@@ -5,6 +5,7 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+#ifndef __DOXYGEN
 #ifndef __ARMAS_DLPACK_H
 #define __ARMAS_DLPACK_H 1
 
@@ -466,3 +467,4 @@ DTYPE __MAX(DTYPE a, DTYPE b) {
 
 
 #endif  /* __ARMAS_DLPACK_H */
+#endif  /* __DOXYGEN */

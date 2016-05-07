@@ -5,7 +5,12 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+/**
+ * \file
+ * Matrix basic operators
+ */
 
+//! \cond
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -25,20 +30,26 @@
 // return byte offset to first CPU cacheline aligned byte.
 #define ALIGNOFFSET(ptr) \
   (((unsigned long)(ptr) & CLMASK) ? CACHELINE-((unsigned long)(ptr) & CLMASK) : 0)
+//! \endcond
 
 // non-inline functions
 
 /**
  * Initialize matrix structure and allocate space for elements.
  *
- * @param [in/out] m
- *    matrix
+ * @param [in,out] m
+ *    On entry uninitialized matrix. On exit initialized matrix with space allocated
+ *    for elements.
  * @param [in] r
- *    rows
+ *    Number of rows
  * @param [in] c
- *    columns
+ *    Number of columns
  *
- * Note: first element address is aligned with CPU cache entry
+ * If number of rows or columns is zero, no space is allocated but matrix
+ * is properly initialized to zero size.
+ *
+ * @return Pointer to initialized matrix.
+ * \ingroup matrix
  */
 __armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c)
 {
@@ -72,13 +83,16 @@ __armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c)
 /**
  * @brief Transpose matrix
  *
- * Transpose matrix to another matrix, A = B.T. Does not work for a vector.
+ * Transpose matrix to another matrix, \f$A = B^T\f$. Does not work for a vector.
  *
- * @param A destination matrix
- * @param B source matrix
+ * @param [out] A 
+ *    Destination matrix, on exit transpose of source matrix
+ * @param [in] B 
+ *    Source matrix
  *
  * @retval A Success
  * @retval NULL Failed
+ * \ingroup matrix
  */
 __armas_dense_t *__armas_transpose(__armas_dense_t *A, __armas_dense_t *B)
 {
@@ -95,11 +109,14 @@ __armas_dense_t *__armas_transpose(__armas_dense_t *A, __armas_dense_t *B)
  * Copy matrix or vector to another matrix or vector, ie. A = B. Sizes of
  * of operand must match, for matrix size(A) == size(B), for vector len(A) == len(B)
  *
- * @param A destination matrix or vector
- * @param B source matrix or vector
+ * @param [out] A 
+ *     Destination matrix or vector, on exit copy of source matrix
+ * @param [in] B 
+ *     Source matrix or vector
  *
  * @retval A Success
  * @retval NULL Incompatible sizes
+ * \ingroup matrix
  */
 __armas_dense_t *__armas_mcopy(__armas_dense_t *A, __armas_dense_t *B)
 {
@@ -122,10 +139,12 @@ __armas_dense_t *__armas_mcopy(__armas_dense_t *A, __armas_dense_t *B)
  *
  * Allocate space and copy matrix, A = newcopy(B)
  *
- * @param B source matrix
+ * @param [in] A 
+ *   The source matrix
  *
  * @retval NOT NULL Success, pointer to new matrix
  * @retval NULL Failed
+ * \ingroup matrix
  */
 __armas_dense_t *__armas_newcopy(__armas_dense_t *A)
 {
@@ -139,18 +158,22 @@ __armas_dense_t *__armas_newcopy(__armas_dense_t *A)
 /**
  * @brief Element-wise equality with in tolerances
  *
- * Test if A == B within given tolerances. Elements are considered equal if
+ * Test if \f$A == B\f$ within given tolerances. Elements are considered equal if
  *
- *  > abs(A[i,j] - B[i,j]) <= atol + rtol*abs(B[i,j])
+ *  \f$|A_{i,j} - B_{i,j}| <= atol + rtol*B_{i,j}\f$
  *
- * @param A, B matrices
- * @param atol absolute tolerance
- * @param rtol relative tolerance
+ * @param [in] A, B 
+ *     Matrices to compare element wise
+ * @param [in] atol 
+ *     Absolute tolerance
+ * @param [in] rtol 
+ *     Relative tolerance
  *
  * @retval 0 not equal
  * @retval 1 equal
+ * \ingroup matrix
  */
-int __armas_intolerance(__armas_dense_t *A, __armas_dense_t *B, ABSTYPE atol, ABSTYPE rtol)
+int __armas_intolerance(const __armas_dense_t *A, const __armas_dense_t *B, ABSTYPE atol, ABSTYPE rtol)
 {
   register int i, j;
   ABSTYPE df, ref;
@@ -182,14 +205,16 @@ static const ABSTYPE ATOL = 1e-8;
 /**
  * @brief Element-wise equality with predefined tolerances
  *
- * @param A, B matrices
+ * @param [in] A, B 
+ *    Matrices to compare
  *
  * @retval 0 not equal
  * @retval 1 equal
+ * \ingroup matrix
  */
-int __armas_allclose(__armas_dense_t *a, __armas_dense_t *b)
+int __armas_allclose(const __armas_dense_t *A, const __armas_dense_t *B)
 {
-  return __armas_intolerance(a, b, ATOL, RTOL);
+  return __armas_intolerance(A, B, ATOL, RTOL);
 }
 
 
@@ -232,9 +257,9 @@ void __armas_print(const __armas_dense_t *m, FILE *out)
 /**
  * @brief Set matrix values
  *
- * Set matrix m values using parameter value function.
+ * Set matrix A values using parameter value function.
  *
- *  > m[i, j] = value(i, j)
+ *  \f$A_{i,j} = value(i, j)\f$
  *
  * Elements affected are selected with flag bits. If flag bit
  * ARMAS_UPPER (ARMAS_LOWER) is set the only upper (lower) triangular
@@ -244,51 +269,55 @@ void __armas_print(const __armas_dense_t *m, FILE *out)
  * is transpose of lower triangular part. If bit ARMAS_UNIT is set then
  * diagonal entry is set to one.
  *
- * @param m[in,out] matrix
- * @param value[in] the element value function
- * @param flags[in] flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT,ARMAS_SYMM)
+ * @param [out] A
+ *      On exit, matrix with selected elements set.
+ * @param [in] value
+ *      the element value function
+ * @param [in] flags 
+ *      flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT,ARMAS_SYMM)
  *
  * @returns 0  Succes
  * @returns -1 Failure
+ * \ingroup matrix
  */
-int __armas_set_values(__armas_dense_t *m, __armas_valuefunc_t value, int flags)
+int __armas_set_values(__armas_dense_t *A, __armas_valuefunc_t value, int flags)
 {
   int i, j;
   switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_SYMM)) {
   case ARMAS_UPPER:
-    for (j = 0; j < m->cols; j++) {
-      for (i = 0; i < j && i < m->rows; i++) {
-        m->elems[j*m->step+i] = value(i, j);
+    for (j = 0; j < A->cols; j++) {
+      for (i = 0; i < j && i < A->rows; i++) {
+        __armas_set_unsafe(A, i, j, value(i, j));
       }
       // don't set diagonal on upper trapezoidal matrix (cols > rows)
-      if (j < m->rows && !(flags & ARMAS_UNIT))
-        m->elems[j*m->step + j] = value(j, j);
+      if (j < A->rows && !(flags & ARMAS_UNIT))
+        __armas_set_unsafe(A, j, j, value(j, j));
     }
     break;
   case ARMAS_LOWER:
-    for (j = 0; j < m->cols; j++) {
-      if (j < m->rows && !(flags & ARMAS_UNIT))
-        m->elems[j*m->step + j] = value(j, j);
-      for (i = j+1; i < m->rows; i++) {
-        m->elems[j*m->step+i] = value(i, j);
+    for (j = 0; j < A->cols; j++) {
+      if (j < A->rows && !(flags & ARMAS_UNIT))
+        __armas_set_unsafe(A, j, j, value(j, j));
+      for (i = j+1; i < A->rows; i++) {
+        __armas_set_unsafe(A, i, j, value(i, j));
       }
     }
     break;
   case ARMAS_SYMM:
-    if (m->rows != m->cols)
+    if (A->rows != A->cols)
       return -1;
-    for (j = 0; j < m->cols; j++) {
-      m->elems[j*m->step + j] = flags & ARMAS_UNIT ? __ONE : value(j, j);
-      for (i = j+1; i < m->rows; i++) {
-        m->elems[j*m->step+i] = value(i, j);
-        m->elems[i*m->step+j] = m->elems[j*m->step+i];
+    for (j = 0; j < A->cols; j++) {
+      A->elems[j*A->step + j] = flags & ARMAS_UNIT ? __ONE : value(j, j);
+      for (i = j+1; i < A->rows; i++) {
+        __armas_set_unsafe(A, i, j, value(i, j));
+        __armas_set_unsafe(A, j, i, __armas_get_unsafe(A, i, j));
       }
     }
     break;
   default:
-    for (j = 0; j < m->cols; j++) {
-      for (i = 0; i < m->rows; i++) {
-        m->elems[j*m->step+i] = value(i, j);
+    for (j = 0; j < A->cols; j++) {
+      for (i = 0; i < A->rows; i++) {
+        __armas_set_unsafe(A, i, j, value(i, j));
       }
     }
   }
@@ -304,9 +333,12 @@ int __armas_set_values(__armas_dense_t *m, __armas_valuefunc_t value, int flags)
  * part to zero. If bit ARMAS_UNIT is set then diagonal element
  * is set to one.
  *
- * @param m[in,out] matrix
- * @param flags[in] flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
+ * @param [in,out] m 
+ *      On entry, input matrix. On exit triangular matrix.
+ * @param [in] flags 
+ *      flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
  *
+ * \ingroup matrix
  */
 void __armas_make_trm(__armas_dense_t *m, int flags)
 {
@@ -341,10 +373,14 @@ void __armas_make_trm(__armas_dense_t *m, int flags)
  * is set then upper (lower) triangular part is scaled. If bit ARMAS_UNIT
  * is set then diagonal entry is not touched.
  *
- * @param m[in,out] matrix
- * @param alpha[in] scaling constant
- * @param flags[in] flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
+ * @param [in,out] m 
+ *      On entry, the unscaled matrix. On exit, matrix with selected elements scaled.
+ * @param [in] alpha 
+ *      scaling constant
+ * @param [in] flags
+ *      flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
  *
+ * \ingroup matrix
  */
 int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
 {
@@ -387,9 +423,10 @@ int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
  * is set then upper (lower) triangular part is scaled. If bit ARMAS_UNIT
  * is set then diagonal entry is not touched.
  *
- * @param m[in,out] matrix
- * @param alpha[in] scaling constant
- * @param flags[in] flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
+ * @param [in,out] m matrix
+ * @param [in] alpha constant
+ * @param [in] flags flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
+ * \ingroup matrix
  */
 int __armas_madd(__armas_dense_t *m, DTYPE alpha, int flags)
 {

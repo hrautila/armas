@@ -5,9 +5,14 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
+//! \file
+//! Matrix element wise addition
+
+//! \cond
 #include <stdio.h>
 
 #include "dtype.h"
+//! \endcond
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(__armas_add_elems)
@@ -22,8 +27,10 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "matrix.h"
 #include "internal.h"
+//! \endcond
 
 static inline
 void __madd_lower(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC)
@@ -260,7 +267,7 @@ void __madd_abs(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC, in
 
 
 /**
- * @brief Element wise addition of A = A + B
+ * @brief Element wise addition of \f$A = A + B\f$
  *
  * @param[in,out] A
  *    On entry, first input matrix. On exit result matrix.
@@ -270,6 +277,7 @@ void __madd_abs(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC, in
  * @param[in] flags
  *    Indicator flags for matrix shape, ARMAS_UPPER, ARMAS_LOWER or ARMAS_TRANS
  *
+ * \ingroup matrix
  */
 int __armas_add_elems(__armas_dense_t *A, const __armas_dense_t *B, int flags)
 {

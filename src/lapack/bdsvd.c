@@ -5,6 +5,9 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Bidiagonal SVD
+
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -22,11 +25,12 @@
 #if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
+//! \cond
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
 #include "auxiliary.h"
-
+//! \endcond
 
 /*
  * \brief Rotate lower bidiagonal matrix to upper bidiagonal matrix.
@@ -69,17 +73,17 @@ void bdmake_upper(__armas_dense_t *D, __armas_dense_t *E,
     }
 }
 
-/*
+/**
  * \brief Compute SVD of bidiagonal matrix.
  *
  * Computes the singular values and, optionially, the left and/or right
  * singular vectors from the SVD of a N-by-N upper or lower bidiagonal
  * matrix. The SVD of B has the form
  *
- *    B = U*S*V.T
+ *   \f$ B = U S V^T \f$
  *
  * where S is the diagonal matrix with singular values, U is an orthogonal
- * matrix of left singular vectors, and V.T is an orthogonal matrix of right
+ * matrix of left singular vectors, and \f$ V^T \f$ is an orthogonal matrix of right
  * singular vectors. If singular vectors are requested they must be initialized
  * either to unit diagonal matrix or some other orthogonal matrices.
  *
@@ -96,6 +100,8 @@ void bdmake_upper(__armas_dense_t *D, __armas_dense_t *E,
  *      updated right singular vectors.
  * \param[out] W
  *      Workspace of size 4*N.
+ * \param[in] flags
+ *      Indicators, *ARMAS_WANTU*, *ARMAS_WANTV*
  * \param[in,out] conf
  *      Configuration block.
  *
@@ -104,6 +110,7 @@ void bdmake_upper(__armas_dense_t *D, __armas_dense_t *E,
  * tolerance is needed, conf.optflags bit ARMAS_ABSTOL flag must be set.
  *
  * Corresponds to lapack.xBDSQR
+ * \ingroup lapack
  */
 int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
                   __armas_dense_t *U, __armas_dense_t *V,
@@ -168,7 +175,7 @@ int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
     if (conf->tolmult != __ZERO) {
         tol = ((ABSTYPE)conf->tolmult) * __EPS;
     }
-    if (conf->optflags & ARMAS_BSVD_GOLUB) {
+    if (conf->optflags & ARMAS_OBSVD_GOLUB) {
         err =__bdsvd_golub(D, E, uu, vv, &CS, tol,  conf);
     } else {
         err =__bdsvd_demmel(D, E, uu, vv, &CS, tol,  conf);
@@ -181,8 +188,9 @@ int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
     return err;
 }
 
-/*
- * Workspace need to compute SVD of bidiagonal or bidiagonalizable matrix S.
+/**
+ * \brief Workspace need to compute SVD of bidiagonal or bidiagonalizable matrix S.
+ * \ingroup lapack
  */
 int __armas_bdsvd_work(__armas_dense_t *S, armas_conf_t *conf)
 {
