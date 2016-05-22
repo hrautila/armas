@@ -133,6 +133,8 @@ XBLAS3 = \
 	blas3/syrk_ext.c
 
 LAPACK = \
+	lapack/trdbis.c \
+	lapack/cholupd.c \
 	lapack/cholpv.c \
 	lapack/invldl.c \
 	lapack/ldl.c \
