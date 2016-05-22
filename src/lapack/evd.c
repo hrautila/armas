@@ -149,6 +149,74 @@ int __armas_eigen_sym(__armas_dense_t *D, __armas_dense_t *A,
     return 0;
 }
 
+
+
+/**
+ * \brief Compute eigenvalue decomposition of symmetric N-by-N matrix
+ *
+ * Compute selected eigenvalue of symmetric N-by-N matrix with bisection algorightm.
+ *
+ * \param[out] D
+ *      Requested eigenvalues in increasing order
+ * \param[in,out] A
+ *      On entry, symmetric matrix stored in lower or upper triangular part.
+ *      On exit, matrix reduced to tridiagonal form.
+ * \param[in] W
+ *      Workspace, size at least 2*N
+ * \param[in] flags
+ *      Flag bits, set ARMAS_UPPER (ARMAS_LOWER) if upper (lower) triangular storage
+ *      is used. If eigenvectors wanted, set ARMAS_WANTV.
+ * \param[in] params
+ *      Requested eigenvalue intervals, defined with macros ARMAS_EIGEN_INT and ARMAS_EIGEN_VAL.
+ * \param[in] conf
+ *      Optional configuration block, if NULL then default configuration used. 
+ *
+ * \retval  0 Success
+ * \retval -1 Error, `conf.error` holds error code.
+ * \retval -2 Tridiagonal reduction failed.
+ * \retval -3 Not all eigenvalues for interval returned
+ *
+ * \ingroup lapack
+ */
+int __armas_eigen_sym_selected(__armas_dense_t *D, __armas_dense_t *A, __armas_dense_t *W, 
+                               __armas_eigen_parameter_t *params, int flags, armas_conf_t *conf)
+{
+    __armas_dense_t sD, sE, tau, Wred;
+    int wrl, ioff, N = A->rows;
+
+    if (!conf)
+        conf = armas_conf_default();
+
+    if (A->rows != A->cols || __armas_size(W) < 2*N) {
+        conf->error = ARMAS_ESIZE;
+        return -1;
+    }
+
+    // default to lower triangular storage
+    if (!(flags & (ARMAS_UPPER|ARMAS_LOWER)))
+        flags |= ARMAS_LOWER;
+
+    ioff = flags & ARMAS_LOWER ? -1 : 1;
+    if (N > 2) {
+        __armas_make(&tau, N, 1, N, __armas_data(W));
+        wrl = __armas_size(W) - N;
+        __armas_make(&Wred, wrl, 1, wrl, &__armas_data(W)[N]);
+
+        // reduce to tridiagonal form
+        if (__armas_trdreduce(A, &tau, &Wred, flags, conf) != 0)
+            return -2;
+
+    }
+    __armas_diag(&sD, A, 0);
+    __armas_diag(&sE, A, ioff);
+
+    // compute selected eigenvalues
+    if (__armas_trdbisect(D, &sD, &sE, params, conf) < 0)
+        return -3;
+
+    return 0;
+}
+
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
 // Local Variables:
