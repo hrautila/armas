@@ -36,6 +36,37 @@ typedef struct __armas_dense_s {
   int __nbytes;   ///< sizeof __data buffer
 } __armas_dense_t;
 
+
+/**
+ * \brief Eigenvalue selection parameters
+ */
+typedef struct __armas_eigen_parameter_s {
+    int ileft;          ///< Start index of half-open interval [ileft, iright)
+    int iright;         ///< End index of half-open interval [ileft, iright) 
+    DTYPE left;         ///< Start eigenvalue of half-open interval [left, right)
+    DTYPE right;        ///< Last eigenvalue of half-open interval [left, right)
+    DTYPE tau;          ///< Requested accurancy; must be > max{|T_i|}*eps
+} __armas_eigen_parameter_t;
+  
+
+//! \brief Define eigenvalue index range [l, r) with default accuracy
+#define ARMAS_EIGEN_INT(l, r)  &(__armas_eigen_parameter_t){(l), (r), 0.0, 0.0, 0.0}
+
+//! \brief Define eigenvalue value range [low, high) with default accuracy
+#define ARMAS_EIGEN_VAL(low, high)  &(__armas_eigen_parameter_t){0, 0, (low), (high), 0.0}
+
+//! \brief Define eigenvalue index range [l, r) and accuracy parameter tau
+#define ARMAS_EIGEN_INT_TAU(l, r, tau)  &(__armas_eigen_parameter_t){(l), (r), 0.0, 0.0, tau}
+
+//! \brief Define eigenvalue value range [low, high) and accuracy parameter tau
+#define ARMAS_EIGEN_VAL_TAU(low, high, tau)  &(__armas_eigen_parameter_t){0, 0, (low), (high), tau}
+
+//! \brief All eigenvalues with default accuracy
+#define ARMAS_EIGEN_ALL  &(__armas_eigen_parameter_t){-1, -1, 0.0, 0.0, 0.0}
+
+//! \brief All eigenvalues with accuracy parameter
+#define ARMAS_EIGEN_ALL_TAU(tau)  &(__armas_eigen_parameter_t){-1, -1, 0.0, 0.0, tau}
+  
 // Null matrix 
 //#define ARMAS_NULL (__armas_dense_t *)0
   
@@ -545,6 +576,7 @@ extern int __armas_bdbuild_work(__armas_dense_t *A, int flags, armas_conf_t *con
 extern int __armas_cholfactor(__armas_dense_t *A, __armas_dense_t *W, armas_pivot_t *P, int flags, armas_conf_t *conf);
 extern int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A, armas_pivot_t *P, int flags,
                              armas_conf_t *conf);
+extern int __armas_cholupdate(__armas_dense_t *A, __armas_dense_t *X, int flags, armas_conf_t *conf);
 
 // Hessenberg reduction
 extern int __armas_hessreduce(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
@@ -644,6 +676,8 @@ extern int __armas_trdmult_work(__armas_dense_t *A, int flags, armas_conf_t *con
 extern int __armas_trdbuild_work(__armas_dense_t *A, armas_conf_t *conf);
 extern int __armas_trdeigen(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *V,
                             __armas_dense_t *W, int flags, armas_conf_t *conf);
+extern int __armas_trdbisect(__armas_dense_t *Y, __armas_dense_t *D, __armas_dense_t *E,
+                             __armas_eigen_parameter_t *params,  armas_conf_t *conf);
 // Secular functions solvers
 extern int __armas_trdsec_solve(__armas_dense_t *y, __armas_dense_t *d,
                                 __armas_dense_t *z, __armas_dense_t *delta, DTYPE rho,
@@ -662,6 +696,8 @@ extern void __armas_gvleft(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2,
 extern void __armas_gvright(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int col, int ncol);
 extern int __armas_gvupdate(__armas_dense_t *A, int start, 
                             __armas_dense_t *C, __armas_dense_t *S, int nrot, int flags);
+extern int __armas_gvrot_vec(__armas_dense_t *X, __armas_dense_t *Y, DTYPE c, DTYPE s);
+
 // Bidiagonal SVD
 extern int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *U, __armas_dense_t *V,
                          __armas_dense_t *W, int flags, armas_conf_t *conf);
@@ -671,7 +707,11 @@ extern int __armas_svd(__armas_dense_t *S, __armas_dense_t *U, __armas_dense_t *
                        __armas_dense_t *W, int flags, armas_conf_t *conf);
 extern int __armas_svd_work(__armas_dense_t *D, int flags, armas_conf_t *conf);
 
-  // DQDS
+// Eigen
+extern int __armas_eigen_sym(__armas_dense_t *D, __armas_dense_t *A,
+                             __armas_dense_t *W, int flags, armas_conf_t *conf);
+  
+// DQDS
 extern int __armas_dqds(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *W, armas_conf_t *conf);
 
 // Recursive Butterfly

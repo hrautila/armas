@@ -62,6 +62,7 @@
 #define __armas_bksolve         armas_s_bksolve
 #define __armas_bksolve_work    armas_s_bksolve_work
 #define __armas_ldlfactor       armas_s_ldlfactor
+#define __armas_ldlupdate       armas_s_ldlupdate
 #define __armas_ldlsolve        armas_s_ldlsolve
 // visible internal functions
 #define __unblk_bkfactor_lower __s_unblk_bkfactor_lower
@@ -75,6 +76,7 @@
 
 // Cholesky 
 #define __armas_cholfactor       armas_s_cholfactor
+#define __armas_cholupdate       armas_s_cholupdate
 #define __armas_cholsolve        armas_s_cholsolve
 // internal pivoting versions
 #define __cholfactor_pv          __s_cholfactor_pv
@@ -83,6 +85,7 @@
 // Givens
 #define __armas_gvcompute       armas_s_gvcompute
 #define __armas_gvrotate        armas_s_gvrotate
+#define __armas_gvrot_vec       armas_s_gvrot_vec
 #define __armas_gvleft          armas_s_gvleft
 #define __armas_gvright         armas_s_gvright
 #define __armas_gvupdate        armas_s_gvupdate
@@ -179,12 +182,14 @@
 #define __armas_trdmult_work    armas_s_trdmult_work
 // Tridiagonal EVD
 #define __armas_trdeigen        armas_s_trdeigen
+#define __armas_trdbisect       armas_s_trdbisect
 #define __armas_trdsec_solve    armas_s_trdsec_solve
 #define __armas_trdsec_eigen    armas_s_trdsec_eigen
 #define __armas_trdsec_solve_vec armas_s_trdsec_solve_vec
 
 // Eigenvalue
-#define __armas_eigen_sym       armas_s_eigen_sym
+#define __armas_eigen_sym           armas_s_eigen_sym
+#define __armas_eigen_sym_selected  armas_s_eigen_sym_selected
 
 // Bidiagonal SVD
 #define __armas_bdsvd           armas_s_bdsvd
@@ -264,6 +269,7 @@
 #define __armas_bksolve         armas_d_bksolve
 #define __armas_bksolve_work    armas_d_bksolve_work
 #define __armas_ldlfactor       armas_d_ldlfactor
+#define __armas_ldlupdate       armas_d_ldlupdate
 #define __armas_ldlsolve        armas_d_ldlsolve
 
 // visible internal functions
@@ -278,6 +284,7 @@
 
 // Cholesky 
 #define __armas_cholfactor       armas_d_cholfactor
+#define __armas_cholupdate       armas_d_cholupdate
 #define __armas_cholsolve        armas_d_cholsolve
 // internal pivoting versions
 #define __cholfactor_pv          __d_cholfactor_pv
@@ -374,16 +381,19 @@
 #define __armas_trdmult_work    armas_d_trdmult_work
 // Tridiagonal EVD
 #define __armas_trdeigen        armas_d_trdeigen
+#define __armas_trdbisect       armas_d_trdbisect
 #define __armas_trdsec_solve    armas_d_trdsec_solve
 #define __armas_trdsec_eigen    armas_d_trdsec_eigen
 #define __armas_trdsec_solve_vec armas_d_trdsec_solve_vec
 
 // Eigenvalue
-#define __armas_eigen_sym       armas_d_eigen_sym
+#define __armas_eigen_sym           armas_d_eigen_sym
+#define __armas_eigen_sym_selected  armas_d_eigen_sym_selected
 
 // Givens
 #define __armas_gvcompute       armas_d_gvcompute
 #define __armas_gvrotate        armas_d_gvrotate
+#define __armas_gvrot_vec       armas_d_gvrot_vec
 #define __armas_gvleft          armas_d_gvleft
 #define __armas_gvright         armas_d_gvright
 #define __armas_gvupdate        armas_d_gvupdate

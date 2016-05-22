@@ -216,6 +216,8 @@
 #define __armas_bkfactor_work   armas_x_bkfactor_work
 #define __armas_bksolve         armas_x_bksolve
 #define __armas_bksolve_work    armas_x_bksolve_work
+#define __armas_ldlfactor        armas_x_ldlfactor
+#define __armas_ldlsolve         armas_x_ldlsolve
 // visible internal functions
 #define __unblk_bkfactor_lower __x_unblk_bkfactor_lower
 #define __unblk_bkfactor_upper __x_unblk_bkfactor_upper
@@ -228,6 +230,7 @@
 
 // Cholesky 
 #define __armas_cholfactor       armas_x_cholfactor
+#define __armas_cholupdate       armas_x_cholupdate
 #define __armas_cholsolve        armas_x_cholsolve
 
 // Hessenberg functions
@@ -321,16 +324,19 @@
 #define __armas_trdmult_work    armas_x_trdmult_work
 // Tridiagonal EVD
 #define __armas_trdeigen        armas_x_trdeigen
+#define __armas_trdbisect       armas_x_trdbisect
 #define __armas_trdsec_solve    armas_x_trdsec_solve
 #define __armas_trdsec_eigen    armas_x_trdsec_eigen
 #define __armas_trdsec_solve_vec armas_x_trdsec_solve_vec
 
 // Eigenvalue
-#define __armas_eigen_sym       armas_x_eigen_sym
+#define __armas_eigen_sym           armas_x_eigen_sym
+#define __armas_eigen_sym_selected  armas_x_eigen_sym_selected
 
 // Givens
 #define __armas_gvcompute       armas_x_gvcompute
 #define __armas_gvrotate        armas_x_gvrotate
+#define __armas_gvrot_vec       armas_x_gvrot_vec
 #define __armas_gvleft          armas_x_gvleft
 #define __armas_gvright         armas_x_gvright
 #define __armas_gvupdate        armas_x_gvupdate
