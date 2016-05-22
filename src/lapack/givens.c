@@ -254,6 +254,31 @@ int __armas_gvupdate(__armas_dense_t *A, int start,
 }
 
 
+/*
+ * \brief Rotate vectors
+ *
+ *  Computes
+ *
+ *    (X^T) = G(c,s)*(X^T)   or (X Y) = (X Y)*G(c,s)
+ *    (Y^T)          (Y^T)
+ *
+ *  Assumes len(X) == len(Y).
+ */
+int __armas_gvrot_vec(__armas_dense_t *X, __armas_dense_t *Y, DTYPE c, DTYPE s)
+{
+    DTYPE x, y;
+    int k;
+    for (k = 0; k < __armas_size(X); k++) {
+        x = __armas_get_at_unsafe(X, k);
+        y = __armas_get_at_unsafe(Y, k);
+        __armas_gvrotate(&x, &y, c, s, x, y);
+        __armas_set_at_unsafe(X, k, x);
+        __armas_set_at_unsafe(Y, k, y);
+    }
+    return 0;
+}
+
+
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
 // Local Variables:
