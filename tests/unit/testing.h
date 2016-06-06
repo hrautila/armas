@@ -57,6 +57,8 @@ typedef float __Dtype;
 #define matrix_solve_diag      armas_s_solve_diag
 #define matrix_update_sym      armas_s_update_sym
 #define matrix_update2_sym     armas_s_update2_sym
+#define matrix_mvupdate_sym    armas_s_mvupdate_sym
+#define matrix_mvupdate2_sym   armas_s_mvupdate2_sym
 #define matrix_transpose       armas_s_transpose
 #define matrix_release         armas_s_release
 #define matrix_pivot_rows      armas_s_pivot_rows
@@ -207,6 +209,8 @@ typedef double __Dtype;
 #define matrix_solve_diag      armas_d_solve_diag
 #define matrix_update_sym      armas_d_update_sym
 #define matrix_update2_sym     armas_d_update2_sym
+#define matrix_mvupdate_sym    armas_d_mvupdate_sym
+#define matrix_mvupdate2_sym   armas_d_mvupdate2_sym
 #define matrix_transpose       armas_d_transpose
 #define matrix_release         armas_d_release
 #define matrix_mcopy           armas_d_mcopy
