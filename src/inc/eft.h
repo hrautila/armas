@@ -68,7 +68,7 @@ static const double __factor_f64 = __FACT64;
 
 #if ! defined(__have_accelerated_eft_versions)
 
-#warning "Using non-accelerated EFT transformations!"
+#warning "Using non-accelerated EFT functions!"
 
 // these the basic, non-optimized versions
 #define __twosum_base(t, type, x, y, a, b)               \
@@ -108,9 +108,9 @@ static const double __factor_f64 = __FACT64;
         (x) = x0; (y) = y0;                                    \
     } while (0)
 
-#define __approx_twodiv_base(t, type, x, y, a, b, fct) \
+#define __approx_twodiv_base(t, type, x, y, a, b, fct)  \
     do {                                                \
-        volatile register type v, w, q;                 \
+        volatile register type v, w;                    \
         x = a/b;                                        \
         __twoprod_base(t, type, v, w, x, b, fct);       \
         y = a - v;                                      \
@@ -154,7 +154,7 @@ static const double __factor_f64 = __FACT64;
 #define __split_base_f32(_x, _y, _a) \
     __split_base("", float, _x, _y, _a, __factor_f32)
 
-#define __extract_base_f32(_x, _y, _p, _r)     \
+#define __extract_scalar_base_f32(_x, _y, _p, _r)     \
     __extract_scalar_base("", float, _x, _y, _p, _r)
 
 // Double precision float
@@ -174,7 +174,7 @@ static const double __factor_f64 = __FACT64;
 #define __split_base_f64(_x, _y, _a) \
     __split_base("", double, _x, _y, _a, __factor_f64)
 
-#define __extract_base_f64(_x, _y, _p, _r)     \
+#define __extract_scalar_base_f64(_x, _y, _p, _r)     \
     __extract_scalar_base("", double, _x, _y, _p, _r)
 
 #endif  // non-optimized
@@ -309,6 +309,11 @@ split_f64(double *x, double *y, double a)
     __split_base_f64((*x), (*y), a);
 }
 
+static inline void __attribute__((__always_inline__))
+extract_f64(float *x, float *y, float p, float r)
+{
+    __extract_scalar_base_f64((*x), (*y), p, r);
+}
 /* --------------------------------------------------------------------------------------
  * Vectorized versions, 128bit
  */
