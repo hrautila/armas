@@ -7,7 +7,8 @@
 #include <armas/dmatrix.h>
 #include "helper.h"
 
-main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
   int verbose = 0;
   int count = 5;
@@ -51,12 +52,12 @@ main(int argc, char **argv) {
   switch (algo) {
   case 'N':
   case 'n':
-    conf.optflags = ARMAS_SNAIVE;
+    conf.optflags = ARMAS_ONAIVE;
     break;
   case 'R':
   case 'r':
   default:
-    conf.optflags = ARMAS_RECURSIVE;
+    conf.optflags = ARMAS_ORECURSIVE;
     break;
   }    
 

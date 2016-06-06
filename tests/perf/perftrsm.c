@@ -11,7 +11,8 @@
 #include "helper.h"
 
 
-main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
   int ok, opt, i;
   int count = 5;
@@ -72,9 +73,9 @@ main(int argc, char **argv) {
   conf = *armas_conf_default();
   
   if (algo == 'N' || algo == 'n') {
-    conf.optflags |= ARMAS_SNAIVE;
+    conf.optflags |= ARMAS_ONAIVE;
   } else if (algo == 'R' || algo == 'r') {
-    conf.optflags |= ARMAS_RECURSIVE;
+    conf.optflags |= ARMAS_ORECURSIVE;
   }
 
   armas_d_init(&A, N, N);

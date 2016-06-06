@@ -36,7 +36,8 @@ typedef double __Dtype;
 #endif
 #include "helper.h"
 
-main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
   int ok, opt, i;
   int count = 5;
@@ -65,7 +66,7 @@ main(int argc, char **argv) {
       conf.optflags |= ARMAS_OEXTPREC; // extended precision
       break;
     case 'o':
-      conf.optflags |= ARMAS_BLAS_RECURSIVE;
+      conf.optflags |= ARMAS_OBLAS_RECURSIVE;
       break;
     default: /* ? */
       fprintf(stderr, "Usage: time_gemm [-v] [-c numtest] [-P nproc] [size]");
