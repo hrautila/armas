@@ -35,7 +35,7 @@
  * @brief Compute \f$ A = A*diag(D) \f$ or \f$ A = diag(D)*A \f$
  *
  * @param A
- *      Target matrix
+ *      Target matrix or vector.
  * @param D
  *      Diagonal vector or square matrix
  * @param flags
@@ -57,18 +57,20 @@ int __armas_mult_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, a
         __armas_diag(&d0, D, 0);
         d = &d0;
     }
-    switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
-    case ARMAS_LEFT:
-        if (__armas_size(d) != A->rows) {
+
+    if (__armas_isvector(A)) {
+        if (__armas_size(d) != __armas_size(A)) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
-        // scale rows; for each column element-wise multiply of D element
         for (k = 0; k < __armas_size(d); k++) {
-            __armas_row(&c, A, k);
-            __armas_scale(&c, __armas_get_at(d, k), conf);
+            DTYPE aval = __armas_get_at_unsafe(A, k)*__armas_get_at_unsafe(d, k);
+            __armas_set_at_unsafe(A, k, aval);
         }
-        break;
+        return 0;
+    }
+
+    switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
     case ARMAS_RIGHT:
         if (__armas_size(d) != A->cols) {
             conf->error = ARMAS_ESIZE;
@@ -77,7 +79,19 @@ int __armas_mult_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, a
         // scale columns; 
         for (k = 0; k < __armas_size(d); k++) {
             __armas_column(&c, A, k);
-            __armas_scale(&c, __armas_get_at(d, k), conf);
+            __armas_scale(&c, __armas_get_at_unsafe(d, k), conf);
+        }
+        break;
+    case ARMAS_LEFT:
+    default:
+        if (__armas_size(d) != A->rows) {
+            conf->error = ARMAS_ESIZE;
+            return -1;
+        }
+        // scale rows; for each column element-wise multiply of D element
+        for (k = 0; k < __armas_size(d); k++) {
+            __armas_row(&c, A, k);
+            __armas_scale(&c, __armas_get_at_unsafe(d, k), conf);
         }
         break;
     }
@@ -88,7 +102,7 @@ int __armas_mult_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, a
  * @brief Compute \f$ A = A*diag(D)^-1 \f$ or \f$ A = diag(D)^-1*A \f$
  *
  * @param A
- *      Target matrix
+ *      Target matrix or vector.
  * @param D
  *      Diagonal vector or square matrix
  * @param flags
@@ -110,18 +124,20 @@ int __armas_solve_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, 
         __armas_diag(&d0, D, 0);
         d = &d0;
     }
-    switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
-    case ARMAS_LEFT:
-        if (__armas_size(d) != A->rows) {
+
+    if (__armas_isvector(A)) {
+        if (__armas_size(d) != __armas_size(A)) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
-        // scale rows; for each column element-wise multiply of D element
         for (k = 0; k < __armas_size(d); k++) {
-            __armas_row(&c, A, k);
-            __armas_invscale(&c, __armas_get_at(d, k), conf);
+            DTYPE aval = __armas_get_at_unsafe(A, k)/__armas_get_at_unsafe(d, k);
+            __armas_set_at_unsafe(A, k, aval);
         }
-        break;
+        return 0;
+    }
+
+    switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
     case ARMAS_RIGHT:
         if (__armas_size(d) != A->cols) {
             conf->error = ARMAS_ESIZE;
@@ -130,7 +146,19 @@ int __armas_solve_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, 
         // scale columns; 
         for (k = 0; k < __armas_size(d); k++) {
             __armas_column(&c, A, k);
-            __armas_invscale(&c, __armas_get_at(d, k), conf);
+            __armas_invscale(&c, __armas_get_at_unsafe(d, k), conf);
+        }
+        break;
+    case ARMAS_LEFT:
+    default:
+        if (__armas_size(d) != A->rows) {
+            conf->error = ARMAS_ESIZE;
+            return -1;
+        }
+        // scale rows; for each column element-wise multiply of D element
+        for (k = 0; k < __armas_size(d); k++) {
+            __armas_row(&c, A, k);
+            __armas_invscale(&c, __armas_get_at_unsafe(d, k), conf);
         }
         break;
     }
