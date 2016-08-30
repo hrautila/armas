@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__swap) || defined(__cblas_swap)
+#if defined(__swapf) || defined(__cblas_swap)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -61,8 +61,8 @@ void __swap_compat(const int N, DTYPE *X, const int incx, DTYPE *Y, const int in
     }
 }
 
-#if defined(__swap)
-void __swap(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy)
+#if defined(__swapf)
+void __swapf(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy)
 {
     __swap_compat(*n, X, *incx, Y, *incy);
 }

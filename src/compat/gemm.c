@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__gemm) || defined(__cblas_gemm)
+#if defined(__gemmf) || defined(__cblas_gemm)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__gemm)
-void __gemm(char *transa, char *transb, int *m, int *n, int *k, DTYPE *alpha, DTYPE *A,
+#if defined(__gemmf)
+void __gemmf(char *transa, char *transb, int *m, int *n, int *k, DTYPE *alpha, DTYPE *A,
             int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
 {
     armas_conf_t *conf = armas_conf_default();

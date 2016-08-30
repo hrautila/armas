@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__axpy) || defined(__cblas_axpy)
+#if defined(__axpyf) || defined(__cblas_axpy)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -60,8 +60,8 @@ void __compat_axpy(const int n, const DTYPE alpha, DTYPE *X, const int incx, DTY
     }
 }
 
-#if defined(__axpy)
-void __axpy(int *n, DTYPE *alpha, DTYPE *X, int *incx, DTYPE *Y, int *incy)
+#if defined(__axpyf)
+void __axpyf(int *n, DTYPE *alpha, DTYPE *X, int *incx, DTYPE *Y, int *incy)
 {
     __compat_axpy(*n, *alpha, X, *incx, Y, *incy);
 }

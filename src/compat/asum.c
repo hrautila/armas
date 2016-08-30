@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__asum) || defined(__cblas_asum)
+#if defined(__asumf) || defined(__cblas_asum)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__asum)
-DTYPE __asum(int *n, DTYPE *X, int *incx)
+#if defined(__asumf)
+DTYPE __asumf(int *n, DTYPE *X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t x;

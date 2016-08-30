@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__ger) || defined(__cblas_ger)
+#if defined(__gerf) || defined(__cblas_ger)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__ger)
-void __ger(int *m, int *n, DTYPE *alpha, DTYPE *X,
+#if defined(__gerf)
+void __gerf(int *m, int *n, DTYPE *alpha, DTYPE *X,
             int *incx, DTYPE *Y, int *incy, DTYPE *A, int *lda)
 {
     armas_conf_t *conf = armas_conf_default();

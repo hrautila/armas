@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__potrf) || defined(__lapacke_potrf_work)
+#if defined(__potrff) || defined(__lapacke_potrf_work)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__potrf)
-void __potrf(char *uplo, int *n, DTYPE *A, int *lda, int *info)
+#if defined(__potrff)
+void __potrff(char *uplo, int *n, DTYPE *A, int *lda, int *info)
 {
     __armas_dense_t a;
     armas_conf_t conf = *armas_conf_default();

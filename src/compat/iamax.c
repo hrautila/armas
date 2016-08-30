@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__iamax) || defined(__cblas_iamax)
+#if defined(__iamaxf) || defined(__cblas_iamax)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__iamax)
-int __iamax(int *n, DTYPE *X, int *incx)
+#if defined(__iamaxf)
+int __iamaxf(int *n, DTYPE *X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t x;

@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__posv) || defined(__cblas_posv)
+#if defined(__posvf) || defined(__cblas_posv)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__posv)
-void __posv(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *ldb,int *info)
+#if defined(__posvf)
+void __posvf(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *ldb,int *info)
 {
     __armas_dense_t a, b;
     armas_conf_t conf = *armas_conf_default();

@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__potrs) || defined(__cblas_potrs) || defined(__lapacke_potrs)
+#if defined(__potrsf) || defined(__cblas_potrs) || defined(__lapacke_potrs)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__potrs)
-void __potrs(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *ldb,int *info)
+#if defined(__potrsf)
+void __potrsf(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *ldb,int *info)
 {
     __armas_dense_t a, b;
     armas_conf_t conf = *armas_conf_default();

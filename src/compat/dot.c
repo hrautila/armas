@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__dot) || defined(__cblas_dot)
+#if defined(__dotf) || defined(__cblas_dot)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -62,8 +62,8 @@ DTYPE __dot_compat(const int N, DTYPE *X, const int incx, DTYPE *Y, const int in
     return dval;
 }
 
-#if defined(__dot)
-DTYPE __dot(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy)
+#if defined(__dotf)
+DTYPE __dotf(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy)
 {
     return __dot_compat(*n, X, *incx, Y, *incy);
 }

@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__syr) || defined(__cblas_syr)
+#if defined(__syrf) || defined(__cblas_syr)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__syr)
-void __syr(char *uplo, int *n, DTYPE *alpha, DTYPE *X,
+#if defined(__syrf)
+void __syrf(char *uplo, int *n, DTYPE *alpha, DTYPE *X,
             int *incx, DTYPE *A, int *lda)
 {
     armas_conf_t *conf = armas_conf_default();

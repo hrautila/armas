@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__getrf)  || defined(__lapacke_getrf)
+#if defined(__getrff)  || defined(__lapacke_getrf)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__getrf)
-void __getrf(int *m, int *n, DTYPE *A, int *lda, int *ipiv, int *info)
+#if defined(__getrff)
+void __getrff(int *m, int *n, DTYPE *A, int *lda, int *ipiv, int *info)
 {
     __armas_dense_t a;
     armas_pivot_t piv;

@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__trsv) || defined(__cblas_trsv)
+#if defined(__trsvf) || defined(__cblas_trsv)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,9 +23,9 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__trsv)
-void __trsv(char *uplo, char *trans, char *diag, int *n, DTYPE *alpha, DTYPE *A,
-            int *lda, DTYPE *X, int *incx)
+#if defined(__trsvf)
+void __trsvf(char *uplo, char *trans, char *diag, int *n, DTYPE *alpha, DTYPE *A,
+             int *lda, DTYPE *X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t a, x;

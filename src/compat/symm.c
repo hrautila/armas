@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__symm) || defined(__cblas_symm)
+#if defined(__symmf) || defined(__cblas_symm)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,9 +23,9 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__symm)
-void __symm(char *side, char *uplo, int *m, int *n, DTYPE *alpha, DTYPE *A,
-            int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
+#if defined(__symmf)
+void __symmf(char *side, char *uplo, int *m, int *n, DTYPE *alpha, DTYPE *A,
+             int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t c, a, b;

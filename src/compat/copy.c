@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__copy) || defined(__cblas_copy)
+#if defined(__copyf) || defined(__cblas_copy)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -60,8 +60,8 @@ void __copy_compat(const int N, DTYPE *X, const int incx, DTYPE *Y, const int in
     }
 }
 
-#if defined(__copy)
-void __copy(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy)
+#if defined(__copyf)
+void __copyf(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy)
 {
     __copy_compat(*n, X, *incx, Y, *incy);
 }

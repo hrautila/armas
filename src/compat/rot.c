@@ -11,7 +11,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__rot) || defined(__rotg) || defined(__cblas_rot)
+#if defined(__rotf) || defined(__rotgf) || defined(__cblas_rot)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -59,15 +59,15 @@ void __rot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE c, DTYPE 
     }
 }
 
-#if defined(__rot)
-void __rot(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy, DTYPE *c, DTYPE *s)
+#if defined(__rotf)
+void __rotf(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy, DTYPE *c, DTYPE *s)
 {
     __rot_compat(*n, X, *incx, Y, *incy, *c, *s);
 }
 #endif
 
-#if defined(__rotg)
-void __rotg(DTYPE *sa, DTYPE *sb, DTYPE *c, DTYPE *s)
+#if defined(__rotgf)
+void __rotgf(DTYPE *sa, DTYPE *sb, DTYPE *c, DTYPE *s)
 {
     DTYPE r;
     __armas_gvcompute(c, s, &r, *sa, *sb);

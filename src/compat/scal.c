@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__scal) || defined(__cblas_scal)
+#if defined(__scalf) || defined(__cblas_scal)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__scal)
-void __scal(int *n, DTYPE *X, int *incx, DTYPE *alpha)
+#if defined(__scalf)
+void __scalf(int *n, DTYPE *X, int *incx, DTYPE *alpha)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t x;

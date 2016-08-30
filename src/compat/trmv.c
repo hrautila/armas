@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__trmv) || defined(__cblas_trmv)
+#if defined(__trmvf) || defined(__cblas_trmv)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,9 +23,9 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__trmv)
-void __trmv(char *uplo, char *trans, char *diag, int *n, DTYPE *alpha, DTYPE *A,
-            int *lda, DTYPE *X, int *incx)
+#if defined(__trmvf)
+void __trmvf(char *uplo, char *trans, char *diag, int *n, DTYPE *alpha, DTYPE *A,
+             int *lda, DTYPE *X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t a, x;

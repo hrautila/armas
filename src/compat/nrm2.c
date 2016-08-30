@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__nrm2) || defined(__cblas_nrm2)
+#if defined(__nrm2f) || defined(__cblas_nrm2)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -23,8 +23,8 @@
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__nrm2)
-DTYPE __nrm2(int *n, DTYPE *X, int *incx)
+#if defined(__nrm2f)
+DTYPE __nrm2f(int *n, DTYPE *X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
     __armas_dense_t x;
