@@ -102,6 +102,10 @@
 #define __compute_householder_rev  __s_compute_householder_rev
 #define __apply_householder2x1     __s_apply_householder2x1
 #define __apply_householder1x1     __s_apply_householder1x1
+#define __armas_house              armas_s_house
+#define __armas_house_apply        armas_s_house_apply
+#define __armas_hhouse             armas_s_hhouse
+#define __armas_hhouse_apply       armas_s_hhouse_apply
 // marker for householder functions
 #define __householder              1
 
@@ -302,6 +306,10 @@
 #define __compute_householder_rev  __d_compute_householder_rev
 #define __apply_householder2x1     __d_apply_householder2x1
 #define __apply_householder1x1     __d_apply_householder1x1
+#define __armas_house              armas_d_house
+#define __armas_house_apply        armas_d_house_apply
+#define __armas_hhouse             armas_d_hhouse
+#define __armas_hhouse_apply       armas_d_hhouse_apply
 // marker for householder functions
 #define __householder              1
 

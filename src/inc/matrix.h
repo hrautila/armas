@@ -108,10 +108,10 @@ extern void __armas_make_trm(__armas_dense_t *m, int flags);
 extern int __armas_mscale(__armas_dense_t *d, DTYPE alpha, int flags);
 extern int __armas_madd(__armas_dense_t *d, DTYPE alpha, int flags);
   // element wise operators
-extern int __armas_mul_elem(__armas_dense_t *A, const __armas_dense_t *B, int flags);
-extern int __armas_add_elem(__armas_dense_t *A, const __armas_dense_t *B, int flags);
-extern int __armas_div_elem(__armas_dense_t *A, const __armas_dense_t *B, int flags);
-extern int __armas_sub_elem(__armas_dense_t *A, const __armas_dense_t *B, int flags);
+extern int __armas_mul_elems(__armas_dense_t *A, const __armas_dense_t *B, int flags);
+extern int __armas_add_elems(__armas_dense_t *A, const __armas_dense_t *B, int flags);
+extern int __armas_div_elems(__armas_dense_t *A, const __armas_dense_t *B, int flags);
+extern int __armas_sub_elems(__armas_dense_t *A, const __armas_dense_t *B, int flags);
 extern int __armas_apply(__armas_dense_t *A, __armas_operator_t func, int flags);
 extern int __armas_apply2(__armas_dense_t *A, __armas_operator2_t func, DTYPE val, int flags);
   
@@ -713,6 +713,17 @@ extern int __armas_eigen_sym(__armas_dense_t *D, __armas_dense_t *A,
   
 // DQDS
 extern int __armas_dqds(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *W, armas_conf_t *conf);
+
+// Householder functions
+extern int __armas_house(__armas_dense_t *a11, __armas_dense_t *x,
+                         __armas_dense_t *tau, int flags, armas_conf_t *conf);
+extern int __armas_house_apply(__armas_dense_t *tau, __armas_dense_t *v, __armas_dense_t *a1,  __armas_dense_t *A2,
+                               __armas_dense_t *w,  int flags, armas_conf_t *conf);
+// Hyperbolic Householder functions
+extern int __armas_hhouse(__armas_dense_t *a11, __armas_dense_t *x,
+                         __armas_dense_t *tau, int flags, armas_conf_t *conf);
+extern int __armas_hhouse_apply(__armas_dense_t *tau, __armas_dense_t *v, __armas_dense_t *a1,  __armas_dense_t *A2,
+                               __armas_dense_t *w,  int flags, armas_conf_t *conf);
 
 // Recursive Butterfly
 extern int __armas_mult_rbt(__armas_dense_t *A, __armas_dense_t *U, int flags, armas_conf_t *conf);
