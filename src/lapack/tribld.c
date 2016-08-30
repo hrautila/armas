@@ -58,15 +58,15 @@ int __armas_trdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
     __armas_dense_t Qh, tauh, d, s;
     int j, err = 0;
 
-    if (!conf)
+    if (!conf) 
         conf = armas_conf_default();
 
     if (__armas_size(A) == 0)
         return 0;
 
   // default to lower triangular if uplo not defined
-  if (!(flags & (ARMAS_LOWER|ARMAS_UPPER)))
-    flags |= ARMAS_LOWER;
+    if ((flags & (ARMAS_LOWER|ARMAS_UPPER)) == 0) 
+        flags |= ARMAS_LOWER;
 
     if (K > A->rows - 1)
         K = A->rows - 1;

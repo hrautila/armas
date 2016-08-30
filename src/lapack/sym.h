@@ -198,7 +198,7 @@ void __swap_rows(__armas_dense_t *A, int src, int dst, armas_conf_t *conf)
     __armas_dense_t r0, r1;
     if (src == dst || A->cols <= 0)
         return;
-    if (src >= A->rows || dst >= A->rows)
+    if ((unsigned int)src >= A->rows || (unsigned int)dst >= A->rows)
         return;
 
     __armas_submatrix(&r0, A, src, 0, 1, A->cols);

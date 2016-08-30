@@ -220,7 +220,7 @@ int __armas_allclose(const __armas_dense_t *A, const __armas_dense_t *B)
 
 void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m)
 {
-  int i, j;
+  unsigned int i, j;
   if (!m)
     return;
   if (!efmt)

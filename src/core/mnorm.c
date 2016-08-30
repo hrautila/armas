@@ -250,7 +250,7 @@ ABSTYPE __trm_norm_frb(const __armas_dense_t *A, int flags, armas_conf_t *conf)
   __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a11, a21, A22, *Acol;
     ABSTYPE ssum, scale;
 
-    EMPTY(A00);
+    EMPTY(A00); EMPTY(a11);
     
     ssum = __ABSONE;
     scale = __ABSZERO;
