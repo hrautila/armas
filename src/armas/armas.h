@@ -39,37 +39,39 @@ extern "C" {
  * @brief Operarand flag bits
  */
 enum armas_flags {
-  ARMAS_NOTRANS = 0,
-  ARMAS_NULL    = 0,
-  ARMAS_NONE    = 0,
-  ARMAS_ANY     = 0,
-  ARMAS_LOWER   = 0x1,          ///< lower triangular matrix
-  ARMAS_UPPER   = 0x2,          ///< upper triangular matrix 
-  ARMAS_SYMM    = 0x4,          ///< symmetric matrix
-  ARMAS_HERM    = 0x8,          ///< hermitian matrix
-  ARMAS_UNIT    = 0x10,         ///< unit diagonal matrix
-  ARMAS_LEFT    = 0x20,         ///< multiplicaton from left
-  ARMAS_RIGHT   = 0x40,         ///< multiplicaton from right
-  ARMAS_TRANSA  = 0x80,         ///< operand A is transposed
-  ARMAS_TRANSB  = 0x100,        ///< operand B is transposed
-  ARMAS_TRANS   = ARMAS_TRANSA, ///< matrix operand is transposed
-  ARMAS_CTRANSA = 0x200,        ///< operand A is conjugate transposed
-  ARMAS_CTRANSB = 0x400,        ///< operand B is conjugate transposed
-  ARMAS_CTRANS  = ARMAS_CTRANSA,///< matrix operand is conjugate transposed
-  ARMAS_MULTQ   = 0x800,        ///< multiply with Q in bidiagonal 
-  ARMAS_MULTP   = 0x1000,       ///< multiply with P in bidiagonal 
-  ARMAS_WANTQ   = 0x2000,       ///< build the Q matrix in bidiagonal 
-  ARMAS_WANTP   = 0x4000,       ///< build the P matrix in bidiagonal 
-  ARMAS_WANTU   = 0x8000,       ///< generate left eigenvectors
-  ARMAS_WANTV   = 0x10000,      ///< generate right eigenvectors
-  ARMAS_FORWARD = 0x20000,      ///< apply forward
-  ARMAS_BACKWARD= 0x40000,      ///< apply backward
-  ARMAS_ABSA    = 0x80000,      ///< compute with |A| 
-  ARMAS_ABSB    = 0x100000,     ///< compute with |B|
-  ARMAS_ABS     = ARMAS_ABSA,   ///< compute with |x|
-  ARMAS_CONJA   = 0x200000,     ///< conjugate matrix A
-  ARMAS_CONJB   = 0x400000,     ///< conjugate matrix B
-  ARMAS_CONJ    = ARMAS_CONJA   ///< conjugate
+  ARMAS_NOTRANS    = 0,
+  ARMAS_NULL       = 0,
+  ARMAS_NONE       = 0,
+  ARMAS_ANY        = 0,
+  ARMAS_LOWER      = 0x1,          ///< lower triangular matrix
+  ARMAS_UPPER      = 0x2,          ///< upper triangular matrix 
+  ARMAS_SYMM       = 0x4,          ///< symmetric matrix
+  ARMAS_HERM       = 0x8,          ///< hermitian matrix
+  ARMAS_UNIT       = 0x10,         ///< unit diagonal matrix
+  ARMAS_LEFT       = 0x20,         ///< multiplicaton from left
+  ARMAS_RIGHT      = 0x40,         ///< multiplicaton from right
+  ARMAS_TRANSA     = 0x80,         ///< operand A is transposed
+  ARMAS_TRANSB     = 0x100,        ///< operand B is transposed
+  ARMAS_TRANS      = ARMAS_TRANSA, ///< matrix operand is transposed
+  ARMAS_CTRANSA    = 0x200,        ///< operand A is conjugate transposed
+  ARMAS_CTRANSB    = 0x400,        ///< operand B is conjugate transposed
+  ARMAS_CTRANS     = ARMAS_CTRANSA,///< matrix operand is conjugate transposed
+  ARMAS_MULTQ      = 0x800,        ///< multiply with Q in bidiagonal 
+  ARMAS_MULTP      = 0x1000,       ///< multiply with P in bidiagonal 
+  ARMAS_WANTQ      = 0x2000,       ///< build the Q matrix in bidiagonal 
+  ARMAS_WANTP      = 0x4000,       ///< build the P matrix in bidiagonal 
+  ARMAS_WANTU      = 0x8000,       ///< generate left eigenvectors
+  ARMAS_WANTV      = 0x10000,      ///< generate right eigenvectors
+  ARMAS_FORWARD    = 0x20000,      ///< apply forward
+  ARMAS_BACKWARD   = 0x40000,      ///< apply backward
+  ARMAS_ABSA       = 0x80000,      ///< compute with |A| 
+  ARMAS_ABSB       = 0x100000,     ///< compute with |B|
+  ARMAS_ABS        = ARMAS_ABSA,   ///< compute with |x|
+  ARMAS_CONJA      = 0x200000,     ///< conjugate matrix A
+  ARMAS_CONJB      = 0x400000,     ///< conjugate matrix B
+  ARMAS_CONJ       = ARMAS_CONJA,  ///< conjugate
+  ARMAS_HHNEGATIVE = 0x800000,     ///< compute Householder for [-beta; 0]
+  ARMAS_NONNEG     = 0x1000000     ///< request non-negative result (householder)
 };
 
 /**
@@ -88,7 +90,7 @@ enum armas_pivots {
   ARMAS_PIVOT_BACKWARD = 0x1,   ///< Pivot backwards
   ARMAS_PIVOT_ROWS = 0x2,       ///< Pivot rows
   ARMAS_PIVOT_COLS = 0x4,       ///< Pivot columns
-  ARMAS_PIVOT_UPPER = 0x8,     ///< Pivot upper triangular symmetric matrix
+  ARMAS_PIVOT_UPPER = 0x8,      ///< Pivot upper triangular symmetric matrix
   ARMAS_PIVOT_LOWER = 0x10      ///< Pivot lower triangular symmetric matrix
 };
 
@@ -110,7 +112,8 @@ enum armas_opts {
   ARMAS_OBSVD_GOLUB = 0x400,     ///< use Golub algorithm in bidiagonal SVD
   ARMAS_OBSVD_DEMMEL = 0x800,    ///< use Demmel-Kahan algorithm in bidiagonal SVD
   ARMAS_OABSTOL = 0x1000,        ///< compute using absolute tolerance
-  ARMAS_OEXTPREC = 0x2000        ///< compute using extended precission
+  ARMAS_OEXTPREC = 0x2000,       ///< compute using extended precission
+  ARMAS_ONONNEG = 0x4000         ///< compute Householder with non-negative diagonal
 };
 
 /**
@@ -121,7 +124,7 @@ enum armas_errors {
   ARMAS_ENEED_VECTOR = 2,  ///< vector operand required
   ARMAS_EINVAL = 3,        ///< invalid parameter
   ARMAS_EIMP = 4,          ///< not implemented
-  ARMAS_EWORK = 5,         ///< workspace to small
+  ARMAS_EWORK = 5,         ///< workspace too small
   ARMAS_ESINGULAR = 6,     ///< singular matrix
   ARMAS_ENEGATIVE = 7,     ///< negative value on diagonal
   ARMAS_EMEMORY = 8,       ///< memory allocation failed
