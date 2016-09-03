@@ -16,38 +16,38 @@
  */
 int test_factor(int M, int N, int lb, int verbose)
 {
-  __Matrix A0, A1, tau0, tau1, W;
+  armas_x_dense_t A0, A1, tau0, tau1, W;
   int wsize;
-  __Dtype n0, n1;
+  DTYPE n0, n1;
   int wchange = lb > 8 ? 2*M : 0;
   armas_conf_t conf = *armas_conf_default();
   
   if (lb == 0)
     lb = 4;
 
-  matrix_init(&A0, M, N);
-  matrix_init(&A1, M, N);
-  matrix_init(&tau0, imin(M, N), 1);
-  matrix_init(&tau1, imin(M, N), 1);
+  armas_x_init(&A0, M, N);
+  armas_x_init(&A1, M, N);
+  armas_x_init(&tau0, imin(M, N), 1);
+  armas_x_init(&tau1, imin(M, N), 1);
 
   // set source data
-  matrix_set_values(&A0, unitrand, ARMAS_NULL);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, ARMAS_NULL);
+  armas_x_mcopy(&A1, &A0);
 
   // allocate workspace according the blocked invocation
   conf.lb = lb;
-  wsize = matrix_lqfactor_work(&A0, &conf);
-  matrix_init(&W, wsize-wchange, 1);
+  wsize = armas_x_lqfactor_work(&A0, &conf);
+  armas_x_init(&W, wsize-wchange, 1);
 
   // factorize
   conf.lb = 0;
-  matrix_lqfactor(&A0, &tau0, &W, &conf);
+  armas_x_lqfactor(&A0, &tau0, &W, &conf);
 
   conf.lb = lb;
-  matrix_lqfactor(&A1, &tau1, &W, &conf);
+  armas_x_lqfactor(&A1, &tau1, &W, &conf);
 
-  n0 = rel_error((__Dtype *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  n1 = rel_error((__Dtype *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+  n0 = rel_error((DTYPE *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n1 = rel_error((DTYPE *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
 
   printf("%s: unblk.LQ(A) == blk.LQ(A)\n", PASS(isOK(n0, N) && isOK(n1, N)));
   if (verbose > 0) {
@@ -55,10 +55,10 @@ int test_factor(int M, int N, int lb, int verbose)
     printf("  || error.tau ||_2: %e [%d]\n", n1, ndigits(n1));
   }
   
-  matrix_release(&A0);
-  matrix_release(&A1);
-  matrix_release(&tau0);
-  matrix_release(&tau1);
+  armas_x_release(&A0);
+  armas_x_release(&A1);
+  armas_x_release(&tau0);
+  armas_x_release(&tau1);
 
   return isOK(n0, N) && isOK(n1, N);
 }

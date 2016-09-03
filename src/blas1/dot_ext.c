@@ -66,7 +66,7 @@ DTYPE __vec_dot_ext(const mvec_t *X,  const mvec_t *Y, int N)
  *
  * @ingroup blas1
  */
-DTYPE __armas_ex_dot(const __armas_dense_t *x, const __armas_dense_t *y, armas_conf_t *conf)
+DTYPE armas_x_ex_dot(const armas_x_dense_t *x, const armas_x_dense_t *y, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
@@ -80,7 +80,7 @@ DTYPE __armas_ex_dot(const __armas_dense_t *x, const __armas_dense_t *y, armas_c
         if (conf) conf->error = ARMAS_ENEED_VECTOR;
         return __ZERO;
     }
-    if (__armas_size(x) != __armas_size(y)) {
+    if (armas_x_size(x) != armas_x_size(y)) {
         if (conf) conf->error = ARMAS_ESIZE;
         return __ZERO;
     }
@@ -88,7 +88,7 @@ DTYPE __armas_ex_dot(const __armas_dense_t *x, const __armas_dense_t *y, armas_c
     const mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
     const mvec_t Y = {y->elems, (y->rows == 1 ? y->step : 1)};
 
-    return __vec_dot_ext(&Y, &X, __armas_size(y));
+    return __vec_dot_ext(&Y, &X, armas_x_size(y));
 }
 #endif
 

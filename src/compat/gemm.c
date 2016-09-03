@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_mult)
+#if defined(armas_x_mult)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -28,19 +28,19 @@ void __gemmf(char *transa, char *transb, int *m, int *n, int *k, DTYPE *alpha, D
             int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t c, a, b;
+    armas_x_dense_t c, a, b;
     int flags = 0;
 
-    __armas_make(&c, *m, *n, *ldc, C);
-    __armas_make(&a, *m, *k, *lda, A);
-    __armas_make(&b, *k, *n, *ldb, B);
+    armas_x_make(&c, *m, *n, *ldc, C);
+    armas_x_make(&a, *m, *k, *lda, A);
+    armas_x_make(&b, *k, *n, *ldb, B);
 
     if (toupper(*transa) == 'T') 
         flags |= ARMAS_TRANSA;
     if (toupper(*transb) == 'T')
         flags |= ARMAS_TRANSB;
 
-    __armas_mult(&c, &a, &b, *alpha, *beta, flags, conf);
+    armas_x_mult(&c, &a, &b, *alpha, *beta, flags, conf);
 }
 #endif
 
@@ -50,7 +50,7 @@ void __cblas_gemm(int order, int transa,  int transb, int M, int N,
                   DTYPE beta, DTYPE *C, int ldc)
 {
     armas_conf_t conf = *armas_conf_default();
-    __armas_dense_t Ca, Aa, Ba;
+    armas_x_dense_t Ca, Aa, Ba;
     int flags = 0;
     
     switch (order) {
@@ -58,40 +58,40 @@ void __cblas_gemm(int order, int transa,  int transb, int M, int N,
         if (transa == CblasTrans) {
             flags |= ARMAS_TRANSA;
             // error: K > lda
-            __armas_make(&Aa, K, M, lda, A);
+            armas_x_make(&Aa, K, M, lda, A);
         } else {
             // error: M > lda
-            __armas_make(&Aa, M, K, lda, A);
+            armas_x_make(&Aa, M, K, lda, A);
         }
         if (transb == CblasTrans) {
             flags |= ARMAS_TRANSB;
-            __armas_make(&Ba, N, K, ldb, B);
+            armas_x_make(&Ba, N, K, ldb, B);
         } else {
-            __armas_make(&Ba, K, N, ldb, B);
+            armas_x_make(&Ba, K, N, ldb, B);
         }
-        __armas_make(&Ca, M, N, ldc, C);
+        armas_x_make(&Ca, M, N, ldc, C);
         break;
     case CblasRowMajor:
         if (transa == CblasNoTrans) {
             flags |= ARMAS_TRANSA;
             // error: M > lda
-            __armas_make(&Aa, M, K, lda, A);
+            armas_x_make(&Aa, M, K, lda, A);
         } else {
             // error: K > lda
-            __armas_make(&Aa, K, M, lda, A);
+            armas_x_make(&Aa, K, M, lda, A);
         }
         if (transb == CblasNoTrans) {
             flags |= ARMAS_TRANSB;
-            __armas_make(&Ba, K, N, ldb, B);
+            armas_x_make(&Ba, K, N, ldb, B);
         } else {
-            __armas_make(&Ba, N, K, ldb, B);
+            armas_x_make(&Ba, N, K, ldb, B);
         }
-        __armas_make(&Ca, N, M, ldc, C);
+        armas_x_make(&Ca, N, M, ldc, C);
         break;
     default:
         return;
     }
-    __armas_mult(&Ca, &Aa, &Ba, alpha, beta, flags, &conf);
+    armas_x_mult(&Ca, &Aa, &Ba, alpha, beta, flags, &conf);
 }
 #endif
 

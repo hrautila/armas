@@ -14,7 +14,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_blas) 
+#if defined(armas_x_blas) 
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -45,9 +45,9 @@
  *               (ABR)
  */
 static
-int __find_bkpivot_upper(__armas_dense_t *A, int *nr, int *np, armas_conf_t *conf)
+int __find_bkpivot_upper(armas_x_dense_t *A, int *nr, int *np, armas_conf_t *conf)
 {
-  __armas_dense_t rcol, qrow;
+  armas_x_dense_t rcol, qrow;
   DTYPE amax, rmax, qmax, qmax2;
   int r, q, lastcol;
 
@@ -56,12 +56,12 @@ int __find_bkpivot_upper(__armas_dense_t *A, int *nr, int *np, armas_conf_t *con
     return 0;
   }
   lastcol = A->rows - 1;
-  amax = __ABS(__armas_get(A, lastcol, lastcol));
+  amax = __ABS(armas_x_get(A, lastcol, lastcol));
   // column above diagonal on [lastcol, lastcol]
-  __armas_submatrix(&rcol, A, 0, lastcol, lastcol, 1);
-  r = __armas_iamax(&rcol, conf);
+  armas_x_submatrix(&rcol, A, 0, lastcol, lastcol, 1);
+  r = armas_x_iamax(&rcol, conf);
   // max off-diagonal on first column at index r
-  rmax = __ABS(__armas_get(A, r, lastcol));
+  rmax = __ABS(armas_x_get(A, r, lastcol));
   if (amax >= bkALPHA*rmax) {
     // no pivoting, 1x1 diagonal
     *nr = -1; *np = 1;
@@ -70,14 +70,14 @@ int __find_bkpivot_upper(__armas_dense_t *A, int *nr, int *np, armas_conf_t *con
   // max off-diagonal on r'th row at index q
   qmax = 0.0;
   if (r > 0) {
-    __armas_submatrix(&qrow, A, 0, r, r, 1);
-    q = __armas_iamax(&qrow, conf);
-    qmax = __ABS(__armas_get(A, q, r));
+    armas_x_submatrix(&qrow, A, 0, r, r, 1);
+    q = armas_x_iamax(&qrow, conf);
+    qmax = __ABS(armas_x_get(A, q, r));
   }
   // elements right of diagonal
-  __armas_submatrix(&qrow, A, r, r+1, 1, lastcol-r);
-  q = __armas_iamax(&qrow, conf);
-  qmax2 = __ABS(__armas_get(&qrow, 0, q));
+  armas_x_submatrix(&qrow, A, r, r+1, 1, lastcol-r);
+  q = armas_x_iamax(&qrow, conf);
+  qmax2 = __ABS(armas_x_get(&qrow, 0, q));
   if (qmax2 > qmax)
     qmax = qmax2;
 
@@ -87,7 +87,7 @@ int __find_bkpivot_upper(__armas_dense_t *A, int *nr, int *np, armas_conf_t *con
     *nr = -1; *np = 1;
     return 0;
   }
-  rmax = __ABS(__armas_get(A, r, r));
+  rmax = __ABS(armas_x_get(A, r, r));
   if (rmax >= bkALPHA*qmax) {
     // 1x1 pivoting, interchange with k, r
     *nr = r; *np = 1;
@@ -103,11 +103,11 @@ int __find_bkpivot_upper(__armas_dense_t *A, int *nr, int *np, armas_conf_t *con
  *
  * Corresponds lapack.DSYTF2
  */
-int __unblk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
+int __unblk_bkfactor_upper(armas_x_dense_t *A, armas_x_dense_t *W,
                            armas_pivot_t *P, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ATR, ABR, A00, a01, a11, A22;
-  __armas_dense_t a11inv, cwrk;
+  armas_x_dense_t ATL, ATR, ABR, A00, a01, a11, A22;
+  armas_x_dense_t a11inv, cwrk;
   armas_pivot_t pT, pB, p0, p1, p2;
   DTYPE t, a11val, a, b, d, scale;
   DTYPE abuf[4];
@@ -121,10 +121,10 @@ int __unblk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
               &pB,   /**/  P, 0, ARMAS_PBOTTOM);
 
   // permanent working space for symmetric inverse of 2x2 a11
-  //__armas_submatrix(&a11inv, W, 0, W->cols-2, 2, 2);
-  __armas_make(&a11inv, 2, 2, 2, abuf);
-  __armas_set(&a11inv, 0, 1, -1.0);
-  __armas_set(&a11inv, 1, 0, -1.0);
+  //armas_x_submatrix(&a11inv, W, 0, W->cols-2, 2, 2);
+  armas_x_make(&a11inv, 2, 2, 2, abuf);
+  armas_x_set(&a11inv, 0, 1, -1.0);
+  armas_x_set(&a11inv, 1, 0, -1.0);
   
   nc = 0;
   while (ATL.cols > 0) {
@@ -139,9 +139,9 @@ int __unblk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
          * a11 ==   ----------------  2-by-2 pivot
          *          [nr,r] | [nr,nr]
          */
-        t = __armas_get(&ATL, nr-1, nr);
-        __armas_set(&ATL, nr-1, nr, __armas_get(&ATL, r, nr));
-        __armas_set(&ATL, r, nr, t);
+        t = armas_x_get(&ATL, nr-1, nr);
+        armas_x_set(&ATL, nr-1, nr, armas_x_get(&ATL, r, nr));
+        armas_x_set(&ATL, r, nr, t);
       }
     }
     // ---------------------------------------------------------------------------
@@ -157,31 +157,31 @@ int __unblk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
     // ---------------------------------------------------------------------------
     if (np == 1) {
       // A00 = A00 - a01*a01.T/a11
-      a11val = __armas_get(&a11, 0, 0);
-      __armas_mvupdate_trm(&A00, &a01, &a01, -1.0/a11val, ARMAS_UPPER, conf);
+      a11val = armas_x_get(&a11, 0, 0);
+      armas_x_mvupdate_trm(&A00, &a01, &a01, -1.0/a11val, ARMAS_UPPER, conf);
       // a01 = a01/a11
-      __armas_invscale(&a01, a11val, conf);
+      armas_x_invscale(&a01, a11val, conf);
       // store pivot point relative to original matrix
       pi = r == -1 ? ATL.rows : r + 1;
       armas_pivot_set(&p1, 0, pi);
     }
     else if (np == 2) {
       /* see comments in __unblk_bkfactor_lower() */
-      a = __armas_get(&a11, 0, 0);
-      b = __armas_get(&a11, 0, 1);
-      d = __armas_get(&a11, 1, 1);
-      __armas_set(&a11inv, 0, 0, d/b);
-      __armas_set(&a11inv, 1, 1, a/b);
+      a = armas_x_get(&a11, 0, 0);
+      b = armas_x_get(&a11, 0, 1);
+      d = armas_x_get(&a11, 1, 1);
+      armas_x_set(&a11inv, 0, 0, d/b);
+      armas_x_set(&a11inv, 1, 1, a/b);
       // denominator: (a/b)*(d/b)-1.0 == (a*d - b^2)/b^2
       scale = 1.0 / ((a/b)*(d/b) - 1.0);
       scale /= b;
       // cwrk = a01
-      __armas_submatrix(&cwrk, W, 2, 0, a01.rows, np);
-      __armas_mcopy(&cwrk, &a01);
+      armas_x_submatrix(&cwrk, W, 2, 0, a01.rows, np);
+      armas_x_mcopy(&cwrk, &a01);
       // a01 := a01*a11.-1
-      __armas_mult(&a01, &cwrk, &a11inv, scale, 0.0, ARMAS_NONE, conf);
+      armas_x_mult(&a01, &cwrk, &a11inv, scale, 0.0, ARMAS_NONE, conf);
       // A00 := A00 - a01*a11.-1*a01.T = A00 - a01*cwrk.T
-      __armas_update_trm(&A00, &a01, &cwrk, -1.0, 1.0, ARMAS_UPPER|ARMAS_TRANSB, conf);
+      armas_x_update_trm(&A00, &a01, &cwrk, -1.0, 1.0, ARMAS_UPPER|ARMAS_TRANSB, conf);
       // store pivot points
       pi = r + 1;
       armas_pivot_set(&p1, 0, -pi);
@@ -223,11 +223,11 @@ int __unblk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
  * actual values of pivot column/row AL(r2), without the diagonal pivots.
  */
 static
-int __build_bkpivot_upper(__armas_dense_t *AL, __armas_dense_t *AR,
-                          __armas_dense_t *WL, __armas_dense_t *WR,
+int __build_bkpivot_upper(armas_x_dense_t *AL, armas_x_dense_t *AR,
+                          armas_x_dense_t *WL, armas_x_dense_t *WR,
                           int k, int *nr, int *np, armas_conf_t *conf)
 {
-  __armas_dense_t rcol, qrow, src, wk, wkp1, wkr, wrow;
+  armas_x_dense_t rcol, qrow, src, wk, wkp1, wkr, wrow;
   int r, q, lc, wc, lr;
   DTYPE amax, rmax, qmax, p1;
   
@@ -236,12 +236,12 @@ int __build_bkpivot_upper(__armas_dense_t *AL, __armas_dense_t *AR,
   lr = AL->rows - 1;
 
   // Copy AR column 0 to WR column 0 and update with WL[0:,]
-  __armas_submatrix(&src, AL, 0, lc, AL->rows, 1);
-  __armas_submatrix(&wk,  WL, 0, wc, AL->rows, 1);
-  __armas_copy(&wk, &src, conf);
+  armas_x_submatrix(&src, AL, 0, lc, AL->rows, 1);
+  armas_x_submatrix(&wk,  WL, 0, wc, AL->rows, 1);
+  armas_x_copy(&wk, &src, conf);
   if (k > 0) {
-    __armas_submatrix(&wrow, WR, lr, 0, 1, WR->cols);
-    __armas_mvmult(&wk, AR, &wrow, -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_submatrix(&wrow, WR, lr, 0, 1, WR->cols);
+    armas_x_mvmult(&wk, AR, &wrow, -1.0, 1.0, ARMAS_NONE, conf);
   }
   if (AL->rows == 1) {
     *nr = -1; *np = 1;
@@ -249,12 +249,12 @@ int __build_bkpivot_upper(__armas_dense_t *AL, __armas_dense_t *AR,
   }
 
   // amax is on-diagonal element of current column
-  amax = __ABS(__armas_get(WL, lr, wc));
+  amax = __ABS(armas_x_get(WL, lr, wc));
   // find max off-diagonal on last column
-  __armas_submatrix(&rcol, WL, 0, wc, lr, 1);
+  armas_x_submatrix(&rcol, WL, 0, wc, lr, 1);
   // r is row index on WR and rmax is it abs value
-  r = __armas_iamax(&rcol, conf);
-  rmax = __ABS(__armas_get(&rcol, r, 0));
+  r = armas_x_iamax(&rcol, conf);
+  rmax = __ABS(armas_x_get(&rcol, r, 0));
   if (amax >= bkALPHA*rmax) {
     // no pivoting, 1x1 diagonal
     *nr = -1; *np = 1;
@@ -262,31 +262,31 @@ int __build_bkpivot_upper(__armas_dense_t *AL, __armas_dense_t *AR,
   }
 
   // now we need to copy row r to WL[:,wc-1] (= wkp1) and update it
-  __armas_submatrix(&wkp1, WL, 0, wc-1, AL->rows, 1);
+  armas_x_submatrix(&wkp1, WL, 0, wc-1, AL->rows, 1);
   if (r > 0) {
     // above diagonal part of AL
-  __armas_submatrix(&qrow, AL, 0, r, r, 1);
-  __armas_submatrix(&wkr,  &wkp1, 0, 0, r, 1);
-  __armas_copy(&wkr, &qrow, conf);
+  armas_x_submatrix(&qrow, AL, 0, r, r, 1);
+  armas_x_submatrix(&wkr,  &wkp1, 0, 0, r, 1);
+  armas_x_copy(&wkr, &qrow, conf);
   }
-  __armas_submatrix(&qrow, AL,    r, r, 1, AL->rows-r);
-  __armas_submatrix(&wkr,  &wkp1, r, 0, AL->rows-r, 1);
-  __armas_copy(&wkr, &qrow, conf);
+  armas_x_submatrix(&qrow, AL,    r, r, 1, AL->rows-r);
+  armas_x_submatrix(&wkr,  &wkp1, r, 0, AL->rows-r, 1);
+  armas_x_copy(&wkr, &qrow, conf);
 
   if (k > 0) {
     // update wkp1 
-    __armas_submatrix(&wrow, WR, r, 0, 1, WR->cols);
-    __armas_mvmult(&wkp1, AR, &wrow, -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_submatrix(&wrow, WR, r, 0, 1, WR->cols);
+    armas_x_mvmult(&wkp1, AR, &wrow, -1.0, 1.0, ARMAS_NONE, conf);
   }
   // set on-diagonal entry to zero to avoid finding it
-  p1 = __armas_get(&wkp1, r, 0);
-  __armas_set(&wkp1, r, 0, 0.0);
+  p1 = armas_x_get(&wkp1, r, 0);
+  armas_x_set(&wkp1, r, 0, 0.0);
 
   // max off-diagonal on r'th column/row on at index q
-  q = __armas_iamax(&wkp1, conf);
-  qmax = __ABS(__armas_get(&wkp1, q, 0));
+  q = armas_x_iamax(&wkp1, conf);
+  qmax = __ABS(armas_x_get(&wkp1, q, 0));
   // restore on-diagonal entry
-  __armas_set(&wkp1, r, 0, p1);
+  armas_x_set(&wkp1, r, 0, p1);
 
   
   if (amax >= bkALPHA*rmax*(rmax/qmax)) {
@@ -294,15 +294,15 @@ int __build_bkpivot_upper(__armas_dense_t *AL, __armas_dense_t *AR,
     *nr = -1; *np = 1;
     return 0;
   }
-  rmax = __ABS(__armas_get(WL, r, wc-1));
+  rmax = __ABS(armas_x_get(WL, r, wc-1));
   if (rmax >= bkALPHA*qmax) {
     // 1x1 pivoting, interchange with k, r
     // move pivot row in column WR[:,1] to WR[:,0]
-    __armas_submatrix(&src,  WL, 0, wc-1, AL->rows, 1);
-    __armas_submatrix(&wkp1, WL, 0, wc,   AL->rows, 1);
-    __armas_copy(&wkp1, &src, conf);
-    __armas_set(&wkp1, -1, 0, __armas_get(&src,  r, 0));
-    __armas_set(&wkp1,  r, 0, __armas_get(&src, -1, 0));
+    armas_x_submatrix(&src,  WL, 0, wc-1, AL->rows, 1);
+    armas_x_submatrix(&wkp1, WL, 0, wc,   AL->rows, 1);
+    armas_x_copy(&wkp1, &src, conf);
+    armas_x_set(&wkp1, -1, 0, armas_x_get(&src,  r, 0));
+    armas_x_set(&wkp1,  r, 0, armas_x_get(&src, -1, 0));
     *nr = r; *np = 1;
     return 1;
   } 
@@ -321,11 +321,11 @@ int __build_bkpivot_upper(__armas_dense_t *AL, __armas_dense_t *AR,
  * Corresponds lapack.DLASYF
  */
 static
-int __unblk_bkbounded_upper(__armas_dense_t *A, __armas_dense_t *W,
+int __unblk_bkbounded_upper(armas_x_dense_t *A, armas_x_dense_t *W,
                             armas_pivot_t *P, int ncol, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ATR, ABL, ABR, A00, a01, A02, a11, a12, A22;
-  __armas_dense_t a11inv, cwrk, w00, w01, w11;
+  armas_x_dense_t ATL, ATR, ABL, ABR, A00, a01, A02, a11, a12, A22;
+  armas_x_dense_t a11inv, cwrk, w00, w01, w11;
   armas_pivot_t pT, pB, p0, p1, p2;
   DTYPE t1, tr, a11val, a, b, d, scale;
   int nc, r, np, pi;
@@ -338,9 +338,9 @@ int __unblk_bkbounded_upper(__armas_dense_t *A, __armas_dense_t *W,
               &pB,   /**/  P, 0, ARMAS_PBOTTOM);
 
   // permanent working space for symmetric inverse of 2x2 a11
-  __armas_submatrix(&a11inv, W, W->rows-2, 0, 2, 2);
-  __armas_set(&a11inv, 1, 0, -1.0);
-  __armas_set(&a11inv, 0, 1, -1.0);
+  armas_x_submatrix(&a11inv, W, W->rows-2, 0, 2, 2);
+  armas_x_set(&a11inv, 1, 0, -1.0);
+  armas_x_set(&a11inv, 0, 1, -1.0);
   
   nc = 0;
   if (ncol > A->cols)
@@ -371,15 +371,15 @@ int __unblk_bkbounded_upper(__armas_dense_t *A, __armas_dense_t *W,
          * w00 =a11 ==   --------------- 
          *               [-1,r] | [-1,-1]
          */
-        t1 = __armas_get(&w00, k, -1);
-        tr = __armas_get(&w00, r, -1);
-        __armas_set(&w00, k, -1, tr);
-        __armas_set(&w00, r, -1, t1);
+        t1 = armas_x_get(&w00, k, -1);
+        tr = armas_x_get(&w00, r, -1);
+        armas_x_set(&w00, k, -1, tr);
+        armas_x_set(&w00, r, -1, t1);
         // interchange diagonal entries on w00[:,-2] 
-        t1 = __armas_get(&w00, k, -2);
-        tr = __armas_get(&w00, r, -2);
-        __armas_set(&w00, k, -2, tr);
-        __armas_set(&w00, r, -2, t1);
+        t1 = armas_x_get(&w00, k, -2);
+        tr = armas_x_get(&w00, r, -2);
+        armas_x_set(&w00, k, -2, tr);
+        armas_x_set(&w00, r, -2, t1);
       }
     }
     // ---------------------------------------------------------------------------
@@ -393,14 +393,14 @@ int __unblk_bkbounded_upper(__armas_dense_t *A, __armas_dense_t *W,
                             &p1,
                             &p2,     /**/ P, np, ARMAS_PTOP);
     // ---------------------------------------------------------------------------
-    __armas_submatrix(&cwrk, &w00, 0, w00.cols-np, a01.rows, np);
+    armas_x_submatrix(&cwrk, &w00, 0, w00.cols-np, a01.rows, np);
     if (np == 1) {
       // 
-      a11val = __armas_get(&w00, a01.rows, w00.cols-np);
-      __armas_set(&a11, 0, 0, a11val);
+      a11val = armas_x_get(&w00, a01.rows, w00.cols-np);
+      armas_x_set(&a11, 0, 0, a11val);
       // a01 = a01/a11
-      __armas_copy(&a01, &cwrk, conf);
-      __armas_invscale(&a01, a11val, conf);
+      armas_x_copy(&a01, &cwrk, conf);
+      armas_x_invscale(&a01, a11val, conf);
       // store pivot point relative to original matrix
       pi = r == -1 ? ATL.rows : r + 1;
       armas_pivot_set(&p1, 0, pi);
@@ -409,20 +409,20 @@ int __unblk_bkbounded_upper(__armas_dense_t *A, __armas_dense_t *W,
        *  w00 == ------  == a11 --> a11.-1 == -------- * scale
        *          . | d                        -1 | a/b
        */
-      a = __armas_get(&w00, ATL.rows-2, -2);
-      b = __armas_get(&w00, ATL.rows-2, -1);
-      d = __armas_get(&w00, ATL.rows-1, -1);
-      __armas_set(&a11inv, 0, 0, d/b);
-      __armas_set(&a11inv, 1, 1, a/b);
+      a = armas_x_get(&w00, ATL.rows-2, -2);
+      b = armas_x_get(&w00, ATL.rows-2, -1);
+      d = armas_x_get(&w00, ATL.rows-1, -1);
+      armas_x_set(&a11inv, 0, 0, d/b);
+      armas_x_set(&a11inv, 1, 1, a/b);
       // denominator: (a/b)*(d/b)-1.0 == (a*d - b^2)/b^2
       scale = 1.0 / ((a/b)*(d/b) - 1.0);
       scale /= b;
       // cwrk = a01
       // a01 := a01*a11.-1
-      __armas_mult(&a01, &cwrk, &a11inv, scale, 0.0, ARMAS_NONE, conf);
-      __armas_set(&a11, 0, 0, a);
-      __armas_set(&a11, 0, 1, b);
-      __armas_set(&a11, 1, 1, d);
+      armas_x_mult(&a01, &cwrk, &a11inv, scale, 0.0, ARMAS_NONE, conf);
+      armas_x_set(&a11, 0, 0, a);
+      armas_x_set(&a11, 0, 1, b);
+      armas_x_set(&a11, 1, 1, d);
       // store pivot points
       pi = r + 1;
       armas_pivot_set(&p1, 0, -pi);
@@ -439,11 +439,11 @@ int __unblk_bkbounded_upper(__armas_dense_t *A, __armas_dense_t *W,
 }
 
 
-int __blk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
+int __blk_bkfactor_upper(armas_x_dense_t *A, armas_x_dense_t *W,
                          armas_pivot_t *P, int lb, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ATR, ABL, ABR, A00, A01, A02, A11, A12, A22;
-  __armas_dense_t cwrk, s, d;
+  armas_x_dense_t ATL, ATR, ABL, ABR, A00, A01, A02, A11, A12, A22;
+  armas_x_dense_t cwrk, s, d;
   armas_pivot_t pT, pB, p0, p1, p2;
   int nblk, k, r, r1, rlen, np, colno;
 
@@ -470,9 +470,9 @@ int __blk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
     // here [A11 A21] as been factorized, now update A22
 
     // nblk last columns in W is original A01
-    __armas_submatrix(&cwrk, W, 0, W->cols-nblk, A01.rows, nblk);
+    armas_x_submatrix(&cwrk, W, 0, W->cols-nblk, A01.rows, nblk);
     // A00 := A00 - L01*D1*L01.T == A00 - A01*W.T
-    __armas_update_trm(&A00, &A01, &cwrk, -1.0, 1.0, ARMAS_UPPER|ARMAS_TRANSB, conf);
+    armas_x_update_trm(&A00, &A01, &cwrk, -1.0, 1.0, ARMAS_UPPER|ARMAS_TRANSB, conf);
 
     // undo partial row pivots right of diagonal from lower level
     for (k = 0; k < nblk; k++) {
@@ -486,9 +486,9 @@ int __blk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
       }
 
       rlen = ATL.cols - colno - np;
-      __armas_submatrix(&s, &ATL, colno, colno+np, 1, rlen);
-      __armas_submatrix(&d, &ATL, r-1,   colno+np, 1, rlen);
-      __armas_swap(&d, &s, conf);
+      armas_x_submatrix(&s, &ATL, colno, colno+np, 1, rlen);
+      armas_x_submatrix(&d, &ATL, r-1,   colno+np, 1, rlen);
+      armas_x_swap(&d, &s, conf);
       if (r1 < 0) {
         // skip the other entry in 2x2 pivots
         k++;
@@ -509,12 +509,12 @@ int __blk_bkfactor_upper(__armas_dense_t *A, __armas_dense_t *W,
 }
 
 
-int __unblk_bksolve_upper(__armas_dense_t *B, __armas_dense_t *A,
+int __unblk_bksolve_upper(armas_x_dense_t *B, armas_x_dense_t *A,
                           armas_pivot_t *P, int phase, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ATR, ABL, ABR, A00, a01, A02, a11, a12, A22;
-  __armas_dense_t BT, BB, B0, b1, B2, Bx;
-  __armas_dense_t *Aref;
+  armas_x_dense_t ATL, ATR, ABL, ABR, A00, a01, A02, a11, a12, A22;
+  armas_x_dense_t BT, BB, B0, b1, B2, Bx;
+  armas_x_dense_t *Aref;
   armas_pivot_t pT, pB, p0, p1, p2;
   int aStart, aDir, bStart, bDir;
   int nc, r, np, k, pr;
@@ -572,9 +572,9 @@ int __unblk_bksolve_upper(__armas_dense_t *B, __armas_dense_t *A,
           __swap_rows(&BT, BT.rows-1, pr-1, conf);
         }
         // B0 = B0 - a01*b1
-        __armas_mvupdate(&B0, &a01, &b1, -1.0, conf);
+        armas_x_mvupdate(&B0, &a01, &b1, -1.0, conf);
         // b1 = b1/d1
-        __armas_invscale(&b1, __armas_get(&a11, 0, 0), conf);
+        armas_x_invscale(&b1, armas_x_get(&a11, 0, 0), conf);
         nc -= 1;
       }
       else if (np == 2) {
@@ -582,21 +582,21 @@ int __unblk_bksolve_upper(__armas_dense_t *B, __armas_dense_t *A,
           // swap rows on top part of B
           __swap_rows(&BT, BT.rows-2, -pr-1, conf);
         }
-        b   = __armas_get(&a11, 0, 1);
-        apb = __armas_get(&a11, 0, 0) / b;
-        dpb = __armas_get(&a11, 1, 1) / b;
+        b   = armas_x_get(&a11, 0, 1);
+        apb = armas_x_get(&a11, 0, 0) / b;
+        dpb = armas_x_get(&a11, 1, 1) / b;
         // (a/b)*(d/b)-1.0 == (a*d - b^2)/b^2
         scale = apb*dpb - 1.0;
         scale *= b;
         // B0 = B0 - a01*b1
-        __armas_mult(&B0, &a01, &b1, -1.0, 1.0, ARMAS_NONE, conf);
+        armas_x_mult(&B0, &a01, &b1, -1.0, 1.0, ARMAS_NONE, conf);
         // b1 = a11.-1*b1.T
         // (2x2 block, no function for doing this in-place)
         for (k = 0; k < b1.cols; k++) {
-          s0 = __armas_get(&b1, 0, k);
-          s1 = __armas_get(&b1, 1, k);
-          __armas_set(&b1, 0, k, (dpb*s0-s1)/scale);
-          __armas_set(&b1, 1, k, (apb*s1-s0)/scale);
+          s0 = armas_x_get(&b1, 0, k);
+          s1 = armas_x_get(&b1, 1, k);
+          armas_x_set(&b1, 0, k, (dpb*s0-s1)/scale);
+          armas_x_set(&b1, 1, k, (apb*s1-s0)/scale);
         }
         nc -= 2;
       }
@@ -604,7 +604,7 @@ int __unblk_bksolve_upper(__armas_dense_t *B, __armas_dense_t *A,
 
     case 2:
       if (np == 1) {
-        __armas_mvmult(&b1, &B0, &a01, -1.0, 1.0, ARMAS_TRANS, conf);
+        armas_x_mvmult(&b1, &B0, &a01, -1.0, 1.0, ARMAS_TRANS, conf);
         if (pr != nc) {
           // swap rows on top part of B
           __merge2x1(&Bx, &B0, &b1);
@@ -613,7 +613,7 @@ int __unblk_bksolve_upper(__armas_dense_t *B, __armas_dense_t *A,
         nc += 1;
       }
       else if (np == 2) {
-        __armas_mult(&b1, &a01, &B0, -1.0, 1.0, ARMAS_TRANSA, conf);
+        armas_x_mult(&b1, &a01, &B0, -1.0, 1.0, ARMAS_TRANSA, conf);
         if (pr != -nc) {
           // swap rows on top part of B
           __merge2x1(&Bx, &B0, &b1);

@@ -16,32 +16,32 @@
 #define __ERROR 1e-8
 #endif
 
-__Dtype unit100(int i, int j)
+DTYPE unit100(int i, int j)
 {
     return 100.0*unitrand(i, j);
 }
 
 int test_equal(int N, int lb, int flags, int verbose)
 {
-    __Matrix A0, A1, A2;
-    __Dtype n0, n1;
+    armas_x_dense_t A0, A1, A2;
+    DTYPE n0, n1;
     char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
     int ok, fails = 0;;
     
     armas_conf_t conf = *armas_conf_default();
     
-    matrix_init(&A0, N, N);
-    matrix_init(&A1, N, N);
-    matrix_init(&A2, N, N);
+    armas_x_init(&A0, N, N);
+    armas_x_init(&A1, N, N);
+    armas_x_init(&A2, N, N);
 
-    matrix_set_values(&A0, unit100, flags);
-    matrix_mcopy(&A1, &A0);
-    matrix_mcopy(&A2, &A0);
+    armas_x_set_values(&A0, unit100, flags);
+    armas_x_mcopy(&A1, &A0);
+    armas_x_mcopy(&A2, &A0);
 
     // unblocked; inverse twice
     conf.lb = 0;
-    matrix_inverse_trm(&A1, flags, &conf);
-    matrix_inverse_trm(&A1, flags, &conf);
+    armas_x_inverse_trm(&A1, flags, &conf);
+    armas_x_inverse_trm(&A1, flags, &conf);
     n0 = rel_error(&n1, &A1, &A0, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
     fails += 1 - ok;
@@ -52,8 +52,8 @@ int test_equal(int N, int lb, int flags, int verbose)
 
     // unblocked; inverse twice
     conf.lb = lb;
-    matrix_inverse_trm(&A2, flags, &conf);
-    matrix_inverse_trm(&A2, flags, &conf);
+    armas_x_inverse_trm(&A2, flags, &conf);
+    armas_x_inverse_trm(&A2, flags, &conf);
     n0 = rel_error(&n1, &A2, &A0, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
     fails += 1 - ok;
@@ -62,41 +62,41 @@ int test_equal(int N, int lb, int flags, int verbose)
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
     
-    matrix_release(&A0);
-    matrix_release(&A1);
-    matrix_release(&A2);
+    armas_x_release(&A0);
+    armas_x_release(&A1);
+    armas_x_release(&A2);
     return fails;
 }
 
 int test_ident(int N, int lb, int flags, int verbose)
 {
-    __Matrix A0, A1, A2, C, C0, D;
-    __Dtype n0, n1;
+    armas_x_dense_t A0, A1, A2, C, C0, D;
+    DTYPE n0, n1;
     char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
     int ok, fails = 0;;
     
     armas_conf_t conf = *armas_conf_default();
     
-    matrix_init(&A0, N, N);
-    matrix_init(&A1, N, N);
-    matrix_init(&A2, N, N);
-    matrix_init(&C, N, N);
+    armas_x_init(&A0, N, N);
+    armas_x_init(&A1, N, N);
+    armas_x_init(&A2, N, N);
+    armas_x_init(&C, N, N);
 
     // make unit matrix C0
-    matrix_init(&C0, N, N);
-    matrix_diag(&D, &C0, 0);
-    matrix_madd(&D, 1.0, 0);
+    armas_x_init(&C0, N, N);
+    armas_x_diag(&D, &C0, 0);
+    armas_x_madd(&D, 1.0, 0);
     
-    matrix_set_values(&A0, unit100, flags);
-    matrix_mcopy(&A1, &A0);
-    matrix_mcopy(&A2, &A0);
+    armas_x_set_values(&A0, unit100, flags);
+    armas_x_mcopy(&A1, &A0);
+    armas_x_mcopy(&A2, &A0);
 
     // unblocked
     conf.lb = 0;
-    matrix_inverse_trm(&A1, flags, &conf);
+    armas_x_inverse_trm(&A1, flags, &conf);
 
     // C = A*A.-1
-    matrix_mult(&C, &A0, &A1, 1.0, 0.0, 0, &conf);
+    armas_x_mult(&C, &A0, &A1, 1.0, 0.0, 0, &conf);
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_INF, ARMAS_NONE, &conf);
     ok = isFINE(n0, N*__ERROR);
     //ok = isOK(n0, N);
@@ -108,9 +108,9 @@ int test_ident(int N, int lb, int flags, int verbose)
 
     // blocked
     conf.lb = lb;
-    matrix_inverse_trm(&A2, flags, &conf);
+    armas_x_inverse_trm(&A2, flags, &conf);
 
-    matrix_mult(&C, &A0, &A2, 1.0, 0.0, 0, &conf);
+    armas_x_mult(&C, &A0, &A2, 1.0, 0.0, 0, &conf);
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_INF, ARMAS_NONE, &conf);
     ok = isFINE(n0, N*__ERROR);
     fails += 1 - ok;
@@ -126,11 +126,11 @@ int test_ident(int N, int lb, int flags, int verbose)
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
 
-    matrix_release(&A0);
-    matrix_release(&A1);
-    matrix_release(&A2);
-    matrix_release(&C);
-    matrix_release(&C0);
+    armas_x_release(&A0);
+    armas_x_release(&A1);
+    armas_x_release(&A2);
+    armas_x_release(&C);
+    armas_x_release(&C0);
     return fails;
 }    
 

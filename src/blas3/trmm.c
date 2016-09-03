@@ -17,7 +17,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_mult_trm) 
+#if defined(armas_x_mult_trm) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -110,7 +110,7 @@ void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
 
 static
 int __mult_trm_threaded(int blknum, int nblk, 
-                         __armas_dense_t *B, const __armas_dense_t *A, 
+                         armas_x_dense_t *B, const armas_x_dense_t *A, 
                          DTYPE alpha, int flags, armas_conf_t *conf)
 {
   int ir, ie, err;
@@ -186,7 +186,7 @@ int __mult_trm_threaded(int blknum, int nblk,
 
 static
 int __mult_trm_schedule(int nblk, 
-                        __armas_dense_t *B, const __armas_dense_t *A, 
+                        armas_x_dense_t *B, const armas_x_dense_t *A, 
                         DTYPE alpha, int flags, armas_conf_t *conf)
 {
   int ir, ie, nT, k, j;
@@ -271,12 +271,12 @@ int __mult_trm_schedule(int nblk,
  *
  * @ingroup blas3
  */
-int __armas_mult_trm(__armas_dense_t *B, const __armas_dense_t *A, 
+int armas_x_mult_trm(armas_x_dense_t *B, const armas_x_dense_t *A, 
                       DTYPE alpha, int flags, armas_conf_t *conf)
 {
   int ok;
 
-  if (__armas_size(B) == 0 || __armas_size(A) == 0)
+  if (armas_x_size(B) == 0 || armas_x_size(A) == 0)
     return 0;
 
   if (!conf)
@@ -303,7 +303,7 @@ int __armas_mult_trm(__armas_dense_t *B, const __armas_dense_t *A,
     opts ^= ~ARMAS_OBLAS_TILED;
     opts |= ARMAS_OBLAS_BLOCKED;
   }
-  long nproc = armas_nblocks(__armas_size(B), conf->wb, conf->maxproc, opts);
+  long nproc = armas_nblocks(armas_x_size(B), conf->wb, conf->maxproc, opts);
 
   if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED) && nproc > 1) {
     return __mult_trm_schedule(nproc, B, A, alpha, flags, conf);

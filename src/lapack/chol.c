@@ -13,11 +13,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_cholfactor) 
+#if defined(armas_x_cholfactor) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_blas1) 
+#if defined(armas_x_blas1) 
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -33,9 +33,9 @@
 //! \endcond
 
 static
-int __unblk_cholfactor_lower(__armas_dense_t *A, armas_conf_t *conf)
+int __unblk_cholfactor_lower(armas_x_dense_t *A, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, a11, a21, A22;
+  armas_x_dense_t ATL, ABR, A00, a11, a21, A22;
   int err = 0;
   DTYPE a11val;
 
@@ -51,17 +51,17 @@ int __unblk_cholfactor_lower(__armas_dense_t *A, armas_conf_t *conf)
                            __nil, &a21,  &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
     // ---------------------------------------------------------------------------
     // a21 = a21/a11
-    a11val = __armas_get(&a11, 0, 0);
+    a11val = armas_x_get(&a11, 0, 0);
     if (a11val > 0.0) {
       // a11 = sqrt(a11)
       a11val = __SQRT(a11val);
-      __armas_set(&a11, 0, 0, a11val);
+      armas_x_set(&a11, 0, 0, a11val);
       
       // a21 = a21/a11
-      __armas_invscale(&a21, a11val, conf);
+      armas_x_invscale(&a21, a11val, conf);
 
       // A22 = A22 - a21*a21.T
-      __armas_mvupdate_sym(&A22, &a21, -1.0, ARMAS_LOWER, conf);
+      armas_x_mvupdate_sym(&A22, &a21, -1.0, ARMAS_LOWER, conf);
     } else {
       if (err == 0) {
         conf->error = a11val < 0.0 ? ARMAS_ENEGATIVE : ARMAS_ESINGULAR;
@@ -77,9 +77,9 @@ int __unblk_cholfactor_lower(__armas_dense_t *A, armas_conf_t *conf)
 }
 
 static
-int __blk_cholfactor_lower(__armas_dense_t *A, int lb, armas_conf_t *conf)
+int __blk_cholfactor_lower(armas_x_dense_t *A, int lb, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, A11, A21, A22;
+  armas_x_dense_t ATL, ABR, A00, A11, A21, A22;
   int err = 0;
 
   EMPTY(A00);
@@ -98,10 +98,10 @@ int __blk_cholfactor_lower(__armas_dense_t *A, int lb, armas_conf_t *conf)
       err = err == 0 ? -1 : err;
     }
     // A21 = A21 * tril(A11).-T
-    __armas_solve_trm(&A21, &A11, 1.0, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA, conf);
+    armas_x_solve_trm(&A21, &A11, 1.0, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA, conf);
 
       // A22 = A22 - A21*A21.T
-    __armas_update_sym(&A22, &A21, -1.0, 1.0, ARMAS_LOWER, conf);
+    armas_x_update_sym(&A22, &A21, -1.0, 1.0, ARMAS_LOWER, conf);
 
     // ---------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil,
@@ -119,9 +119,9 @@ int __blk_cholfactor_lower(__armas_dense_t *A, int lb, armas_conf_t *conf)
 
 
 static
-int __unblk_cholfactor_upper(__armas_dense_t *A, armas_conf_t *conf)
+int __unblk_cholfactor_upper(armas_x_dense_t *A, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, a11, a12, A22;
+  armas_x_dense_t ATL, ABR, A00, a11, a12, A22;
   int err = 0;
   DTYPE a11val;
 
@@ -137,17 +137,17 @@ int __unblk_cholfactor_upper(__armas_dense_t *A, armas_conf_t *conf)
                            __nil, __nil, &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
     // ---------------------------------------------------------------------------
     // a21 = a21/a11
-    a11val = __armas_get(&a11, 0, 0);
+    a11val = armas_x_get(&a11, 0, 0);
     if (a11val > 0.0) {
       // a11 = sqrt(a11)
       a11val = __SQRT(a11val);
-      __armas_set(&a11, 0, 0, a11val);
+      armas_x_set(&a11, 0, 0, a11val);
       
       // a12 = a12/a11
-      __armas_invscale(&a12, a11val, conf);
+      armas_x_invscale(&a12, a11val, conf);
 
       // A22 = A22 - a12*a12.T
-      __armas_mvupdate_sym(&A22, &a12, -1.0, ARMAS_UPPER, conf);
+      armas_x_mvupdate_sym(&A22, &a12, -1.0, ARMAS_UPPER, conf);
     } else {
       if (err == 0) {
         conf->error = a11val < 0.0 ? ARMAS_ENEGATIVE : ARMAS_ESINGULAR;
@@ -163,9 +163,9 @@ int __unblk_cholfactor_upper(__armas_dense_t *A, armas_conf_t *conf)
 }
 
 static
-int __blk_cholfactor_upper(__armas_dense_t *A, int lb, armas_conf_t *conf)
+int __blk_cholfactor_upper(armas_x_dense_t *A, int lb, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, A11, A12, A22;
+  armas_x_dense_t ATL, ABR, A00, A11, A12, A22;
   int err = 0;
 
   EMPTY(A00); 
@@ -183,10 +183,10 @@ int __blk_cholfactor_upper(__armas_dense_t *A, int lb, armas_conf_t *conf)
       err = err == 0 ? -1 : err;
     }
     // A12 = tril(A11).-T * A12
-    __armas_solve_trm(&A12, &A11, 1.0, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
+    armas_x_solve_trm(&A12, &A11, 1.0, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
 
       // A22 = A22 - A12.T*A12
-    __armas_update_sym(&A22, &A12, -1.0, 1.0, ARMAS_UPPER|ARMAS_TRANSA, conf);
+    armas_x_update_sym(&A22, &A12, -1.0, 1.0, ARMAS_UPPER|ARMAS_TRANSA, conf);
     // ---------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil,
                         __nil, &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -201,11 +201,11 @@ int __blk_cholfactor_upper(__armas_dense_t *A, int lb, armas_conf_t *conf)
 }
 
 extern 
-int __cholfactor_pv(__armas_dense_t *A, __armas_dense_t *W, armas_pivot_t *P,
+int __cholfactor_pv(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P,
                     int flags, armas_conf_t *conf);
 
 extern 
-int __cholsolve_pv(__armas_dense_t *B, __armas_dense_t *A, armas_pivot_t *P,
+int __cholsolve_pv(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P,
                     int flags, armas_conf_t *conf);
 
 /**
@@ -236,7 +236,7 @@ int __cholsolve_pv(__armas_dense_t *B, __armas_dense_t *A, armas_pivot_t *P,
  * Compatible with lapack.DPOTRF
  * \ingroup lapack
  */
-int __armas_cholfactor(__armas_dense_t *A, __armas_dense_t *W,
+int armas_x_cholfactor(armas_x_dense_t *A, armas_x_dense_t *W,
                        armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
   int err = 0;
@@ -292,7 +292,7 @@ int __armas_cholfactor(__armas_dense_t *A, __armas_dense_t *W,
  * Compatible with lapack.DPOTRS.
  * \ingroup lapack
  */
-int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A, 
+int armas_x_cholsolve(armas_x_dense_t *B, armas_x_dense_t *A, 
                       armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
   int ok;
@@ -311,12 +311,12 @@ int __armas_cholsolve(__armas_dense_t *B, __armas_dense_t *A,
 
   if (flags & ARMAS_LOWER) {
     // solve A*X = B; X = A.-1*B == (L*L.T).-1*B == L.-T*(L.-1*B)
-    __armas_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_LOWER, conf);
-    __armas_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf);
+    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_LOWER, conf);
+    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf);
   } else {
     // solve A*X = B;  X = A.-1*B == (U.T*U).-1*B == U.-1*(U.-T*B)
-    __armas_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
-    __armas_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_UPPER, conf);
+    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
+    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_UPPER, conf);
   }
   return 0;
 }

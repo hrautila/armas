@@ -10,11 +10,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_ldlinverse_sym) 
+#if defined(armas_x_ldlinverse_sym) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_blas) 
+#if defined(armas_x_blas) 
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -55,9 +55,9 @@
  *
  */
 static
-int __unblk_invldl_lower(__armas_dense_t *A, __armas_dense_t *W, armas_conf_t *conf)
+int __unblk_invldl_lower(armas_x_dense_t *A, armas_x_dense_t *W, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, a11, a21, A22, l21;
+    armas_x_dense_t ATL, ABR, A00, a11, a21, A22, l21;
     int err = 0;
     DTYPE a11val, udot;
 
@@ -72,14 +72,14 @@ int __unblk_invldl_lower(__armas_dense_t *A, __armas_dense_t *W, armas_conf_t *c
                                __nil,  &a11, __nil,
                                __nil,  &a21,  &A22,  /**/  A, 1, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------------
-        __armas_make(&l21, a21.rows, 1, a21.rows, __armas_data(W));
-        __armas_mcopy(&l21, &a21);
+        armas_x_make(&l21, a21.rows, 1, a21.rows, armas_x_data(W));
+        armas_x_mcopy(&l21, &a21);
         // a21 = - A22*l21 
-        __armas_mvmult_sym(&a21, &A22, &l21, -__ONE, __ZERO, ARMAS_LOWER|ARMAS_LEFT, conf);
+        armas_x_mvmult_sym(&a21, &A22, &l21, -__ONE, __ZERO, ARMAS_LOWER|ARMAS_LEFT, conf);
         // a11 = a11 - a21.T*l21
-        udot    = __armas_dot(&a21, &l21, conf);
-        a11val  = __ONE/__armas_get_unsafe(&a11, 0, 0);
-        __armas_set_unsafe(&a11, 0, 0, a11val - udot);
+        udot    = armas_x_dot(&a21, &l21, conf);
+        a11val  = __ONE/armas_x_get_unsafe(&a11, 0, 0);
+        armas_x_set_unsafe(&a11, 0, 0, a11val - udot);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
                             __nil, &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PTOPLEFT);
@@ -103,9 +103,9 @@ int __unblk_invldl_lower(__armas_dense_t *A, __armas_dense_t *W, armas_conf_t *c
  *   (2)  A21*L11 + A22*L21   = 0            --> A21 = (-A22*L21)*L11.-1
  */
 static
-int __blk_invldl_lower(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_conf_t *conf)
+int __blk_invldl_lower(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, A11, A21, A22, L21, w2;
+    armas_x_dense_t ATL, ABR, A00, A11, A21, A22, L21, w2;
     int err = 0;
     
     EMPTY(ATL); EMPTY(A00);
@@ -120,20 +120,20 @@ int __blk_invldl_lower(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_con
                                __nil,  &A21,  &A22,  /**/  A, lb, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------------
         // workspaces;
-        __armas_make(&w2, lb, 1, lb, __armas_data(W));
-        __armas_make(&L21, A21.rows, A11.cols, A21.rows, &__armas_data(W)[lb]);
-        __armas_mcopy(&L21, &A21);
+        armas_x_make(&w2, lb, 1, lb, armas_x_data(W));
+        armas_x_make(&L21, A21.rows, A11.cols, A21.rows, &armas_x_data(W)[lb]);
+        armas_x_mcopy(&L21, &A21);
         
         // A21 = - A22*L21*L11.-1
-        __armas_mult_sym(&A21, &A22, &L21, - __ONE, __ZERO, ARMAS_LOWER, conf);
-        __armas_solve_trm(&A21, &A11, __ONE, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
+        armas_x_mult_sym(&A21, &A22, &L21, - __ONE, __ZERO, ARMAS_LOWER, conf);
+        armas_x_solve_trm(&A21, &A11, __ONE, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
         
         // A11*L11 + A21.T*L21 = L11.-T -> A11 = inv(A11) - A21.T*L21*L11.-1
-        __armas_solve_trm(&L21, &A11, __ONE, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
+        armas_x_solve_trm(&L21, &A11, __ONE, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
         if (__unblk_invldl_lower(&A11, &w2, conf) < 0 && err == 0)
             err = -1;
         // rank update
-        __armas_update_trm(&A11, &A21, &L21, -__ONE, __ONE, ARMAS_TRANSA|ARMAS_LOWER, conf);
+        armas_x_update_trm(&A11, &A21, &L21, -__ONE, __ONE, ARMAS_TRANSA|ARMAS_LOWER, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
                             __nil, &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PTOPLEFT);
@@ -161,9 +161,9 @@ int __blk_invldl_lower(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_con
  *
  */
 static
-int __unblk_invldl_upper(__armas_dense_t *A, __armas_dense_t *W, armas_conf_t *conf)
+int __unblk_invldl_upper(armas_x_dense_t *A, armas_x_dense_t *W, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, a01, a11, A22, u01;
+    armas_x_dense_t ATL, ABR, A00, a01, a11, A22, u01;
     int err = 0;
     DTYPE a11val, udot;
 
@@ -177,13 +177,13 @@ int __unblk_invldl_upper(__armas_dense_t *A, __armas_dense_t *W, armas_conf_t *c
                                __nil,  &a11, __nil,
                                __nil, __nil,  &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
         // ---------------------------------------------------------------------------
-        __armas_make(&u01, a01.rows, 1, a01.rows, __armas_data(W));
-        __armas_mcopy(&u01, &a01);
+        armas_x_make(&u01, a01.rows, 1, a01.rows, armas_x_data(W));
+        armas_x_mcopy(&u01, &a01);
         
-        __armas_mvmult_sym(&a01, &A00, &u01, -__ONE, __ZERO, ARMAS_UPPER, conf);
-        a11val = __ONE/__armas_get_unsafe(&a11, 0, 0);
-        udot   = __armas_dot(&a01, &u01, conf);
-        __armas_set_unsafe(&a11, 0, 0, a11val - udot);
+        armas_x_mvmult_sym(&a01, &A00, &u01, -__ONE, __ZERO, ARMAS_UPPER, conf);
+        a11val = __ONE/armas_x_get_unsafe(&a11, 0, 0);
+        udot   = armas_x_dot(&a01, &u01, conf);
+        armas_x_set_unsafe(&a11, 0, 0, a11val - udot);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
                             __nil, &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -210,9 +210,9 @@ int __unblk_invldl_upper(__armas_dense_t *A, __armas_dense_t *W, armas_conf_t *c
  *                                           -->  A11 = inv(A11) - A01.T*U01*U11.-1
  */
 static
-int __blk_invldl_upper(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_conf_t *conf)
+int __blk_invldl_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, A01, A11, A22, U01, w2;
+    armas_x_dense_t ATL, ABR, A00, A01, A11, A22, U01, w2;
     int err = 0;
     
     __partition_2x2(&ATL,  __nil,
@@ -225,19 +225,19 @@ int __blk_invldl_upper(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_con
                                __nil, __nil,  &A22,  /**/  A, lb, ARMAS_PBOTTOMRIGHT);
         // ---------------------------------------------------------------------------
         // workspaces;
-        __armas_make(&w2, lb, 1, lb, __armas_data(W));
-        __armas_make(&U01, A01.rows, A11.cols, A01.rows, &__armas_data(W)[lb]);
-        __armas_mcopy(&U01, &A01);
+        armas_x_make(&w2, lb, 1, lb, armas_x_data(W));
+        armas_x_make(&U01, A01.rows, A11.cols, A01.rows, &armas_x_data(W)[lb]);
+        armas_x_mcopy(&U01, &A01);
 
         // A01 = - A00*U01*U11.-1
-        __armas_mult_sym(&A01, &A00, &U01, -__ONE, __ZERO, ARMAS_LEFT|ARMAS_UPPER, conf);
-        __armas_solve_trm(&A01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT, conf);
+        armas_x_mult_sym(&A01, &A00, &U01, -__ONE, __ZERO, ARMAS_LEFT|ARMAS_UPPER, conf);
+        armas_x_solve_trm(&A01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT, conf);
 
         // A11 = inv(A11) - A01.T*U01*U11.-1
-        __armas_solve_trm(&U01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT, conf);
+        armas_x_solve_trm(&U01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT, conf);
         if (__unblk_invldl_upper(&A11, &w2, conf) < 0 && err == 0)
             err = -1;
-        __armas_update_trm(&A11, &A01, &U01, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANSA, conf);
+        armas_x_update_trm(&A11, &A01, &U01, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANSA, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
                             __nil, &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -266,7 +266,7 @@ int __blk_invldl_upper(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_con
  * \retval  0   OK
  * \retval -1   failure, conf.error holds actual error code
  */
-int __armas_ldlinverse_sym(__armas_dense_t *A, __armas_dense_t *W, 
+int armas_x_ldlinverse_sym(armas_x_dense_t *A, armas_x_dense_t *W, 
                            armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
     int lb, ws, err = 0;
@@ -280,7 +280,7 @@ int __armas_ldlinverse_sym(__armas_dense_t *A, __armas_dense_t *W,
     }
 
     lb = conf->lb;
-    ws = __armas_size(W);
+    ws = armas_x_size(W);
     if (ws < A->rows) {
         conf->error = ARMAS_EWORK;
         return -1;
@@ -310,9 +310,9 @@ int __armas_ldlinverse_sym(__armas_dense_t *A, __armas_dense_t *W,
 
     if (P != ARMAS_NOPIVOT) {
         if (flags & ARMAS_UPPER) {
-            __armas_pivot(A, P, ARMAS_PIVOT_UPPER|ARMAS_PIVOT_FORWARD, conf);
+            armas_x_pivot(A, P, ARMAS_PIVOT_UPPER|ARMAS_PIVOT_FORWARD, conf);
         } else {
-            __armas_pivot(A, P, ARMAS_PIVOT_LOWER|ARMAS_PIVOT_BACKWARD, conf);
+            armas_x_pivot(A, P, ARMAS_PIVOT_LOWER|ARMAS_PIVOT_BACKWARD, conf);
         }
     }
     return err;

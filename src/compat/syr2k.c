@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_update2_sym)
+#if defined(armas_x_update2_sym)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -28,23 +28,23 @@ void __syr2kf(char *uplo, char *trans, int *n, int *k, DTYPE *alpha, DTYPE *A,
               int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t c, a, b;
+    armas_x_dense_t c, a, b;
     int flags = 0;
 
     flags |= toupper(*uplo) == 'L' ? ARMAS_LOWER : ARMAS_UPPER;
     if (toupper(*trans) == 'T') 
         flags |= ARMAS_TRANS;
 
-    __armas_make(&c, *n, *n, *ldc, C);
+    armas_x_make(&c, *n, *n, *ldc, C);
     if (flags & ARMAS_TRANS) {
-        __armas_make(&a, *k, *n, *lda, A);
-        __armas_make(&b, *k, *n, *lda, B);
+        armas_x_make(&a, *k, *n, *lda, A);
+        armas_x_make(&b, *k, *n, *lda, B);
     } else {
-        __armas_make(&a, *n, *k, *lda, A);
-        __armas_make(&b, *n, *k, *lda, B);
+        armas_x_make(&a, *n, *k, *lda, A);
+        armas_x_make(&b, *n, *k, *lda, B);
     }
 
-    __armas_update2_sym(&c, &a, &b, *alpha, *beta, flags, conf);
+    armas_x_update2_sym(&c, &a, &b, *alpha, *beta, flags, conf);
 }
 #endif
 
@@ -54,7 +54,7 @@ void __cblas_syr2k(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
                    DTYPE *A, int lda, DTYPE *B, int ldb, DTYPE beta, DTYPE *C, int ldc)
 {
     armas_conf_t conf = *armas_conf_default();
-    __armas_dense_t Ca, Aa, Ba;
+    armas_x_dense_t Ca, Aa, Ba;
     int flags = 0;
 
     switch (order) {
@@ -62,9 +62,9 @@ void __cblas_syr2k(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
         flags |= uplo == CblasUpper ? ARMAS_LOWER : ARMAS_UPPER;
         if (trans == CblasNoTrans) {
             flags |= ARMAS_TRANS;
-            __armas_make(&Aa, K, N, lda, A);
+            armas_x_make(&Aa, K, N, lda, A);
         } else {
-            __armas_make(&Aa, N, K, lda, A);
+            armas_x_make(&Aa, N, K, lda, A);
         }
         break;
     case CblasColMajor:
@@ -72,16 +72,16 @@ void __cblas_syr2k(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
         flags |= uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
         if (trans == CblasTrans) {
             flags |= ARMAS_TRANS;
-            __armas_make(&Aa, K, N, lda, A);
-            __armas_make(&Ba, K, N, ldb, B);
+            armas_x_make(&Aa, K, N, lda, A);
+            armas_x_make(&Ba, K, N, ldb, B);
         } else {
-            __armas_make(&Aa, N, K, lda, A);
-            __armas_make(&Ba, N, K, ldb, B);
+            armas_x_make(&Aa, N, K, lda, A);
+            armas_x_make(&Ba, N, K, ldb, B);
         }
         break;
     }
-    __armas_make(&Ca, N, N, ldc, C);
-    __armas_update2_sym(&Ca, &Aa, &Ba, alpha, beta, flags, conf);
+    armas_x_make(&Ca, N, N, ldc, C);
+    armas_x_update2_sym(&Ca, &Aa, &Ba, alpha, beta, flags, conf);
 }
 
 #endif

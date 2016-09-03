@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_axpy)
+#if defined(armas_x_axpy)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -27,7 +27,7 @@ static
 void __compat_axpy(const int n, const DTYPE alpha, DTYPE *X, const int incx, DTYPE *Y, const int incy)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t y, x;
+    armas_x_dense_t y, x;
     int ix, iy, nx, ny, k;
     DTYPE xv, yv;
 
@@ -35,17 +35,17 @@ void __compat_axpy(const int n, const DTYPE alpha, DTYPE *X, const int incx, DTY
     iy = incy < 0 ? - incy : incy;
 
     if (ix == 1) {
-        __armas_make(&x, n, 1, n, X);
+        armas_x_make(&x, n, 1, n, X);
     } else {
-        __armas_make(&x, 1, n, ix, X);
+        armas_x_make(&x, 1, n, ix, X);
     }
     if (iy == 1) {
-        __armas_make(&y, n, 1, n, Y);
+        armas_x_make(&y, n, 1, n, Y);
     } else {
-        __armas_make(&y, 1, n, iy, Y);
+        armas_x_make(&y, 1, n, iy, Y);
     }
     if (incx*incy > 0) {
-        __armas_axpy(&y, &x, alpha, conf);
+        armas_x_axpy(&y, &x, alpha, conf);
         return;
     } 
     // if not same sign then iteration direction is different (so clever)
@@ -54,9 +54,9 @@ void __compat_axpy(const int n, const DTYPE alpha, DTYPE *X, const int incx, DTY
     nx = ix == 0 ? 1 : -1;
     ny = iy == 0 ? 1 : -1;
     for (k = 0; k < n; ix += nx, iy += ny, k++) {
-        xv = __armas_get_at_unsafe(&x, ix);
-        yv = __armas_get_at_unsafe(&y, iy);
-        __armas_set_at_unsafe(&y, iy, yv + alpha*xv);
+        xv = armas_x_get_at_unsafe(&x, ix);
+        yv = armas_x_get_at_unsafe(&y, iy);
+        armas_x_set_at_unsafe(&y, iy, yv + alpha*xv);
     }
 }
 

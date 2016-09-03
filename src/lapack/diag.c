@@ -13,11 +13,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_mult_diag) && defined(__armas_solve_diag)
+#if defined(armas_x_mult_diag) && defined(armas_x_solve_diag)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_scale)  && defined(__armas_invscale)
+#if defined(armas_x_scale)  && defined(armas_x_invscale)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -43,55 +43,55 @@
  * @param conf
  *      Optional blocking configuration
  */
-int __armas_mult_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, armas_conf_t *conf)
+int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t c, d0;
-    const __armas_dense_t *d;
+    armas_x_dense_t c, d0;
+    const armas_x_dense_t *d;
     int k;
 
     if (!conf)
         conf = armas_conf_default();
     
     d = D;
-    if (! __armas_isvector(D)) {
-        __armas_diag(&d0, D, 0);
+    if (! armas_x_isvector(D)) {
+        armas_x_diag(&d0, D, 0);
         d = &d0;
     }
 
-    if (__armas_isvector(A)) {
-        if (__armas_size(d) != __armas_size(A)) {
+    if (armas_x_isvector(A)) {
+        if (armas_x_size(d) != armas_x_size(A)) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
-        for (k = 0; k < __armas_size(d); k++) {
-            DTYPE aval = __armas_get_at_unsafe(A, k)*__armas_get_at_unsafe(d, k);
-            __armas_set_at_unsafe(A, k, aval);
+        for (k = 0; k < armas_x_size(d); k++) {
+            DTYPE aval = armas_x_get_at_unsafe(A, k)*armas_x_get_at_unsafe(d, k);
+            armas_x_set_at_unsafe(A, k, aval);
         }
         return 0;
     }
 
     switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
     case ARMAS_RIGHT:
-        if (__armas_size(d) != A->cols) {
+        if (armas_x_size(d) != A->cols) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
         // scale columns; 
-        for (k = 0; k < __armas_size(d); k++) {
-            __armas_column(&c, A, k);
-            __armas_scale(&c, __armas_get_at_unsafe(d, k), conf);
+        for (k = 0; k < armas_x_size(d); k++) {
+            armas_x_column(&c, A, k);
+            armas_x_scale(&c, armas_x_get_at_unsafe(d, k), conf);
         }
         break;
     case ARMAS_LEFT:
     default:
-        if (__armas_size(d) != A->rows) {
+        if (armas_x_size(d) != A->rows) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
         // scale rows; for each column element-wise multiply of D element
-        for (k = 0; k < __armas_size(d); k++) {
-            __armas_row(&c, A, k);
-            __armas_scale(&c, __armas_get_at_unsafe(d, k), conf);
+        for (k = 0; k < armas_x_size(d); k++) {
+            armas_x_row(&c, A, k);
+            armas_x_scale(&c, armas_x_get_at_unsafe(d, k), conf);
         }
         break;
     }
@@ -110,55 +110,55 @@ int __armas_mult_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, a
  * @param conf
  *      Optional blocking configuration
  */
-int __armas_solve_diag(__armas_dense_t *A, const __armas_dense_t *D, int flags, armas_conf_t *conf)
+int armas_x_solve_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t c, d0;
-    const __armas_dense_t *d;
+    armas_x_dense_t c, d0;
+    const armas_x_dense_t *d;
     int k;
 
     if (!conf)
         conf = armas_conf_default();
     
     d = D;
-    if (! __armas_isvector(D)) {
-        __armas_diag(&d0, D, 0);
+    if (! armas_x_isvector(D)) {
+        armas_x_diag(&d0, D, 0);
         d = &d0;
     }
 
-    if (__armas_isvector(A)) {
-        if (__armas_size(d) != __armas_size(A)) {
+    if (armas_x_isvector(A)) {
+        if (armas_x_size(d) != armas_x_size(A)) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
-        for (k = 0; k < __armas_size(d); k++) {
-            DTYPE aval = __armas_get_at_unsafe(A, k)/__armas_get_at_unsafe(d, k);
-            __armas_set_at_unsafe(A, k, aval);
+        for (k = 0; k < armas_x_size(d); k++) {
+            DTYPE aval = armas_x_get_at_unsafe(A, k)/armas_x_get_at_unsafe(d, k);
+            armas_x_set_at_unsafe(A, k, aval);
         }
         return 0;
     }
 
     switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
     case ARMAS_RIGHT:
-        if (__armas_size(d) != A->cols) {
+        if (armas_x_size(d) != A->cols) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
         // scale columns; 
-        for (k = 0; k < __armas_size(d); k++) {
-            __armas_column(&c, A, k);
-            __armas_invscale(&c, __armas_get_at_unsafe(d, k), conf);
+        for (k = 0; k < armas_x_size(d); k++) {
+            armas_x_column(&c, A, k);
+            armas_x_invscale(&c, armas_x_get_at_unsafe(d, k), conf);
         }
         break;
     case ARMAS_LEFT:
     default:
-        if (__armas_size(d) != A->rows) {
+        if (armas_x_size(d) != A->rows) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
         // scale rows; for each column element-wise multiply of D element
-        for (k = 0; k < __armas_size(d); k++) {
-            __armas_row(&c, A, k);
-            __armas_invscale(&c, __armas_get_at_unsafe(d, k), conf);
+        for (k = 0; k < armas_x_size(d); k++) {
+            armas_x_row(&c, A, k);
+            armas_x_invscale(&c, armas_x_get_at_unsafe(d, k), conf);
         }
         break;
     }

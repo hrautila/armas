@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_qrtfactor) 
+#if defined(armas_x_qrtfactor) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -37,11 +37,11 @@ int __ws_qrtfactor(int M, int N, int lb)
  * Unblocked factorization.
  */
 static
-int __unblk_qrtfactor(__armas_dense_t *A, __armas_dense_t *T,
-                     __armas_dense_t *W, armas_conf_t *conf)
+int __unblk_qrtfactor(armas_x_dense_t *A, armas_x_dense_t *T,
+                     armas_x_dense_t *W, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, a11, a12, a21, A22;
-  __armas_dense_t TTL, TTR, TBR, T00, t01, t11, T22, w12;
+  armas_x_dense_t ATL, ABR, A00, a11, a12, a21, A22;
+  armas_x_dense_t TTL, TTR, TBR, T00, t01, t11, T22, w12;
   DTYPE tauval;
 
   EMPTY(A00);
@@ -63,16 +63,16 @@ int __unblk_qrtfactor(__armas_dense_t *A, __armas_dense_t *T,
     // ---------------------------------------------------------------------------
     __compute_householder(&a11, &a21, &t11, conf);
 
-    __armas_submatrix(&w12, W, 0, 0, __armas_size(&a12), 1);
+    armas_x_submatrix(&w12, W, 0, 0, armas_x_size(&a12), 1);
 
     __apply_householder2x1(&t11, &a21, &a12, &A22, &w12, ARMAS_LEFT, conf);
-    tauval = __armas_get_unsafe(&t11, 0, 0);
+    tauval = armas_x_get_unsafe(&t11, 0, 0);
     if ( tauval != __ZERO) {
       // t01 := -tauval*(a10.T + A20.T*a21)
-      __armas_axpby(&t01, &a12, 1.0, 0.0, conf);
-      __armas_mvmult(&t01, &A22, &a21, -tauval, -tauval, ARMAS_TRANSA, conf);
+      armas_x_axpby(&t01, &a12, 1.0, 0.0, conf);
+      armas_x_mvmult(&t01, &A22, &a21, -tauval, -tauval, ARMAS_TRANSA, conf);
       // t01 := T00*t01
-      __armas_mvmult_trm(&t01, &T00, 1.0, ARMAS_UPPER, conf);
+      armas_x_mvmult_trm(&t01, &T00, 1.0, ARMAS_UPPER, conf);
     }
     // ---------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil,
@@ -88,11 +88,11 @@ int __unblk_qrtfactor(__armas_dense_t *A, __armas_dense_t *T,
  * Blocked factorization.
  */
 static
-int __blk_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W, int lb, armas_conf_t *conf)
+int __blk_qrtfactor(armas_x_dense_t *A, armas_x_dense_t *T, armas_x_dense_t *W, int lb, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, A11, A12, A21, A22, AL;
-  __armas_dense_t TL, TR, T00, T01, T02;
-  __armas_dense_t w1, Wrk;
+  armas_x_dense_t ATL, ABR, A00, A11, A12, A21, A22, AL;
+  armas_x_dense_t TL, TR, T00, T01, T02;
+  armas_x_dense_t w1, Wrk;
 
   EMPTY(A00); EMPTY(AL);
   EMPTY(TL); EMPTY(TR); EMPTY(T00); EMPTY(w1);
@@ -111,12 +111,12 @@ int __blk_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W, 
     // ---------------------------------------------------------------------------
     // decompose current panel AL = ( A11 )
     //                              ( A21 )
-    __armas_submatrix(&w1, W, 0, 0, A11.rows, 1);
+    armas_x_submatrix(&w1, W, 0, 0, A11.rows, 1);
     __merge2x1(&AL, &A11, &A21);
     __unblk_qrtfactor(&AL, &T01, &w1, conf);
 
     // update ( A12 A22 ).T
-    __armas_submatrix(&Wrk, W, 0, 0, A12.cols, A12.rows);
+    armas_x_submatrix(&Wrk, W, 0, 0, A12.cols, A12.rows);
     __update_qr_left(&A12, &A22, &A11, &A21, &T01, &Wrk, TRUE, conf);
     // ---------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil,
@@ -126,7 +126,7 @@ int __blk_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W, 
 
   // last block with unblocked
   if (ABR.rows > 0 && ABR.cols > 0) {
-    __armas_submatrix(&T01, &TR, 0, 0, ABR.cols, ABR.cols);
+    armas_x_submatrix(&T01, &TR, 0, 0, ABR.cols, ABR.cols);
     __unblk_qrtfactor(&ABR, &T01, W, conf);
   }
 
@@ -176,10 +176,10 @@ int __blk_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W, 
  *
  *  Compatible with lapack.xGEQRT
  */
-int __armas_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W,
+int armas_x_qrtfactor(armas_x_dense_t *A, armas_x_dense_t *T, armas_x_dense_t *W,
                       armas_conf_t *conf)
 {
-  __armas_dense_t sT;
+  armas_x_dense_t sT;
   int wsmin, lb;
   if (!conf)
     conf = armas_conf_default();
@@ -193,13 +193,13 @@ int __armas_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W
   // set blocking factor to number of rows in T
   lb = T->rows;
   wsmin = __ws_qrtfactor(A->rows, A->cols, lb);
-  if (! W || __armas_size(W) < wsmin) {
+  if (! W || armas_x_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
   }
 
   if (lb == 0 || A->cols <= lb) {
-    __armas_submatrix(&sT, T, 0, 0, A->cols, A->cols);
+    armas_x_submatrix(&sT, T, 0, 0, A->cols, A->cols);
     __unblk_qrtfactor(A, &sT, W, conf);
   } else {
     __blk_qrtfactor(A, T, W, lb, conf);
@@ -212,7 +212,7 @@ int __armas_qrtfactor(__armas_dense_t *A, __armas_dense_t *T, __armas_dense_t *W
  * configuration. If blocking configuration is not provided then default
  * configuation will be used.
  */
-int __armas_qrtfactor_work(__armas_dense_t *A, armas_conf_t *conf)
+int armas_x_qrtfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();

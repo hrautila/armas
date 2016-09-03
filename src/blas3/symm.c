@@ -17,7 +17,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_mult_sym) 
+#if defined(armas_x_mult_sym) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -273,8 +273,8 @@ void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
 
 static
 int __mult_sym_threaded(int blknum, int nblk, int colwise, 
-                          __armas_dense_t *C,
-                          const __armas_dense_t *A, const __armas_dense_t *B,
+                          armas_x_dense_t *C,
+                          const armas_x_dense_t *A, const armas_x_dense_t *B,
                           DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
 
@@ -354,9 +354,9 @@ int __mult_sym_threaded(int blknum, int nblk, int colwise,
 // new scheduler; N workers, either nblk blocks or tiles of size WBxWB
 
 static
-int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
-                        const __armas_dense_t *A,
-                        const __armas_dense_t *B,
+int __mult_sym_schedule(int nblk, int colwise, armas_x_dense_t *C,
+                        const armas_x_dense_t *A,
+                        const armas_x_dense_t *B,
                         DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   int rN, cN, i, j, iR, iE, jS, jL, k, nT, K;
@@ -470,14 +470,14 @@ int __mult_sym_schedule(int nblk, int colwise, __armas_dense_t *C,
  *
  * @ingroup blas3
  */
-int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas_dense_t *B,
+int armas_x_mult_sym(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *B,
                       DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   int ok;
 
   if (C->rows == 0 || C->cols == 0)
     return 0;
-  if (__armas_size(A) == 0 || __armas_size(B) == 0)
+  if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
     return 0;
 
   if (!conf)
@@ -501,7 +501,7 @@ int __armas_mult_sym(__armas_dense_t *C, const __armas_dense_t *A, const __armas
 
 #if defined(ENABLE_THREADS)
   int colwise = C->rows < C->cols;
-  long nproc = armas_use_nproc(__armas_size(C), conf);
+  long nproc = armas_use_nproc(armas_x_size(C), conf);
 
   if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED) && nproc > 1) {
     return __mult_sym_schedule(nproc, colwise,

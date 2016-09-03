@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_zzzz)
+#if defined(armas_x_zzzz)
 #define __ARMAS_REQUIRES 1
 #endif
 

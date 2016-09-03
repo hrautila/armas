@@ -104,26 +104,26 @@ void __gvrot(DTYPE *v0, DTYPE *v1, DTYPE cos, DTYPE sin, DTYPE y0, DTYPE y1)
  * \ingroup lapackaux internal
  */
 static inline
-int __bd_qrsweep(__armas_dense_t *D, __armas_dense_t *E,
-                 __armas_dense_t *Cr, __armas_dense_t *Sr,
-                 __armas_dense_t *Cl, __armas_dense_t *Sl, 
+int __bd_qrsweep(armas_x_dense_t *D, armas_x_dense_t *E,
+                 armas_x_dense_t *Cr, armas_x_dense_t *Sr,
+                 armas_x_dense_t *Cl, armas_x_dense_t *Sl, 
                  DTYPE f0, DTYPE g0, int saves)
 {
     DTYPE d1, e1, d2, e2, f, g,  cosr, cosl, sinr, sinl, r;
-    int k, N = __armas_size(D);
+    int k, N = armas_x_size(D);
 
     d2 = e2 = __ZERO;
-    d1 = __armas_get_at_unsafe(D, 0);
-    e1 = __armas_get_at_unsafe(E, 0);
+    d1 = armas_x_get_at_unsafe(D, 0);
+    e1 = armas_x_get_at_unsafe(E, 0);
     f = f0;
     g = g0;
     for (k = 0; k < N-1; k++) {
-        d2 = __armas_get_at_unsafe(D, k+1);
+        d2 = armas_x_get_at_unsafe(D, k+1);
 
         __gvrotg(&cosr, &sinr, &r, f, g);
         if (k > 0) {
             // e[i-1] = r
-            __armas_set_at_unsafe(E, k-1, r);
+            armas_x_set_at_unsafe(E, k-1, r);
         }
         // f = cosr*d[i] + sinr*e[i]; e[i] = cosr*e[i] - sinr*d[i]
         __gvrot(&f, &e1, cosr, sinr, d1, e1);
@@ -135,26 +135,26 @@ int __bd_qrsweep(__armas_dense_t *D, __armas_dense_t *E,
         // f = cosl*e[i] + sinl*d[i+1]; d[i+1] = cosl*d[i+1] - sinl*e[i];
         __gvrot(&f, &d2, cosl, sinl, e1, d2);
         if (k < N-2) {
-            e2 = __armas_get_at_unsafe(E, k+1);
+            e2 = armas_x_get_at_unsafe(E, k+1);
             // g = sinl*e[i+1]; e[i+1] = cosl*e[i+1];
             __gvrot(&g, &e2, cosl, sinl, 0.0, e2);
-            __armas_set_at_unsafe(E, k+1, e2);
+            armas_x_set_at_unsafe(E, k+1, e2);
         }
 
-        __armas_set_at_unsafe(D, k, d1);
-        __armas_set_at_unsafe(D, k+1, d2);
+        armas_x_set_at_unsafe(D, k, d1);
+        armas_x_set_at_unsafe(D, k+1, d2);
         d1 = d2; e1 = e2;
 
         // save rotations
         if (saves) {
-            __armas_set_at_unsafe(Cr, k, cosr);
-            __armas_set_at_unsafe(Sr, k, sinr);
-            __armas_set_at_unsafe(Cl, k, cosl);
-            __armas_set_at_unsafe(Sl, k, sinl);
+            armas_x_set_at_unsafe(Cr, k, cosr);
+            armas_x_set_at_unsafe(Sr, k, sinr);
+            armas_x_set_at_unsafe(Cl, k, cosl);
+            armas_x_set_at_unsafe(Sl, k, sinl);
         }
     }
     // e[-1] = f
-    __armas_set_at_unsafe(E, N-2, f);
+    armas_x_set_at_unsafe(E, N-2, f);
     //return k > 0 ? k+1 : 0;
     return N-1;
 }
@@ -167,38 +167,38 @@ int __bd_qrsweep(__armas_dense_t *D, __armas_dense_t *E,
  * As described in Demmel-Kahan, 1990.
  */
 static inline
-int __bd_qrzero(__armas_dense_t *D, __armas_dense_t *E,
-                 __armas_dense_t *Cr, __armas_dense_t *Sr,
-                 __armas_dense_t *Cl, __armas_dense_t *Sl, 
+int __bd_qrzero(armas_x_dense_t *D, armas_x_dense_t *E,
+                 armas_x_dense_t *Cr, armas_x_dense_t *Sr,
+                 armas_x_dense_t *Cl, armas_x_dense_t *Sl, 
                  int saves)
 {
     DTYPE d1, e1, d2, cosr, cosl, sinr, sinl, r;
-    int k, N = __armas_size(D);
+    int k, N = armas_x_size(D);
 
     d2 = __ZERO;
-    d1 = __armas_get_at_unsafe(D, 0);
+    d1 = armas_x_get_at_unsafe(D, 0);
     sinl = __ONE;
     cosr = __ONE;
     cosl = __ONE;
     for (k = 0; k < N-1; k++) {
-        e1 = __armas_get_at_unsafe(E, k);
-        d2 = __armas_get_at_unsafe(D, k+1);
+        e1 = armas_x_get_at_unsafe(E, k);
+        d2 = armas_x_get_at_unsafe(D, k+1);
         __gvrotg(&cosr, &sinr, &r, d1*cosr, e1);
         if (k > 0)
-            __armas_set_at_unsafe(E, k-1, sinl*r);
+            armas_x_set_at_unsafe(E, k-1, sinl*r);
         __gvrotg(&cosl, &sinl, &r, cosl*r, sinr*d2);
-        __armas_set_at_unsafe(D, k, r);
+        armas_x_set_at_unsafe(D, k, r);
         d1 = d2;
         if (saves) {
-            __armas_set_at_unsafe(Cr, k, cosr);
-            __armas_set_at_unsafe(Sr, k, sinr);
-            __armas_set_at_unsafe(Cl, k, cosl);
-            __armas_set_at_unsafe(Sl, k, sinl);
+            armas_x_set_at_unsafe(Cr, k, cosr);
+            armas_x_set_at_unsafe(Sr, k, sinr);
+            armas_x_set_at_unsafe(Cl, k, cosl);
+            armas_x_set_at_unsafe(Sl, k, sinl);
         }
     }
     d2 = cosr*d2;
-    __armas_set_at_unsafe(D, N-1, d2*cosl);
-    __armas_set_at_unsafe(E, N-2, d2*sinl);
+    armas_x_set_at_unsafe(D, N-1, d2*cosl);
+    armas_x_set_at_unsafe(E, N-2, d2*sinl);
     //return k > 0 ? k+1 : 0;
     return N-1;
 }
@@ -206,24 +206,24 @@ int __bd_qrzero(__armas_dense_t *D, __armas_dense_t *E,
 
 #if ! defined(__bd_qlsweep_enhanced)
 static inline
-int __bd_qlsweep(__armas_dense_t *D, __armas_dense_t *E,
-                 __armas_dense_t *Cr, __armas_dense_t *Sr,
-                 __armas_dense_t *Cl, __armas_dense_t *Sl, DTYPE f0, DTYPE g0, int saves)
+int __bd_qlsweep(armas_x_dense_t *D, armas_x_dense_t *E,
+                 armas_x_dense_t *Cr, armas_x_dense_t *Sr,
+                 armas_x_dense_t *Cl, armas_x_dense_t *Sl, DTYPE f0, DTYPE g0, int saves)
 {
     DTYPE d1, e1, d2, e2, f, g,  cosr, cosl, sinr, sinl, r;
-    int k, n, N = __armas_size(D);
+    int k, n, N = armas_x_size(D);
 
     d1 = e2 = __ZERO;
-    d1 = __armas_get_at_unsafe(D, N-1);
-    e1 = __armas_get_at_unsafe(E, N-2);
+    d1 = armas_x_get_at_unsafe(D, N-1);
+    e1 = armas_x_get_at_unsafe(E, N-2);
     f = f0;
     g = g0;
     for (n = 0, k = N-1; k > 0; k--, n++) {
-        d2 = __armas_get_at_unsafe(D, k-1);
+        d2 = armas_x_get_at_unsafe(D, k-1);
 
         __gvrotg(&cosr, &sinr, &r, f, g);
         if (k < N-1) {
-            __armas_set_at_unsafe(E, k, r);
+            armas_x_set_at_unsafe(E, k, r);
         }
         //f  = cosr*d1 + sinr*e1;   e1 = cosr*e1 - sinr*d1;
         __gvrot(&f, &e1, cosr, sinr, d1, e1);
@@ -235,25 +235,25 @@ int __bd_qlsweep(__armas_dense_t *D, __armas_dense_t *E,
         //f  = cosl*e1 + sinl*d2;  d2 = cosl*d2 - sinl*e1;
         __gvrot(&f, &d2, cosl, sinl, e1, d2);
         if (k > 1) {
-            e2 = __armas_get_at_unsafe(E, k-2);
+            e2 = armas_x_get_at_unsafe(E, k-2);
             //g  = sinl*e2;  e2 = cosl*e2;
             __gvrot(&g, &e2, cosl, sinl, 0.0, e2);
-            __armas_set_at_unsafe(E, k-2, e2);
+            armas_x_set_at_unsafe(E, k-2, e2);
         }
 
-        __armas_set_at_unsafe(D, k, d1);
-        __armas_set_at_unsafe(D, k-1, d2);
+        armas_x_set_at_unsafe(D, k, d1);
+        armas_x_set_at_unsafe(D, k-1, d2);
         // save values;
         d1 = d2; e1 = e2;
         // save rotations
         if (saves) {
-            __armas_set_at_unsafe(Cr, k-1, cosr);
-            __armas_set_at_unsafe(Sr, k-1, -sinr);
-            __armas_set_at_unsafe(Cl, k-1, cosl);
-            __armas_set_at_unsafe(Sl, k-1, -sinl);
+            armas_x_set_at_unsafe(Cr, k-1, cosr);
+            armas_x_set_at_unsafe(Sr, k-1, -sinr);
+            armas_x_set_at_unsafe(Cl, k-1, cosl);
+            armas_x_set_at_unsafe(Sl, k-1, -sinl);
         }
     }
-    __armas_set_at_unsafe(E, 0, f);
+    armas_x_set_at_unsafe(E, 0, f);
     //return n > 0 ? N : 0;
     return N-1;
 }
@@ -262,37 +262,37 @@ int __bd_qlsweep(__armas_dense_t *D, __armas_dense_t *E,
 
 #if ! defined(__bd_qlzero_enhanced)
 static inline
-int __bd_qlzero(__armas_dense_t *D, __armas_dense_t *E,
-                __armas_dense_t *Cr, __armas_dense_t *Sr,
-                __armas_dense_t *Cl, __armas_dense_t *Sl, 
+int __bd_qlzero(armas_x_dense_t *D, armas_x_dense_t *E,
+                armas_x_dense_t *Cr, armas_x_dense_t *Sr,
+                armas_x_dense_t *Cl, armas_x_dense_t *Sl, 
                 int saves)
 {
     DTYPE d1, e1, d2, cosr, cosl, sinr, sinl, r;
-    int k, n, N = __armas_size(D);
+    int k, n, N = armas_x_size(D);
 
     sinl = __ONE;
-    d1 = __armas_get_at_unsafe(D, N-1);
+    d1 = armas_x_get_at_unsafe(D, N-1);
     cosr = __ONE;
     cosl = __ONE;
     for (n = 0, k = N-1; k > 0; k--, n++) {
-        e1 = __armas_get_at_unsafe(E, k-1);
-        d2 = __armas_get_at_unsafe(D, k-1);
+        e1 = armas_x_get_at_unsafe(E, k-1);
+        d2 = armas_x_get_at_unsafe(D, k-1);
         __gvrotg(&cosr, &sinr, &r, d1*cosr, e1);
         if (k < N-1)
-            __armas_set_at_unsafe(E, k, sinl*r);
+            armas_x_set_at_unsafe(E, k, sinl*r);
         __gvrotg(&cosl, &sinl, &r, cosl*r, sinr*d2);
-        __armas_set_at_unsafe(D, k, r);
+        armas_x_set_at_unsafe(D, k, r);
         d1 = d2;
         if (saves) {
-            __armas_set_at_unsafe(Cr, k-1, cosr);
-            __armas_set_at_unsafe(Sr, k-1, -sinr);
-            __armas_set_at_unsafe(Cl, k-1, cosl);
-            __armas_set_at_unsafe(Sl, k-1, -sinl);
+            armas_x_set_at_unsafe(Cr, k-1, cosr);
+            armas_x_set_at_unsafe(Sr, k-1, -sinr);
+            armas_x_set_at_unsafe(Cl, k-1, cosl);
+            armas_x_set_at_unsafe(Sl, k-1, -sinl);
         }
     }
-    d2 = cosr*__armas_get_at_unsafe(D, 0);
-    __armas_set_at_unsafe(D, 0, d2*cosl);
-    __armas_set_at_unsafe(E, 0, d2*sinl);
+    d2 = cosr*armas_x_get_at_unsafe(D, 0);
+    armas_x_set_at_unsafe(D, 0, d2*cosl);
+    armas_x_set_at_unsafe(E, 0, d2*sinl);
     //return n > 0 ? N : 0;
     return N-1;
 }
@@ -305,42 +305,42 @@ int __bd_qlzero(__armas_dense_t *D, __armas_dense_t *E,
  * \brief Implicit tridiagonal QL sweep from bottom to top.
  */
 static inline
-int __trd_qlsweep(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *Cr,
-                  __armas_dense_t *Sr, DTYPE f0, DTYPE g0, int saves)
+int __trd_qlsweep(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *Cr,
+                  armas_x_dense_t *Sr, DTYPE f0, DTYPE g0, int saves)
 {
     DTYPE cosr, sinr, r, d0, d1, e0, e1, e0r, e0c, w0, f, g; 
     int k;
-    int N = __armas_size(D);
+    int N = armas_x_size(D);
 
     e0c = w0 = e1 = __ZERO;
 
     f = f0; g = g0;
-    d0 = __armas_get_at_unsafe(D, N-1);
-    e0 = __armas_get_at_unsafe(E, N-2);
+    d0 = armas_x_get_at_unsafe(D, N-1);
+    e0 = armas_x_get_at_unsafe(E, N-2);
 
     for (k = N-1; k > 0; k--) {
-        d1 = __armas_get_at_unsafe(D, k-1);
+        d1 = armas_x_get_at_unsafe(D, k-1);
         __gvrotg(&cosr, &sinr, &r, f, g);
         if (k < N-1)
-            __armas_set_at_unsafe(E, k, r);
+            armas_x_set_at_unsafe(E, k, r);
         // rows
         __gvrot(&d0,  &e0c, cosr, sinr, d0, e0);
         __gvrot(&e0r, &d1,  cosr, sinr, e0, d1);
         __gvrot(&d0,  &e0r, cosr, sinr, d0, e0r);
         __gvrot(&e0c, &d1,  cosr, sinr, e0c, d1);
         if (k > 1) {
-            e1 = __armas_get_at_unsafe(E, k-2);
+            e1 = armas_x_get_at_unsafe(E, k-2);
             __gvrot(&w0, &e1,  cosr, sinr, 0.0, e1);
         }
-        __armas_set_at_unsafe(D, k, d0);
+        armas_x_set_at_unsafe(D, k, d0);
         d0 = d1; e0 = e1; f = e0r; g = w0;
         if (saves) {
-            __armas_set_at_unsafe(Cr, k-1, cosr);
-            __armas_set_at_unsafe(Sr, k-1, -sinr);
+            armas_x_set_at_unsafe(Cr, k-1, cosr);
+            armas_x_set_at_unsafe(Sr, k-1, -sinr);
         }
     }
-    __armas_set_at_unsafe(D, 0, d0);
-    __armas_set_at_unsafe(E, 0, e0c);
+    armas_x_set_at_unsafe(D, 0, d0);
+    armas_x_set_at_unsafe(E, 0, e0c);
     return N-1;
 }
 #endif   // ! __trd_qlsweep_enhanced
@@ -361,40 +361,40 @@ int __trd_qlsweep(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *Cr,
  *     1st  2nd
  */
 static inline
-int __trd_qrsweep(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *Cr,
-                  __armas_dense_t *Sr, DTYPE f0, DTYPE g0, int saves)
+int __trd_qrsweep(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *Cr,
+                  armas_x_dense_t *Sr, DTYPE f0, DTYPE g0, int saves)
 {
     DTYPE cosr, sinr, r, d0, d1, e0, e1, e0r, e0c, w0, f, g; 
     int k;
-    int N = __armas_size(D);
+    int N = armas_x_size(D);
 
     e0r = e1 = w0 = __ZERO;
     f = f0; g = g0;
-    d0 = __armas_get_at_unsafe(D, 0);
-    e0 = __armas_get_at_unsafe(E, 0);
+    d0 = armas_x_get_at_unsafe(D, 0);
+    e0 = armas_x_get_at_unsafe(E, 0);
 
     for (k = 0; k < N-1; k++) {
-        d1 = __armas_get_at_unsafe(D, k+1);
+        d1 = armas_x_get_at_unsafe(D, k+1);
         __gvrotg(&cosr, &sinr, &r, f, g);
         if (k > 0)
-            __armas_set_at_unsafe(E, k-1, r);
+            armas_x_set_at_unsafe(E, k-1, r);
         __gvrot(&d0,  &e0c, cosr, sinr, d0, e0);
         __gvrot(&e0r, &d1,  cosr, sinr, e0, d1);
         __gvrot(&d0,  &e0r, cosr, sinr, d0, e0r);
         __gvrot(&e0c, &d1,  cosr, sinr, e0c, d1);
         if (k < N-2) {
-            e1 = __armas_get_at_unsafe(E, k+1);
+            e1 = armas_x_get_at_unsafe(E, k+1);
             __gvrot(&w0, &e1,  cosr, sinr, 0.0, e1);
         }
-        __armas_set_at_unsafe(D, k, d0);
+        armas_x_set_at_unsafe(D, k, d0);
         d0 = d1; e0 = e1; f = e0r; g = w0;
         if (saves) {
-            __armas_set_at_unsafe(Cr, k, cosr);
-            __armas_set_at_unsafe(Sr, k, sinr);
+            armas_x_set_at_unsafe(Cr, k, cosr);
+            armas_x_set_at_unsafe(Sr, k, sinr);
         }
     }
-    __armas_set_at_unsafe(D, N-1, d0);
-    __armas_set_at_unsafe(E, N-2, e0r);
+    armas_x_set_at_unsafe(D, N-1, d0);
+    armas_x_set_at_unsafe(E, N-2, e0r);
     //return k > 0 ? N : 0;
     return N-1;
 }
@@ -409,7 +409,7 @@ int __trd_qrsweep(__armas_dense_t *D, __armas_dense_t *E, __armas_dense_t *Cr,
  */
 #if ! defined(__gvleft_enhanced)
 static inline
-void __gvleft(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int col, int ncol)
+void __gvleft(armas_x_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int col, int ncol)
 {
     DTYPE t0, *y0, *y1;
     int k, n;
@@ -434,7 +434,7 @@ void __gvleft(__armas_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int col, int
  */
 #if ! defined(__gvright_enhanced)
 static inline
-void __gvright(__armas_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int row, int nrow)
+void __gvright(armas_x_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int row, int nrow)
 {
     DTYPE t0, *y0, *y1;
     int k;
@@ -499,7 +499,7 @@ void __eigen2x2(DTYPE *e1, DTYPE *e2, DTYPE a, DTYPE b, DTYPE c, DTYPE d)
 
     T = (a + d)/2.0;
     D = a*d - b*c;
-    __armas_qdroots(e1, e2, 1.0, T, D);
+    armas_x_qdroots(e1, e2, 1.0, T, D);
 }
 
 #endif

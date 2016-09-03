@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_mvsolve_trm)
+#if defined(armas_x_mvsolve_trm)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -28,7 +28,7 @@ void __trsvf(char *uplo, char *trans, char *diag, int *n, DTYPE *alpha, DTYPE *A
              int *lda, DTYPE *X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t a, x;
+    armas_x_dense_t a, x;
     int flags = 0;
 
     switch (toupper(*uplo)) {
@@ -45,13 +45,13 @@ void __trsvf(char *uplo, char *trans, char *diag, int *n, DTYPE *alpha, DTYPE *A
     if (toupper(*diag) == 'U') 
         flags |= ARMAS_UNIT;
     
-    __armas_make(&a, *n, *n, *lda, A);
+    armas_x_make(&a, *n, *n, *lda, A);
     if (*incx == 1) {
-        __armas_make(&x, *n, 1, *n, X);
+        armas_x_make(&x, *n, 1, *n, X);
     } else {
-        __armas_make(&x, 1, *n, *incx, X);
+        armas_x_make(&x, 1, *n, *incx, X);
     }
-    __armas_mvsolve_trm(&x, &a, __ONE, flags, conf);
+    armas_x_mvsolve_trm(&x, &a, __ONE, flags, conf);
 }
 #endif
 
@@ -61,7 +61,7 @@ void __cblas_trsv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
                   DTYPE alpha, DTYPE *A, int lda, DTYPE *X,  int incx)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t Aa, x;
+    armas_x_dense_t Aa, x;
     int flags = 0;
 
     switch (order) {
@@ -82,12 +82,12 @@ void __cblas_trsv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
         break;
     }
     if (incx == 1) {
-        __armas_make(&x, N, 1, N, X);
+        armas_x_make(&x, N, 1, N, X);
     } else {
-        __armas_make(&x, 1, N, incx, X);
+        armas_x_make(&x, 1, N, incx, X);
     }
-    __armas_make(&Aa, N, N, lda, A);
-    __armas_mvsolve_trm(&x, &Aa, alpha, flags, conf);
+    armas_x_make(&Aa, N, N, lda, A);
+    armas_x_mvsolve_trm(&x, &Aa, alpha, flags, conf);
 }
 
 #endif

@@ -12,7 +12,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_iamax) && defined(__armas_amax)
+#if defined(armas_x_iamax) && defined(armas_x_amax)
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
@@ -101,7 +101,7 @@ int __vec_iamin(const mvec_t *X,  int N)
  *
  * @ingroup blas1
  */
-int __armas_iamax(const __armas_dense_t *x, armas_conf_t *conf)
+int armas_x_iamax(const armas_x_dense_t *x, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -114,22 +114,22 @@ int __armas_iamax(const __armas_dense_t *x, armas_conf_t *conf)
 
   // assume column vector
   mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
-  return __vec_iamax(&X, __armas_size(x));
+  return __vec_iamax(&X, armas_x_size(x));
 }
 
 /**
  * @brief Maximum absolute value of vector.
  */
-ABSTYPE __armas_amax(const __armas_dense_t *x, armas_conf_t *conf)
+ABSTYPE armas_x_amax(const armas_x_dense_t *x, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
 
-  int imax = __armas_iamax(x, conf);
+  int imax = armas_x_iamax(x, conf);
   if (imax != -1) {
     int r = x->rows == 0 ? 0    : imax;
     int c = x->rows == 0 ? imax : 0;
-    return __ABS(__armas_get(x, r, c));
+    return __ABS(armas_x_get(x, r, c));
   }
   return __ZERO;
 }
@@ -146,7 +146,7 @@ ABSTYPE __armas_amax(const __armas_dense_t *x, armas_conf_t *conf)
  *
  * @ingroup blas1
  */
-int __armas_iamin(const __armas_dense_t *x, armas_conf_t *conf)
+int armas_x_iamin(const armas_x_dense_t *x, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -159,7 +159,7 @@ int __armas_iamin(const __armas_dense_t *x, armas_conf_t *conf)
 
   // assume column vector
   mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
-  return __vec_iamin(&X, __armas_size(x));
+  return __vec_iamin(&X, armas_x_size(x));
 }
 
 #endif /* __ARMAS_REQUIRES && __ARMAS_PROVIDES */

@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_qdroots) && defined(__armas_discriminant)
+#if defined(armas_x_qdroots) && defined(armas_x_discriminant)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
@@ -130,7 +130,7 @@ DTYPE discriminant(DTYPE a, DTYPE b, DTYPE c)
  * For details see
  *   W. Kahan, On the cost of Floating-Point Computation Without Extra-Precise Arithmetic, 2004
  */
-int __armas_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c)
+int armas_x_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c)
 {
     DTYPE d, r, s, signb;
     d = discriminant(a, b, c);
@@ -158,7 +158,7 @@ int __armas_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c)
  * For details see
  *   W. Kahan, On the Cost of Floating-Point Computation Without Extra-Precise Arithmetic, 2004
  */
-void __armas_discriminant(DTYPE *dval, DTYPE a, DTYPE b, DTYPE c)
+void armas_x_discriminant(DTYPE *dval, DTYPE a, DTYPE b, DTYPE c)
 {
     *dval = discriminant(a, b, c);
 }

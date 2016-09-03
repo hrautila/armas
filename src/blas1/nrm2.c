@@ -12,7 +12,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_nrm2) 
+#if defined(armas_x_nrm2) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
@@ -148,7 +148,7 @@ ABSTYPE __vec_nrm2_scaled(const mvec_t *X,  int N)
  *
  * @ingroup blas1
  */
-ABSTYPE __armas_nrm2(const __armas_dense_t *x, armas_conf_t *conf)
+ABSTYPE armas_x_nrm2(const armas_x_dense_t *x, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -159,17 +159,17 @@ ABSTYPE __armas_nrm2(const __armas_dense_t *x, armas_conf_t *conf)
     return __ABSZERO;
   }
 
-  if (__armas_size(x) == 0) {
+  if (armas_x_size(x) == 0) {
     return __ABSZERO;
   }
-  if (__armas_size(x) == 1) {
+  if (armas_x_size(x) == 1) {
     return __ABS(x->elems[0]);
   }
   mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
   if (conf && (conf->optflags & ARMAS_ONAIVE)) {
-    return __vec_nrm2(&X, __armas_size(x));
+    return __vec_nrm2(&X, armas_x_size(x));
   }
-  return __vec_nrm2_scaled(&X, __armas_size(x));
+  return __vec_nrm2_scaled(&X, armas_x_size(x));
 }
 
 #endif /* __ARMAS_REQUIRES && __ARMAS_PROVIDES */

@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_solve_trm)
+#if defined(armas_x_solve_trm)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -28,20 +28,20 @@ void __trsmf(char *side, char *uplo, char *transa, char *diag,int *m, int *n,
              DTYPE *alpha, DTYPE *A, int *lda, DTYPE *B, int *ldb)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t a, b;
+    armas_x_dense_t a, b;
     int flags = 0;
 
-    __armas_make(&b, *m, *n, *ldb, B);
+    armas_x_make(&b, *m, *n, *ldb, B);
 
     switch (toupper(*side)) {
     case 'R':
         flags |= ARMAS_RIGHT;
-        __armas_make(&a, *n, *n, *lda, A);
+        armas_x_make(&a, *n, *n, *lda, A);
         break;
     case 'L':
     default:
         flags |= ARMAS_LEFT;
-        __armas_make(&a, *m, *m, *lda, A);
+        armas_x_make(&a, *m, *m, *lda, A);
         break;
     }
     flags |= toupper(*uplo) == 'L' ? ARMAS_LOWER : ARMAS_UPPER;
@@ -50,7 +50,7 @@ void __trsmf(char *side, char *uplo, char *transa, char *diag,int *m, int *n,
     if (toupper(*diag) == 'U')
         flags |=  ARMAS_UNIT;
 
-    __armas_solve_trm(&b, &a, *alpha, flags, conf);
+    armas_x_solve_trm(&b, &a, *alpha, flags, conf);
 }
 #endif
 
@@ -61,7 +61,7 @@ void __cblas_trsm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
                   DTYPE alpha, DTYPE *A, int lda, DTYPE *B, int ldb)
 {
     armas_conf_t conf = *armas_conf_default();
-    __armas_dense_t Aa, Ba;
+    armas_x_dense_t Aa, Ba;
     int flags = 0;
     switch (order) {
     case CblasColMajor:
@@ -72,13 +72,13 @@ void __cblas_trsm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
         if (transa == CblasTrans)
             flags |= ARMAS_TRANSA;
         // M > ldb --> error
-        __armas_make(&Ba, M, N, ldb, B);
+        armas_x_make(&Ba, M, N, ldb, B);
         if (side == CblasRight) {
             // N > lda --> error
-            __armas_make(&Aa, N, N, lda, A);
+            armas_x_make(&Aa, N, N, lda, A);
         } else {
             // M > lda --> error
-            __armas_make(&Aa, M, M, lda, A);
+            armas_x_make(&Aa, M, M, lda, A);
         }
         break;
     case CblasRowMajor:
@@ -89,19 +89,19 @@ void __cblas_trsm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
         if (transa == CblasNoTrans)
             flags |= ARMAS_TRANSA;
         // N > ldb --> error
-        __armas_make(&Ba, N, M, ldb, B);
+        armas_x_make(&Ba, N, M, ldb, B);
         if (side == CblasRight) {
             // N > lda --> error
-            __armas_make(&Aa, M, M, lda, A);
+            armas_x_make(&Aa, M, M, lda, A);
         } else {
             // M > lda --> error
-            __armas_make(&Aa, N, N, lda, A);
+            armas_x_make(&Aa, N, N, lda, A);
         }
         break;
     default:
         return;
     }
-    __armas_solve_trm(&Ba, &Aa, alpha, flags, &conf);
+    armas_x_solve_trm(&Ba, &Aa, alpha, flags, &conf);
 }
 
 #endif

@@ -12,7 +12,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_copy) 
+#if defined(armas_x_copy) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
@@ -74,7 +74,7 @@ void __vec_copy(mvec_t *X,  const mvec_t *Y, int N)
  *
  * @ingroup blas1
  */
-int __armas_copy(__armas_dense_t *Y, const __armas_dense_t *X, armas_conf_t *conf)
+int armas_x_copy(armas_x_dense_t *Y, const armas_x_dense_t *X, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -88,17 +88,17 @@ int __armas_copy(__armas_dense_t *Y, const __armas_dense_t *X, armas_conf_t *con
     conf->error = ARMAS_ENEED_VECTOR;
     return -1;
   }
-  if (__armas_size(X) < __armas_size(Y)) {
+  if (armas_x_size(X) < armas_x_size(Y)) {
     conf->error = ARMAS_ESIZE;
     return -1;
   }
-  if (__armas_size(X) == 0 || __armas_size(Y) == 0) {
+  if (armas_x_size(X) == 0 || armas_x_size(Y) == 0) {
     return 0;
   }
   const mvec_t x = {X->elems, (X->rows == 1 ? X->step : 1)};
   mvec_t y = {Y->elems, (Y->rows == 1 ? Y->step : 1)};
 
-  __vec_copy(&y, &x, __armas_size(Y));
+  __vec_copy(&y, &x, armas_x_size(Y));
   return 0;
 }
 

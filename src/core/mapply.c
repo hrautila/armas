@@ -15,7 +15,7 @@
 //! \endcond
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(__armas_apply) && defined(__armas_apply2)
+#if defined(armas_x_apply) && defined(armas_x_apply2)
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
@@ -44,32 +44,32 @@
  *    0 for success, -1 for error
  * \ingroup matrix
  */
-int __armas_apply(__armas_dense_t *A, __armas_operator_t oper, int flags)
+int armas_x_apply(armas_x_dense_t *A, armas_x_operator_t oper, int flags)
 {
   int i, j;
 
-  if (__armas_size(A) == 0)
+  if (armas_x_size(A) == 0)
     return 0;
 
   switch (flags & (ARMAS_LOWER|ARMAS_UPPER)) {
   case ARMAS_LOWER:
     for (j = 0; j < A->cols; j++) {
       for (i = j; i < A->rows; i++) {
-        __armas_set_unsafe(A, i, j, oper(__armas_get_unsafe(A, i, j)));
+        armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j)));
       }
     }
     break;
   case ARMAS_UPPER:
     for (j = 0; j < A->cols; j++) {
       for (i = 0; i <= j; i++) {
-        __armas_set_unsafe(A, i, j, oper(__armas_get_unsafe(A, i, j)));
+        armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j)));
       }
     }
     break;
   default:
     for (j = 0; j < A->cols; j++) {
       for (i = 0; i < A->rows; i++) {
-        __armas_set_unsafe(A, i, j, oper(__armas_get_unsafe(A, i, j)));
+        armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j)));
       }
     }
     break;
@@ -93,32 +93,32 @@ int __armas_apply(__armas_dense_t *A, __armas_operator_t oper, int flags)
  *    0 for success, -1 for error
  * \ingroup matrix
  */
-int __armas_apply2(__armas_dense_t *A, __armas_operator2_t oper, DTYPE val, int flags)
+int armas_x_apply2(armas_x_dense_t *A, armas_x_operator2_t oper, DTYPE val, int flags)
 {
   int i, j;
 
-  if (__armas_size(A) == 0)
+  if (armas_x_size(A) == 0)
     return 0;
 
   switch (flags & (ARMAS_LOWER|ARMAS_UPPER)) {
   case ARMAS_LOWER:
     for (j = 0; j < A->cols; j++) {
       for (i = j; i < A->rows; i++) {
-        __armas_set_unsafe(A, i, j, oper(__armas_get_unsafe(A, i, j), val));
+        armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j), val));
       }
     }
     break;
   case ARMAS_UPPER:
     for (j = 0; j < A->cols; j++) {
       for (i = 0; i <= j; i++) {
-        __armas_set_unsafe(A, i, j, oper(__armas_get_unsafe(A, i, j), val));
+        armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j), val));
       }
     }
     break;
   default:
     for (j = 0; j < A->cols; j++) {
       for (i = 0; i < A->rows; i++) {
-        __armas_set_unsafe(A, i, j, oper(__armas_get_unsafe(A, i, j), val));
+        armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j), val));
       }
     }
     break;

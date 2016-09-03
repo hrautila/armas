@@ -13,11 +13,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_trdbisect) 
+#if defined(armas_x_trdbisect) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_blas) 
+#if defined(armas_x_blas) 
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -75,14 +75,14 @@
  * See (1) 5.3 algorithm 4.
  */
 static
-int __float_count_ieee(__armas_dense_t *D, __armas_dense_t *E, DTYPE x)
+int __float_count_ieee(armas_x_dense_t *D, armas_x_dense_t *E, DTYPE x)
 {
     int k, count = 0;
     DTYPE d = __ONE, bim1 = __ZERO;
     
-    for (k = 0; k < __armas_size(D); k++) {
-        d    = (__armas_get_at_unsafe(D, k) - x) - bim1*bim1/d;
-        bim1 = __armas_get_at_unsafe(E, k);
+    for (k = 0; k < armas_x_size(D); k++) {
+        d    = (armas_x_get_at_unsafe(D, k) - x) - bim1*bim1/d;
+        bim1 = armas_x_get_at_unsafe(E, k);
         count += signbit(d) ? 1 : 0;
     }
     return count;
@@ -96,17 +96,17 @@ int __float_count_ieee(__armas_dense_t *D, __armas_dense_t *E, DTYPE x)
  *  fudge = 2.1; pivmin = min e(i)^2  ; pivmin = pivmin*safemn
  */
 static
-void __compute_gerschgorin(DTYPE *glow, DTYPE *gup, __armas_dense_t *D, __armas_dense_t *E)
+void __compute_gerschgorin(DTYPE *glow, DTYPE *gup, armas_x_dense_t *D, armas_x_dense_t *E)
 {
-    int k, n = __armas_size(D);
+    int k, n = armas_x_size(D);
     DTYPE gl, gu, di, ei, eim1, t, bnorm, pivmin;
     ei = __ZERO; pivmin = __ONE;
-    gl = gu = __armas_get_at_unsafe(D, 0);
+    gl = gu = armas_x_get_at_unsafe(D, 0);
 
     eim1 = __ZERO;
     for (k = 0; k < n-1; k++) {
-        di   = __armas_get_at_unsafe(D, k);
-        ei = __ABS(__armas_get_at_unsafe(E, k));
+        di   = armas_x_get_at_unsafe(D, k);
+        ei = __ABS(armas_x_get_at_unsafe(E, k));
         t = ei + eim1;
         if (gl > di - t)
             gl = di - t;
@@ -117,7 +117,7 @@ void __compute_gerschgorin(DTYPE *glow, DTYPE *gup, __armas_dense_t *D, __armas_
             pivmin = ei*ei;
     }
     pivmin = __SAFEMIN*pivmin;
-    di  = __armas_get_at_unsafe(D, n-1);
+    di  = armas_x_get_at_unsafe(D, n-1);
     if (gl > di - ei)
         gl = di - ei;
     if (gu < di + ei)
@@ -158,13 +158,13 @@ void __compute_gerschgorin(DTYPE *glow, DTYPE *gup, __armas_dense_t *D, __armas_
  * \retval -1  Target vector Y too small
  */
 static
-int __trd_bisect(__armas_dense_t *Y, __armas_dense_t *D, __armas_dense_t *E,
+int __trd_bisect(armas_x_dense_t *Y, armas_x_dense_t *D, armas_x_dense_t *E,
                   DTYPE left, DTYPE right, int nleft, int nright, 
                   DTYPE tau, int index, int istart)
 {
     int nl, nr, nmid;
     DTYPE mid, eigen;
-    __armas_dense_t sD, sE;
+    armas_x_dense_t sD, sE;
 
     if (nleft >= nright || left > right) {
         return 0;
@@ -180,33 +180,33 @@ int __trd_bisect(__armas_dense_t *Y, __armas_dense_t *D, __armas_dense_t *E,
     if (right - left < tau) {
         eigen = __MIN(__MAX(mid, left), right);
         //printf("eigen: %e [%d times] @ %d %d\n", eigen, nright-nleft, index, istart);
-        if (index-istart >= __armas_size(Y))
+        if (index-istart >= armas_x_size(Y))
             return -1;
         // store to result vector
-        __armas_set_at_unsafe(Y, index-istart, eigen);
+        armas_x_set_at_unsafe(Y, index-istart, eigen);
         return 0;
     }
 
     nmid = __float_count_ieee(D, E, mid);
     nmid = __IMIN(__IMAX(nmid, nleft), nright);
     if (nmid > nleft) {
-        if (__armas_size(D) == 1) {
+        if (armas_x_size(D) == 1) {
             if (__trd_bisect(Y, D, E, left, mid, nleft, nmid, tau, index+nleft, istart) < 0)
                 return -1;
         } else {
-            __armas_subvector_unsafe(&sD, D, nleft, nmid-nleft);
-            __armas_subvector_unsafe(&sE, E, nleft, nmid-nleft);
+            armas_x_subvector_unsafe(&sD, D, nleft, nmid-nleft);
+            armas_x_subvector_unsafe(&sE, E, nleft, nmid-nleft);
             if (__trd_bisect(Y, &sD, &sE, left, mid, 0, nmid-nleft, tau, index+nleft, istart) < 0)
                 return -1;
         }
     }
     if (nmid < nright) {
-        if (__armas_size(D) == 1) {
+        if (armas_x_size(D) == 1) {
             if (__trd_bisect(Y, D, E, mid, right, nmid, nright, tau, index+nmid, istart) < 0)
                 return -1;
         } else {
-            __armas_subvector_unsafe(&sD, D, nmid, nright-nmid);
-            __armas_subvector_unsafe(&sE, E, nmid, nright-nmid);
+            armas_x_subvector_unsafe(&sD, D, nmid, nright-nmid);
+            armas_x_subvector_unsafe(&sE, E, nmid, nright-nmid);
             if (__trd_bisect(Y, &sD, &sE, mid, right, 0, nright-nmid, tau, index+nmid, istart) < 0)
                 return -1;
         }
@@ -237,10 +237,10 @@ int __trd_bisect(__armas_dense_t *Y, __armas_dense_t *D, __armas_dense_t *E,
  * \retval  0  OK
  * \retval <0  Failed to store all requested eigenvalues to result vector
  */
-int __armas_trdbisect(__armas_dense_t *Y, __armas_dense_t *D, __armas_dense_t *E,
-                      __armas_eigen_parameter_t *params,  armas_conf_t *conf)
+int armas_x_trdbisect(armas_x_dense_t *Y, armas_x_dense_t *D, armas_x_dense_t *E,
+                      armas_x_eigen_parameter_t *params,  armas_conf_t *conf)
 {
-    //__armas_dense_t Xrow;
+    //armas_x_dense_t Xrow;
     DTYPE gleft, gright, bnorm, tau;
     int nleft, nright;
     int err;
@@ -248,7 +248,7 @@ int __armas_trdbisect(__armas_dense_t *Y, __armas_dense_t *D, __armas_dense_t *E
     if (!conf)
         conf = armas_conf_default();
     
-    if (__armas_size(D) == 0 || __armas_size(E) == 0)
+    if (armas_x_size(D) == 0 || armas_x_size(E) == 0)
         return 0;
 
     __compute_gerschgorin(&gleft, &gright, D, E);
@@ -267,12 +267,12 @@ int __armas_trdbisect(__armas_dense_t *Y, __armas_dense_t *D, __armas_dense_t *E
         } else {
             // index range
             nleft = __IMAX(0, params->ileft);
-            nright = __IMIN(params->iright, __armas_size(D));
+            nright = __IMIN(params->iright, armas_x_size(D));
         }
         err = __trd_bisect(Y, D, E, gleft, gright, nleft, nright, tau, 0, nleft);
     } else {
         // all eigenvalues
-        err = __trd_bisect(Y, D, E, gleft, gright, 0, __armas_size(D), tau, 0, 0);
+        err = __trd_bisect(Y, D, E, gleft, gright, 0, armas_x_size(D), tau, 0, 0);
     }
         
     if (err < 0)

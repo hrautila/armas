@@ -12,7 +12,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_scale) && defined(__armas_invscale) && defined(__armas_add)
+#if defined(armas_x_scale) && defined(armas_x_invscale) && defined(armas_x_add)
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
@@ -150,7 +150,7 @@ void __vec_add(mvec_t *X,  const DTYPE alpha, int N)
  *
  * @ingroup blas1
  */
-int __armas_scale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
+int armas_x_scale(const armas_x_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -163,7 +163,7 @@ int __armas_scale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *con
 
   mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
 
-  __vec_scal(&X, alpha, __armas_size(x));
+  __vec_scal(&X, alpha, armas_x_size(x));
   return 0;
 }
 
@@ -179,7 +179,7 @@ int __armas_scale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *con
  *
  * @ingroup blas1
  */
-int __armas_invscale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
+int armas_x_invscale(const armas_x_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -192,7 +192,7 @@ int __armas_invscale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *
 
   mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
 
-  __vec_scal(&X, __ONE/alpha, __armas_size(x));
+  __vec_scal(&X, __ONE/alpha, armas_x_size(x));
   return 0;
 }
 
@@ -208,7 +208,7 @@ int __armas_invscale(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *
  *
  * @ingroup blas1
  */
-int __armas_add(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
+int armas_x_add(const armas_x_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -221,7 +221,7 @@ int __armas_add(const __armas_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 
   mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
 
-  __vec_add(&X, alpha, __armas_size(x));
+  __vec_add(&X, alpha, armas_x_size(x));
   return 0;
 }
 

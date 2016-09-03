@@ -10,11 +10,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_inverse_trm) 
+#if defined(armas_x_inverse_trm) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_blas) 
+#if defined(armas_x_blas) 
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -36,9 +36,9 @@
  */
 
 static
-int __unblk_inverse_upper(__armas_dense_t *A, int flags, armas_conf_t *conf)
+int __unblk_inverse_upper(armas_x_dense_t *A, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, a01, a11, A22;
+    armas_x_dense_t ATL, ABR, A00, a01, a11, A22;
     int err = 0;
     DTYPE a11val;
 
@@ -57,7 +57,7 @@ int __unblk_inverse_upper(__armas_dense_t *A, int flags, armas_conf_t *conf)
                                __nil, __nil, &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
         // ---------------------------------------------------------------------------
         if (!(flags & ARMAS_UNIT)) {
-            a11val = __armas_get_unsafe(&a11, 0, 0);
+            a11val = armas_x_get_unsafe(&a11, 0, 0);
             if (a11val == __ZERO) {
                 if (err == 0) {
                     conf->error = ARMAS_ESINGULAR;
@@ -67,10 +67,10 @@ int __unblk_inverse_upper(__armas_dense_t *A, int flags, armas_conf_t *conf)
             }
             // a11 = 1.0/a11
             a11val = __ONE/a11val;
-            __armas_set_unsafe(&a11, 0, 0, a11val);
+            armas_x_set_unsafe(&a11, 0, 0, a11val);
         } 
         // a01 = -a11val*A00*a01
-        __armas_mvmult_trm(&a01, &A00, -a11val, ARMAS_UPPER, conf);
+        armas_x_mvmult_trm(&a01, &A00, -a11val, ARMAS_UPPER, conf);
         // ---------------------------------------------------------------------------
     next:
         __continue_3x3to2x2(&ATL,  __nil,
@@ -80,9 +80,9 @@ int __unblk_inverse_upper(__armas_dense_t *A, int flags, armas_conf_t *conf)
 }
 
 static
-int __blk_inverse_upper(__armas_dense_t *A, int flags, int lb, armas_conf_t *conf)
+int __blk_inverse_upper(armas_x_dense_t *A, int flags, int lb, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, A01, A11, A22;
+    armas_x_dense_t ATL, ABR, A00, A01, A11, A22;
     int err = 0;
 
     __partition_2x2(&ATL,  __nil,
@@ -95,9 +95,9 @@ int __blk_inverse_upper(__armas_dense_t *A, int flags, int lb, armas_conf_t *con
                                __nil, __nil, &A22,  /**/  A, lb, ARMAS_PBOTTOMRIGHT);
         // ---------------------------------------------------------------------------
         // A01 := A00*A01
-        __armas_mult_trm(&A01, &A00, __ONE, ARMAS_LEFT|ARMAS_UPPER|flags, conf);
+        armas_x_mult_trm(&A01, &A00, __ONE, ARMAS_LEFT|ARMAS_UPPER|flags, conf);
         // A01 := -A01*A11.-1
-        __armas_solve_trm(&A01, &A11, -__ONE, ARMAS_RIGHT|ARMAS_UPPER|flags, conf);
+        armas_x_solve_trm(&A01, &A11, -__ONE, ARMAS_RIGHT|ARMAS_UPPER|flags, conf);
         // inv(&A11)
         if (__unblk_inverse_upper(&A11, flags, conf) != 0 && err == 0)
             err = -1;
@@ -109,9 +109,9 @@ int __blk_inverse_upper(__armas_dense_t *A, int flags, int lb, armas_conf_t *con
 }
 
 static
-int __unblk_inverse_lower(__armas_dense_t *A, int flags, armas_conf_t *conf)
+int __unblk_inverse_lower(armas_x_dense_t *A, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, a11, a21, A22;
+    armas_x_dense_t ATL, ABR, A00, a11, a21, A22;
     int err = 0;
     DTYPE a11val;
 
@@ -130,7 +130,7 @@ int __unblk_inverse_lower(__armas_dense_t *A, int flags, armas_conf_t *conf)
                                __nil, &a21,  &A22,  /**/  A, 1, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------------
         if (!(flags & ARMAS_UNIT)) {
-            a11val = __armas_get_unsafe(&a11, 0, 0);
+            a11val = armas_x_get_unsafe(&a11, 0, 0);
             if (a11val == __ZERO) {
                 if (err == 0) {
                     conf->error = ARMAS_ESINGULAR;
@@ -140,10 +140,10 @@ int __unblk_inverse_lower(__armas_dense_t *A, int flags, armas_conf_t *conf)
             }
             // a11 = 1.0/a11
             a11val = __ONE/a11val;
-            __armas_set_unsafe(&a11, 0, 0, a11val);
+            armas_x_set_unsafe(&a11, 0, 0, a11val);
         } 
         // a21 = -a11val*A22*a21
-        __armas_mvmult_trm(&a21, &A22, -a11val, ARMAS_LOWER, conf);
+        armas_x_mvmult_trm(&a21, &A22, -a11val, ARMAS_LOWER, conf);
         // ---------------------------------------------------------------------------
     next:
         __continue_3x3to2x2(&ATL,  __nil,
@@ -154,9 +154,9 @@ int __unblk_inverse_lower(__armas_dense_t *A, int flags, armas_conf_t *conf)
 
 
 static
-int __blk_inverse_lower(__armas_dense_t *A, int flags, int lb, armas_conf_t *conf)
+int __blk_inverse_lower(armas_x_dense_t *A, int flags, int lb, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, A11, A21, A22;
+    armas_x_dense_t ATL, ABR, A00, A11, A21, A22;
     int err = 0;
 
     EMPTY(A00); EMPTY(ATL);
@@ -171,9 +171,9 @@ int __blk_inverse_lower(__armas_dense_t *A, int flags, int lb, armas_conf_t *con
                                __nil, &A21,  &A22,  /**/  A, lb, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------------
         // A21 := A22*A21
-        __armas_mult_trm(&A21, &A22, __ONE, ARMAS_LEFT|ARMAS_LOWER|flags, conf);
+        armas_x_mult_trm(&A21, &A22, __ONE, ARMAS_LEFT|ARMAS_LOWER|flags, conf);
         // A21 := -A21*A11.-1
-        __armas_solve_trm(&A21, &A11, -__ONE, ARMAS_RIGHT|ARMAS_LOWER|flags, conf);
+        armas_x_solve_trm(&A21, &A11, -__ONE, ARMAS_RIGHT|ARMAS_LOWER|flags, conf);
         // inv(&A11)
         if (__unblk_inverse_lower(&A11, flags, conf) != 0 && err == 0)
             err = -1;
@@ -199,7 +199,7 @@ int __blk_inverse_lower(__armas_dense_t *A, int flags, int lb, armas_conf_t *con
  * \returns
  *    0 for succes, -1 for error
  */
-int __armas_inverse_trm(__armas_dense_t *A, int flags, armas_conf_t *conf)
+int armas_x_inverse_trm(armas_x_dense_t *A, int flags, armas_conf_t *conf)
 {
     int err = 0;
     if (!conf)

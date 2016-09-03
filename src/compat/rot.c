@@ -15,7 +15,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_gvrotate) && defined(__armas_gvcompute)
+#if defined(armas_x_gvrotate) && defined(armas_x_gvcompute)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -29,7 +29,7 @@
 static
 void __rot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE c, DTYPE s)
 {
-    __armas_dense_t y, x;
+    armas_x_dense_t y, x;
     int ix, iy, nx, ny, i;
     DTYPE x0, y0;
 
@@ -37,14 +37,14 @@ void __rot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE c, DTYPE 
     iy = incy < 0 ? -incy : incy;
 
     if (ix == 1) {
-        __armas_make(&x, N, 1, N, X);
+        armas_x_make(&x, N, 1, N, X);
     } else {
-        __armas_make(&x, 1, N, ix, X);
+        armas_x_make(&x, 1, N, ix, X);
     }
     if (iy == 1) {
-        __armas_make(&y, N, 1, N, Y);
+        armas_x_make(&y, N, 1, N, Y);
     } else {
-        __armas_make(&y, 1, N, iy, Y);
+        armas_x_make(&y, 1, N, iy, Y);
     }
 
     ix = incx < 0 ? N - 1 : 0;
@@ -52,10 +52,10 @@ void __rot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE c, DTYPE 
     nx = ix == 0 ? 1 : -1;
     ny = iy == 0 ? 1 : -1;
     for (i = 0; i < N; i++, iy += ny, ix += nx) {
-        __armas_gvrotate(&x0, &y0, c, s,
-                         __armas_get_at_unsafe(&x, ix), __armas_get_at_unsafe(&y, iy));
-        __armas_set_at_unsafe(&x, ix, x0);
-        __armas_set_at_unsafe(&y, iy, y0);
+        armas_x_gvrotate(&x0, &y0, c, s,
+                         armas_x_get_at_unsafe(&x, ix), armas_x_get_at_unsafe(&y, iy));
+        armas_x_set_at_unsafe(&x, ix, x0);
+        armas_x_set_at_unsafe(&y, iy, y0);
     }
 }
 
@@ -70,7 +70,7 @@ void __rotf(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy, DTYPE *c, DTYPE *s
 void __rotgf(DTYPE *sa, DTYPE *sb, DTYPE *c, DTYPE *s)
 {
     DTYPE r;
-    __armas_gvcompute(c, s, &r, *sa, *sb);
+    armas_x_gvcompute(c, s, &r, *sa, *sb);
 }
 #endif // rotg
 

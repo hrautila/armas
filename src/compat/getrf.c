@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(ENABLE_COMPAT) && defined(__armas_lufactor)
+#if defined(ENABLE_COMPAT) && defined(armas_x_lufactor)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -26,14 +26,14 @@
 #if defined(__getrff)
 void __getrff(int *m, int *n, DTYPE *A, int *lda, int *ipiv, int *info)
 {
-    __armas_dense_t a;
+    armas_x_dense_t a;
     armas_pivot_t piv;
     armas_conf_t conf = *armas_conf_default();
     int err, npiv = imin(*m, *n);
 
-    __armas_make(&a, *m, *n, *lda, A);
+    armas_x_make(&a, *m, *n, *lda, A);
     armas_pivot_make(&piv, npiv, ipiv);
-    err = __armas_lufactor(&a, &piv, &conf);
+    err = armas_x_lufactor(&a, &piv, &conf);
     *info = err ? -conf.error : 0;
 }
 #endif
@@ -41,7 +41,7 @@ void __getrff(int *m, int *n, DTYPE *A, int *lda, int *ipiv, int *info)
 #if defined(__lapacke_getrf)
 int __lapacke_getrf(int order, int M, int N, DTYPE *A, int lda, int *ipv)
 {
-    __armas_dense_t Aa;
+    armas_x_dense_t Aa;
     armas_pivot_t piv;
     armas_conf_t conf = *armas_conf_default();
     int err, npiv = imin(M, N);
@@ -49,9 +49,9 @@ int __lapacke_getrf(int order, int M, int N, DTYPE *A, int lda, int *ipv)
     if (order == LAPACKE_ROW_MAJOR) {
         return -1;
     }
-    __armas_make(&Aa, M, N, lda, A);
+    armas_x_make(&Aa, M, N, lda, A);
     armas_pivot_make(&piv, npiv, ipv);
-    err = __armas_lufactor(&Aa, &piv, &conf);
+    err = armas_x_lufactor(&Aa, &piv, &conf);
     return err ? -conf.error : 0;
 }
 #endif

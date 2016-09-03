@@ -13,11 +13,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_cholupdate) 
+#if defined(armas_x_cholupdate) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_blas) && defined(__armas_gvrot_vec)
+#if defined(armas_x_blas) && defined(armas_x_gvrot_vec)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -42,10 +42,10 @@
  *                        (x^T)
  */
 static
-int __unblk_cholupdate_lower(__armas_dense_t *A, __armas_dense_t *X, armas_conf_t *conf)
+int __unblk_cholupdate_lower(armas_x_dense_t *A, armas_x_dense_t *X, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABL, ABR, A00, a11, a21, A22;
-    __armas_dense_t XL, XR, X0, x1, X2;
+    armas_x_dense_t ATL, ABL, ABR, A00, a11, a21, A22;
+    armas_x_dense_t XL, XR, X0, x1, X2;
     DTYPE c, s, r, a11val, x1val;
 
     EMPTY(x1); EMPTY(a11); EMPTY(A00); EMPTY(XL);
@@ -62,12 +62,12 @@ int __unblk_cholupdate_lower(__armas_dense_t *A, __armas_dense_t *X, armas_conf_
                                __nil,  &a21,  &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
         __repartition_1x2to1x3(&XL, /**/ &X0, &x1, &X2,  /**/ X, 1, ARMAS_PRIGHT);
         // ---------------------------------------------------------------------------
-        a11val = __armas_get_unsafe(&a11, 0, 0);
-        x1val  = __armas_get_unsafe(&x1, 0, 0);
-        __armas_gvcompute(&c, &s, &r, a11val, x1val);
+        a11val = armas_x_get_unsafe(&a11, 0, 0);
+        x1val  = armas_x_get_unsafe(&x1, 0, 0);
+        armas_x_gvcompute(&c, &s, &r, a11val, x1val);
 
-        __armas_set_unsafe(&a11, 0, 0, r);
-        __armas_gvrot_vec(&a21, &X2, c, s);
+        armas_x_set_unsafe(&a11, 0, 0, r);
+        armas_x_gvrot_vec(&a21, &X2, c, s);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL, __nil,
                             &ABL,  &ABR, /**/ &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -78,10 +78,10 @@ int __unblk_cholupdate_lower(__armas_dense_t *A, __armas_dense_t *X, armas_conf_
 
 
 static
-int __unblk_cholupdate_upper(__armas_dense_t *A, __armas_dense_t *X, armas_conf_t *conf)
+int __unblk_cholupdate_upper(armas_x_dense_t *A, armas_x_dense_t *X, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABL, ABR, A00, a11, a12, A22;
-    __armas_dense_t XL, XR, X0, x1, X2;
+    armas_x_dense_t ATL, ABL, ABR, A00, a11, a12, A22;
+    armas_x_dense_t XL, XR, X0, x1, X2;
     DTYPE c, s, r, a11val, x1val;
 
     EMPTY(x1); EMPTY(a11); EMPTY(A00); EMPTY(XL);
@@ -98,12 +98,12 @@ int __unblk_cholupdate_upper(__armas_dense_t *A, __armas_dense_t *X, armas_conf_
                                __nil, __nil,  &A22,  /**/  A, 1, ARMAS_PBOTTOMRIGHT);
         __repartition_1x2to1x3(&XL, /**/ &X0, &x1, &X2,  /**/ X, 1, ARMAS_PRIGHT);
         // ---------------------------------------------------------------------------
-        a11val = __armas_get_unsafe(&a11, 0, 0);
-        x1val  = __armas_get_unsafe(&x1, 0, 0);
-        __armas_gvcompute(&c, &s, &r, a11val, x1val);
+        a11val = armas_x_get_unsafe(&a11, 0, 0);
+        x1val  = armas_x_get_unsafe(&x1, 0, 0);
+        armas_x_gvcompute(&c, &s, &r, a11val, x1val);
 
-        __armas_set_unsafe(&a11, 0, 0, r);
-        __armas_gvrot_vec(&a12, &X2, c, s);
+        armas_x_set_unsafe(&a11, 0, 0, r);
+        armas_x_gvrot_vec(&a12, &X2, c, s);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL, __nil,
                             &ABL,  &ABR, /**/ &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -130,21 +130,21 @@ int __unblk_cholupdate_upper(__armas_dense_t *A, __armas_dense_t *X, armas_conf_
  * \retval  0 ok
  * \retval -1 error
  */
-int __armas_cholupdate(__armas_dense_t *A, __armas_dense_t *X, int flags, armas_conf_t *conf)
+int armas_x_cholupdate(armas_x_dense_t *A, armas_x_dense_t *X, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t Xrow;
+    armas_x_dense_t Xrow;
     
     if (!conf)
         conf = armas_conf_default();
     
-    if (__armas_size(A) == 0 || __armas_size(X) == 0)
+    if (armas_x_size(A) == 0 || armas_x_size(X) == 0)
         return 0;
 
     // private functions expect row vector
     if (X->cols == 1) {
-        __armas_col_as_row(&Xrow, X);
+        armas_x_col_as_row(&Xrow, X);
     } else {
-        __armas_make(&Xrow, X->rows, X->cols, X->step, __armas_data(X));
+        armas_x_make(&Xrow, X->rows, X->cols, X->step, armas_x_data(X));
     }
 
     if (flags & ARMAS_UPPER) {

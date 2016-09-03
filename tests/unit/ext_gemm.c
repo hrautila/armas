@@ -28,7 +28,7 @@
 int main(int argc, char **argv) {
 
   armas_conf_t conf;
-  __Matrix C, Ct, T, A, B, Ce;
+  armas_x_dense_t C, Ct, T, A, B, Ce;
 
   int ok, opt;
   int N = 33;
@@ -72,22 +72,22 @@ int main(int argc, char **argv) {
   
   conf = *armas_conf_default();
 
-  matrix_init(&C, M, N);
-  matrix_init(&Ct, N, M);
-  matrix_init(&Ce, M, N);
-  matrix_init(&T, M, N);
-  matrix_set_values(&C, zero, ARMAS_NULL);
-  matrix_set_values(&Ct, zero, ARMAS_NULL);
+  armas_x_init(&C, M, N);
+  armas_x_init(&Ct, N, M);
+  armas_x_init(&Ce, M, N);
+  armas_x_init(&T, M, N);
+  armas_x_set_values(&C, zero, ARMAS_NULL);
+  armas_x_set_values(&Ct, zero, ARMAS_NULL);
 
   // test 1: M != N != K
-  matrix_init(&A, M, K);
-  matrix_init(&B, K, N);
+  armas_x_init(&A, M, K);
+  armas_x_init(&B, K, N);
   
   if (debug) {
     printf("conf .mb, .nb, .kb: %d, %d, %d\n", conf.mb, conf.nb, conf.kb);
-    matrix_set_values(&A, one, ARMAS_NULL);
-    matrix_set_values(&B, one, ARMAS_NULL);
-    matrix_mult(&Ce, &A, &B, 1.0, 0.0, 0, &conf);
+    armas_x_set_values(&A, one, ARMAS_NULL);
+    armas_x_set_values(&B, one, ARMAS_NULL);
+    armas_x_mult(&Ce, &A, &B, 1.0, 0.0, 0, &conf);
   } else {
     ep_genmat(&dot, &cond, &A, &B, cwant);
     ep_gemm(&Ce, &A, &B, 1.0, 0.0, prec, ARMAS_NULL);
@@ -100,21 +100,21 @@ int main(int argc, char **argv) {
   conf.optflags = ARMAS_OEXTPREC;
 
   // C = A*B; C.T = B.T*A.T
-  matrix_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
-  matrix_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
+  armas_x_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
 
   if (verbose > 2 && N < 10) {
-    printf("C.exact:\n"); matrix_printf(stdout, "%13e", &Ce);
-    printf("A*B:\n"); matrix_printf(stdout, "%13e", &C);
-    printf("(B.T*A.T).T:\n"); matrix_printf(stdout, "%13e", &Ct);
+    printf("C.exact:\n"); armas_x_printf(stdout, "%13e", &Ce);
+    printf("A*B:\n"); armas_x_printf(stdout, "%13e", &C);
+    printf("(B.T*A.T).T:\n"); armas_x_printf(stdout, "%13e", &Ct);
   }
 
-  matrix_transpose(&T, &Ct);
-  m_one   = rel_error((__Dtype *)0, &C, &Ce, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  m_one_t = rel_error((__Dtype *)0, &T, &Ce, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  armas_x_transpose(&T, &Ct);
+  m_one   = rel_error((DTYPE *)0, &C, &Ce, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  m_one_t = rel_error((DTYPE *)0, &T, &Ce, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   if (verbose > 1 && N < 10) {
-    printf("Ce - A*B:\n"); matrix_printf(stdout, "%13e", &C);
-    printf("Ce - (B.T*A.T).T:\n"); matrix_printf(stdout, "%13e", &T);
+    printf("Ce - A*B:\n"); armas_x_printf(stdout, "%13e", &C);
+    printf("Ce - (B.T*A.T).T:\n"); armas_x_printf(stdout, "%13e", &T);
   }
 
   ok = m_one < N*_EPS2; 
@@ -136,12 +136,12 @@ int main(int argc, char **argv) {
     conf.optflags ^= ARMAS_OEXTPREC;
 
     // C = A*B; C.T = B.T*A.T
-    matrix_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
-    matrix_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+    armas_x_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
+    armas_x_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
 
-    matrix_transpose(&T, &Ct);
-    m_one   = rel_error((__Dtype *)0, &C, &Ce, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-    m_one_t = rel_error((__Dtype *)0, &T, &Ce, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+    armas_x_transpose(&T, &Ct);
+    m_one   = rel_error((DTYPE *)0, &C, &Ce, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+    m_one_t = rel_error((DTYPE *)0, &T, &Ce, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
 
     ok = m_one < N*_EPS;
     printf("\ncompare to normal precision\n");

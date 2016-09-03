@@ -12,7 +12,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_asum) && defined(__armas_sum)
+#if defined(armas_x_asum) && defined(armas_x_sum)
 #define __ARMAS_PROVIDES 1
 #endif
 // this requires no external public functions
@@ -254,7 +254,7 @@ DTYPE __vec_sum_recursive(const mvec_t *X, int n)
  *
  * @ingroup blas1
  */
-ABSTYPE __armas_asum(const __armas_dense_t *x, armas_conf_t *conf)
+ABSTYPE armas_x_asum(const armas_x_dense_t *x, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -270,18 +270,18 @@ ABSTYPE __armas_asum(const __armas_dense_t *x, armas_conf_t *conf)
 
   // if extended precision enabled and requested
   if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
-    return __vec_asum_ext(&X, __armas_size(x));
+    return __vec_asum_ext(&X, armas_x_size(x));
   }
 
   // this executed if extended precision not requested
   switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_OKAHAN|ARMAS_ORECURSIVE)) {
   case ARMAS_OKAHAN:
-    return __vec_asum_kahan(&X, __armas_size(x));
+    return __vec_asum_kahan(&X, armas_x_size(x));
 
   case ARMAS_ONAIVE:
-    return __vec_asum(&X, __armas_size(x));
+    return __vec_asum(&X, armas_x_size(x));
   }
-  return __vec_asum_recursive(&X, __armas_size(x));
+  return __vec_asum_recursive(&X, armas_x_size(x));
 }
 
 
@@ -295,7 +295,7 @@ ABSTYPE __armas_asum(const __armas_dense_t *x, armas_conf_t *conf)
  *
  * @ingroup blas1
  */
-DTYPE __armas_sum(const __armas_dense_t *x, armas_conf_t *conf)
+DTYPE armas_x_sum(const armas_x_dense_t *x, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -311,21 +311,21 @@ DTYPE __armas_sum(const __armas_dense_t *x, armas_conf_t *conf)
 
   // if extended precision enabled and requested
   if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
-    return __vec_sum_ext(&X, __armas_size(x));
+    return __vec_sum_ext(&X, armas_x_size(x));
   }
   
   // this executed if extended precision not requested
   switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_OKAHAN|ARMAS_ORECURSIVE)) {
   case ARMAS_OKAHAN:
-    return __vec_sum_kahan(&X, __armas_size(x));
+    return __vec_sum_kahan(&X, armas_x_size(x));
 
   case ARMAS_ONAIVE:
-    return __vec_sum(&X, __armas_size(x));
+    return __vec_sum(&X, armas_x_size(x));
 
   default:
     break;
   }
-  return __vec_sum_recursive(&X, __armas_size(x));
+  return __vec_sum_recursive(&X, armas_x_size(x));
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

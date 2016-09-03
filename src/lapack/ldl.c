@@ -10,11 +10,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_ldlfactor)  
+#if defined(armas_x_ldlfactor)  
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_blas) 
+#if defined(armas_x_blas) 
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -40,9 +40,9 @@
  *   A22  =   l21*d1*l21.t + L22*D2*L22.t  => A22 = A22 - l21*d1*l21t
  */
 static
-int __unblk_ldlnp_lower(__armas_dense_t *A, armas_conf_t *conf)
+int __unblk_ldlnp_lower(armas_x_dense_t *A, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, a11, a21, A22;
+    armas_x_dense_t ATL, ABR, A00, a11, a21, A22;
     int err = 0;
     DTYPE a11val;
 
@@ -60,10 +60,10 @@ int __unblk_ldlnp_lower(__armas_dense_t *A, armas_conf_t *conf)
         // d11 = a11; no-op
         
         // A22 = A22 - l21*d11*l21.T = A22 - a21*a21.T/a11
-        a11val = __ONE/__armas_get_unsafe(&a11, 0, 0);
-        __armas_mvupdate_trm(&A22, &a21, &a21, -a11val, ARMAS_LOWER, conf);
+        a11val = __ONE/armas_x_get_unsafe(&a11, 0, 0);
+        armas_x_mvupdate_trm(&A22, &a21, &a21, -a11val, ARMAS_LOWER, conf);
         // l21 = a21/a11
-        __armas_scale(&a21, a11val, conf);
+        armas_x_scale(&a21, a11val, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
                             __nil,  &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -80,9 +80,9 @@ int __unblk_ldlnp_lower(__armas_dense_t *A, armas_conf_t *conf)
  *   A00  =   u01*d1*u01.t + U00*D1*U00.t  => A00 = A00 - a01*a01.t/a11
  */
 static
-int __unblk_ldlnp_upper(__armas_dense_t *A, armas_conf_t *conf)
+int __unblk_ldlnp_upper(armas_x_dense_t *A, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, a11, a01, A22;
+    armas_x_dense_t ATL, ABR, A00, a11, a01, A22;
     int err = 0;
     DTYPE a11val;
 
@@ -100,10 +100,10 @@ int __unblk_ldlnp_upper(__armas_dense_t *A, armas_conf_t *conf)
         // d11 = a11; no-op
         
         // A00 = A00 - u01*d1*u01.T = A00 - a01*a01.T/a11
-        a11val = __ONE/__armas_get_unsafe(&a11, 0, 0);
-        __armas_mvupdate_trm(&A00, &a01, &a01, -a11val, ARMAS_UPPER, conf);
+        a11val = __ONE/armas_x_get_unsafe(&a11, 0, 0);
+        armas_x_mvupdate_trm(&A00, &a01, &a01, -a11val, ARMAS_UPPER, conf);
         // u01 = a01/a11
-        __armas_scale(&a01, a11val, conf);
+        armas_x_scale(&a01, a11val, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
                             __nil,  &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PTOPLEFT);
@@ -121,9 +121,9 @@ int __unblk_ldlnp_upper(__armas_dense_t *A, armas_conf_t *conf)
  *   A22  =   L21*D1*L21.t + L22*D2*L22.t  => L22 = A22 - L21*D1*L21.t
  */
 static
-int __blk_ldlnp_lower(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_conf_t *conf)
+int __blk_ldlnp_lower(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, A11, A21, A22, L21, D;
+    armas_x_dense_t ATL, ABR, A00, A11, A21, A22, L21, D;
     int err = 0;
 
     EMPTY(A00); EMPTY(ATL);
@@ -138,21 +138,21 @@ int __blk_ldlnp_lower(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_conf
                                __nil,  &A21,  &A22,  /**/  A, lb, ARMAS_PBOTTOMRIGHT);
         // ---------------------------------------------------------------------------
         __unblk_ldlnp_lower(&A11, conf);
-        __armas_diag(&D, &A11, 0);
+        armas_x_diag(&D, &A11, 0);
         
         // A21 = A21*A11.-T
-        __armas_solve_trm(&A21, &A11, __ONE, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANS, conf);
+        armas_x_solve_trm(&A21, &A11, __ONE, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANS, conf);
         // A21 = A21.D.-1  (=L21)
-        __armas_solve_diag(&A21, &D, ARMAS_RIGHT, conf);
+        armas_x_solve_diag(&A21, &D, ARMAS_RIGHT, conf);
 
         // Wrk = L21 = D1*L21.T
-        __armas_make(&L21, A21.rows, A21.cols, A21.rows, __armas_data(W));
-        __armas_mcopy(&L21, &A21);
+        armas_x_make(&L21, A21.rows, A21.cols, A21.rows, armas_x_data(W));
+        armas_x_mcopy(&L21, &A21);
         // L21 = L21*D
-        __armas_mult_diag(&L21, &D, ARMAS_RIGHT, conf);
+        armas_x_mult_diag(&L21, &D, ARMAS_RIGHT, conf);
 
         // A22 = A22 - L21*A21.T 
-        __armas_update_trm(&A22, &L21, &A21, -__ONE, __ONE, ARMAS_LOWER|ARMAS_TRANSB, conf);
+        armas_x_update_trm(&A22, &L21, &A21, -__ONE, __ONE, ARMAS_LOWER|ARMAS_TRANSB, conf);
 
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
@@ -163,9 +163,9 @@ int __blk_ldlnp_lower(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_conf
 
 
 static
-int __blk_ldlnp_upper(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_conf_t *conf)
+int __blk_ldlnp_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABR, A00, A01, A11, A22, D, L01;
+    armas_x_dense_t ATL, ABR, A00, A01, A11, A22, D, L01;
     int err = 0;
 
     __partition_2x2(&ATL, __nil,
@@ -178,21 +178,21 @@ int __blk_ldlnp_upper(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_conf
                                __nil, __nil,  &A22,  /**/  A, lb, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------------
         __unblk_ldlnp_upper(&A11, conf);
-        __armas_diag(&D, &A11, 0);
+        armas_x_diag(&D, &A11, 0);
         
         // A01 = A01*A11.-T
-        __armas_solve_trm(&A01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT|ARMAS_TRANS, conf);
+        armas_x_solve_trm(&A01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT|ARMAS_TRANS, conf);
         // A01 = A01.D.-1  (=L01)
-        __armas_solve_diag(&A01, &D, ARMAS_RIGHT, conf);
+        armas_x_solve_diag(&A01, &D, ARMAS_RIGHT, conf);
 
         // Wrk = L01 = D1*L01.T
-        __armas_make(&L01, A01.rows, A01.cols, A01.rows, __armas_data(W));
-        __armas_mcopy(&L01, &A01);
+        armas_x_make(&L01, A01.rows, A01.cols, A01.rows, armas_x_data(W));
+        armas_x_mcopy(&L01, &A01);
         // L01 = L01*D
-        __armas_mult_diag(&L01, &D, ARMAS_RIGHT, conf);
+        armas_x_mult_diag(&L01, &D, ARMAS_RIGHT, conf);
 
         // A00 = A00 - L01*A01.T
-        __armas_update_trm(&A00, &L01, &A01, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANSB, conf);
+        armas_x_update_trm(&A00, &L01, &A01, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANSB, conf);
 
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
@@ -223,7 +223,7 @@ int __blk_ldlnp_upper(__armas_dense_t *A, __armas_dense_t *W, int lb, armas_conf
  * \retval 0  ok
  * \retval -1 error
  */
-int __ldlfactor_np(__armas_dense_t *A, __armas_dense_t *W, int flags, armas_conf_t *conf)
+int __ldlfactor_np(armas_x_dense_t *A, armas_x_dense_t *W, int flags, armas_conf_t *conf)
 {
     int ws, ws_opt, lb, err = 0;
     if (!conf)
@@ -234,7 +234,7 @@ int __ldlfactor_np(__armas_dense_t *A, __armas_dense_t *W, int flags, armas_conf
         return -1;
     }
     lb = conf->lb;
-    ws = __armas_size(W);
+    ws = armas_x_size(W);
     ws_opt = __ws_opt(A->rows, lb);
 
     if (ws > 0 && ws < ws_opt) {
@@ -275,12 +275,12 @@ int __ldlfactor_np(__armas_dense_t *A, __armas_dense_t *W, int flags, armas_conf
  * \retval  0 ok
  * \retval -1 error
  */
-int __ldlsolve_np(__armas_dense_t *B, __armas_dense_t *A, int flags, armas_conf_t *conf)
+int __ldlsolve_np(armas_x_dense_t *B, armas_x_dense_t *A, int flags, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
     
-    if (__armas_size(B) == 0 || __armas_size(A) == 0)
+    if (armas_x_size(B) == 0 || armas_x_size(A) == 0)
         return 0;
 
     if (A->rows != A->cols || A->cols != B->rows) {
@@ -290,14 +290,14 @@ int __ldlsolve_np(__armas_dense_t *B, __armas_dense_t *A, int flags, armas_conf_
 
     if (flags & ARMAS_TRANS) {
         // X = L.-1*(D.-1*(L.-T*B))
-        __armas_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_TRANS|ARMAS_LEFT, conf);
-        __armas_solve_diag(B, A, ARMAS_LEFT, conf);
-        __armas_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
+        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_TRANS|ARMAS_LEFT, conf);
+        armas_x_solve_diag(B, A, ARMAS_LEFT, conf);
+        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
     } else {
         // X = L.-T*(D.-1*(L.-1*B))
-        __armas_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
-        __armas_solve_diag(B, A, ARMAS_LEFT, conf);
-        __armas_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_TRANS, conf);
+        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
+        armas_x_solve_diag(B, A, ARMAS_LEFT, conf);
+        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_TRANS, conf);
     }
     return 0;
 }

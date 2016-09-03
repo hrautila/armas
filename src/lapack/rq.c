@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_rqfactor) 
+#if defined(armas_x_rqfactor) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -74,11 +74,11 @@ int __ws_rqfactor(int M, int N, int lb)
  *   ( v4 v4 v4 v4 v4 v4 r )
  */
 static
-int __unblk_rqfactor(__armas_dense_t *A, __armas_dense_t *tau,
-                     __armas_dense_t *W, armas_conf_t *conf)
+int __unblk_rqfactor(armas_x_dense_t *A, armas_x_dense_t *tau,
+                     armas_x_dense_t *W, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, a11, a01, a10, A22;
-  __armas_dense_t tT, tB, t0, t1, t2, w12;
+  armas_x_dense_t ATL, ABR, A00, a11, a01, a10, A22;
+  armas_x_dense_t tT, tB, t0, t1, t2, w12;
 
   EMPTY(ATL); 
 
@@ -99,7 +99,7 @@ int __unblk_rqfactor(__armas_dense_t *A, __armas_dense_t *tau,
     // ---------------------------------------------------------------------------
     __compute_householder(&a11, &a10, &t1, conf);
 
-    __armas_submatrix(&w12, W, 0, 0, __armas_size(&a01), 1);
+    armas_x_submatrix(&w12, W, 0, 0, armas_x_size(&a01), 1);
 
     __apply_householder2x1(&t1, &a10, &a01, &A00, &w12, ARMAS_RIGHT, conf);
     // ---------------------------------------------------------------------------
@@ -116,11 +116,11 @@ int __unblk_rqfactor(__armas_dense_t *A, __armas_dense_t *tau,
  * Blocked factorization.
  */
 static
-int __blk_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *Twork,
-                   __armas_dense_t *W, int lb, armas_conf_t *conf)
+int __blk_rqfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *Twork,
+                   armas_x_dense_t *W, int lb, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABR, A00, A01, A10, A11, A22, AL;
-  __armas_dense_t tT, tB, t0, t1, t2, w1, Wrk;
+  armas_x_dense_t ATL, ABR, A00, A01, A10, A11, A22, AL;
+  armas_x_dense_t tT, tB, t0, t1, t2, w1, Wrk;
 
   __partition_2x2(&ATL,  __nil,
                   __nil, &ABR,   /**/  A, 0, 0, ARMAS_PBOTTOMRIGHT);
@@ -138,16 +138,16 @@ int __blk_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *Tw
                            &t2,     /**/ tau, A11.cols, ARMAS_PTOP);
     // ---------------------------------------------------------------------------
     // decompose current panel AL = ( A10 A11 )
-    __armas_submatrix(&w1, W, 0, 0, A11.rows, 1);
+    armas_x_submatrix(&w1, W, 0, 0, A11.rows, 1);
     __merge1x2(&AL, &A10, &A11);
     __unblk_rqfactor(&AL, &t1, &w1, conf);
 
     // build block reflector
-    __armas_mscale(Twork, 0.0, ARMAS_ANY);
+    armas_x_mscale(Twork, 0.0, ARMAS_ANY);
     __unblk_rq_reflector(Twork, &AL, &t1, conf);
 
     // update ( A00 A01 )
-    __armas_submatrix(&Wrk, W, 0, 0, A01.rows, A01.cols);
+    armas_x_submatrix(&Wrk, W, 0, 0, A01.rows, A01.cols);
     __update_rq_right(&A01, &A00, &A11, &A10, Twork, &Wrk, FALSE, conf);
     // ---------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil,
@@ -158,7 +158,7 @@ int __blk_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *Tw
 
   // last block with unblocked
   if (ATL.rows > 0 && ATL.cols > 0) {
-    __armas_submatrix(&w1, W, 0, 0, ATL.rows, 1);
+    armas_x_submatrix(&w1, W, 0, 0, ATL.rows, 1);
     __unblk_rqfactor(&ATL, &tT, &w1, conf);
   }
 
@@ -176,31 +176,31 @@ int __blk_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *Tw
  *
  * C1 is nb*K, C2 is P*K, Y1 is nb*nb triuu, Y2 is nb*P, T is nb*nb,  W is K*nb
  */
-int __update_rq_left(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t *Y1,
-                     __armas_dense_t *Y2, __armas_dense_t *T, __armas_dense_t *W,
+int __update_rq_left(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t *Y1,
+                     armas_x_dense_t *Y2, armas_x_dense_t *T, armas_x_dense_t *W,
                      int transpose, armas_conf_t *conf)
 {
   // W = C1.T
-  __armas_scale_plus(W, C1, 0.0, 1.0, ARMAS_TRANSB, conf);
+  armas_x_scale_plus(W, C1, 0.0, 1.0, ARMAS_TRANSB, conf);
   // W = C1.T*Y1.T = W*Y1.T
-  __armas_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
+  armas_x_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
   // W = W + C2.T*Y2.T
-  __armas_mult(W, C2, Y2, 1.0, 1.0, ARMAS_TRANSA|ARMAS_TRANSB, conf);
+  armas_x_mult(W, C2, Y2, 1.0, 1.0, ARMAS_TRANSA|ARMAS_TRANSB, conf);
   // here: W = C.T*Y
 
   int bits = ARMAS_LOWER|ARMAS_RIGHT;
   if (! transpose)
     bits |= ARMAS_TRANSA;
   // W = W*T or W.T*T
-  __armas_mult_trm(W, T, 1.0, bits, conf);
+  armas_x_mult_trm(W, T, 1.0, bits, conf);
   // here: W == C.T*Y*T or C.T*Y*T.T
 
   // C2 = C2 - Y2*W.T
-  __armas_mult(C2, Y2, W, -1.0, 1.0, ARMAS_TRANSA|ARMAS_TRANSB, conf);
+  armas_x_mult(C2, Y2, W, -1.0, 1.0, ARMAS_TRANSA|ARMAS_TRANSB, conf);
   // W = Y1*W.T ==> W.T = W*Y1
-  __armas_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
+  armas_x_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
   // C1 = C1 - W.T
-  __armas_scale_plus(C1, W, 1.0, -1.0, ARMAS_TRANSB, conf);
+  armas_x_scale_plus(C1, W, 1.0, -1.0, ARMAS_TRANSB, conf);
   // here: C = (I - Y*T*Y.T)*C or C = (I - Y*T.Y.T).T*C
   return 0;
 }
@@ -216,32 +216,32 @@ int __update_rq_left(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t *
  *
  * C1 is K*nb, C2 is K*P, Y1 is nb*nb trilu, Y2 is nb*P, T is nb*nb, W = K*nb
 */
-int __update_rq_right(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t *Y1,
-                      __armas_dense_t *Y2, __armas_dense_t *T, __armas_dense_t *W,
+int __update_rq_right(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t *Y1,
+                      armas_x_dense_t *Y2, armas_x_dense_t *T, armas_x_dense_t *W,
                       int transpose, armas_conf_t *conf)
 {
   // W = C1
-  __armas_scale_plus(W, C1, 0.0, 1.0, ARMAS_NONE, conf);
+  armas_x_scale_plus(W, C1, 0.0, 1.0, ARMAS_NONE, conf);
   // W = C1*Y1 = W*Y1
-  __armas_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
+  armas_x_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
   // W = W + C2*Y2.T
-  __armas_mult(W, C2, Y2, 1.0, 1.0, ARMAS_TRANSB, conf);
+  armas_x_mult(W, C2, Y2, 1.0, 1.0, ARMAS_TRANSB, conf);
   // here: W = C*Y
 
   int bits = ARMAS_LOWER|ARMAS_RIGHT;
   if (transpose)
     bits |= ARMAS_TRANSA;
   // W = W*T or W.T*T
-  __armas_mult_trm(W, T, 1.0, bits, conf);
+  armas_x_mult_trm(W, T, 1.0, bits, conf);
   // here: W == C*Y*T or C*Y*T.T
 
   // C2 = C2 - W*Y2
-  __armas_mult(C2, W, Y2, -1.0, 1.0, ARMAS_NONE, conf);
+  armas_x_mult(C2, W, Y2, -1.0, 1.0, ARMAS_NONE, conf);
   // C1 = C1 - W*Y1
   //  W = W*Y1.T
-  __armas_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
+  armas_x_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
   // C1 = C1 - W
-  __armas_scale_plus(C1, W, 1.0, -1.0, ARMAS_NONE, conf);
+  armas_x_scale_plus(C1, W, 1.0, -1.0, ARMAS_NONE, conf);
   // here: C = C*(I - Y*T*Y.T)*C or C = C*(I - Y*T.Y.T).T
   return 0;
 }
@@ -258,13 +258,13 @@ int __update_rq_right(__armas_dense_t *C1, __armas_dense_t *C2, __armas_dense_t 
  * Q = H(1)H(2)...H(k) building forward here.
  *
  */
-int __unblk_rq_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t *tau,
+int __unblk_rq_reflector(armas_x_dense_t *T, armas_x_dense_t *A, armas_x_dense_t *tau,
                          armas_conf_t *conf)
 {
   double tauval;
-  __armas_dense_t ATL, ABR, A00, a10, a11, A20, a21, A22;
-  __armas_dense_t TTL, TBR, T00, t11, t21, T22;
-  __armas_dense_t tT, tB, t0, t1, t2;
+  armas_x_dense_t ATL, ABR, A00, a10, a11, A20, a21, A22;
+  armas_x_dense_t TTL, TBR, T00, t11, t21, T22;
+  armas_x_dense_t tT, tB, t0, t1, t2;
 
   EMPTY(ATL); EMPTY(A00);
   EMPTY(TTL); EMPTY(T00); EMPTY(t11);
@@ -290,14 +290,14 @@ int __unblk_rq_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t
                            &t1,
                            &t2,     /**/ tau, 1, ARMAS_PTOP);
     // ---------------------------------------------------------------------------
-    tauval = __armas_get(&t1, 0, 0);
+    tauval = armas_x_get(&t1, 0, 0);
     if (tauval != 0.0) {
-      __armas_set(&t11, 0, 0, tauval);
+      armas_x_set(&t11, 0, 0, tauval);
       // t21 := -tauval*(a21 + &A20*a10)
-      __armas_axpby(&t21, &a21, 1.0, 0.0, conf);
-      __armas_mvmult(&t21, &A20, &a10, -tauval, -tauval, ARMAS_NONE, conf);
+      armas_x_axpby(&t21, &a21, 1.0, 0.0, conf);
+      armas_x_mvmult(&t21, &A20, &a10, -tauval, -tauval, ARMAS_NONE, conf);
       // t01 := T22*t21
-      __armas_mvmult_trm(&t21, &T22, 1.0, ARMAS_LOWER, conf);
+      armas_x_mvmult_trm(&t21, &T22, 1.0, ARMAS_LOWER, conf);
     }
     // ---------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil,
@@ -320,7 +320,7 @@ int __unblk_rq_reflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t
  *    ( v2 v2 v2 v2 1  . )  ( t2 )    ( t  t2 .  )
  *    ( v3 v3 v3 v3 v3 1 )  ( t3 )    ( t  t  t3 )
  */
-int __armas_rqreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t *tau,
+int armas_x_rqreflector(armas_x_dense_t *T, armas_x_dense_t *A, armas_x_dense_t *tau,
                         armas_conf_t *conf)
 {
   if (!conf)
@@ -374,7 +374,7 @@ int __armas_rqreflector(__armas_dense_t *T, __armas_dense_t *A, __armas_dense_t 
  *
  * rqfactor() is compatible with lapack.DGERQF
  */
-int __armas_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+int armas_x_rqfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
                      armas_conf_t *conf)
 {
   int wsmin, lb, wsneed;
@@ -388,24 +388,24 @@ int __armas_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
   }
   lb = conf->lb;
   wsmin = __ws_rqfactor(A->rows, A->cols, 0);
-  if (! W || __armas_size(W) < wsmin) {
+  if (! W || armas_x_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
   }
   // adjust blocking factor for workspace
   wsneed = __ws_rqfactor(A->rows, A->cols, lb);
-  if (lb > 0 && __armas_size(W) < wsneed) {
-    lb = compute_lb(A->rows, A->cols, __armas_size(W), __ws_rqfactor);
+  if (lb > 0 && armas_x_size(W) < wsneed) {
+    lb = compute_lb(A->rows, A->cols, armas_x_size(W), __ws_rqfactor);
     lb = min(lb, conf->lb);
   }
   if (lb == 0 || A->rows <= lb) {
     __unblk_rqfactor(A, tau, W, conf);
   } else {
-    __armas_dense_t T, Wrk;
+    armas_x_dense_t T, Wrk;
     // block reflector at start of workspace
-    __armas_make(&T, lb, lb, lb, __armas_data(W));
+    armas_x_make(&T, lb, lb, lb, armas_x_data(W));
     // temporary space after block reflector T, N(A)-lb-by-lb matrix
-    __armas_make(&Wrk, A->rows-lb, lb, A->rows-lb, &__armas_data(W)[__armas_size(&T)]);
+    armas_x_make(&Wrk, A->rows-lb, lb, A->rows-lb, &armas_x_data(W)[armas_x_size(&T)]);
 
     __blk_rqfactor(A, tau, &T, &Wrk, lb, conf);
   }
@@ -415,7 +415,7 @@ int __armas_rqfactor(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
 /**
  * \brief Calculate worksize for RQ factorization
  */
-int __armas_rqfactor_work(__armas_dense_t *A, armas_conf_t *conf)
+int armas_x_rqfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();

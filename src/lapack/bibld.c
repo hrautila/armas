@@ -13,11 +13,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_bdbuild) 
+#if defined(armas_x_bdbuild) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_qrbuild) && defined(__armas_lqbuild)
+#if defined(armas_x_qrbuild) && defined(armas_x_lqbuild)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -60,43 +60,43 @@
  *
  * \ingroup lapack
  */
-int __armas_bdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+int armas_x_bdbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
                     int K, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t Qh, Ph, tauh, d, s;
+    armas_x_dense_t Qh, Ph, tauh, d, s;
     int j, err = 0;
 
     if (!conf)
         conf = armas_conf_default();
 
-    if (__armas_size(A) == 0)
+    if (armas_x_size(A) == 0)
         return 0;
 
     if (A->rows > A->cols || (A->rows == A->cols && !(flags & ARMAS_LOWER))) {
         switch (flags & (ARMAS_WANTQ|ARMAS_WANTP)) {
         case ARMAS_WANTQ:
-            __armas_submatrix(&tauh, tau, 0, 0, A->cols, 1);
-            err = __armas_qrbuild(A, &tauh, W, K, conf);
+            armas_x_submatrix(&tauh, tau, 0, 0, A->cols, 1);
+            err = armas_x_qrbuild(A, &tauh, W, K, conf);
             break;
         case ARMAS_WANTP:
             // shift P matrix embedded in A down and fill first column and
             // row to unit vectors
             for (j = A->cols-1; j > 0; j--) {
-                __armas_submatrix(&s, A, j-1, j, 1, A->cols-j);
-                __armas_submatrix(&d, A, j,   j, 1, A->cols-j);
-                __armas_copy(&d, &s, conf);
-                __armas_set(A, j, 0, __ZERO);
+                armas_x_submatrix(&s, A, j-1, j, 1, A->cols-j);
+                armas_x_submatrix(&d, A, j,   j, 1, A->cols-j);
+                armas_x_copy(&d, &s, conf);
+                armas_x_set(A, j, 0, __ZERO);
             }
             // zero first row
-            __armas_row(&d, A, 0);
-            __armas_scale(&d, __ZERO, conf);
-            __armas_set(&d, 0, 0, __ONE);
+            armas_x_row(&d, A, 0);
+            armas_x_scale(&d, __ZERO, conf);
+            armas_x_set(&d, 0, 0, __ONE);
 
-            __armas_submatrix(&Ph, A, 1, 1, A->cols-1, A->cols-1);
-            __armas_submatrix(&tauh, tau, 0, 0, A->cols-1, 1);
+            armas_x_submatrix(&Ph, A, 1, 1, A->cols-1, A->cols-1);
+            armas_x_submatrix(&tauh, tau, 0, 0, A->cols-1, 1);
             if (K > A->cols-1 || K < 0)
                 K = A->cols - 1;
-            err = __armas_lqbuild(&Ph, &tauh, W, K, conf);
+            err = armas_x_lqbuild(&Ph, &tauh, W, K, conf);
             break;
         default:
             break;
@@ -108,25 +108,25 @@ int __armas_bdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
             // shift Q matrix embedded in A right and fill first column and
             // row to unit vectors
             for (j = A->rows-1; j > 0; j--) {
-                __armas_submatrix(&s, A, j, j-1, A->rows-j, 1);
-                __armas_submatrix(&d, A, j, j,   A->rows-j, 1);
-                __armas_copy(&d, &s, conf);
-                __armas_set(A, 0, j, __ZERO);
+                armas_x_submatrix(&s, A, j, j-1, A->rows-j, 1);
+                armas_x_submatrix(&d, A, j, j,   A->rows-j, 1);
+                armas_x_copy(&d, &s, conf);
+                armas_x_set(A, 0, j, __ZERO);
             }
             // zero first column
-            __armas_column(&d, A, 0);
-            __armas_scale(&d, __ZERO, conf);
-            __armas_set(&d, 0, 0, __ONE);
+            armas_x_column(&d, A, 0);
+            armas_x_scale(&d, __ZERO, conf);
+            armas_x_set(&d, 0, 0, __ONE);
 
-            __armas_submatrix(&Qh, A, 1, 1, A->rows-1, A->rows-1);
-            __armas_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
+            armas_x_submatrix(&Qh, A, 1, 1, A->rows-1, A->rows-1);
+            armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
             if (K > A->rows-1 || K < 0)
                 K = A->rows - 1;
-            err = __armas_qrbuild(&Qh, &tauh, W, K, conf);
+            err = armas_x_qrbuild(&Qh, &tauh, W, K, conf);
             break;
         case ARMAS_WANTP:
-            __armas_submatrix(&tauh, tau, 0, 0, A->rows, 1);
-            err = __armas_lqbuild(A, &tauh, W, K, conf);
+            armas_x_submatrix(&tauh, tau, 0, 0, A->rows, 1);
+            err = armas_x_lqbuild(A, &tauh, W, K, conf);
             break;
         default:
             break;
@@ -137,14 +137,14 @@ int __armas_bdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W
 
 //! \brief Workspace size for bdbuild().
 //! \ingroup lapack
-int __armas_bdbuild_work(__armas_dense_t *A, int flags, armas_conf_t *conf)
+int armas_x_bdbuild_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
   if (flags & ARMAS_WANTP) {
-      return __armas_lqbuild_work(A, conf);
+      return armas_x_lqbuild_work(A, conf);
   }
-  return __armas_qrbuild_work(A, conf);
+  return armas_x_qrbuild_work(A, conf);
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

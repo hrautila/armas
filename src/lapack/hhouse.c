@@ -10,11 +10,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_hhouse)  && defined(__armas_hhouse_apply)
+#if defined(armas_x_hhouse)  && defined(armas_x_hhouse_apply)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_blas1) && defined(__armas_blas2)
+#if defined(armas_x_blas1) && defined(armas_x_blas2)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -88,8 +88,8 @@ double sqrt_x2my2(double x, double y)
  *
  *  \retval 0 
  */
-int __armas_hhouse(__armas_dense_t *a11, __armas_dense_t *x,
-                   __armas_dense_t *tau, int flags, armas_conf_t *conf)
+int armas_x_hhouse(armas_x_dense_t *a11, armas_x_dense_t *x,
+                   armas_x_dense_t *tau, int flags, armas_conf_t *conf)
 {
     DTYPE rsafmin, safmin, normx, alpha, beta, sign, delta, scale, t;
     int nscale = 0;
@@ -99,15 +99,15 @@ int __armas_hhouse(__armas_dense_t *a11, __armas_dense_t *x,
 
     safmin = __SAFEMIN/__EPS;
     
-    normx = __armas_nrm2(x, conf);  
-    alpha   = __armas_get(a11, 0, 0);
+    normx = armas_x_nrm2(x, conf);  
+    alpha   = armas_x_get(a11, 0, 0);
     if (__ABS(alpha) < normx) {
         // alpha^2 - normx^2 < 0; sqrt not defined
         conf->error = ARMAS_EINVAL;
         return -1;
     }
     if (normx == 0.0) {
-        __armas_set(tau, 0, 0, 0.0);
+        armas_x_set(tau, 0, 0, 0.0);
         return 0;
     }
     sign = __SIGN(alpha) ? -1.0 : 1.0;
@@ -119,12 +119,12 @@ int __armas_hhouse(__armas_dense_t *a11, __armas_dense_t *x,
         rsafmin = 1.0/safmin;
         do {
             nscale++;
-            __armas_scale(x, rsafmin, conf);
+            armas_x_scale(x, rsafmin, conf);
             beta *= rsafmin;
             alpha *= rsafmin;
         } while (__ABS(beta) < safmin);
         // now beta in [safmin ... 1.0]
-        normx = __armas_nrm2(x, conf);
+        normx = armas_x_nrm2(x, conf);
         beta  = sqrt_x2my2(alpha, normx);
     }
 
@@ -165,15 +165,15 @@ int __armas_hhouse(__armas_dense_t *a11, __armas_dense_t *x,
         break;
     }
     // v = - x/(alpha - beta)
-    __armas_scale(x, scale, conf);
+    armas_x_scale(x, scale, conf);
     // tau = 2.0/(1 - v^T v) = 2.0/(1 - (normx/delta)*(normx/delta)
     t = 2.0/(1.0 - (normx/delta) * (normx/delta));
-    __armas_set(tau, 0, 0, t);
+    armas_x_set(tau, 0, 0, t);
 
     while (nscale-- > 0) {
         beta *= safmin;
     }
-    __armas_set(a11, 0, 0, beta);
+    armas_x_set(a11, 0, 0, beta);
     return 0;
 }
 
@@ -206,46 +206,46 @@ int __armas_hhouse(__armas_dense_t *a11, __armas_dense_t *x,
  *                  w1 := tau*(a1 + A2.T*v) if side == LEFT
  *                     := tau*(a1 + A2*v)   if side == RIGHT
  */
-int __armas_hhouse_apply(__armas_dense_t *tau, __armas_dense_t *v,
-                         __armas_dense_t *a1,  __armas_dense_t *A2,
-                         __armas_dense_t *w,  int flags, armas_conf_t *conf)
+int armas_x_hhouse_apply(armas_x_dense_t *tau, armas_x_dense_t *v,
+                         armas_x_dense_t *a1,  armas_x_dense_t *A2,
+                         armas_x_dense_t *w,  int flags, armas_conf_t *conf)
 {
     DTYPE tval;
-    __armas_dense_t w1;
+    armas_x_dense_t w1;
     
     if (!conf)
         conf = armas_conf_default();
-    if (__armas_size(w) < __armas_size(a1)) {
+    if (armas_x_size(w) < armas_x_size(a1)) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-    __armas_make(&w1, __armas_size(a1), 1, __armas_size(a1), __armas_data(w));
+    armas_x_make(&w1, armas_x_size(a1), 1, armas_x_size(a1), armas_x_data(w));
 
-    tval = __armas_get(tau, 0, 0);
+    tval = armas_x_get(tau, 0, 0);
     if (tval == 0.0) {
         return 0;
     }
 
     // w1 = a1
-    __armas_copy(&w1, a1, conf);
+    armas_x_copy(&w1, a1, conf);
     if (flags & ARMAS_LEFT) {
         // w1 = a1 + A2.T*v
-        __armas_mvmult(&w1, A2, v, 1.0, 1.0, ARMAS_TRANSA, conf);
+        armas_x_mvmult(&w1, A2, v, 1.0, 1.0, ARMAS_TRANSA, conf);
     } else {
         // w1 = a1 + A2*v
-        __armas_mvmult(&w1, A2, v, 1.0, 1.0, ARMAS_NONE, conf);
+        armas_x_mvmult(&w1, A2, v, 1.0, 1.0, ARMAS_NONE, conf);
     }
     // w1 = tau*w1
-    __armas_scale(&w1, tval, conf);
+    armas_x_scale(&w1, tval, conf);
   
     // a1 = a1 - w1
-    __armas_axpy(a1, &w1, -1.0, conf);
+    armas_x_axpy(a1, &w1, -1.0, conf);
 
     // A2 = A2 + v*w1
     if (flags & ARMAS_LEFT) {
-        __armas_mvupdate(A2, v, &w1, 1.0, conf);
+        armas_x_mvupdate(A2, v, &w1, 1.0, conf);
     } else {
-        __armas_mvupdate(A2, &w1, v, 1.0, conf);
+        armas_x_mvupdate(A2, &w1, v, 1.0, conf);
     }
     return 0;
 }

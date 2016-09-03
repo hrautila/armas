@@ -19,7 +19,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(__armas_update_trm) && defined(__update_trm_blk)
+#if defined(armas_x_update_trm) && defined(__update_trm_blk)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -403,8 +403,8 @@ void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
 }
 
 static
-int __update_trm_threaded(int blk, int nblk, __armas_dense_t *C,
-                          const __armas_dense_t *A, const __armas_dense_t *B,
+int __update_trm_threaded(int blk, int nblk, armas_x_dense_t *C,
+                          const armas_x_dense_t *A, const armas_x_dense_t *B,
                           DTYPE alpha, DTYPE beta, int flags,
                           armas_conf_t *conf)
 {
@@ -483,8 +483,8 @@ int __update_trm_threaded(int blk, int nblk, __armas_dense_t *C,
 }
 
 static
-int __update_trm_schedule(int nblk, __armas_dense_t *C,
-                          const __armas_dense_t *A, const __armas_dense_t *B,
+int __update_trm_schedule(int nblk, armas_x_dense_t *C,
+                          const armas_x_dense_t *A, const armas_x_dense_t *B,
                           DTYPE alpha, DTYPE beta, int flags,
                           armas_conf_t *conf)
 {
@@ -579,13 +579,13 @@ int __update_trm_schedule(int nblk, __armas_dense_t *C,
  *
  * @ingroup blas3
  */
-int __armas_update_trm(__armas_dense_t *C,
-                       const __armas_dense_t *A, const __armas_dense_t *B,
+int armas_x_update_trm(armas_x_dense_t *C,
+                       const armas_x_dense_t *A, const armas_x_dense_t *B,
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   int ok;
 
-  if (__armas_size(C) == 0 || __armas_size(A) == 0 || __armas_size(B) == 0)
+  if (armas_x_size(C) == 0 || armas_x_size(A) == 0 || armas_x_size(B) == 0)
     return 0;
 
   if (!conf)
@@ -613,7 +613,7 @@ int __armas_update_trm(__armas_dense_t *C,
 
 
 #if defined(ENABLE_THREADS)
-  long nproc = armas_use_nproc(__armas_size(C), conf);
+  long nproc = armas_use_nproc(armas_x_size(C), conf);
   if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED) && nproc > 1) {
     return __update_trm_schedule(nproc, C, A, B, alpha, beta, flags, conf);
   }

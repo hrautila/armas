@@ -15,7 +15,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_bkfactor) && defined(__armas_bksolve)
+#if defined(armas_x_bkfactor) && defined(armas_x_bksolve)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -76,23 +76,23 @@ int __ws_ldlfactor(int M, int N, int lb)
  *  Compatible with lapack.SYTRF.
  * \ingroup lapack
  */
-int __armas_bkfactor(__armas_dense_t *A, __armas_dense_t *W,
+int armas_x_bkfactor(armas_x_dense_t *A, armas_x_dense_t *W,
                      armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
-  __armas_dense_t Wrk;
+  armas_x_dense_t Wrk;
   int lb, k, wsmin, wsneed;
   if (!conf)
     conf = armas_conf_default();
 
   lb = conf->lb;
   wsmin = __ws_ldlfactor(A->rows, A->cols, lb);
-  if (__armas_size(W) < wsmin) {
+  if (armas_x_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
   }
   // adjust blocking factor for workspace
   wsneed = __ws_ldlfactor(A->rows, A->cols, lb);
-  if (lb > 0 && __armas_size(W) < wsneed) {
+  if (lb > 0 && armas_x_size(W) < wsneed) {
     lb = compute_lb(A->rows, A->cols, wsneed, __ws_ldlfactor);
     lb = min(lb, conf->lb);
     if (lb < 5)
@@ -109,7 +109,7 @@ int __armas_bkfactor(__armas_dense_t *A, __armas_dense_t *W,
   }
 
   if (lb == 0 || A->cols <= lb) {
-    __armas_make(&Wrk, A->rows, 2, A->rows, __armas_data(W));
+    armas_x_make(&Wrk, A->rows, 2, A->rows, armas_x_data(W));
     if (flags & ARMAS_UPPER) {
       __unblk_bkfactor_upper(A, &Wrk, P, conf);
     }
@@ -118,7 +118,7 @@ int __armas_bkfactor(__armas_dense_t *A, __armas_dense_t *W,
     }
   }
   else {
-    __armas_make(&Wrk, A->rows, lb+1, A->rows, __armas_data(W));
+    armas_x_make(&Wrk, A->rows, lb+1, A->rows, armas_x_data(W));
     if (flags & ARMAS_UPPER) {
       __blk_bkfactor_upper(A, &Wrk, P, lb, conf);
     }
@@ -140,7 +140,7 @@ int __armas_bkfactor(__armas_dense_t *A, __armas_dense_t *W,
  * \return Workspace size as number of elements.
  * \ingroup lapack
  */
-int __armas_bkfactor_work(__armas_dense_t *A, armas_conf_t *conf)
+int armas_x_bkfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -170,7 +170,7 @@ int __armas_bkfactor_work(__armas_dense_t *A, armas_conf_t *conf)
  * Currently only unblocked algorightm implemented. Compatible with lapack.SYTRS.
  * \ingroup lapack
  */
-int __armas_bksolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *W,
+int armas_x_bksolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *W,
                     armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
   int err = 0;

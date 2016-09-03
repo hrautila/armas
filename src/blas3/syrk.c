@@ -16,7 +16,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(__armas_update_sym) && defined(__rank_diag)
+#if defined(armas_x_update_sym) && defined(__rank_diag)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -183,7 +183,7 @@ void *__compute_recursive(void *arg)
 
 static
 int __rank_recursive(int blk, int nblk,
-                    __armas_dense_t *C, const __armas_dense_t *A, 
+                    armas_x_dense_t *C, const armas_x_dense_t *A, 
                     DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   int rs, re, cs, ce, err;
@@ -273,7 +273,7 @@ void *__compute_block2(void *arg, armas_cbuf_t *cbuf)
 }
 
 static
-int __rank_schedule(int nblk, __armas_dense_t *C, const __armas_dense_t *A,
+int __rank_schedule(int nblk, armas_x_dense_t *C, const armas_x_dense_t *A,
                     DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   int rN, cN, i, j, iR, iE, jS, jL, k, nT, K;
@@ -389,12 +389,12 @@ int __rank_schedule(int nblk, __armas_dense_t *C, const __armas_dense_t *A,
  *
  * @ingroup blas3
  */
-int __armas_update_sym(__armas_dense_t *C,  const __armas_dense_t *A, 
+int armas_x_update_sym(armas_x_dense_t *C,  const armas_x_dense_t *A, 
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   int ok;
 
-  if (__armas_size(A) == 0 || __armas_size(C) == 0)
+  if (armas_x_size(A) == 0 || armas_x_size(C) == 0)
     return 0;
 
   if (!conf)
@@ -414,7 +414,7 @@ int __armas_update_sym(__armas_dense_t *C,  const __armas_dense_t *A,
   }
 
 #if defined(ENABLE_THREADS)
-  long nproc = armas_use_nproc(__armas_size(C), conf);
+  long nproc = armas_use_nproc(armas_x_size(C), conf);
   if (conf->optflags & (ARMAS_OBLAS_BLOCKED|ARMAS_OBLAS_TILED)) {
     return __rank_schedule(nproc, C, A, alpha, beta, flags, conf);
   }

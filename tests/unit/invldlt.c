@@ -21,100 +21,100 @@
 
 int test_ldlnp_inv(int N, int lb, int flags, int verbose)
 {
-    __Matrix A0, A1, C, C1, D, W;
+    armas_x_dense_t A0, A1, C, C1, D, W;
     armas_conf_t conf = *armas_conf_default();
-    __Dtype n0, n1;
+    DTYPE n0, n1;
     int ok;
     char *fact = flags & ARMAS_LOWER ? "LDL^T" : "UDU^T";
     char *blk = lb == 0 ? "unblk" : "  blk";
     
-    matrix_init(&A0, N, N);
-    matrix_init(&A1, N, N);
-    matrix_init(&C, N, N);
-    matrix_init(&C1, N, N);
-    matrix_init(&W, lb == 0 ? N : lb*N, 1);
-    matrix_diag(&D, &C1, 0);
-    matrix_madd(&D, 1.0, 0);
+    armas_x_init(&A0, N, N);
+    armas_x_init(&A1, N, N);
+    armas_x_init(&C, N, N);
+    armas_x_init(&C1, N, N);
+    armas_x_init(&W, lb == 0 ? N : lb*N, 1);
+    armas_x_diag(&D, &C1, 0);
+    armas_x_madd(&D, 1.0, 0);
 
-    matrix_set_values(&A0, unitrand, ARMAS_SYMM);
-    matrix_mcopy(&A1, &A0);
-    matrix_make_trm(&A0, flags);
+    armas_x_set_values(&A0, unitrand, ARMAS_SYMM);
+    armas_x_mcopy(&A1, &A0);
+    armas_x_make_trm(&A0, flags);
 
     if (N < 10) {
-        printf("A:\n"); matrix_printf(stdout, "%6.3f", &A0);
+        printf("A:\n"); armas_x_printf(stdout, "%6.3f", &A0);
     }
 
     conf.lb = lb;
-    matrix_ldlfactor(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
-    matrix_ldlinverse_sym(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_ldlfactor(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_ldlinverse_sym(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
 
-    matrix_mult_sym(&C, &A0, &A1, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
+    armas_x_mult_sym(&C, &A0, &A1, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
 
     n0 = rel_error(&n1, &C, &C1, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
     if (N < 10) {
-        printf("A*A.-1 - I:\n"); matrix_printf(stdout, "%6.3f", &C);
+        printf("A*A.-1 - I:\n"); armas_x_printf(stdout, "%6.3f", &C);
     }
     printf("%s : %s.(%s).-1*A = I\n", PASS(ok), blk, fact);
     printf("   || rel error ||: %e [%d]\n", n0, ndigits(n0));
 
     
-    matrix_release(&A0);
-    matrix_release(&A1);
-    matrix_release(&C);
-    matrix_release(&C1);
-    matrix_release(&W);
+    armas_x_release(&A0);
+    armas_x_release(&A1);
+    armas_x_release(&C);
+    armas_x_release(&C1);
+    armas_x_release(&W);
     return 1 - ok;
 }
 
 int test_ldl_inv(int N, int lb, int flags, int verbose)
 {
-    __Matrix A0, A1, C, C1, D, W;
+    armas_x_dense_t A0, A1, C, C1, D, W;
     armas_pivot_t P0;
     armas_conf_t conf = *armas_conf_default();
-    __Dtype n0, n1;
+    DTYPE n0, n1;
     int ok;
     char *fact = flags & ARMAS_LOWER ? "LDL^T" : "UDU^T";
     char *blk = lb == 0 ? "unblk" : "  blk";
     
-    matrix_init(&A0, N, N);
-    matrix_init(&A1, N, N);
-    matrix_init(&C, N, N);
-    matrix_init(&C1, N, N);
-    matrix_init(&W, lb == 0 ? N : lb*N, 1);
-    matrix_diag(&D, &C1, 0);
-    matrix_madd(&D, 1.0, 0);
+    armas_x_init(&A0, N, N);
+    armas_x_init(&A1, N, N);
+    armas_x_init(&C, N, N);
+    armas_x_init(&C1, N, N);
+    armas_x_init(&W, lb == 0 ? N : lb*N, 1);
+    armas_x_diag(&D, &C1, 0);
+    armas_x_madd(&D, 1.0, 0);
     armas_pivot_init(&P0, N);
     
-    matrix_set_values(&A0, unitrand, ARMAS_SYMM);
-    matrix_mcopy(&A1, &A0);
-    matrix_make_trm(&A0, flags);
+    armas_x_set_values(&A0, unitrand, ARMAS_SYMM);
+    armas_x_mcopy(&A1, &A0);
+    armas_x_make_trm(&A0, flags);
 
     if (N < 10) {
-        printf("A:\n"); matrix_printf(stdout, "%6.3f", &A0);
+        printf("A:\n"); armas_x_printf(stdout, "%6.3f", &A0);
     }
 
     conf.lb = lb;
-    matrix_ldlfactor(&A0, &W, &P0, flags, &conf);
-    matrix_ldlinverse_sym(&A0, &W, &P0, flags, &conf);
+    armas_x_ldlfactor(&A0, &W, &P0, flags, &conf);
+    armas_x_ldlinverse_sym(&A0, &W, &P0, flags, &conf);
 
-    matrix_mult_sym(&C, &A0, &A1, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
+    armas_x_mult_sym(&C, &A0, &A1, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
 
     n0 = rel_error(&n1, &C, &C1, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
     if (N < 10) {
         printf("P0: "); armas_pivot_printf(stdout, "%d", &P0);
-        printf("A*A.-1 - I:\n"); matrix_printf(stdout, "%6.3f", &C);
+        printf("A*A.-1 - I:\n"); armas_x_printf(stdout, "%6.3f", &C);
     }
     printf("%s : %s.(%s).-1*A = I\n", PASS(ok), blk, fact);
     printf("   || rel error ||: %e [%d]\n", n0, ndigits(n0));
 
     
-    matrix_release(&A0);
-    matrix_release(&A1);
-    matrix_release(&C);
-    matrix_release(&C1);
-    matrix_release(&W);
+    armas_x_release(&A0);
+    armas_x_release(&A1);
+    armas_x_release(&C);
+    armas_x_release(&C1);
+    armas_x_release(&W);
     armas_pivot_release(&P0);
     return 1 - ok;
 }

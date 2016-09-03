@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_scale)
+#if defined(armas_x_scale)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -27,14 +27,14 @@
 void __scalf(int *n, DTYPE *X, int *incx, DTYPE *alpha)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t x;
+    armas_x_dense_t x;
 
     if (*incx == 1) {
-        __armas_make(&x, *n, 1, *n, X);
+        armas_x_make(&x, *n, 1, *n, X);
     } else {
-        __armas_make(&x, 1, *n, *incx, X);
+        armas_x_make(&x, 1, *n, *incx, X);
     }
-    __armas_scale(&x, *alpha, conf);
+    armas_x_scale(&x, *alpha, conf);
     return;
 }
 #endif
@@ -43,14 +43,14 @@ void __scalf(int *n, DTYPE *X, int *incx, DTYPE *alpha)
 void __cblas_scal(const int N, const DTYPE alpha, DTYPE *X, const int incx)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t x;
+    armas_x_dense_t x;
 
     if (*incx == 1) {
-        __armas_make(&x, N, 1, N, X);
+        armas_x_make(&x, N, 1, N, X);
     } else {
-        __armas_make(&x, 1, N, incx, X);
+        armas_x_make(&x, 1, N, incx, X);
     }
-    __armas_scale(&x, alpha, conf);
+    armas_x_scale(&x, alpha, conf);
     return;
 }
 

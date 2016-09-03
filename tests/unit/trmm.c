@@ -6,29 +6,29 @@
 
 #if defined(FLOAT32)
 #include <armas/smatrix.h>
-typedef armas_s_dense_t __Matrix ;
-typedef float __Dtype;
+typedef armas_s_dense_t armas_x_dense_t ;
+typedef float DTYPE;
 
-#define matrix_init       armas_s_init
-#define matrix_set_values armas_s_set_values
-#define matrix_mult       armas_s_mult
-#define matrix_transpose  armas_s_transpose
-#define matrix_release    armas_s_release
-#define matrix_mult_trm   armas_s_mult_trm
-#define matrix_mcopy      armas_s_mcopy
+#define armas_x_init       armas_s_init
+#define armas_x_set_values armas_s_set_values
+#define armas_x_mult       armas_s_mult
+#define armas_x_transpose  armas_s_transpose
+#define armas_x_release    armas_s_release
+#define armas_x_mult_trm   armas_s_mult_trm
+#define armas_x_mcopy      armas_s_mcopy
 
 #else
 #include <armas/dmatrix.h>
-typedef armas_d_dense_t __Matrix ;
-typedef double __Dtype;
+typedef armas_d_dense_t armas_x_dense_t ;
+typedef double DTYPE;
 
-#define matrix_init       armas_d_init
-#define matrix_set_values armas_d_set_values
-#define matrix_mult       armas_d_mult
-#define matrix_transpose  armas_d_transpose
-#define matrix_release    armas_d_release
-#define matrix_mult_trm   armas_d_mult_trm
-#define matrix_mcopy      armas_d_mcopy
+#define armas_x_init       armas_d_init
+#define armas_x_set_values armas_d_set_values
+#define armas_x_mult       armas_d_mult
+#define armas_x_transpose  armas_d_transpose
+#define armas_x_release    armas_d_release
+#define armas_x_mult_trm   armas_d_mult_trm
+#define armas_x_mcopy      armas_d_mcopy
 
 #endif
 #include "helper.h"
@@ -36,12 +36,12 @@ typedef double __Dtype;
 int main(int argc, char **argv) {
 
   armas_conf_t conf;
-  __Matrix C, B0, A, B;
+  armas_x_dense_t C, B0, A, B;
 
   int ok, opt, fails = 0;
   int N = 600;
   int verbose = 1;
-  __Dtype alpha = 1.0, n0, n1;
+  DTYPE alpha = 1.0, n0, n1;
 
   while ((opt = getopt(argc, argv, "v")) != -1) {
     switch (opt) {
@@ -59,20 +59,20 @@ int main(int argc, char **argv) {
 
   conf = *armas_conf_default();
 
-  matrix_init(&C, N, N);
-  matrix_init(&A, N, N);
-  matrix_init(&B, N, N);
-  matrix_init(&B0, N, N);
+  armas_x_init(&C, N, N);
+  armas_x_init(&A, N, N);
+  armas_x_init(&B, N, N);
+  armas_x_init(&B0, N, N);
   
-  matrix_set_values(&C, zero, ARMAS_NULL);
-  matrix_set_values(&A, zero, ARMAS_NULL);
-  matrix_set_values(&A, unitrand, ARMAS_UPPER);
-  matrix_set_values(&B, one, ARMAS_NULL);
-  matrix_mcopy(&B0, &B);
+  armas_x_set_values(&C, zero, ARMAS_NULL);
+  armas_x_set_values(&A, zero, ARMAS_NULL);
+  armas_x_set_values(&A, unitrand, ARMAS_UPPER);
+  armas_x_set_values(&B, one, ARMAS_NULL);
+  armas_x_mcopy(&B0, &B);
 
   // B = A*B
-  matrix_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_LEFT, &conf);
-  matrix_mult(&C, &A, &B0, alpha, 0.0, ARMAS_NULL, &conf);
+  armas_x_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_LEFT, &conf);
+  armas_x_mult(&C, &A, &B0, alpha, 0.0, ARMAS_NULL, &conf);
 
   n0 = rel_error(&n1, &B, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -82,11 +82,11 @@ int main(int argc, char **argv) {
   }
   fails += 1 - ok;
 
-  matrix_set_values(&B, one, ARMAS_NULL);
-  matrix_set_values(&B0, one, ARMAS_NULL);
-  matrix_set_values(&C, zero, ARMAS_NULL);
-  matrix_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_LEFT|ARMAS_TRANSA, &conf);
-  matrix_mult(&C, &A, &B0, alpha, 0.0, ARMAS_TRANSA, &conf);
+  armas_x_set_values(&B, one, ARMAS_NULL);
+  armas_x_set_values(&B0, one, ARMAS_NULL);
+  armas_x_set_values(&C, zero, ARMAS_NULL);
+  armas_x_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_LEFT|ARMAS_TRANSA, &conf);
+  armas_x_mult(&C, &A, &B0, alpha, 0.0, ARMAS_TRANSA, &conf);
 
   n0 = rel_error(&n1, &B, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -96,11 +96,11 @@ int main(int argc, char **argv) {
   }
   fails += 1 - ok;
 
-  matrix_set_values(&B, one, ARMAS_NULL);
-  matrix_set_values(&B0, one, ARMAS_NULL);
-  matrix_set_values(&C, zero, ARMAS_NULL);
-  matrix_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_RIGHT, &conf);
-  matrix_mult(&C, &B0, &A, alpha, 0.0, ARMAS_NULL, &conf);
+  armas_x_set_values(&B, one, ARMAS_NULL);
+  armas_x_set_values(&B0, one, ARMAS_NULL);
+  armas_x_set_values(&C, zero, ARMAS_NULL);
+  armas_x_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_RIGHT, &conf);
+  armas_x_mult(&C, &B0, &A, alpha, 0.0, ARMAS_NULL, &conf);
 
   n0 = rel_error(&n1, &B, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -110,11 +110,11 @@ int main(int argc, char **argv) {
   }
   fails += 1 - ok;
 
-  matrix_set_values(&B, one, ARMAS_NULL);
-  matrix_set_values(&B0, one, ARMAS_NULL);
-  matrix_set_values(&C, zero, ARMAS_NULL);
-  matrix_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_RIGHT|ARMAS_TRANSA, &conf);
-  matrix_mult(&C, &B0, &A, alpha, 0.0, ARMAS_TRANSB, &conf);
+  armas_x_set_values(&B, one, ARMAS_NULL);
+  armas_x_set_values(&B0, one, ARMAS_NULL);
+  armas_x_set_values(&C, zero, ARMAS_NULL);
+  armas_x_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_RIGHT|ARMAS_TRANSA, &conf);
+  armas_x_mult(&C, &B0, &A, alpha, 0.0, ARMAS_TRANSB, &conf);
 
   n0 = rel_error(&n1, &B, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;

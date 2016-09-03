@@ -14,11 +14,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_trdbuild) 
+#if defined(armas_x_trdbuild) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_qrbuild) && defined(__armas_qlbuild)
+#if defined(armas_x_qrbuild) && defined(armas_x_qlbuild)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -52,16 +52,16 @@
  * @return
  *    0 on success, -1 on failure and sets conf.error value.
  */
-int __armas_trdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *W,
+int armas_x_trdbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
                      int K, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t Qh, tauh, d, s;
+    armas_x_dense_t Qh, tauh, d, s;
     int j, err = 0;
 
     if (!conf) 
         conf = armas_conf_default();
 
-    if (__armas_size(A) == 0)
+    if (armas_x_size(A) == 0)
         return 0;
 
   // default to lower triangular if uplo not defined
@@ -75,37 +75,37 @@ int __armas_trdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
     case ARMAS_LOWER:
         // shift Q matrix embedded in A right and fill first column to unit vector
         for (j = A->rows-1; j > 0; j--) {
-            __armas_submatrix(&s, A, j, j-1, A->rows-j, 1);
-            __armas_submatrix(&d, A, j, j,   A->rows-j, 1);
-            __armas_copy(&d, &s, conf);
-            __armas_set(A, 0, j, __ZERO);
+            armas_x_submatrix(&s, A, j, j-1, A->rows-j, 1);
+            armas_x_submatrix(&d, A, j, j,   A->rows-j, 1);
+            armas_x_copy(&d, &s, conf);
+            armas_x_set(A, 0, j, __ZERO);
         }
         // zero first row
-        __armas_column(&d, A, 0);
-        __armas_scale(&d, __ZERO, conf);
-        __armas_set(&d, 0, 0, __ONE);
+        armas_x_column(&d, A, 0);
+        armas_x_scale(&d, __ZERO, conf);
+        armas_x_set(&d, 0, 0, __ONE);
 
-        __armas_submatrix(&Qh, A, 1, 1, A->rows-1, A->rows-1);
-        __armas_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
-        err = __armas_qrbuild(&Qh, &tauh, W, K, conf);
+        armas_x_submatrix(&Qh, A, 1, 1, A->rows-1, A->rows-1);
+        armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
+        err = armas_x_qrbuild(&Qh, &tauh, W, K, conf);
         break;
 
     case ARMAS_UPPER:
         // shift Q matrix embedded in A left and fill first column to unit vector
         for (j = 1; j < A->rows; j++) {
-            __armas_submatrix(&s, A, 0, j,   j, 1);
-            __armas_submatrix(&d, A, 0, j-1, j, 1);
-            __armas_copy(&d, &s, conf);
-            __armas_set(A, -1, j-1, __ZERO);
+            armas_x_submatrix(&s, A, 0, j,   j, 1);
+            armas_x_submatrix(&d, A, 0, j-1, j, 1);
+            armas_x_copy(&d, &s, conf);
+            armas_x_set(A, -1, j-1, __ZERO);
         }
         // zero first row
-        __armas_column(&d, A, A->rows-1);
-        __armas_scale(&d, __ZERO, conf);
-        __armas_set(&d, -1, 0, __ONE);
+        armas_x_column(&d, A, A->rows-1);
+        armas_x_scale(&d, __ZERO, conf);
+        armas_x_set(&d, -1, 0, __ONE);
 
-        __armas_submatrix(&Qh, A, 0, 0, A->rows-1, A->rows-1);
-        __armas_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
-        err = __armas_qlbuild(&Qh, &tauh, W, K, conf);
+        armas_x_submatrix(&Qh, A, 0, 0, A->rows-1, A->rows-1);
+        armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
+        err = armas_x_qlbuild(&Qh, &tauh, W, K, conf);
         break;
 
     default:
@@ -114,12 +114,12 @@ int __armas_trdbuild(__armas_dense_t *A, __armas_dense_t *tau, __armas_dense_t *
     return err;
 }
 
-int __armas_trdbuild_work(__armas_dense_t *A, armas_conf_t *conf)
+int armas_x_trdbuild_work(armas_x_dense_t *A, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
     // QR, QL workspace requirements same
-    return __armas_qrbuild_work(A, conf);
+    return armas_x_qrbuild_work(A, conf);
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

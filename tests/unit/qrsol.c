@@ -16,40 +16,40 @@
 //   3. compute || X0 - B || == O(eps)
 int test_lss(int M, int N, int K, int lb, int verbose)
 {
-  __Matrix A0, tau0;
-  __Matrix B0, X0, W, X;
+  armas_x_dense_t A0, tau0;
+  armas_x_dense_t B0, X0, W, X;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
-  __Dtype nrm, nrm0;
+  DTYPE nrm, nrm0;
 
-  matrix_init(&A0, M, N);
-  matrix_init(&B0, M, K);
-  matrix_init(&X0, N, K);
-  matrix_init(&tau0, N, 1);
+  armas_x_init(&A0, M, N);
+  armas_x_init(&B0, M, K);
+  armas_x_init(&X0, N, K);
+  armas_x_init(&tau0, N, 1);
 
   // set source data
-  matrix_set_values(&A0, unitrand, ARMAS_ANY);
+  armas_x_set_values(&A0, unitrand, ARMAS_ANY);
 
   // set initial X
-  matrix_set_values(&X0, unitrand, ARMAS_ANY);
+  armas_x_set_values(&X0, unitrand, ARMAS_ANY);
   // compute: B0 = A0*X0
-  matrix_mult(&B0, &A0, &X0, 1.0, 0.0, ARMAS_NONE, &conf);
+  armas_x_mult(&B0, &A0, &X0, 1.0, 0.0, ARMAS_NONE, &conf);
 
   conf.lb = lb;
-  wsize = matrix_qrfactor_work(&A0, &conf);
-  matrix_init(&W, wsize, 1);
+  wsize = armas_x_qrfactor_work(&A0, &conf);
+  armas_x_init(&W, wsize, 1);
 
   // factor
-  matrix_qrfactor(&A0, &tau0, &W, &conf);
+  armas_x_qrfactor(&A0, &tau0, &W, &conf);
 
   // solve B0 = A.-1*B0
-  matrix_qrsolve(&B0, &A0, &tau0, &W, ARMAS_NONE, &conf);
+  armas_x_qrsolve(&B0, &A0, &tau0, &W, ARMAS_NONE, &conf);
 
   // X0 = X0 - A.-1*B0
-  matrix_submatrix(&X, &B0, 0, 0, N, K);
+  armas_x_submatrix(&X, &B0, 0, 0, N, K);
 #if 0
-  matrix_scale_plus(&X0, &X, 1.0, -1.0, ARMAS_NONE, &conf);
-  nrm = matrix_mnorm(&X0, ARMAS_NORM_ONE, &conf);
+  armas_x_scale_plus(&X0, &X, 1.0, -1.0, ARMAS_NONE, &conf);
+  nrm = armas_x_mnorm(&X0, ARMAS_NORM_ONE, &conf);
   ok = isFINE(nrm, M*1e-12);
 #endif
   nrm = rel_error(&nrm0, &X, &X0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
@@ -65,41 +65,41 @@ int test_lss(int M, int N, int K, int lb, int verbose)
 // test: min ||X|| s.t. A.T*X = B
 int test_min(int M, int N, int K, int lb, int verbose)
 {
-  __Matrix A0, A1, tau0;
-  __Matrix B0, X0, W, B;
+  armas_x_dense_t A0, A1, tau0;
+  armas_x_dense_t B0, X0, W, B;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
-  __Dtype nrm, nrm0;
+  DTYPE nrm, nrm0;
 
-  matrix_init(&A0, M, N);
-  matrix_init(&A1, M, N);
-  matrix_init(&B0, M, K);
-  matrix_init(&X0, M, K);
-  matrix_init(&tau0, N, 1);
+  armas_x_init(&A0, M, N);
+  armas_x_init(&A1, M, N);
+  armas_x_init(&B0, M, K);
+  armas_x_init(&X0, M, K);
+  armas_x_init(&tau0, N, 1);
 
   // set source data
-  matrix_set_values(&A0, unitrand, ARMAS_ANY);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, ARMAS_ANY);
+  armas_x_mcopy(&A1, &A0);
 
   // set B0
-  matrix_set_values(&B0, unitrand, ARMAS_ANY);
+  armas_x_set_values(&B0, unitrand, ARMAS_ANY);
 
   conf.lb = lb;
-  wsize = matrix_qrfactor_work(&A0, &conf);
-  matrix_init(&W, wsize, 1);
+  wsize = armas_x_qrfactor_work(&A0, &conf);
+  armas_x_init(&W, wsize, 1);
 
   // factor
-  matrix_qrfactor(&A0, &tau0, &W, &conf);
+  armas_x_qrfactor(&A0, &tau0, &W, &conf);
 
   // X0 = A.-T*B0
-  matrix_mcopy(&X0, &B0);
-  matrix_qrsolve(&X0, &A0, &tau0, &W, ARMAS_TRANS, &conf);
+  armas_x_mcopy(&X0, &B0);
+  armas_x_qrsolve(&X0, &A0, &tau0, &W, ARMAS_TRANS, &conf);
 
   // B = B - A.T*X
-  matrix_submatrix(&B, &B0, 0, 0, N, K);
-  nrm0 = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf);
-  matrix_mult(&B, &A1, &X0, -1.0, 1.0, ARMAS_TRANSA, &conf);
-  nrm = matrix_mnorm(&B, ARMAS_NORM_ONE, &conf) / nrm0;
+  armas_x_submatrix(&B, &B0, 0, 0, N, K);
+  nrm0 = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+  armas_x_mult(&B, &A1, &X0, -1.0, 1.0, ARMAS_TRANSA, &conf);
+  nrm = armas_x_mnorm(&B, ARMAS_NORM_ONE, &conf) / nrm0;
   //ok = isFINE(nrm, M*1e-12);
   ok = isOK(nrm, M);
   printf("%s: min || X || s.t. A.T*X = B\n", PASS(ok));

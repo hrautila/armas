@@ -8,32 +8,32 @@
 
 #if defined(FLOAT32)
 #include <armas/smatrix.h>
-typedef float __Dtype;
-typedef armas_s_dense_t __Matrix;
+typedef float DTYPE;
+typedef armas_s_dense_t armas_x_dense_t;
 #define EPSILON FLT_EPSILON
 #define FABS fabsf
-#define matrix_is_vector    armas_s_isvector
-#define matrix_axpy         armas_s_axpy
-#define matrix_scale_plus armas_s_scale_plus
-#define matrix_mnorm        armas_s_mnorm
-#define matrix_make         armas_s_make
-#define matrix_size         armas_s_size
-#define matrix_data         armas_s_data
+#define armas_x_is_vector    armas_s_isvector
+#define armas_x_axpy         armas_s_axpy
+#define armas_x_scale_plus armas_s_scale_plus
+#define armas_x_mnorm        armas_s_mnorm
+#define armas_x_make         armas_s_make
+#define armas_x_size         armas_s_size
+#define armas_x_data         armas_s_data
 
 #else
 #include <armas/dmatrix.h>
-typedef double __Dtype;
-typedef armas_d_dense_t __Matrix;
+typedef double DTYPE;
+typedef armas_d_dense_t armas_x_dense_t;
 
 #define EPSILON DBL_EPSILON
 #define FABS fabs
-#define matrix_is_vector    armas_d_isvector
-#define matrix_axpy         armas_d_axpy
-#define matrix_scale_plus armas_d_scale_plus
-#define matrix_mnorm        armas_d_mnorm
-#define matrix_make         armas_d_make
-#define matrix_size         armas_d_size
-#define matrix_data         armas_d_data
+#define armas_x_is_vector    armas_d_isvector
+#define armas_x_axpy         armas_d_axpy
+#define armas_x_scale_plus armas_d_scale_plus
+#define armas_x_mnorm        armas_d_mnorm
+#define armas_x_make         armas_d_make
+#define armas_x_size         armas_d_size
+#define armas_x_data         armas_d_data
 
 #endif
 
@@ -79,42 +79,42 @@ double gflops(double ms, int64_t count)
   return (count/ms)*1e-6;
 }
 
-__Dtype zero(int i, int j) {
+DTYPE zero(int i, int j) {
   return 0.0;
 }
 
-__Dtype one(int i, int j) {
+DTYPE one(int i, int j) {
   return 1.0;
 }
 
-__Dtype rowno(int i, int j) {
+DTYPE rowno(int i, int j) {
   return (i+1)*1.0;
 }
 
-__Dtype colno(int i, int j) {
+DTYPE colno(int i, int j) {
   return (j+1)*1.0;
 }
 
-__Dtype zeromean(int i, int j) {
+DTYPE zeromean(int i, int j) {
   static int init = 0;
   if (!init) {
     srand48((long)time(0));
     init = 1;
   }
-  return (__Dtype)(drand48() - 0.5);
+  return (DTYPE)(drand48() - 0.5);
 }
 
-__Dtype unitrand(int i, int j) {
+DTYPE unitrand(int i, int j) {
   static int init = 0;
   if (!init) {
     srand48((long)time(0));
     init = 1;
   }
-  return (__Dtype)drand48();
+  return (DTYPE)drand48();
 }
 
 // std random variable from unit random with box-muller transformation
-__Dtype stdrand(int i, int j)
+DTYPE stdrand(int i, int j)
 { 
   double s, u, v;
   static int init = 0;
@@ -127,18 +127,18 @@ __Dtype stdrand(int i, int j)
     v = 2.0*drand48() - 1.0;
     s = u*u + v*v;
   } while (s == 0.0 || s >= 1.0);
-  return (__Dtype)(u * sqrt(-2.0*log(s)/s));
+  return (DTYPE)(u * sqrt(-2.0*log(s)/s));
 }
 
-int isOK(__Dtype nrm, int N)
+int isOK(DTYPE nrm, int N)
 {
   //int nk = (int64_t)(FABS(nrm/EPSILON));
   //return nrm != 0.0 && nk < (int64_t)N;
   // if exactly zero then something suspect
-  return nrm != 0.0 && FABS(nrm) < (__Dtype)N*EPSILON;
+  return nrm != 0.0 && FABS(nrm) < (DTYPE)N*EPSILON;
 }
 
-int isFINE(__Dtype nrm, __Dtype tol)
+int isFINE(DTYPE nrm, DTYPE tol)
 {
   // if exactly zero then something suspect
   return nrm != 0.0 && FABS(nrm) < FABS(tol);
@@ -160,28 +160,28 @@ int in_tolerance(double a, double b)
 // Compute relative error: ||computed - expected||/||expected||
 // Returns norm ||computed - exptected|| in dnorm. 
 // Note: contents of computed is destroyed.
-__Dtype rel_error(__Dtype *dnorm, __Matrix *computed,
-		  __Matrix *expected, int norm, int flags, armas_conf_t *conf)
+DTYPE rel_error(DTYPE *dnorm, armas_x_dense_t *computed,
+		  armas_x_dense_t *expected, int norm, int flags, armas_conf_t *conf)
 {
     double cnrm, enrm;
-    if (matrix_is_vector(computed)) {
-      matrix_axpy(computed, expected, -1.0, conf);
+    if (armas_x_is_vector(computed)) {
+      armas_x_axpy(computed, expected, -1.0, conf);
     } else {
       // computed = computed - expected
-      matrix_scale_plus(computed, expected, 1.0, -1.0, flags, conf);
+      armas_x_scale_plus(computed, expected, 1.0, -1.0, flags, conf);
     }
     // ||computed - expected||
-    cnrm = matrix_mnorm(computed, norm, conf);
+    cnrm = armas_x_mnorm(computed, norm, conf);
     if (dnorm)
       *dnorm = cnrm;
     // ||expected||
-    enrm = matrix_mnorm(expected, norm, conf);
+    enrm = armas_x_mnorm(expected, norm, conf);
     return cnrm/enrm;
 }
 
-__Matrix *col_as_row(__Matrix *row, __Matrix *col)
+armas_x_dense_t *col_as_row(armas_x_dense_t *row, armas_x_dense_t *col)
 {
-  matrix_make(row, 1, matrix_size(col), 1, matrix_data(col));
+  armas_x_make(row, 1, armas_x_size(col), 1, armas_x_data(col));
   return row;
 }
 
@@ -264,7 +264,7 @@ int check(armas_d_dense_t *A, armas_d_dense_t *B, int chkdir, const char *msg)
   return ok;
 }
 
-void matrix_printf(FILE *out, const char *efmt, const armas_d_dense_t *m, int partial)
+void armas_x_printf(FILE *out, const char *efmt, const armas_d_dense_t *m, int partial)
 {
   int i, j;
   if (!m)
@@ -274,9 +274,9 @@ void matrix_printf(FILE *out, const char *efmt, const armas_d_dense_t *m, int pa
 
   int rowpartial = partial && m->rows > 18 ;
   int colpartial = partial && m->cols > 9;
-  for (i = 0; i < m->rows; i++ ) {
+  for (i = 0; i < (int)m->rows; i++ ) {
     printf("[");
-    for (j = 0; j < m->cols; j++ ) {
+    for (j = 0; j < (int)m->cols; j++ ) {
       if (j > 0) {
 	printf(", ");
       }

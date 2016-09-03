@@ -12,7 +12,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_axpy) 
+#if defined(armas_x_axpy) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
@@ -141,7 +141,7 @@ void __vec_axpby(mvec_t *Y,  const mvec_t *X, DTYPE alpha, DTYPE beta, int N)
  *
  * @ingroup blas1
  */
-int __armas_axpy(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, armas_conf_t *conf)
+int armas_x_axpy(armas_x_dense_t *y, const armas_x_dense_t *x, DTYPE alpha, armas_conf_t *conf)
 {
   // only for column or row vectors
   if (!conf)
@@ -155,7 +155,7 @@ int __armas_axpy(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, arma
     conf->error = ARMAS_ENEED_VECTOR;
     return -1;
   }
-  if (__armas_size(x) != __armas_size(y)) {
+  if (armas_x_size(x) != armas_x_size(y)) {
     conf->error = ARMAS_ESIZE;
     return -1;
   }
@@ -164,11 +164,11 @@ int __armas_axpy(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, arma
   mvec_t Y       = {y->elems, (y->rows == 1 ? y->step : 1)};
 
   if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
-    __vec_axpy_ext(&Y, &X, alpha, __armas_size(y));
+    __vec_axpy_ext(&Y, &X, alpha, armas_x_size(y));
     return 0;
   }
   
-  __vec_axpy(&Y, &X, alpha, __armas_size(y));
+  __vec_axpy(&Y, &X, alpha, armas_x_size(y));
   return 0;
 }
 
@@ -190,7 +190,7 @@ int __armas_axpy(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, arma
  *
  * @ingroup blas1
  */
-int __armas_axpby(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, DTYPE beta, armas_conf_t *conf)
+int armas_x_axpby(armas_x_dense_t *y, const armas_x_dense_t *x, DTYPE alpha, DTYPE beta, armas_conf_t *conf)
 {
   // only for column or row vectors
   if (!conf)
@@ -204,7 +204,7 @@ int __armas_axpby(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, DTY
     conf->error = ARMAS_ENEED_VECTOR;
     return -1;
   }
-  if (__armas_size(x) != __armas_size(y)) {
+  if (armas_x_size(x) != armas_x_size(y)) {
     conf->error = ARMAS_ESIZE;
     return -1;
   }
@@ -214,11 +214,11 @@ int __armas_axpby(__armas_dense_t *y, const __armas_dense_t *x, DTYPE alpha, DTY
 
 
   if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
-    __vec_axpby_ext(&Y, &X, alpha, beta, __armas_size(y));
+    __vec_axpby_ext(&Y, &X, alpha, beta, armas_x_size(y));
     return 0;
   }
   
-  __vec_axpby(&Y, &X, alpha, beta, __armas_size(y));
+  __vec_axpby(&Y, &X, alpha, beta, armas_x_size(y));
   return 0;
 }
 

@@ -210,19 +210,19 @@ void __gemv_update_ext_unb(mvec_t *Y, mvec_t *dY,
  *  @param[in]      conf   configuration block
  *
  */
-int __armas_ex_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_dense_t *X,
+int armas_x_ex_mvmult(armas_x_dense_t *Y, const armas_x_dense_t *A, const armas_x_dense_t *X,
                       DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
     int ok;
     mvec_t x, y;
     mdata_t A0;
-    int nx = __armas_size(X);
-    int ny = __armas_size(Y);
+    int nx = armas_x_size(X);
+    int ny = armas_x_size(Y);
   
     if (!conf)
         conf = armas_conf_default();
 
-    if (__armas_size(A) == 0 || __armas_size(X) == 0 || __armas_size(Y) == 0)
+    if (armas_x_size(A) == 0 || armas_x_size(X) == 0 || armas_x_size(Y) == 0)
         return 0;
   
     if (X->rows != 1 && X->cols != 1) {

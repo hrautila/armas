@@ -10,11 +10,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_mult_rbt) && defined(__armas_gen_rbt)
+#if defined(armas_x_mult_rbt) && defined(armas_x_gen_rbt)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_get_at_unsafe) && defined(__armas_set_at_unsafe)
+#if defined(armas_x_get_at_unsafe) && defined(armas_x_set_at_unsafe)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -50,7 +50,7 @@
  *
  */
 static
-void __rbt_left(__armas_dense_t *A, __armas_dense_t *R, int Nd, int flags, armas_conf_t *conf)
+void __rbt_left(armas_x_dense_t *A, armas_x_dense_t *R, int Nd, int flags, armas_conf_t *conf)
 {
     int i, j, rb, nb;
     DTYPE r0, r1, a00, a10;
@@ -67,17 +67,17 @@ void __rbt_left(__armas_dense_t *A, __armas_dense_t *R, int Nd, int flags, armas
         //printf("..rows=%d, Nd=%d, nb=%d, rb=%d\n", A->rows, Nd, nb, rb);
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < rb; i++) {
-                r0  = __armas_get_at_unsafe(R, i);
-                r1  = __armas_get_at_unsafe(R, i+nb);
-                a00 = __armas_get_unsafe(A, i, j);
-                a10 = __armas_get_unsafe(A, i+nb, j);
-                __armas_set_unsafe(A, i,    j, r0*(a00+a10));
-                __armas_set_unsafe(A, i+nb, j, r1*(a00-a10));
+                r0  = armas_x_get_at_unsafe(R, i);
+                r1  = armas_x_get_at_unsafe(R, i+nb);
+                a00 = armas_x_get_unsafe(A, i, j);
+                a10 = armas_x_get_unsafe(A, i+nb, j);
+                armas_x_set_unsafe(A, i,    j, r0*(a00+a10));
+                armas_x_set_unsafe(A, i+nb, j, r1*(a00-a10));
             }
             for (; i < nb; i++) {
-                r0  = __armas_get_at_unsafe(R, i);
-                a00 = __armas_get_unsafe(A, i, j);
-                __armas_set_unsafe(A, i,  j, r0*a00);
+                r0  = armas_x_get_at_unsafe(R, i);
+                a00 = armas_x_get_unsafe(A, i, j);
+                armas_x_set_unsafe(A, i,  j, r0*a00);
             }
         }
         return;
@@ -85,18 +85,18 @@ void __rbt_left(__armas_dense_t *A, __armas_dense_t *R, int Nd, int flags, armas
 
     for (j = 0; j < A->cols; j++) {
         for (i = 0; i < rb; i++) {
-            r0  = __armas_get_at_unsafe(R, i);
-            r1  = __armas_get_at_unsafe(R, i+nb);
-            a00 = r0 * __armas_get_unsafe(A, i, j);
-            a10 = r1 * __armas_get_unsafe(A, i+nb, j);
-            __armas_set_unsafe(A, i,    j, a00+a10);
-            __armas_set_unsafe(A, i+nb, j, a00-a10);
+            r0  = armas_x_get_at_unsafe(R, i);
+            r1  = armas_x_get_at_unsafe(R, i+nb);
+            a00 = r0 * armas_x_get_unsafe(A, i, j);
+            a10 = r1 * armas_x_get_unsafe(A, i+nb, j);
+            armas_x_set_unsafe(A, i,    j, a00+a10);
+            armas_x_set_unsafe(A, i+nb, j, a00-a10);
         }
         // for case when Nd > rows(A)
         for (; i < nb; i++) {
-            r0  = __armas_get_at_unsafe(R, i);
-            a00 = __armas_get_unsafe(A, i, j);
-            __armas_set_unsafe(A, i, j, r0*a00);
+            r0  = armas_x_get_at_unsafe(R, i);
+            a00 = armas_x_get_unsafe(A, i, j);
+            armas_x_set_unsafe(A, i, j, r0*a00);
         }
     }
 }
@@ -105,11 +105,11 @@ void __rbt_left(__armas_dense_t *A, __armas_dense_t *R, int Nd, int flags, armas
  * Update matrix A with partial recursive butterfly matrix R from left.
  */
 static
-int __rbt_recursive_left(__armas_dense_t *A, __armas_dense_t *R, int flags, armas_conf_t *conf)
+int __rbt_recursive_left(armas_x_dense_t *A, armas_x_dense_t *R, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t AT, AB, A0, A1, A2;
-    __armas_dense_t RL, RR, R0, R1, R2, rT, rB, r0, r1, r2;
-    __armas_dense_t *Rx;
+    armas_x_dense_t AT, AB, A0, A1, A2;
+    armas_x_dense_t RL, RR, R0, R1, R2, rT, rB, r0, r1, r2;
+    armas_x_dense_t *Rx;
     int pdir, rdir, lb, k;
     int twod = 1 << R->cols;   // twod = 2^d
     int Nd;                    // Nd closest multiple of 2^d larger than N
@@ -159,7 +159,7 @@ int __rbt_recursive_left(__armas_dense_t *A, __armas_dense_t *R, int flags, arma
                                 &rB, /**/ &r0, &r1, /**/ &R1, ARMAS_PBOTTOM);
         }
         __continue_1x3to1x2(&RL, &RR, /**/ &R0, &R1,  /**/ R, rdir);
-        //printf("A\n"); __armas_printf(stdout, "%6.3f", A);
+        //printf("A\n"); armas_x_printf(stdout, "%6.3f", A);
         // next butterfly size
         if (flags & ARMAS_TRANS) {
             lb = 2*lb;
@@ -172,13 +172,13 @@ int __rbt_recursive_left(__armas_dense_t *A, __armas_dense_t *R, int flags, arma
         }
     }
     // scale with (1/sqrt(2))^d 
-    __armas_mscale(A, __POW(__RSQRT2, R->cols), 0);
+    armas_x_mscale(A, __POW(__RSQRT2, R->cols), 0);
     return 0;
 }
 
 
 static
-void __rbt_right(__armas_dense_t *A, __armas_dense_t *R, int Nd, int flags, armas_conf_t *conf)
+void __rbt_right(armas_x_dense_t *A, armas_x_dense_t *R, int Nd, int flags, armas_conf_t *conf)
 {
     int i, j, rb, nb;
     DTYPE r0, r1, a00, a01;
@@ -195,36 +195,36 @@ void __rbt_right(__armas_dense_t *A, __armas_dense_t *R, int Nd, int flags, arma
         j = 0;
         for (i = 0; i < A->rows; i++) {
             for (j = 0; j < rb; j++) {
-                r0  = __armas_get_at_unsafe(R, j);
-                r1  = __armas_get_at_unsafe(R, j+nb);
-                a00 = r0 * __armas_get_unsafe(A, i, j);
-                a01 = r1 * __armas_get_unsafe(A, i, j+nb);
-                __armas_set_unsafe(A, i, j,    a00+a01);
-                __armas_set_unsafe(A, i, j+nb, a00-a01);
+                r0  = armas_x_get_at_unsafe(R, j);
+                r1  = armas_x_get_at_unsafe(R, j+nb);
+                a00 = r0 * armas_x_get_unsafe(A, i, j);
+                a01 = r1 * armas_x_get_unsafe(A, i, j+nb);
+                armas_x_set_unsafe(A, i, j,    a00+a01);
+                armas_x_set_unsafe(A, i, j+nb, a00-a01);
             }
         }
         // for case when Nd > rows(A)
         for (; j < nb; j++) {
-            r0  = __armas_get_at_unsafe(R, j);
-            a00 = __armas_get_unsafe(A, i, j);
-            __armas_set_unsafe(A, i, j, r0*a00);
+            r0  = armas_x_get_at_unsafe(R, j);
+            a00 = armas_x_get_unsafe(A, i, j);
+            armas_x_set_unsafe(A, i, j, r0*a00);
         }
         return;
     }
 
     for (i = 0; i < A->rows; i++) {
         for (j = 0; j < rb; j++) {
-            r0  = __armas_get_at_unsafe(R, j);
-            r1  = __armas_get_at_unsafe(R, j+nb);
-            a00 = __armas_get_unsafe(A, i, j);
-            a01 = __armas_get_unsafe(A, i, j+nb);
-            __armas_set_unsafe(A, i, j,    r0*(a00+a01));
-            __armas_set_unsafe(A, i, j+nb, r1*(a00-a01));
+            r0  = armas_x_get_at_unsafe(R, j);
+            r1  = armas_x_get_at_unsafe(R, j+nb);
+            a00 = armas_x_get_unsafe(A, i, j);
+            a01 = armas_x_get_unsafe(A, i, j+nb);
+            armas_x_set_unsafe(A, i, j,    r0*(a00+a01));
+            armas_x_set_unsafe(A, i, j+nb, r1*(a00-a01));
         }
         for (; j < nb; j++) {
-            r0  = __armas_get_at_unsafe(R, j);
-            a00 = __armas_get_unsafe(A, i, j);
-            __armas_set_unsafe(A, i,  j, r0*a00);
+            r0  = armas_x_get_at_unsafe(R, j);
+            a00 = armas_x_get_unsafe(A, i, j);
+            armas_x_set_unsafe(A, i,  j, r0*a00);
         }
     }
 }
@@ -236,11 +236,11 @@ void __rbt_right(__armas_dense_t *A, __armas_dense_t *R, int Nd, int flags, arma
  *  would be to loop over each column/row of A cols(R) times.)
  */
 static
-int __rbt_recursive_right(__armas_dense_t *A, __armas_dense_t *R, int flags, armas_conf_t *conf)
+int __rbt_recursive_right(armas_x_dense_t *A, armas_x_dense_t *R, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t AL, AR, A0, A1, A2;
-    __armas_dense_t RL, RR, R0, R1, R2, rT, rB, r0, r1, r2;
-    __armas_dense_t *Rx;
+    armas_x_dense_t AL, AR, A0, A1, A2;
+    armas_x_dense_t RL, RR, R0, R1, R2, rT, rB, r0, r1, r2;
+    armas_x_dense_t *Rx;
     int pdir, rdir, lb, k;
     int twod = 1 << R->cols;   // twod = 2^d
     int Nd;                    // Nd closest multiple of 2^d larger than N
@@ -298,7 +298,7 @@ int __rbt_recursive_right(__armas_dense_t *A, __armas_dense_t *R, int flags, arm
         }
    }
     // scale with (1/sqrt(2))^d 
-    __armas_mscale(A, __POW(__RSQRT2, R->cols), 0);
+    armas_x_mscale(A, __POW(__RSQRT2, R->cols), 0);
     return 0;
 }
 
@@ -337,7 +337,7 @@ int __rbt_recursive_right(__armas_dense_t *A, __armas_dense_t *R, int flags, arm
  *  @return 
  *     0 for success, -1 for error.
  */
-int __armas_mult_rbt(__armas_dense_t *A, __armas_dense_t *R, int flags, armas_conf_t *conf)
+int armas_x_mult_rbt(armas_x_dense_t *A, armas_x_dense_t *R, int flags, armas_conf_t *conf)
 {
     int ok;
     
@@ -376,7 +376,7 @@ int __armas_mult_rbt(__armas_dense_t *A, __armas_dense_t *R, int flags, armas_co
  *    @param[in] depth
  *      Depth of recursive butterfly. 
  */
-int __armas_size_rbt(int *fact, int N, int depth)
+int armas_x_size_rbt(int *fact, int N, int depth)
 {
     int Nd;
     int twod = 1 << depth;   // twod = 2^d
@@ -392,7 +392,7 @@ int __armas_size_rbt(int *fact, int N, int depth)
 /*
  * From: Baboulin, Randomization 
  */
-void __armas_gen_rbt(__armas_dense_t *R)
+void armas_x_gen_rbt(armas_x_dense_t *R)
 {
     static int init = 0;
     double r;
@@ -407,7 +407,7 @@ void __armas_gen_rbt(__armas_dense_t *R)
         for (i = 0; i < R->rows; i++) {
             r = drand48() - 0.5;
             r = exp(r/10.0);
-            __armas_set_unsafe(R, i, j, r);
+            armas_x_set_unsafe(R, i, j, r);
         }
     }
 }

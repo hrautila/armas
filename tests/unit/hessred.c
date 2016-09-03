@@ -17,36 +17,36 @@
 
 int test_reduce(int M, int N, int lb, int verbose)
 {
-  __Matrix A0, A1, tau0, tau1, W;
+  armas_x_dense_t A0, A1, tau0, tau1, W;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
   int wchange = lb > 8 ? 2*M : 0;
-  __Dtype n0, n1;
+  DTYPE n0, n1;
 
-  matrix_init(&A0, N, N);
-  matrix_init(&A1, N, N);
-  matrix_init(&tau0, N, 1);
-  matrix_init(&tau1, N, 1);
+  armas_x_init(&A0, N, N);
+  armas_x_init(&A1, N, N);
+  armas_x_init(&tau0, N, 1);
+  armas_x_init(&tau1, N, 1);
 
   conf.lb = lb;
-  wsize = matrix_hessreduce_work(&A0, &conf);
-  matrix_init(&W, wsize-wchange, 1);
+  wsize = armas_x_hessreduce_work(&A0, &conf);
+  armas_x_init(&W, wsize-wchange, 1);
 
   // set source data
-  matrix_set_values(&A0, unitrand, ARMAS_ANY);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, ARMAS_ANY);
+  armas_x_mcopy(&A1, &A0);
 
   // unblocked reduction
   conf.lb = 0;
-  matrix_hessreduce(&A0, &tau0, &W, &conf);
+  armas_x_hessreduce(&A0, &tau0, &W, &conf);
 
   // blocked reduction
   conf.lb = lb;
-  matrix_hessreduce(&A1, &tau1, &W, &conf);
+  armas_x_hessreduce(&A1, &tau1, &W, &conf);
 
 
-  n0 = rel_error((__Dtype *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  n1 = rel_error((__Dtype *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+  n0 = rel_error((DTYPE *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n1 = rel_error((DTYPE *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
   ok = isFINE(n0, N*__ERROR);
 
   printf("%s: unblk.Hess(A) == blk.Hess(A)\n", PASS(ok));
@@ -55,11 +55,11 @@ int test_reduce(int M, int N, int lb, int verbose)
     printf("  || error.tau  ||: %e [%d]\n", n1, ndigits(n1));
   }
 
-  matrix_release(&A0);
-  matrix_release(&A1);
-  matrix_release(&tau0);
-  matrix_release(&tau1);
-  matrix_release(&W);
+  armas_x_release(&A0);
+  armas_x_release(&A1);
+  armas_x_release(&tau0);
+  armas_x_release(&tau1);
+  armas_x_release(&W);
 
   return ok;
 }
@@ -67,52 +67,52 @@ int test_reduce(int M, int N, int lb, int verbose)
 
 int test_mult(int M, int N, int lb, int verbose)
 {
-  __Matrix A0, A1, B, tau0, W, Blow;
+  armas_x_dense_t A0, A1, B, tau0, W, Blow;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
   int wchange = lb > 8 ? 2*M : 0;
-  __Dtype nrm;
+  DTYPE nrm;
 
-  matrix_init(&A0, N, N);
-  matrix_init(&A1, N, N);
-  matrix_init(&B, N, N);
-  matrix_init(&tau0, N, 1);
+  armas_x_init(&A0, N, N);
+  armas_x_init(&A1, N, N);
+  armas_x_init(&B, N, N);
+  armas_x_init(&tau0, N, 1);
 
   conf.lb = lb;
   // A is square; left and right work sizes are equal
-  wsize = matrix_hessmult_work(&A0, ARMAS_LEFT, &conf);
-  matrix_init(&W, wsize-wchange, 1);
+  wsize = armas_x_hessmult_work(&A0, ARMAS_LEFT, &conf);
+  armas_x_init(&W, wsize-wchange, 1);
 
   // set source data
-  matrix_set_values(&A0, unitrand, ARMAS_ANY);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, ARMAS_ANY);
+  armas_x_mcopy(&A1, &A0);
 
   // reduce to Hessenberg matrix
   conf.lb = lb;
-  matrix_hessreduce(&A0, &tau0, &W, &conf);
+  armas_x_hessreduce(&A0, &tau0, &W, &conf);
 
   // extract B = Hess(A)  
-  matrix_mcopy(&B, &A0);
-  matrix_submatrix(&Blow, &B, 1, 0, N-1, N-1);
-  matrix_make_trm(&Blow, ARMAS_UPPER);
+  armas_x_mcopy(&B, &A0);
+  armas_x_submatrix(&Blow, &B, 1, 0, N-1, N-1);
+  armas_x_make_trm(&Blow, ARMAS_UPPER);
 
   // A = H*B*H.T; update B with H.T and H
-  matrix_hessmult(&B, &A0, &tau0, &W, ARMAS_LEFT, &conf);
-  matrix_hessmult(&B, &A0, &tau0, &W, ARMAS_RIGHT|ARMAS_TRANS, &conf);
+  armas_x_hessmult(&B, &A0, &tau0, &W, ARMAS_LEFT, &conf);
+  armas_x_hessmult(&B, &A0, &tau0, &W, ARMAS_RIGHT|ARMAS_TRANS, &conf);
 
   // B == A1?
-  nrm = rel_error((__Dtype *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  nrm = rel_error((DTYPE *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, N);
   printf("%s: Q*Hess(A)*Q.T == A\n", PASS(ok));
   if (verbose > 0) {
     printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
-  matrix_release(&A0);
-  matrix_release(&A1);
-  matrix_release(&B);
-  matrix_release(&tau0);
-  matrix_release(&W);
+  armas_x_release(&A0);
+  armas_x_release(&A1);
+  armas_x_release(&B);
+  armas_x_release(&tau0);
+  armas_x_release(&W);
   return ok;
 }
 

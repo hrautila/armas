@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_mvupdate2_sym)
+#if defined(armas_x_mvupdate2_sym)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -28,23 +28,23 @@ void __syr2f(char *uplo, int *n, DTYPE *alpha, DTYPE *X,
              int *incx, DTYPE *Y, int *incy, DTYPE *A, int *lda)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t a, x, y;
+    armas_x_dense_t a, x, y;
     int flags = 0;
 
     flags |= toupper(*uplo) == 'L' ? ARMAS_LOWER : ARMAS_UPPER;
 
-    __armas_make(&a, *n, *n, *lda, A);
+    armas_x_make(&a, *n, *n, *lda, A);
     if (*incx == 1) {
-        __armas_make(&x, *n, 1, *n, X);
+        armas_x_make(&x, *n, 1, *n, X);
     } else {
-        __armas_make(&x, 1, *n, *incx, X);
+        armas_x_make(&x, 1, *n, *incx, X);
     }
     if (*incy == 1) {
-        __armas_make(&y, *n, 1, *n, Y);
+        armas_x_make(&y, *n, 1, *n, Y);
     } else {
-        __armas_make(&y, 1, *n, *incy, Y);
+        armas_x_make(&y, 1, *n, *incy, Y);
     }
-    __armas_mvupdate2_sym(&a, &x, &y, *alpha, flags, conf);
+    armas_x_mvupdate2_sym(&a, &x, &y, *alpha, flags, conf);
 }
 #endif
 
@@ -53,7 +53,7 @@ void __cblas_syr2(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo, int 
                   DTYPE alpha, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE *A, int lda)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t Aa, x, y;
+    armas_x_dense_t Aa, x, y;
     int flags = 0;
 
     switch (order) {
@@ -65,18 +65,18 @@ void __cblas_syr2(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo, int 
         flags |= uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
         break;
     }
-    __armas_make(&Aa, N, N, lda, A);
+    armas_x_make(&Aa, N, N, lda, A);
     if (incx == 1) {
-        __armas_make(&x, N, 1, N, X);
+        armas_x_make(&x, N, 1, N, X);
     } else {
-        __armas_make(&x, 1, N, incx, X);
+        armas_x_make(&x, 1, N, incx, X);
     }
     if (incy == 1) {
-        __armas_make(&y, N, 1, N, Y);
+        armas_x_make(&y, N, 1, N, Y);
     } else {
-        __armas_make(&y, 1, N, incy, Y);
+        armas_x_make(&y, 1, N, incy, Y);
     }
-    __armas_mvupdate2_sym(&Aa, &x, &y, alpha, flags, conf);
+    armas_x_mvupdate2_sym(&Aa, &x, &y, alpha, flags, conf);
 }
 #endif
 

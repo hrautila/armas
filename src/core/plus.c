@@ -14,7 +14,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_scale_plus) 
+#if defined(armas_x_scale_plus) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
@@ -146,7 +146,7 @@ void __scale_plus(mdata_t *A, const mdata_t *B,
  *      Configuration block
  * \ingroup matrix
  */
-int __armas_scale_plus(__armas_dense_t *A, const __armas_dense_t *B,
+int armas_x_scale_plus(armas_x_dense_t *A, const armas_x_dense_t *B,
                        DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   int ok;
@@ -156,7 +156,7 @@ int __armas_scale_plus(__armas_dense_t *A, const __armas_dense_t *B,
   if (!conf)
     conf = armas_conf_default();
 
-  if (__armas_size(A) == 0 || __armas_size(B) == 0)
+  if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
     return 0;
 
   // check consistency

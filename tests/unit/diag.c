@@ -12,33 +12,33 @@
 
 int test_left(int M, int N, int verbose)
 {
-  __Matrix A0, A1, D;
+  armas_x_dense_t A0, A1, D;
   int ok;
-  __Dtype nrm;
+  DTYPE nrm;
   armas_conf_t conf = *armas_conf_default();
 
-  matrix_init(&A0, M, N);
-  matrix_init(&A1, M, N);
-  matrix_init(&D, M, 1);
+  armas_x_init(&A0, M, N);
+  armas_x_init(&A1, M, N);
+  armas_x_init(&D, M, 1);
 
-  matrix_set_values(&A0, unitrand, ARMAS_ANY);
-  matrix_mcopy(&A1, &A0);
-  matrix_set_values(&D, unitrand, ARMAS_ANY);
+  armas_x_set_values(&A0, unitrand, ARMAS_ANY);
+  armas_x_mcopy(&A1, &A0);
+  armas_x_set_values(&D, unitrand, ARMAS_ANY);
 
-  matrix_mult_diag(&A1, &D, ARMAS_LEFT, &conf);
+  armas_x_mult_diag(&A1, &D, ARMAS_LEFT, &conf);
   if (verbose > 1 && N < 10) {
-    printf("A0\n"); matrix_printf(stdout, "%6.3f", &A0);
-    printf("A1\n"); matrix_printf(stdout, "%6.3f", &A1);
+    printf("A0\n"); armas_x_printf(stdout, "%6.3f", &A0);
+    printf("A1\n"); armas_x_printf(stdout, "%6.3f", &A1);
   }
-  matrix_solve_diag(&A1, &D, ARMAS_LEFT, &conf);
+  armas_x_solve_diag(&A1, &D, ARMAS_LEFT, &conf);
 #if 0
-  matrix_scale_plus(&A1, &A0, 1.0, -1.0, ARMAS_NOTRANS, &conf);
+  armas_x_scale_plus(&A1, &A0, 1.0, -1.0, ARMAS_NOTRANS, &conf);
   if (verbose > 1 && N < 10) {
-    printf("A1 - A0\n"); matrix_printf(stdout, "%6.3f", &A1);
+    printf("A1 - A0\n"); armas_x_printf(stdout, "%6.3f", &A1);
   }
-  nrm = matrix_mnorm(&A1, ARMAS_NORM_ONE, &conf);
+  nrm = armas_x_mnorm(&A1, ARMAS_NORM_ONE, &conf);
 #endif
-  nrm = rel_error((__Dtype *)0, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  nrm = rel_error((DTYPE *)0, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok =isOK(nrm, N);
   printf("%4s: A = D.-1*D*A\n", PASS(ok));
   if (verbose > 0)
@@ -49,33 +49,33 @@ int test_left(int M, int N, int verbose)
 
 int test_right(int M, int N, int verbose)
 {
-  __Matrix A0, A1, D;
+  armas_x_dense_t A0, A1, D;
   int ok;
-  __Dtype nrm;
+  DTYPE nrm;
   armas_conf_t conf = *armas_conf_default();
 
-  matrix_init(&A0, M, N);
-  matrix_init(&A1, M, N);
-  matrix_init(&D, N, 1);
+  armas_x_init(&A0, M, N);
+  armas_x_init(&A1, M, N);
+  armas_x_init(&D, N, 1);
 
-  matrix_set_values(&A0, unitrand, ARMAS_ANY);
-  matrix_mcopy(&A1, &A0);
-  matrix_set_values(&D, unitrand, ARMAS_ANY);
+  armas_x_set_values(&A0, unitrand, ARMAS_ANY);
+  armas_x_mcopy(&A1, &A0);
+  armas_x_set_values(&D, unitrand, ARMAS_ANY);
 
-  matrix_mult_diag(&A1, &D, ARMAS_RIGHT, &conf);
+  armas_x_mult_diag(&A1, &D, ARMAS_RIGHT, &conf);
   if (verbose > 1 && N < 10) {
-    printf("A0\n"); matrix_printf(stdout, "%6.3f", &A0);
-    printf("A1\n"); matrix_printf(stdout, "%6.3f", &A1);
+    printf("A0\n"); armas_x_printf(stdout, "%6.3f", &A0);
+    printf("A1\n"); armas_x_printf(stdout, "%6.3f", &A1);
   }
-  matrix_solve_diag(&A1, &D, ARMAS_RIGHT, &conf);
+  armas_x_solve_diag(&A1, &D, ARMAS_RIGHT, &conf);
 #if 0
-  matrix_scale_plus(&A1, &A0, 1.0, -1.0, ARMAS_NOTRANS, &conf);
+  armas_x_scale_plus(&A1, &A0, 1.0, -1.0, ARMAS_NOTRANS, &conf);
   if (verbose > 1 && N < 10) {
-    printf("A1 - A0\n"); matrix_printf(stdout, "%6.3f", &A1);
+    printf("A1 - A0\n"); armas_x_printf(stdout, "%6.3f", &A1);
   }
-  nrm = matrix_mnorm(&A1, ARMAS_NORM_ONE, &conf);
+  nrm = armas_x_mnorm(&A1, ARMAS_NORM_ONE, &conf);
 #endif
-  nrm = rel_error((__Dtype *)0, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  nrm = rel_error((DTYPE *)0, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok =isOK(nrm, N);
   printf("%4s: A = A*D*D.-1\n", PASS(ok));
   if (verbose > 0)

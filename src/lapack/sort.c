@@ -14,7 +14,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_swap) 
+#if defined(armas_x_swap) 
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -38,25 +38,25 @@
  * \param[in] updown
  *      Sort to ascending order if updown > 0, and to descending if < 0.
  */
-void __abs_sort_vec(__armas_dense_t *D, int updown) 
+void __abs_sort_vec(armas_x_dense_t *D, int updown) 
 {
     int k,  j;
     DTYPE cval, tmpval;
 
     // simple insertion sort
-    for (k = 1; k < __armas_size(D); k++) {
-        cval = __ABS(__armas_get_at_unsafe(D, k));
+    for (k = 1; k < armas_x_size(D); k++) {
+        cval = __ABS(armas_x_get_at_unsafe(D, k));
         for (j = k; j > 0; j--) {
-            tmpval = __ABS(__armas_get_at_unsafe(D, j-1));
+            tmpval = __ABS(armas_x_get_at_unsafe(D, j-1));
             if (updown > 0 && tmpval >= cval) {
                 break;
             }
             if (updown < 0 && tmpval <= cval) {
                 break;
             }
-            __armas_set_at_unsafe(D, j, tmpval);
+            armas_x_set_at_unsafe(D, j, tmpval);
         }
-        __armas_set_at_unsafe(D, j, cval);
+        armas_x_set_at_unsafe(D, j, cval);
     }
 }
 
@@ -68,25 +68,25 @@ void __abs_sort_vec(__armas_dense_t *D, int updown)
  * \param[in] updown
  *      Sort to ascending order if updown > 0, and to descending if < 0.
  */
-void __sort_vec(__armas_dense_t *D, int updown) 
+void __sort_vec(armas_x_dense_t *D, int updown) 
 {
     int k, j;
     DTYPE cval, tmpval;
 
     // simple insertion sort
-    for (k = 1; k < __armas_size(D); k++) {
-        cval = __armas_get_at_unsafe(D, k);
+    for (k = 1; k < armas_x_size(D); k++) {
+        cval = armas_x_get_at_unsafe(D, k);
         for (j = k; j > 0; j--) {
-            tmpval = __armas_get_at_unsafe(D, j-1);
+            tmpval = armas_x_get_at_unsafe(D, j-1);
             if (updown > 0 && tmpval >= cval) {
                 break;
             }
             if (updown < 0 && tmpval <= cval) {
                 break;
             }
-            __armas_set_at_unsafe(D, j, tmpval);
+            armas_x_set_at_unsafe(D, j, tmpval);
         }
-        __armas_set_at_unsafe(D, j, cval);
+        armas_x_set_at_unsafe(D, j, cval);
     }
 }
 
@@ -94,15 +94,15 @@ void __sort_vec(__armas_dense_t *D, int updown)
  * \brief Find minumum or maximum absolute value in vector
  */
 static inline
-int __vec_minmax(__armas_dense_t *D, int updown)
+int __vec_minmax(armas_x_dense_t *D, int updown)
 {
     int k, ix, incx, n;
     DTYPE cval, tmpval, *data;
     incx = D->rows == 1 ? D->step : 1;
-    data = __armas_data(D);
+    data = armas_x_data(D);
     cval = data[0];
     ix = 0;
-    for (k = 1, n = incx; k < __armas_size(D); k++, n += incx) {
+    for (k = 1, n = incx; k < armas_x_size(D); k++, n += incx) {
         tmpval = data[n];
         if (updown > 0 && tmpval > cval) {
             cval = tmpval;
@@ -120,16 +120,16 @@ int __vec_minmax(__armas_dense_t *D, int updown)
  * \brief Find minumum or maximum absolute value in vector
  */
 static inline
-int __vec_abs_minmax(__armas_dense_t *D, int minmax)
+int __vec_abs_minmax(armas_x_dense_t *D, int minmax)
 {
     int k, ix, n, incx;
     DTYPE cval, tmpval, *data;
 
     incx = D->rows == 1 ? D->step : 1;
-    data = __armas_data(D);
+    data = armas_x_data(D);
     cval = __ABS(data[0]);
     ix = 0;
-    for (k = 1, n = incx ; k < __armas_size(D); k++, n += incx) {
+    for (k = 1, n = incx ; k < armas_x_size(D); k++, n += incx) {
         tmpval = __ABS(data[n]);
         if (minmax > 0 && tmpval > cval) {
             cval = tmpval;
@@ -159,48 +159,48 @@ int __vec_abs_minmax(__armas_dense_t *D, int minmax)
  * \param[in] updown
  *      Sort to ascending order if updown > 0 and descending order if < 0.
  */
-int __sort_eigenvec(__armas_dense_t *D, __armas_dense_t *U,
-                    __armas_dense_t *V, __armas_dense_t *C, int updown)
+int __sort_eigenvec(armas_x_dense_t *D, armas_x_dense_t *U,
+                    armas_x_dense_t *V, armas_x_dense_t *C, int updown)
 {
     DTYPE t0;
-    int k, pk, N = __armas_size(D);
-    __armas_dense_t sD, m0, m1;
+    int k, pk, N = armas_x_size(D);
+    armas_x_dense_t sD, m0, m1;
 
     EMPTY(sD);
 
-    if (! __armas_isvector(D)) {
+    if (! armas_x_isvector(D)) {
         return -1;
     }
 
     // This is simple insertion sort - find index to largest/smallest value
     // in remaining subvector and swap that with value in current index.
     for (k = 0; k < N-1; k++) {
-        __armas_subvector(&sD, D, k, N-k);
+        armas_x_subvector(&sD, D, k, N-k);
         pk = __vec_minmax(&sD, -updown);
         if (pk != 0) {
-            t0 = __armas_get_at_unsafe(D, k);
-            __armas_set_at_unsafe(D, k, __armas_get_at_unsafe(D, k+pk));
-            __armas_set_at_unsafe(D, pk+k, t0);
+            t0 = armas_x_get_at_unsafe(D, k);
+            armas_x_set_at_unsafe(D, k, armas_x_get_at_unsafe(D, k+pk));
+            armas_x_set_at_unsafe(D, pk+k, t0);
             if (U) {
-                __armas_column(&m0, U, k);
-                __armas_column(&m1, U, k+pk);
-                __armas_swap(&m1, &m0, (armas_conf_t *)0);
+                armas_x_column(&m0, U, k);
+                armas_x_column(&m1, U, k+pk);
+                armas_x_swap(&m1, &m0, (armas_conf_t *)0);
             }
             if (V) {
-                __armas_row(&m0, V, k);
-                __armas_row(&m1, V, k+pk);
-                __armas_swap(&m1, &m0, (armas_conf_t *)0);
+                armas_x_row(&m0, V, k);
+                armas_x_row(&m1, V, k+pk);
+                armas_x_swap(&m1, &m0, (armas_conf_t *)0);
             }
             if (C) {
-                if (__armas_isvector(C)) {
-                    t0 = __armas_get_at_unsafe(C, k);
-                    __armas_set_at_unsafe(C, k, __armas_get_at_unsafe(C, k+pk));
-                    __armas_set_at_unsafe(C, pk+k, t0);
+                if (armas_x_isvector(C)) {
+                    t0 = armas_x_get_at_unsafe(C, k);
+                    armas_x_set_at_unsafe(C, k, armas_x_get_at_unsafe(C, k+pk));
+                    armas_x_set_at_unsafe(C, pk+k, t0);
                     
                 } else {
-                    __armas_column(&m0, C, k);
-                    __armas_column(&m1, C, k+pk);
-                    __armas_swap(&m1, &m0, (armas_conf_t *)0);
+                    armas_x_column(&m0, C, k);
+                    armas_x_column(&m1, C, k+pk);
+                    armas_x_swap(&m1, &m0, (armas_conf_t *)0);
                 }
             }
         }
@@ -224,40 +224,40 @@ int __sort_eigenvec(__armas_dense_t *D, __armas_dense_t *U,
  *      Optional matrix present in value U*C
  *
  */
-int __svd_sort(__armas_dense_t *D, __armas_dense_t *U,
-               __armas_dense_t *V, __armas_dense_t *C, armas_conf_t *conf)
+int __svd_sort(armas_x_dense_t *D, armas_x_dense_t *U,
+               armas_x_dense_t *V, armas_x_dense_t *C, armas_conf_t *conf)
 {
     DTYPE t0;
-    int k, pk, N = __armas_size(D);
-    __armas_dense_t sD, m0, m1;
+    int k, pk, N = armas_x_size(D);
+    armas_x_dense_t sD, m0, m1;
 
-    if (! __armas_isvector(D)) {
+    if (! armas_x_isvector(D)) {
         return -1;
     }
 
     // This is simple insertion sort - find index to largest value
     // in remaining subvector and swap that with value in current index.
     for (k = 0; k < N-1; k++) {
-        __armas_subvector(&sD, D, k, N-k);
-        pk = __armas_iamax(&sD, (armas_conf_t*)0);
+        armas_x_subvector(&sD, D, k, N-k);
+        pk = armas_x_iamax(&sD, (armas_conf_t*)0);
         if (pk != 0) {
-            t0 = __armas_get_at_unsafe(D, k);
-            __armas_set_at_unsafe(D, k, __armas_get_at_unsafe(D, k+pk));
-            __armas_set_at_unsafe(D, pk+k, t0);
+            t0 = armas_x_get_at_unsafe(D, k);
+            armas_x_set_at_unsafe(D, k, armas_x_get_at_unsafe(D, k+pk));
+            armas_x_set_at_unsafe(D, pk+k, t0);
             if (U) {
-                __armas_column(&m0, U, k);
-                __armas_column(&m1, U, k+pk);
-                __armas_swap(&m1, &m0, conf);
+                armas_x_column(&m0, U, k);
+                armas_x_column(&m1, U, k+pk);
+                armas_x_swap(&m1, &m0, conf);
             }
             if (C) {
-                __armas_column(&m0, C, k);
-                __armas_column(&m1, C, k+pk);
-                __armas_swap(&m1, &m0, conf);
+                armas_x_column(&m0, C, k);
+                armas_x_column(&m1, C, k+pk);
+                armas_x_swap(&m1, &m0, conf);
             }
             if (V) {
-                __armas_row(&m0, V, k);
-                __armas_row(&m1, V, k+pk);
-                __armas_swap(&m1, &m0, conf);
+                armas_x_row(&m0, V, k);
+                armas_x_row(&m1, V, k+pk);
+                armas_x_swap(&m1, &m0, conf);
             }
         }
     }

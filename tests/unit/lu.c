@@ -17,37 +17,37 @@
 
 int test_solve(int M, int N, int lb, int verbose)
 {
-  __Matrix A0, A1;
-  __Matrix B0, X0;
+  armas_x_dense_t A0, A1;
+  armas_x_dense_t B0, X0;
   armas_pivot_t P0;
   armas_conf_t conf = *armas_conf_default();
   char *blk = lb == 0 ? "unblk" : "blk";
   int ok;
-  __Dtype nrm, nrm0;
+  DTYPE nrm, nrm0;
 
-  matrix_init(&A0, N, N);
-  matrix_init(&A1, N, N);
-  matrix_init(&B0, N, M);
-  matrix_init(&X0, N, M);
+  armas_x_init(&A0, N, N);
+  armas_x_init(&A1, N, N);
+  armas_x_init(&B0, N, M);
+  armas_x_init(&X0, N, M);
   armas_pivot_init(&P0, N);
 
   // set source data
-  matrix_set_values(&A0, unitrand, ARMAS_ANY);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, ARMAS_ANY);
+  armas_x_mcopy(&A1, &A0);
 
-  matrix_set_values(&B0, unitrand, ARMAS_ANY);
-  matrix_mcopy(&X0, &B0);
-  nrm0 = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+  armas_x_set_values(&B0, unitrand, ARMAS_ANY);
+  armas_x_mcopy(&X0, &B0);
+  nrm0 = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &conf);
 
   conf.lb = lb;
-  matrix_lufactor(&A0, &P0, &conf);
+  armas_x_lufactor(&A0, &P0, &conf);
 
   // solve
-  matrix_lusolve(&X0, &A0, &P0, ARMAS_NONE, &conf);
+  armas_x_lusolve(&X0, &A0, &P0, ARMAS_NONE, &conf);
 
   // B0 = B0 - A*X0
-  matrix_mult(&B0, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
-  nrm = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
+  armas_x_mult(&B0, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
+  nrm = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
 
   ok = isFINE(nrm, N*MAX_ERROR);
 
@@ -60,28 +60,28 @@ int test_solve(int M, int N, int lb, int verbose)
 
 int test_factor(int M, int N, int lb, int verbose)
 {
-  __Matrix A0, A1;
+  armas_x_dense_t A0, A1;
   armas_pivot_t P0, P1;
   armas_conf_t conf = *armas_conf_default();
   int ok;
-  __Dtype nrm;
+  DTYPE nrm;
 
-  matrix_init(&A0, M, N);
-  matrix_init(&A1, M, N);
+  armas_x_init(&A0, M, N);
+  armas_x_init(&A1, M, N);
   armas_pivot_init(&P0, N);
   armas_pivot_init(&P1, N);
 
   // set source data
-  matrix_set_values(&A0, unitrand, ARMAS_ANY);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, ARMAS_ANY);
+  armas_x_mcopy(&A1, &A0);
 
-  //matrix_lufactor(&A0, &P0, &conf);
+  //armas_x_lufactor(&A0, &P0, &conf);
   conf.lb = 0;
-  matrix_lufactor(&A0, &P0, &conf);
+  armas_x_lufactor(&A0, &P0, &conf);
   conf.lb = lb;
-  matrix_lufactor(&A1, &P1,  &conf);
+  armas_x_lufactor(&A1, &P1,  &conf);
 
-  nrm = rel_error((__Dtype *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  nrm = rel_error((DTYPE *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, N);
 
   printf("%s: unblk.LU(A) == blk.LU(A)\n", PASS(ok));
@@ -89,8 +89,8 @@ int test_factor(int M, int N, int lb, int verbose)
     printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
 
-  matrix_release(&A0);
-  matrix_release(&A1);
+  armas_x_release(&A0);
+  armas_x_release(&A1);
   armas_pivot_release(&P0);
   armas_pivot_release(&P1);
   return ok;

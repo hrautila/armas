@@ -38,115 +38,115 @@
  *
  */
 void ep_gentrsm(double *dot, double *tcond,
-                __Matrix *A, __Matrix *B, __Matrix *C,
+                armas_x_dense_t *A, armas_x_dense_t *B, armas_x_dense_t *C,
                 double cond, int flags)
 {
-  __Matrix R0, C0, C1, D, Rx, Cx;
+  armas_x_dense_t R0, C0, C1, D, Rx, Cx;
   int k, tk;
   int right = flags & ARMAS_RIGHT;
 
-  matrix_init(&R0, 0, 0);
-  matrix_init(&C0, 0, 0);
+  armas_x_init(&R0, 0, 0);
+  armas_x_init(&C0, 0, 0);
   // make A identity
-  matrix_set_values(A, zero, 0);
-  matrix_diag(&D, A, 0);
-  matrix_set_values(&D, one, 0);
+  armas_x_set_values(A, zero, 0);
+  armas_x_diag(&D, A, 0);
+  armas_x_set_values(&D, one, 0);
   
   switch (flags & (ARMAS_RIGHT|ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {
   case ARMAS_LOWER|ARMAS_RIGHT:
-    matrix_column(&R0, A, 0);
-    matrix_subvector(&Rx, &R0, 1, matrix_size(&R0)-1);
+    armas_x_column(&R0, A, 0);
+    armas_x_subvector(&Rx, &R0, 1, armas_x_size(&R0)-1);
     tk = 0;
     break;
   case ARMAS_LOWER|ARMAS_TRANS:
-    matrix_column(&R0, A, 0);
-    matrix_subvector(&Rx, &R0, 1, matrix_size(&R0)-1);
+    armas_x_column(&R0, A, 0);
+    armas_x_subvector(&Rx, &R0, 1, armas_x_size(&R0)-1);
     tk = 0;
     break;
   case ARMAS_LOWER|ARMAS_TRANS|ARMAS_RIGHT:
-    matrix_row(&R0, A, A->rows-1);
-    matrix_subvector(&Rx, &R0, 0, matrix_size(&R0)-1);
+    armas_x_row(&R0, A, A->rows-1);
+    armas_x_subvector(&Rx, &R0, 0, armas_x_size(&R0)-1);
     tk = B->cols - 1;
     break;
   case ARMAS_LOWER:
-    matrix_row(&R0, A, A->rows-1);
-    matrix_subvector(&Rx, &R0, 0, matrix_size(&R0)-1);
+    armas_x_row(&R0, A, A->rows-1);
+    armas_x_subvector(&Rx, &R0, 0, armas_x_size(&R0)-1);
     tk = B->rows - 1;
     break;
   case ARMAS_UPPER|ARMAS_TRANS:
-    matrix_column(&R0, A, A->cols-1);
-    matrix_subvector(&Rx, &R0, 0, matrix_size(&R0)-1);
+    armas_x_column(&R0, A, A->cols-1);
+    armas_x_subvector(&Rx, &R0, 0, armas_x_size(&R0)-1);
     tk = B->rows - 1;
     break;
   case ARMAS_UPPER|ARMAS_TRANS|ARMAS_RIGHT:
-    matrix_row(&R0, A, 0);
-    matrix_subvector(&Rx, &R0, 1, matrix_size(&R0)-1);
+    armas_x_row(&R0, A, 0);
+    armas_x_subvector(&Rx, &R0, 1, armas_x_size(&R0)-1);
     tk = 0;
     break;
   case ARMAS_UPPER|ARMAS_RIGHT:
-    matrix_column(&R0, A, A->cols-1);
-    matrix_subvector(&Rx, &R0, 0, matrix_size(&R0)-1);
+    armas_x_column(&R0, A, A->cols-1);
+    armas_x_subvector(&Rx, &R0, 0, armas_x_size(&R0)-1);
     tk = B->cols - 1;
     break;
   case ARMAS_UPPER:
   default:
-    matrix_row(&R0, A, 0);
-    matrix_subvector(&Rx, &R0, 1, matrix_size(&R0)-1);
+    armas_x_row(&R0, A, 0);
+    armas_x_subvector(&Rx, &R0, 1, armas_x_size(&R0)-1);
     tk = 0;
     break;
   }
 
   if (right) {
-    matrix_row(&C0, B, 0);
+    armas_x_row(&C0, B, 0);
   } else {
-    matrix_column(&C0, B, 0);
+    armas_x_column(&C0, B, 0);
   }
   // generate dot product ...
-  matrix_subvector(&Cx, &C0, tk == 0 ? 1 : 0, matrix_size(&C0)-1);
+  armas_x_subvector(&Cx, &C0, tk == 0 ? 1 : 0, armas_x_size(&C0)-1);
   ep_gendot(dot, tcond, &Rx, &Cx, cond);
 
   if (flags & ARMAS_UNIT) {
-    matrix_set(A, tk, tk, 1.0);
-    matrix_set_at(&C0, tk, *dot);
+    armas_x_set(A, tk, tk, 1.0);
+    armas_x_set_at(&C0, tk, *dot);
   } else {
-    matrix_set(A, tk, tk, *dot);
-    matrix_set_at(&C0, tk, 1.0);
+    armas_x_set(A, tk, tk, *dot);
+    armas_x_set_at(&C0, tk, 1.0);
   }
 
   // make rest of rows/columns copies of first row/column.
   for (k = 1; k < (right ? B->rows : B->cols); k++) {
     if (right) {
-      matrix_row(&C1, B, k);
+      armas_x_row(&C1, B, k);
     } else {
-      matrix_column(&C1, B, k);
+      armas_x_column(&C1, B, k);
     }
-    matrix_mcopy(&C1, &C0);
+    armas_x_mcopy(&C1, &C0);
   }
 
   // create result matrix C; C = A*B where elements row/column at index tk
   // have the value of 2*(dot product).
-  matrix_mcopy(C, B);
+  armas_x_mcopy(C, B);
   if (right) {
-    matrix_column(&C1, C, tk);
+    armas_x_column(&C1, C, tk);
   } else {
-    matrix_row(&C1, C, tk);
+    armas_x_row(&C1, C, tk);
   }
-  //printf("..gentrsm tk=%d, dot=%13e, C1=[%ld]\n", tk, *dot, matrix_size(&C1));
-  for (k = 0; k < matrix_size(&C1); k++) {
-    matrix_set_at(&C1, k, 2.0*(*dot));
+  //printf("..gentrsm tk=%d, dot=%13e, C1=[%ld]\n", tk, *dot, armas_x_size(&C1));
+  for (k = 0; k < armas_x_size(&C1); k++) {
+    armas_x_set_at(&C1, k, 2.0*(*dot));
   }
 }
 
 // ne = norm1 of exact; re = ||exact-result||/||exact||
 void compute(double *ne, double *re,
-             __Matrix *B, __Matrix *A, __Matrix *C,
+             armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *C,
              int flags, int prec, int verbose, armas_conf_t *conf)
 {
-  __Dtype e;
+  DTYPE e;
   // B = A*B
-  matrix_solve_trm(B, A, 1.0, flags, conf);
+  armas_x_solve_trm(B, A, 1.0, flags, conf);
   if (verbose > 1 && B->cols < 10) {
-    printf("A.-1*B:\n"); matrix_printf(stdout, "%13e", B);
+    printf("A.-1*B:\n"); armas_x_printf(stdout, "%13e", B);
   }
   *re = rel_error(&e, B, C, ARMAS_NORM_INF, ARMAS_NONE, conf);
   if (ne)
@@ -155,29 +155,29 @@ void compute(double *ne, double *re,
 
 int test(char *name, int N, int K, int flags, int verbose, int prec, double cwant, armas_conf_t *conf)
 {
-  __Matrix B0, A, B, Ce;
+  armas_x_dense_t B0, A, B, Ce;
   double dot, cond, m_c, m_one;
   int ok;
 
 
-  matrix_init(&A, N, N);
+  armas_x_init(&A, N, N);
   if (flags & ARMAS_RIGHT) {
-    matrix_init(&Ce, K, N);
-    matrix_init(&B, K, N);
-    matrix_init(&B0, K, N);
+    armas_x_init(&Ce, K, N);
+    armas_x_init(&B, K, N);
+    armas_x_init(&B0, K, N);
   } else {
-    matrix_init(&Ce, N, K);
-    matrix_init(&B, N, K);
-    matrix_init(&B0, N, K);
+    armas_x_init(&Ce, N, K);
+    armas_x_init(&B, N, K);
+    armas_x_init(&B0, N, K);
   }
   
   ep_gentrsm(&dot, &cond, &A, &B0, &B, cwant, flags);
 
   if (verbose > 1 && N < 10) {
-    printf("A:\n"); matrix_printf(stdout, "%13e", &A);
+    printf("A:\n"); armas_x_printf(stdout, "%13e", &A);
     if (K < 10) {
-      printf("B0:\n"); matrix_printf(stdout, "%13e", &B0);
-      printf("B:\n"); matrix_printf(stdout, "%13e", &B);
+      printf("B0:\n"); armas_x_printf(stdout, "%13e", &B0);
+      printf("B:\n"); armas_x_printf(stdout, "%13e", &B);
     }
   }
 
@@ -189,13 +189,13 @@ int test(char *name, int N, int K, int flags, int verbose, int prec, double cwan
   ok = m_one < N*_EPS;
   printf("%-4s: %s rel.error %e [%e]\n",  PASS(ok), name, m_one, m_c);
   if (!ok && K < 10) {
-    printf("B-Ce:\n"); matrix_printf(stdout, "%13e", &B);
+    printf("B-Ce:\n"); armas_x_printf(stdout, "%13e", &B);
   }
 
-  matrix_release(&Ce);
-  matrix_release(&A);
-  matrix_release(&B);
-  matrix_release(&B0);
+  armas_x_release(&Ce);
+  armas_x_release(&A);
+  armas_x_release(&B);
+  armas_x_release(&B0);
 
   return ok;
 }

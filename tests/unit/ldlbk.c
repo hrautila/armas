@@ -13,39 +13,39 @@
 
 int test_factor(int M, int N, int lb, int verbose, int flags)
 {
-  __Matrix A0, A1, W;
+  armas_x_dense_t A0, A1, W;
   armas_pivot_t P0, P1;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
   char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
-  __Dtype nrm;
+  DTYPE nrm;
 
-  matrix_init(&A0, N, N);
-  matrix_init(&A1, N, N);
+  armas_x_init(&A0, N, N);
+  armas_x_init(&A1, N, N);
   armas_pivot_init(&P0, N);
   armas_pivot_init(&P1, N);
 
   conf.lb = lb;
-  wsize = matrix_bkfactor_work(&A0, &conf);
-  matrix_init(&W, wsize, 1);
+  wsize = armas_x_bkfactor_work(&A0, &conf);
+  armas_x_init(&W, wsize, 1);
 
   // set source data
-  matrix_set_values(&A0, unitrand, flags);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, flags);
+  armas_x_mcopy(&A1, &A0);
 
   conf.error = 0;
   conf.lb = 0; 
-  matrix_bkfactor(&A0, &W, &P0, flags, &conf);
+  armas_x_bkfactor(&A0, &W, &P0, flags, &conf);
   if (verbose > 1 && conf.error != 0)
     printf("1. error=%d\n", conf.error);
 
   conf.error = 0;
   conf.lb = lb;
-  matrix_bkfactor(&A1, &W, &P1, flags,  &conf);
+  armas_x_bkfactor(&A1, &W, &P1, flags,  &conf);
   if (verbose > 1 && conf.error != 0)
     printf("1. error=%d\n", conf.error);
 
-  nrm = rel_error((__Dtype *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  nrm = rel_error((DTYPE *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, N);
 
   
@@ -54,9 +54,9 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
     printf("  || error.LDL(A, '%c') ||: %e [%d]\n", uplo, nrm, ndigits(nrm));
   }
 
-  matrix_release(&A0);
-  matrix_release(&A1);
-  matrix_release(&W);
+  armas_x_release(&A0);
+  armas_x_release(&A1);
+  armas_x_release(&W);
   armas_pivot_release(&P0);
   armas_pivot_release(&P1);
 
@@ -66,39 +66,39 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
 
 int test_solve(int M, int N, int lb, int verbose, int flags)
 {
-  __Matrix A0, A1;
-  __Matrix B0, X0, W;
+  armas_x_dense_t A0, A1;
+  armas_x_dense_t B0, X0, W;
   armas_pivot_t P0;
   armas_conf_t conf = *armas_conf_default();
   char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
   int ok, wsize;
-  __Dtype nrm, nrm_A;
+  DTYPE nrm, nrm_A;
 
-  matrix_init(&A0, N, N);
-  matrix_init(&A1, N, N);
-  matrix_init(&B0, N, M);
-  matrix_init(&X0, N, M);
+  armas_x_init(&A0, N, N);
+  armas_x_init(&A1, N, N);
+  armas_x_init(&B0, N, M);
+  armas_x_init(&X0, N, M);
   armas_pivot_init(&P0, N);
 
   // set source data
-  matrix_set_values(&A0, unitrand, flags);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, flags);
+  armas_x_mcopy(&A1, &A0);
 
-  matrix_set_values(&B0, unitrand, ARMAS_ANY);
-  matrix_mcopy(&X0, &B0);
-  nrm_A = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+  armas_x_set_values(&B0, unitrand, ARMAS_ANY);
+  armas_x_mcopy(&X0, &B0);
+  nrm_A = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &conf);
 
   conf.lb = lb;
-  wsize = matrix_bkfactor_work(&A0, &conf);
-  matrix_init(&W, wsize, 1);
-  matrix_bkfactor(&A0, &W, &P0, flags, &conf);
+  wsize = armas_x_bkfactor_work(&A0, &conf);
+  armas_x_init(&W, wsize, 1);
+  armas_x_bkfactor(&A0, &W, &P0, flags, &conf);
 
   // solve
-  matrix_bksolve(&X0, &A0, &W, &P0, flags, &conf);
+  armas_x_bksolve(&X0, &A0, &W, &P0, flags, &conf);
   
   // B0 = B0 - A*X0
-  matrix_mult_sym(&B0, &A1, &X0, -1.0, 1.0, ARMAS_LEFT|flags, &conf);
-  nrm = matrix_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+  armas_x_mult_sym(&B0, &A1, &X0, -1.0, 1.0, ARMAS_LEFT|flags, &conf);
+  nrm = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &conf);
   nrm /= nrm_A;
 
 #if FLOAT32

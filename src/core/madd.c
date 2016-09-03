@@ -15,11 +15,11 @@
 //! \endcond
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(__armas_add_elems)
+#if defined(armas_x_add_elems)
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
-#if defined(__armas_madd)
+#if defined(armas_x_madd)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -33,13 +33,13 @@
 //! \endcond
 
 static inline
-void __madd_lower(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC)
+void __madd_lower(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
 {
   register int i, j, k, lda, ldb;
   DTYPE *a, *b;
 
-  a = __armas_data(A);
-  b = __armas_data(B);
+  a = armas_x_data(A);
+  b = armas_x_data(B);
   lda = A->step; ldb = B->step;
 
   for (j = 0; j < nC-3; j += 4) {
@@ -67,13 +67,13 @@ void __madd_lower(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC)
 }
 
 static inline
-void __madd_lower_abs(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC)
+void __madd_lower_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
 {
   register int i, j, k, lda, ldb;
   DTYPE *a, *b;
 
-  a = __armas_data(A);
-  b = __armas_data(B);
+  a = armas_x_data(A);
+  b = armas_x_data(B);
   lda = A->step; ldb = B->step;
 
   for (j = 0; j < nC-3; j += 4) {
@@ -101,13 +101,13 @@ void __madd_lower_abs(__armas_dense_t *A, const __armas_dense_t *B, int nR, int 
 }
 
 static inline
-void __madd_upper(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC)
+void __madd_upper(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
 {
   register int i, j, k, lda, ldb;
   DTYPE *a, *b;
 
-  a = __armas_data(A);
-  b = __armas_data(B);
+  a = armas_x_data(A);
+  b = armas_x_data(B);
   lda = A->step; ldb = B->step;
 
   for (j = 0; j < nC-3; j += 4) {
@@ -135,13 +135,13 @@ void __madd_upper(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC)
 }
 
 static inline
-void __madd_upper_abs(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC)
+void __madd_upper_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
 {
   register int i, j, k, lda, ldb;
   DTYPE *a, *b;
 
-  a = __armas_data(A);
-  b = __armas_data(B);
+  a = armas_x_data(A);
+  b = armas_x_data(B);
   lda = A->step; ldb = B->step;
 
   for (j = 0; j < nC-3; j += 4) {
@@ -170,13 +170,13 @@ void __madd_upper_abs(__armas_dense_t *A, const __armas_dense_t *B, int nR, int 
 
 
 static inline
-void __madd(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC, int flags)
+void __madd(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, int flags)
 {
   register int i, j, lda, ldb;
   DTYPE *a, *b;
 
-  a = __armas_data(A);
-  b = __armas_data(B);
+  a = armas_x_data(A);
+  b = armas_x_data(B);
   lda = A->step; ldb = B->step;
 
   if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
@@ -218,13 +218,13 @@ void __madd(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC, int fl
 }
 
 static inline
-void __madd_abs(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC, int flags)
+void __madd_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, int flags)
 {
   register int i, j, lda, ldb;
   DTYPE *a, *b;
 
-  a = __armas_data(A);
-  b = __armas_data(B);
+  a = armas_x_data(A);
+  b = armas_x_data(B);
   lda = A->step; ldb = B->step;
 
   if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
@@ -279,12 +279,12 @@ void __madd_abs(__armas_dense_t *A, const __armas_dense_t *B, int nR, int nC, in
  *
  * \ingroup matrix
  */
-int __armas_add_elems(__armas_dense_t *A, const __armas_dense_t *B, int flags)
+int armas_x_add_elems(armas_x_dense_t *A, const armas_x_dense_t *B, int flags)
 {
-  if (__armas_size(A) == 0 || __armas_size(B) == 0)
+  if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
     return 0;
-  if (__armas_size(B) == 1)
-    return __armas_madd(A, __armas_get_unsafe(B, 0, 0), flags);
+  if (armas_x_size(B) == 1)
+    return armas_x_madd(A, armas_x_get_unsafe(B, 0, 0), flags);
 
   if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
     if (A->rows != B->cols || A->cols != B->rows)

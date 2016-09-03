@@ -30,9 +30,9 @@
  *               (ABR)
  */
 static inline
-void __apply_bkpivot_upper(__armas_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
+void __apply_bkpivot_upper(armas_x_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
 {
-    __armas_dense_t s, d;
+    armas_x_dense_t s, d;
     DTYPE p1, p3;
     if (srcix == dstix)
         return;
@@ -42,18 +42,18 @@ void __apply_bkpivot_upper(__armas_dense_t *AR, int srcix, int dstix, armas_conf
         dstix = t;
     }
     // S2 -- D2
-    __armas_submatrix_unsafe(&s, AR, dstix+1, srcix,   srcix-dstix-1, 1);
-    __armas_submatrix_unsafe(&d, AR, dstix,   dstix+1, 1, srcix-dstix-1);
-    __armas_swap(&s, &d, conf);
+    armas_x_submatrix_unsafe(&s, AR, dstix+1, srcix,   srcix-dstix-1, 1);
+    armas_x_submatrix_unsafe(&d, AR, dstix,   dstix+1, 1, srcix-dstix-1);
+    armas_x_swap(&s, &d, conf);
     // S3 -- D3
-    __armas_submatrix_unsafe(&s, AR, 0, srcix,  dstix, 1);
-    __armas_submatrix_unsafe(&d, AR, 0, dstix,  dstix, 1);
-    __armas_swap(&s, &d, conf);
+    armas_x_submatrix_unsafe(&s, AR, 0, srcix,  dstix, 1);
+    armas_x_submatrix_unsafe(&d, AR, 0, dstix,  dstix, 1);
+    armas_x_swap(&s, &d, conf);
     // swap P1 and P3
-    p1 = __armas_get_unsafe(AR, srcix, srcix);
-    p3 = __armas_get_unsafe(AR, dstix, dstix);
-    __armas_set_unsafe(AR, srcix, srcix, p3);
-    __armas_set_unsafe(AR, dstix, dstix, p1);
+    p1 = armas_x_get_unsafe(AR, srcix, srcix);
+    p3 = armas_x_get_unsafe(AR, dstix, dstix);
+    armas_x_set_unsafe(AR, srcix, srcix, p3);
+    armas_x_set_unsafe(AR, dstix, dstix, p1);
 }
 
 /*
@@ -75,9 +75,9 @@ void __apply_bkpivot_upper(__armas_dense_t *AR, int srcix, int dstix, armas_conf
  *
  */
 static inline
-void __apply_bkpivot_upper_top(__armas_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
+void __apply_bkpivot_upper_top(armas_x_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
 {
-    __armas_dense_t s, d;
+    armas_x_dense_t s, d;
     DTYPE p1, p3;
     if (srcix == dstix)
         return;
@@ -87,18 +87,18 @@ void __apply_bkpivot_upper_top(__armas_dense_t *AR, int srcix, int dstix, armas_
         dstix = t;
     }
     // S2 -- D2
-    __armas_submatrix_unsafe(&s, AR, srcix,   srcix+1, 1, dstix-srcix-1);
-    __armas_submatrix_unsafe(&d, AR, srcix+1, dstix,   dstix-srcix-1, 1);
-    __armas_swap(&s, &d, conf);
+    armas_x_submatrix_unsafe(&s, AR, srcix,   srcix+1, 1, dstix-srcix-1);
+    armas_x_submatrix_unsafe(&d, AR, srcix+1, dstix,   dstix-srcix-1, 1);
+    armas_x_swap(&s, &d, conf);
     // S3 -- D3
-    __armas_submatrix_unsafe(&s, AR, srcix, dstix+1, 1, AR->cols-dstix-1);
-    __armas_submatrix_unsafe(&d, AR, dstix, dstix+1, 1, AR->cols-dstix-1);
-    __armas_swap(&s, &d, conf);
+    armas_x_submatrix_unsafe(&s, AR, srcix, dstix+1, 1, AR->cols-dstix-1);
+    armas_x_submatrix_unsafe(&d, AR, dstix, dstix+1, 1, AR->cols-dstix-1);
+    armas_x_swap(&s, &d, conf);
     // swap P1 and P3
-    p1 = __armas_get_unsafe(AR, srcix, srcix);
-    p3 = __armas_get_unsafe(AR, dstix, dstix);
-    __armas_set_unsafe(AR, srcix, srcix, p3);
-    __armas_set_unsafe(AR, dstix, dstix, p1);
+    p1 = armas_x_get_unsafe(AR, srcix, srcix);
+    p3 = armas_x_get_unsafe(AR, dstix, dstix);
+    armas_x_set_unsafe(AR, srcix, srcix, p3);
+    armas_x_set_unsafe(AR, dstix, dstix, p1);
 }
 
 /*
@@ -118,9 +118,9 @@ void __apply_bkpivot_upper_top(__armas_dense_t *AR, int srcix, int dstix, armas_
  *         (AR)
  */
 static inline
-void __apply_bkpivot_lower(__armas_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
+void __apply_bkpivot_lower(armas_x_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
 {
-    __armas_dense_t s, d;
+    armas_x_dense_t s, d;
     DTYPE p1, p3;
     if (srcix == dstix)
         return;
@@ -130,18 +130,18 @@ void __apply_bkpivot_lower(__armas_dense_t *AR, int srcix, int dstix, armas_conf
         dstix = t;
     }
     // S2 -- D2
-    __armas_submatrix_unsafe(&s, AR, srcix+1, srcix,   dstix-srcix-1, 1);
-    __armas_submatrix_unsafe(&d, AR, dstix,   srcix+1, 1, dstix-srcix-1);
-    __armas_swap(&s, &d, conf);
+    armas_x_submatrix_unsafe(&s, AR, srcix+1, srcix,   dstix-srcix-1, 1);
+    armas_x_submatrix_unsafe(&d, AR, dstix,   srcix+1, 1, dstix-srcix-1);
+    armas_x_swap(&s, &d, conf);
     // S3 -- D3
-    __armas_submatrix_unsafe(&s, AR, dstix+1, srcix,  AR->rows-dstix-1, 1);
-    __armas_submatrix_unsafe(&d, AR, dstix+1, dstix,  AR->rows-dstix-1, 1);
-    __armas_swap(&s, &d, conf);
+    armas_x_submatrix_unsafe(&s, AR, dstix+1, srcix,  AR->rows-dstix-1, 1);
+    armas_x_submatrix_unsafe(&d, AR, dstix+1, dstix,  AR->rows-dstix-1, 1);
+    armas_x_swap(&s, &d, conf);
     // swap P1 and P3
-    p1 = __armas_get_unsafe(AR, srcix, srcix);
-    p3 = __armas_get_unsafe(AR, dstix, dstix);
-    __armas_set_unsafe(AR, srcix, srcix, p3);
-    __armas_set_unsafe(AR, dstix, dstix, p1);
+    p1 = armas_x_get_unsafe(AR, srcix, srcix);
+    p3 = armas_x_get_unsafe(AR, dstix, dstix);
+    armas_x_set_unsafe(AR, srcix, srcix, p3);
+    armas_x_set_unsafe(AR, dstix, dstix, p1);
 }
 
 /*
@@ -162,9 +162,9 @@ void __apply_bkpivot_lower(__armas_dense_t *AR, int srcix, int dstix, armas_conf
  *
  */
 static inline
-void __apply_bkpivot_lower_bottom(__armas_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
+void __apply_bkpivot_lower_bottom(armas_x_dense_t *AR, int srcix, int dstix, armas_conf_t *conf)
 {
-    __armas_dense_t s, d;
+    armas_x_dense_t s, d;
     DTYPE p1, p3;
     if (srcix == dstix)
         return;
@@ -174,18 +174,18 @@ void __apply_bkpivot_lower_bottom(__armas_dense_t *AR, int srcix, int dstix, arm
         dstix = t;
     }
     // S2 -- D2
-    __armas_submatrix_unsafe(&s, AR, srcix,   dstix+1, 1, srcix-dstix-1);
-    __armas_submatrix_unsafe(&d, AR, dstix+1, dstix,   srcix-dstix-1, 1);
-    __armas_swap(&s, &d, conf);
+    armas_x_submatrix_unsafe(&s, AR, srcix,   dstix+1, 1, srcix-dstix-1);
+    armas_x_submatrix_unsafe(&d, AR, dstix+1, dstix,   srcix-dstix-1, 1);
+    armas_x_swap(&s, &d, conf);
     // S3 -- D3
-    __armas_submatrix_unsafe(&s, AR, srcix, 0, 1,  dstix);
-    __armas_submatrix_unsafe(&d, AR, dstix, 0, 1,  dstix);
-    __armas_swap(&s, &d, conf);
+    armas_x_submatrix_unsafe(&s, AR, srcix, 0, 1,  dstix);
+    armas_x_submatrix_unsafe(&d, AR, dstix, 0, 1,  dstix);
+    armas_x_swap(&s, &d, conf);
     // swap P1 and P3
-    p1 = __armas_get_unsafe(AR, srcix, srcix);
-    p3 = __armas_get_unsafe(AR, dstix, dstix);
-    __armas_set_unsafe(AR, srcix, srcix, p3);
-    __armas_set_unsafe(AR, dstix, dstix, p1);
+    p1 = armas_x_get_unsafe(AR, srcix, srcix);
+    p3 = armas_x_get_unsafe(AR, dstix, dstix);
+    armas_x_set_unsafe(AR, srcix, srcix, p3);
+    armas_x_set_unsafe(AR, dstix, dstix, p1);
 }
 
 
@@ -193,34 +193,34 @@ void __apply_bkpivot_lower_bottom(__armas_dense_t *AR, int srcix, int dstix, arm
  * Swap rows of matrix
  */
 static inline
-void __swap_rows(__armas_dense_t *A, int src, int dst, armas_conf_t *conf)
+void __swap_rows(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
 {
-    __armas_dense_t r0, r1;
+    armas_x_dense_t r0, r1;
     if (src == dst || A->cols <= 0)
         return;
     if ((unsigned int)src >= A->rows || (unsigned int)dst >= A->rows)
         return;
 
-    __armas_submatrix(&r0, A, src, 0, 1, A->cols);
-    __armas_submatrix(&r1, A, dst, 0, 1, A->cols);
-    __armas_swap(&r0, &r1, (armas_conf_t *)0);
+    armas_x_submatrix(&r0, A, src, 0, 1, A->cols);
+    armas_x_submatrix(&r1, A, dst, 0, 1, A->cols);
+    armas_x_swap(&r0, &r1, (armas_conf_t *)0);
 }
 
 /*
  * Swap columns of matrix
  */
 static inline
-void __swap_cols(__armas_dense_t *A, int src, int dst, armas_conf_t *conf)
+void __swap_cols(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
 {
-    __armas_dense_t r0, r1;
+    armas_x_dense_t r0, r1;
     if (src == dst || A->rows <= 0)
         return;
     if (src >= A->cols || dst >= A->cols)
         return;
     
-    __armas_submatrix(&r0, A, 0, src, A->rows, 1);
-    __armas_submatrix(&r1, A, 0, dst, A->rows, 1);
-    __armas_swap(&r0, &r1, (armas_conf_t *)0);
+    armas_x_submatrix(&r0, A, 0, src, A->rows, 1);
+    armas_x_submatrix(&r1, A, 0, dst, A->rows, 1);
+    armas_x_swap(&r0, &r1, (armas_conf_t *)0);
 }
 
 

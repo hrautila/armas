@@ -309,21 +309,21 @@ nobase_include_HEADERS = $(BUILT_SOURCES)
 CLEANFILES = $(BUILT_SOURCES)
 
 armas/smatrix.h: inc/matrix.h
-	sed 's/__armas_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_SMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
+	sed 's/armas_x_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_SMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
 
 armas/linalgs.h: inc/linalg.h
-	sed 's/__armas_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_SMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s:"matrix.h":<armas/smatrix.h>:;s/_LINALG_/_LINALGS_/;' $< > $@
+	sed 's/armas_x_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_SMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s:"matrix.h":<armas/smatrix.h>:;s/_LINALG_/_LINALGS_/;' $< > $@
 
 armas/dmatrix.h: inc/matrix.h
-	sed 's/__armas_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
+	sed 's/armas_x_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
 
 armas/linalgd.h: inc/linalg.h
-	sed 's/__armas_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s:"matrix.h":<armas/dmatrix.h>:;s/_LINALG_/_LINALGD_/;' $< > $@
+	sed 's/armas_x_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s:"matrix.h":<armas/dmatrix.h>:;s/_LINALG_/_LINALGD_/;' $< > $@
 
 
 # comples types
 
 armas/zmatrix.h: inc/matrix.h
-	sed 's/__armas_/armas_z_/g;s/_ARMAS_MAT/_ARMAS_ZMAT/;s/DTYPE/double complex/g;s/ABSTYPE/double/g;s/__ZERO/0.0+0.0i/g;s:/\* COMPLEX_H \*/:#include <complex.h>:' $< > $@
+	sed 's/armas_x_/armas_z_/g;s/_ARMAS_MAT/_ARMAS_ZMAT/;s/DTYPE/double complex/g;s/ABSTYPE/double/g;s/__ZERO/0.0+0.0i/g;s:/\* COMPLEX_H \*/:#include <complex.h>:' $< > $@
 
 

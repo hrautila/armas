@@ -16,45 +16,45 @@
  */
 int test_factor(int M, int N, int lb, int verbose)
 {
-  __Matrix A0, A1, tau0, tau1, W, row;
+  armas_x_dense_t A0, A1, tau0, tau1, W, row;
   int wsize;
-  __Dtype n0, n1;
+  DTYPE n0, n1;
   int wchange = lb > 8 ? 2*M : 0;
   armas_conf_t conf = *armas_conf_default();
   
   if (lb == 0)
     lb = 4;
 
-  matrix_init(&A0, M, N);
-  matrix_init(&A1, M, N);
-  matrix_init(&tau0, imin(M, N), 1);
-  matrix_init(&tau1, imin(M, N), 1);
+  armas_x_init(&A0, M, N);
+  armas_x_init(&A1, M, N);
+  armas_x_init(&tau0, imin(M, N), 1);
+  armas_x_init(&tau1, imin(M, N), 1);
 
   // set source data
-  matrix_set_values(&A0, unitrand, ARMAS_NULL);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, ARMAS_NULL);
+  armas_x_mcopy(&A1, &A0);
 
   // allocate workspace according the blocked invocation
   conf.lb = lb;
-  wsize = matrix_qrfactor_work(&A0, &conf);
-  matrix_init(&W, wsize-wchange, 1);
+  wsize = armas_x_qrfactor_work(&A0, &conf);
+  armas_x_init(&W, wsize-wchange, 1);
 
   // factorize
   conf.lb = 0;
-  matrix_qrfactor(&A0, &tau0, &W, &conf);
+  armas_x_qrfactor(&A0, &tau0, &W, &conf);
 
   conf.lb = lb;
-  matrix_qrfactor(&A1, &tau1, &W, &conf);
+  armas_x_qrfactor(&A1, &tau1, &W, &conf);
 
   if (verbose > 1 && N < 10) {
-    printf("unblk.QR(A):\n"); matrix_printf(stdout, "%9.2e", &A0);
-    printf("unblk.tau:\n");   matrix_printf(stdout, "%9.2e", col_as_row(&row, &tau0));
-    printf("  blk.tau:\n");   matrix_printf(stdout, "%9.2e", col_as_row(&row, &tau1));
-    printf("  blk.QR(A):\n"); matrix_printf(stdout, "%9.2e", &A1);
+    printf("unblk.QR(A):\n"); armas_x_printf(stdout, "%9.2e", &A0);
+    printf("unblk.tau:\n");   armas_x_printf(stdout, "%9.2e", col_as_row(&row, &tau0));
+    printf("  blk.tau:\n");   armas_x_printf(stdout, "%9.2e", col_as_row(&row, &tau1));
+    printf("  blk.QR(A):\n"); armas_x_printf(stdout, "%9.2e", &A1);
   }
 
-  n0 = rel_error((__Dtype *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  n1 = rel_error((__Dtype *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+  n0 = rel_error((DTYPE *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n1 = rel_error((DTYPE *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
 
   printf("%s: unblk.QR(A) == blk.QR(A)\n", PASS(isOK(n0, N) && isOK(n1, N)));
   if (verbose > 0) {
@@ -62,10 +62,10 @@ int test_factor(int M, int N, int lb, int verbose)
     printf("  || error.tau ||_2: %e [%d]\n", n1, ndigits(n1));
   }
   
-  matrix_release(&A0);
-  matrix_release(&A1);
-  matrix_release(&tau0);
-  matrix_release(&tau1);
+  armas_x_release(&A0);
+  armas_x_release(&A1);
+  armas_x_release(&tau0);
+  armas_x_release(&tau1);
 
   return isOK(n0, N) && isOK(n1, N);
 }

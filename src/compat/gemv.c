@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_gemv)
+#if defined(armas_x_gemv)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -28,7 +28,7 @@ void __gemvf(char *trans, int *m, int *n, DTYPE *alpha, DTYPE *A,
             int *lda, DTYPE *X, int *incx, DTYPE *beta, DTYPE *Y, int *incy)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t y, a, x;
+    armas_x_dense_t y, a, x;
     int ylen, xlen, flags = 0;
 
     if (toupper(*trans) == 'T') 
@@ -36,20 +36,20 @@ void __gemvf(char *trans, int *m, int *n, DTYPE *alpha, DTYPE *A,
     
     ylen = flags & ARMAS_TRANS ? *n : *m;
     xlen = flags & ARMAS_TRANS ? *m : *n;
-    __armas_make(&a, *m, *n, *lda, A);
+    armas_x_make(&a, *m, *n, *lda, A);
     if (*incy == 1) {
         // column vector
-        __armas_make(&y, ylen, 1, ylen, Y);
+        armas_x_make(&y, ylen, 1, ylen, Y);
     } else {
         // row vector
-        __armas_make(&y, 1, ylen, *incy, Y);
+        armas_x_make(&y, 1, ylen, *incy, Y);
     }
     if (*incx == 1) {
-        __armas_make(&x, xlen, 1, xlen, X);
+        armas_x_make(&x, xlen, 1, xlen, X);
     } else {
-        __armas_make(&x, 1, xlen, *incx, X);
+        armas_x_make(&x, 1, xlen, *incx, X);
     }
-    __armas_mvmult(&y, &a, &x, *alpha, *beta, flags, conf);
+    armas_x_mvmult(&y, &a, &x, *alpha, *beta, flags, conf);
 }
 #endif
 
@@ -59,7 +59,7 @@ void __cblas_gemv(const enum CBLAS_ORDER order, const enum CBLAS_TRANS trans,
                   DTYPE *X,  const int incx, const DTYPE beta, DTYPE *Y, const int incy)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t y, Aa, x;
+    armas_x_dense_t y, Aa, x;
     int ylen, xlen, flags = 0;
 
     switch (order) {
@@ -68,7 +68,7 @@ void __cblas_gemv(const enum CBLAS_ORDER order, const enum CBLAS_TRANS trans,
             flags |= ARMAS_TRANS;
         ylen = flags & ARMAS_TRANS ? M : N;
         xlen = flags & ARMAS_TRANS ? N : M;
-        __armas_make(&Aa, N, M, lda, A);
+        armas_x_make(&Aa, N, M, lda, A);
         break;
     case CblasColMajor:
     default:
@@ -76,23 +76,23 @@ void __cblas_gemv(const enum CBLAS_ORDER order, const enum CBLAS_TRANS trans,
             flags |= ARMAS_TRANS;
         ylen = flags & ARMAS_TRANS ? N : M;
         xlen = flags & ARMAS_TRANS ? M : N;
-        __armas_make(&Aa, M, N, lda, A);
+        armas_x_make(&Aa, M, N, lda, A);
         break;
     }
 
     if (incy == 1) {
         // column vector
-        __armas_make(&y, ylen, 1, ylen, Y);
+        armas_x_make(&y, ylen, 1, ylen, Y);
     } else {
         // row vector
-        __armas_make(&y, 1, ylen, incy, Y);
+        armas_x_make(&y, 1, ylen, incy, Y);
     }
     if (incx == 1) {
-        __armas_make(&x, xlen, 1, xlen, X);
+        armas_x_make(&x, xlen, 1, xlen, X);
     } else {
-        __armas_make(&x, 1, xlen, incx, X);
+        armas_x_make(&x, 1, xlen, incx, X);
     }
-    __armas_mvmult(&y, &Aa, &x, alpha, beta, flags, conf);
+    armas_x_mvmult(&y, &Aa, &x, alpha, beta, flags, conf);
 }
 
 #endif

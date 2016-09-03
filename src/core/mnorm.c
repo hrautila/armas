@@ -14,11 +14,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_mnorm) 
+#if defined(armas_x_mnorm) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_amax) && defined(__armas_asum) && defined(__armas_nrm2)
+#if defined(armas_x_amax) && defined(armas_x_asum) && defined(armas_x_nrm2)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -34,13 +34,13 @@
 //! \endcond
 
 static 
-void __sum_of_sq(ABSTYPE *ssum, ABSTYPE *scale, __armas_dense_t *X, ABSTYPE sum, ABSTYPE scl)
+void __sum_of_sq(ABSTYPE *ssum, ABSTYPE *scale, armas_x_dense_t *X, ABSTYPE sum, ABSTYPE scl)
 {
   register int i;
   register ABSTYPE a0;
 
-  for (i = 0; i < __armas_size(X); i += 1) {
-    a0 = __armas_get_at_unsafe(X, i);
+  for (i = 0; i < armas_x_size(X); i += 1) {
+    a0 = armas_x_get_at_unsafe(X, i);
     if (a0 != __ZERO) {
       a0 = __ABS(a0);
       if (a0 > scl) {
@@ -59,16 +59,16 @@ void __sum_of_sq(ABSTYPE *ssum, ABSTYPE *scale, __armas_dense_t *X, ABSTYPE sum,
  * Frobenius-norm is the square root of sum of the squares of the matrix elements.
  */
 static
-ABSTYPE __matrix_norm_frb(const __armas_dense_t *x, armas_conf_t *conf)
+ABSTYPE __matrix_norm_frb(const armas_x_dense_t *x, armas_conf_t *conf)
 {
   int k;
-  __armas_dense_t v;
+  armas_x_dense_t v;
   ABSTYPE ssum, scale;
 
   ssum = __ABSONE;
   scale = __ABSZERO;
   for (k = 0; k < x->cols; k++) {
-    __armas_column(&v, x, k);
+    armas_x_column(&v, x, k);
     __sum_of_sq(&ssum, &scale, &v, ssum, scale);
   }
   return scale*__SQRT(ssum);
@@ -78,15 +78,15 @@ ABSTYPE __matrix_norm_frb(const __armas_dense_t *x, armas_conf_t *conf)
  * 1-norm is the maximum of the column sums.
  */
 static
-ABSTYPE __matrix_norm_one(const __armas_dense_t *x, armas_conf_t *conf)
+ABSTYPE __matrix_norm_one(const armas_x_dense_t *x, armas_conf_t *conf)
 {
   int k;
-  __armas_dense_t v;
+  armas_x_dense_t v;
   ABSTYPE cmax, amax = __ABSZERO;
 
   for (k = 0; k < x->cols; k++) {
-    __armas_column(&v, x, k);
-    cmax = __ABS(__armas_asum(&v, conf));
+    armas_x_column(&v, x, k);
+    cmax = __ABS(armas_x_asum(&v, conf));
     if (cmax > amax) {
       amax = cmax;
     }
@@ -98,15 +98,15 @@ ABSTYPE __matrix_norm_one(const __armas_dense_t *x, armas_conf_t *conf)
  * inf-norm is the maximum of the row sums.
  */
 static
-ABSTYPE __matrix_norm_inf(const __armas_dense_t *x, armas_conf_t *conf)
+ABSTYPE __matrix_norm_inf(const armas_x_dense_t *x, armas_conf_t *conf)
 {
   int k;
-  __armas_dense_t v;
+  armas_x_dense_t v;
   ABSTYPE cmax, amax = __ABSZERO;
 
   for (k = 0; k < x->rows; k++) {
-    __armas_row(&v, x, k);
-    cmax = __ABS(__armas_asum(&v, conf));
+    armas_x_row(&v, x, k);
+    cmax = __ABS(armas_x_asum(&v, conf));
     if (cmax > amax) {
       amax = cmax;
     }
@@ -127,28 +127,28 @@ ABSTYPE __matrix_norm_inf(const __armas_dense_t *x, armas_conf_t *conf)
  *    Optional configuration block
  * \ingroup matrix
  */
-ABSTYPE __armas_mnorm(const __armas_dense_t *A, int which, armas_conf_t *conf)
+ABSTYPE armas_x_mnorm(const armas_x_dense_t *A, int which, armas_conf_t *conf)
 {
   ABSTYPE normval = __ABSZERO;
 
   if (!conf)
     conf = armas_conf_default();
 
-  if (! A || __armas_size(A) == 0)
+  if (! A || armas_x_size(A) == 0)
     return __ABSZERO;
 
   int is_vector = A->rows == 1 || A->cols == 1;
   switch (which) {
   case ARMAS_NORM_ONE:
     if (is_vector) {
-      normval = __armas_asum(A, conf);
+      normval = armas_x_asum(A, conf);
     } else {
       normval = __matrix_norm_one(A, conf);
     }
     break;
   case ARMAS_NORM_TWO:
     if (is_vector) {
-      normval = __armas_nrm2(A, conf);
+      normval = armas_x_nrm2(A, conf);
     } else {
       conf->error = ARMAS_EIMP;
       normval = __ABSZERO;
@@ -156,14 +156,14 @@ ABSTYPE __armas_mnorm(const __armas_dense_t *A, int which, armas_conf_t *conf)
     break;
   case ARMAS_NORM_INF:
     if (is_vector) {
-      normval = __ABS(__armas_amax(A, conf));
+      normval = __ABS(armas_x_amax(A, conf));
     } else {
       normval = __matrix_norm_inf(A, conf);
     }
     break;
   case ARMAS_NORM_FRB:
     if (is_vector) {
-      normval = __armas_nrm2(A, conf);
+      normval = armas_x_nrm2(A, conf);
     } else {
       normval = __matrix_norm_frb(A, conf);
     }
@@ -177,9 +177,9 @@ ABSTYPE __armas_mnorm(const __armas_dense_t *A, int which, armas_conf_t *conf)
 
 
 static
-ABSTYPE __trm_norm_one(const __armas_dense_t *A, int flags, armas_conf_t *conf)
+ABSTYPE __trm_norm_one(const armas_x_dense_t *A, int flags, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a11, a21, A22, *Acol;
+  armas_x_dense_t ATL, ABL, ABR, ATR, A00, a01, a11, a21, A22, *Acol;
   ABSTYPE aval, cmax = __ABSZERO;
 
   Acol = flags & ARMAS_UPPER ? &a01 : &a21;
@@ -198,8 +198,8 @@ ABSTYPE __trm_norm_one(const __armas_dense_t *A, int flags, armas_conf_t *conf)
 
     aval = flags & ARMAS_UNIT
       ? __ABSONE
-      : __ABS(__armas_get_at_unsafe(&a11, 0));
-    aval += __armas_asum(Acol, conf);
+      : __ABS(armas_x_get_at_unsafe(&a11, 0));
+    aval += armas_x_asum(Acol, conf);
     if (aval > cmax)
       cmax = aval;
     
@@ -211,9 +211,9 @@ ABSTYPE __trm_norm_one(const __armas_dense_t *A, int flags, armas_conf_t *conf)
 }
 
 static
-ABSTYPE __trm_norm_inf(const __armas_dense_t *A, int flags, armas_conf_t *conf)
+ABSTYPE __trm_norm_inf(const armas_x_dense_t *A, int flags, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABL, ABR, ATR, A00, a10, a11, a12, A22, *Arow;
+  armas_x_dense_t ATL, ABL, ABR, ATR, A00, a10, a11, a12, A22, *Arow;
   ABSTYPE aval, cmax = __ABSZERO;
 
   Arow = flags & ARMAS_UPPER ? &a12 : &a10;
@@ -232,8 +232,8 @@ ABSTYPE __trm_norm_inf(const __armas_dense_t *A, int flags, armas_conf_t *conf)
 
     aval = flags & ARMAS_UNIT
       ? __ABSONE
-      : __ABS(__armas_get_at_unsafe(&a11, 0));
-    aval += __armas_asum(Arow, conf);
+      : __ABS(armas_x_get_at_unsafe(&a11, 0));
+    aval += armas_x_asum(Arow, conf);
     if (aval > cmax)
       cmax = aval;
     
@@ -245,9 +245,9 @@ ABSTYPE __trm_norm_inf(const __armas_dense_t *A, int flags, armas_conf_t *conf)
 }
 
 static
-ABSTYPE __trm_norm_frb(const __armas_dense_t *A, int flags, armas_conf_t *conf)
+ABSTYPE __trm_norm_frb(const armas_x_dense_t *A, int flags, armas_conf_t *conf)
 {
-  __armas_dense_t ATL, ABL, ABR, ATR, A00, a01, a11, a21, A22, *Acol;
+  armas_x_dense_t ATL, ABL, ABR, ATR, A00, a01, a11, a21, A22, *Acol;
     ABSTYPE ssum, scale;
 
     EMPTY(A00); EMPTY(a11);
@@ -297,18 +297,18 @@ ABSTYPE __trm_norm_frb(const __armas_dense_t *A, int flags, armas_conf_t *conf)
  * (Note ARMAS_NORM_TWO not implemented.)
  * \ingroup matrix
  */
-ABSTYPE __armas_norm(const __armas_dense_t *A, int which, int flags, armas_conf_t *conf)
+ABSTYPE armas_x_norm(const armas_x_dense_t *A, int which, int flags, armas_conf_t *conf)
 {
   DTYPE normval = __ABSZERO;
 
   if (!conf)
     conf = armas_conf_default();
 
-  if (! A || __armas_size(A) == 0)
+  if (! A || armas_x_size(A) == 0)
     return __ABSZERO;
 
   if (!(flags & (ARMAS_LOWER|ARMAS_UPPER))) {
-    return __armas_mnorm(A, which, conf);
+    return armas_x_mnorm(A, which, conf);
   }
   // triangular/trapezoidial matrices here
   switch (which) {

@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_cholfactor)
+#if defined(armas_x_cholfactor)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -26,13 +26,13 @@
 #if defined(__potrff)
 void __potrff(char *uplo, int *n, DTYPE *A, int *lda, int *info)
 {
-    __armas_dense_t a;
+    armas_x_dense_t a;
     armas_conf_t conf = *armas_conf_default();
     int err, flags = 0;
 
-    __armas_make(&a, *n, *n, *lda, A);
+    armas_x_make(&a, *n, *n, *lda, A);
     flags = toupper(*uplo) == 'L' | ARMAS_LOWER : ARMAS_UPPER;
-    err = __armas_cholfactor(&a, flags, &conf);
+    err = armas_x_cholfactor(&a, flags, &conf);
     *info = err ? -conf.error : 0;
 }
 #endif
@@ -40,14 +40,14 @@ void __potrff(char *uplo, int *n, DTYPE *A, int *lda, int *info)
 #if defined(__lapacke_potrf_work)
 int __lapacke_potrf_work(int order, char uplo, int n, DTYPE *A, int lda)
 {
-    __armas_dense_t a;
+    armas_x_dense_t a;
     armas_conf_t conf = *armas_conf_default();
     int err, flags = 0;
     
     if (order == LAPACK_COL_MAJOR) {
         flags = toupper(uplo) == 'L' | ARMAS_LOWER : ARMAS_UPPER;
-        __armas_make(&a, n, n, lda, A);
-        err = __armas_cholfactor(&a, flags, &conf);
+        armas_x_make(&a, n, n, lda, A);
+        err = armas_x_cholfactor(&a, flags, &conf);
         return err ? -conf.error : 0;
     }
     return -1;

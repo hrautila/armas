@@ -13,12 +13,12 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_trdsec_solve) && defined(__armas_trdsec_eigen) && \
-    defined(__armas_trdsec_solve_vec)
+#if defined(armas_x_trdsec_solve) && defined(armas_x_trdsec_eigen) && \
+    defined(armas_x_trdsec_solve_vec)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_discriminant) 
+#if defined(armas_x_discriminant) 
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -48,14 +48,14 @@
  */
 static inline
 void rational_forward(DTYPE *val, DTYPE *dval, 
-                      __armas_dense_t *Z, __armas_dense_t *delta, int start, int end)
+                      armas_x_dense_t *Z, armas_x_dense_t *delta, int start, int end)
 {
     int i;
     DTYPE dj, zj, tval;
 
     for (i = start; i < end; i++) {
-        dj = __armas_get_at_unsafe(delta, i);
-        zj = __armas_get_at_unsafe(Z, i);
+        dj = armas_x_get_at_unsafe(delta, i);
+        zj = armas_x_get_at_unsafe(Z, i);
         tval = zj/dj;
         *val += zj*tval;
         *dval += tval*tval;
@@ -68,14 +68,14 @@ void rational_forward(DTYPE *val, DTYPE *dval,
  */
 static inline
 void rational_backward(DTYPE *val, DTYPE *dval, 
-                       __armas_dense_t *Z, __armas_dense_t *delta, int start, int end)
+                       armas_x_dense_t *Z, armas_x_dense_t *delta, int start, int end)
 {
     int i;
     DTYPE dj, zj, tval;
 
     for (i = end-1; i >= start; i--) {
-        dj = __armas_get_at_unsafe(delta, i);
-        zj = __armas_get_at_unsafe(Z, i);
+        dj = armas_x_get_at_unsafe(delta, i);
+        zj = armas_x_get_at_unsafe(Z, i);
         tval = zj/dj;
         *val += zj*tval;
         *dval += tval*tval;
@@ -86,15 +86,15 @@ void rational_backward(DTYPE *val, DTYPE *dval,
  * Compute delta(j) = (D(j) - D(K)) - tau
  */
 static inline
-void compute_delta(__armas_dense_t *delta, __armas_dense_t *D, int ik, DTYPE tau) {
+void compute_delta(armas_x_dense_t *delta, armas_x_dense_t *D, int ik, DTYPE tau) {
     int i, nx, kx, n, k;
     DTYPE d0, *dp, *dk;
-    dp = __armas_data(delta);
-    dk = __armas_data(D);
+    dp = armas_x_data(delta);
+    dk = armas_x_data(D);
     nx = delta->rows == 1 ? delta->step : 1;
     kx = D->rows == 1 ? D->step : 1;
-    d0 = __armas_get_at_unsafe(D, ik);
-    for (i = 0, n = 0, k = 0; i < __armas_size(D); i++, n += nx, k += kx) {
+    d0 = armas_x_get_at_unsafe(D, ik);
+    for (i = 0, n = 0, k = 0; i < armas_x_size(D); i++, n += nx, k += kx) {
         dp[n] = dk[k] - d0 - tau;
     }
 }
@@ -103,12 +103,12 @@ void compute_delta(__armas_dense_t *delta, __armas_dense_t *D, int ik, DTYPE tau
  * Compute delta(j) = delta(j) - eta
  */
 static inline
-void update_delta(__armas_dense_t *delta, DTYPE eta) {
+void update_delta(armas_x_dense_t *delta, DTYPE eta) {
     int i, ix, n;
     DTYPE *dp;
-    dp = __armas_data(delta);
+    dp = armas_x_data(delta);
     ix = delta->rows == 1 ? delta->step : 1;
-    for (i = 0, n = 0; i < __armas_size(delta); i++, n += ix) {
+    for (i = 0, n = 0; i < armas_x_size(delta); i++, n += ix) {
         dp[n] = dp[n] - eta;
     }
 }
@@ -199,14 +199,14 @@ void update_delta(__armas_dense_t *delta, DTYPE eta) {
  */
 static
 int __trdsec_initial_guess(DTYPE *tau, DTYPE *tau_low, DTYPE *tau_high, 
-                           __armas_dense_t *D, __armas_dense_t *Z,
-                           __armas_dense_t *delta, int index, DTYPE rho)
+                           armas_x_dense_t *D, armas_x_dense_t *Z,
+                           armas_x_dense_t *delta, int index, DTYPE rho)
 {
     DTYPE G, Hx, dG, F, A, B, C, dd;
     DTYPE d_k, d_k1, z_k, z_k1, mpoint, diff; 
     int N, iK, iN, last = 0;
 
-    N = __armas_size(D);
+    N = armas_x_size(D);
     if (index == N-1) {
         iN = N-2;
         last = 1;
@@ -216,8 +216,8 @@ int __trdsec_initial_guess(DTYPE *tau, DTYPE *tau_low, DTYPE *tau_high,
 
     // compute initial value at (D[k] + D[k+1])/2
     // note: D[i] - (D[k] + D[k+1])/2 == D[i] - D[k] - (D[k+1] - D[k])/2.0
-    d_k  = __armas_get_at_unsafe(D, iN);
-    d_k1 = __armas_get_at_unsafe(D, iN+1);
+    d_k  = armas_x_get_at_unsafe(D, iN);
+    d_k1 = armas_x_get_at_unsafe(D, iN+1);
     diff = d_k1 - d_k;
     mpoint  = last ? rho/2.0 : diff/2.0;
 
@@ -230,10 +230,10 @@ int __trdsec_initial_guess(DTYPE *tau, DTYPE *tau_low, DTYPE *tau_high,
     rational_forward(&G, &dG, Z, delta, 0, iN+1);
     rational_backward(&G, &dG, Z, delta, iN+1, N);
     // G = z_k^2/(d_k - y) + z_k1^2/(d_k1 - y)
-    z_k  = __armas_get_at_unsafe(Z, iN);
-    z_k1 = __armas_get_at_unsafe(Z, iN+1);
-    d_k  = __armas_get_at_unsafe(delta, iN);
-    d_k1 = __armas_get_at_unsafe(delta, iN+1);
+    z_k  = armas_x_get_at_unsafe(Z, iN);
+    z_k1 = armas_x_get_at_unsafe(Z, iN+1);
+    d_k  = armas_x_get_at_unsafe(delta, iN);
+    d_k1 = armas_x_get_at_unsafe(delta, iN+1);
 
     // F is f(x) at initial point, 1/rho + g(y) + h(y)
     F  = 1/rho + G;
@@ -262,7 +262,7 @@ int __trdsec_initial_guess(DTYPE *tau, DTYPE *tau_low, DTYPE *tau_high,
         *tau_high = __ZERO;
     }
     B /= 2.0;
-    __armas_discriminant(&dd, A, B, C);
+    armas_x_discriminant(&dd, A, B, C);
     if (B > __ZERO) {
         *tau = A/(B + __SQRT(dd));
     } else {
@@ -281,7 +281,7 @@ int __trdsec_initial_guess(DTYPE *tau, DTYPE *tau_low, DTYPE *tau_high,
     if (F <= __ZERO && C <= Hx) {
         *tau = rho;
     } else {
-        __armas_discriminant(&dd, A, -B, C);
+        armas_x_discriminant(&dd, A, -B, C);
         if (B < __ZERO) {
             *tau = A/(B - __SQRT(dd));
         } else {
@@ -318,15 +318,15 @@ int __trdsec_initial_guess(DTYPE *tau, DTYPE *tau_low, DTYPE *tau_high,
  *      Coefficient
  */
 static
-int __trdsec_root(DTYPE *lambda, __armas_dense_t *D, __armas_dense_t *Z,
-                  __armas_dense_t *delta, int index, DTYPE rho)
+int __trdsec_root(DTYPE *lambda, armas_x_dense_t *D, armas_x_dense_t *Z,
+                  armas_x_dense_t *delta, int index, DTYPE rho)
 {
     int iK, iK1, niter, maxiter, N;
 
     DTYPE H, dH, G, dG, F, dF, Fa, A, B, C, tau, tau_low, tau_high, eta, eta0, dd, edif;
     DTYPE delta_k, delta_k1, da_k, da_k1; 
 
-    N    = __armas_size(D);
+    N    = armas_x_size(D);
     tau  = __ZERO;
 
     // compute initial value at (D[k] + D[k+1])/2
@@ -334,17 +334,17 @@ int __trdsec_root(DTYPE *lambda, __armas_dense_t *D, __armas_dense_t *Z,
     iK = __trdsec_initial_guess(&tau, &tau_low, &tau_high, D, Z, delta, index, rho);
     if (iK == index) {
         iK1 = index+1;
-        delta_k  = __armas_get_at_unsafe(delta, iK);
+        delta_k  = armas_x_get_at_unsafe(delta, iK);
         if (index < N-1) {
-            delta_k1 = __armas_get_at_unsafe(delta, iK1);
+            delta_k1 = armas_x_get_at_unsafe(delta, iK1);
         } else {
             delta_k1 = tau;
         }
     } else {
         iK1 = index;
-        delta_k1  = __armas_get_at_unsafe(delta, iK1);
+        delta_k1  = armas_x_get_at_unsafe(delta, iK1);
         if (index < N-1) {
-            delta_k = __armas_get_at_unsafe(delta, iK);
+            delta_k = armas_x_get_at_unsafe(delta, iK);
         } else {
             delta_k = tau;
         }
@@ -387,7 +387,7 @@ int __trdsec_root(DTYPE *lambda, __armas_dense_t *D, __armas_dense_t *Z,
         C = delta_k*delta_k1*F;
         // compute discriminant of A*x^2 - 2B*x + C with extra precission
         B /= 2.0;
-        __armas_discriminant(&dd, A, B, C);
+        armas_x_discriminant(&dd, A, B, C);
         eta0 = eta;
         if (B > 0) {
             eta = C/(B + __SQRT(dd));
@@ -415,9 +415,9 @@ int __trdsec_root(DTYPE *lambda, __armas_dense_t *D, __armas_dense_t *Z,
     }
 
     if (index == N-1) {
-        *lambda = __armas_get_at_unsafe(D, N-1) + tau;
+        *lambda = armas_x_get_at_unsafe(D, N-1) + tau;
     } else {
-        *lambda = __armas_get_at_unsafe(D, iK) + tau;
+        *lambda = armas_x_get_at_unsafe(D, iK) + tau;
     }
     return niter == maxiter ? -niter : niter;
 }
@@ -426,28 +426,28 @@ int __trdsec_root(DTYPE *lambda, __armas_dense_t *D, __armas_dense_t *Z,
  * \brief 
  */
 static
-void __update_vec_delta(DTYPE *vk, __armas_dense_t *d,
-                        __armas_dense_t *delta, int index, DTYPE rho)
+void __update_vec_delta(DTYPE *vk, armas_x_dense_t *d,
+                        armas_x_dense_t *delta, int index, DTYPE rho)
 {
     DTYPE n0, n1, dn, dk, val, p0, p1;
     int j, N;
 
-    N  = __armas_size(d);
-    dk = __armas_get_at_unsafe(d, index);
-    dn = __armas_get_at_unsafe(delta, N-1);
+    N  = armas_x_size(d);
+    dk = armas_x_get_at_unsafe(d, index);
+    dn = armas_x_get_at_unsafe(delta, N-1);
 
     // compute; prod j; (lambda_j - d_k)/(d_j - d_k) , j = 0..index-1
     p0 = __ONE;
     for (j = 0; j < index; j++) {
-        n0 = __armas_get_at_unsafe(delta, j);
-        n1 = __armas_get_at_unsafe(d, j) - dk;
+        n0 = armas_x_get_at_unsafe(delta, j);
+        n1 = armas_x_get_at_unsafe(d, j) - dk;
         p0 *= n0/n1;
     }
     p1 = __ONE;
     // compute; prod j; (lambda_j - d_k)/(d_j+1 - d_k) , j = index..N-2
     for (j = index; j < N-1; j++) {
-        n0 = __armas_get_at_unsafe(delta, j);
-        n1 = __armas_get_at_unsafe(d, j+1) - dk;
+        n0 = armas_x_get_at_unsafe(delta, j);
+        n1 = armas_x_get_at_unsafe(d, j+1) - dk;
         p1 *= n0/n1;
     }
 
@@ -471,18 +471,18 @@ void __update_vec_delta(DTYPE *vk, __armas_dense_t *d,
  * For details see (3). Computation as equation 3.3 in (3)
  */
 static inline
-void __trdsec_update_vec_delta(__armas_dense_t *z, __armas_dense_t *Q,
-                               __armas_dense_t *d, DTYPE rho)
+void __trdsec_update_vec_delta(armas_x_dense_t *z, armas_x_dense_t *Q,
+                               armas_x_dense_t *d, DTYPE rho)
 {
-    __armas_dense_t delta;
+    armas_x_dense_t delta;
     DTYPE zk;
     int i;
     EMPTY(delta);
 
-    for (i = 0; i < __armas_size(z); i++) {
-        __armas_column(&delta, Q, i);
+    for (i = 0; i < armas_x_size(z); i++) {
+        armas_x_column(&delta, Q, i);
         __update_vec_delta(&zk, d, &delta, i, rho);
-        __armas_set_at_unsafe(z, i, zk);
+        armas_x_set_at_unsafe(z, i, zk);
     }
 }
 
@@ -497,18 +497,18 @@ void __trdsec_update_vec_delta(__armas_dense_t *z, __armas_dense_t *Q,
  *  when solving the secular function.
  */
 static inline
-void __trdsec_eigenvec_delta(__armas_dense_t *qi, __armas_dense_t *dl, __armas_dense_t *z)
+void __trdsec_eigenvec_delta(armas_x_dense_t *qi, armas_x_dense_t *dl, armas_x_dense_t *z)
 {
     DTYPE dk, zk, t, s;
     int k;
-    for (k = 0; k < __armas_size(dl); k++) {
-        zk = __armas_get_at_unsafe(z, k);
-        dk = __armas_get_at_unsafe(dl, k);
+    for (k = 0; k < armas_x_size(dl); k++) {
+        zk = armas_x_get_at_unsafe(z, k);
+        dk = armas_x_get_at_unsafe(dl, k);
         t = zk/dk;
-        __armas_set_at_unsafe(qi, k, t);
+        armas_x_set_at_unsafe(qi, k, t);
     }
-    s = __armas_nrm2(qi, (armas_conf_t *)0);
-    __armas_invscale(qi, s, (armas_conf_t *)0);
+    s = armas_x_nrm2(qi, (armas_conf_t *)0);
+    armas_x_invscale(qi, s, (armas_conf_t *)0);
 }
 
 /*
@@ -525,15 +525,15 @@ void __trdsec_eigenvec_delta(__armas_dense_t *qi, __armas_dense_t *dl, __armas_d
  * This version requires space 2*N^2 (target eigenmatrix Q and workspace for deltas).
  */
 static
-void __trdsec_eigen2_build(__armas_dense_t *Q, __armas_dense_t *z, __armas_dense_t *Q2)
+void __trdsec_eigen2_build(armas_x_dense_t *Q, armas_x_dense_t *z, armas_x_dense_t *Q2)
 {
-    __armas_dense_t qi, delta;
+    armas_x_dense_t qi, delta;
     int k;
     EMPTY(delta);
 
-    for (k = 0; k < __armas_size(z); k++) {
-        __armas_column(&qi, Q, k);
-        __armas_row(&delta, Q2, k);
+    for (k = 0; k < armas_x_size(z); k++) {
+        armas_x_column(&qi, Q, k);
+        armas_x_row(&delta, Q2, k);
         __trdsec_eigenvec_delta(&qi, &delta, z);
     }
 }
@@ -550,11 +550,11 @@ void __trdsec_eigen2_build(__armas_dense_t *Q, __armas_dense_t *z, __armas_dense
  *  deltas are row vectors of Q and result eigenvectors are column vectors of Q.
  */
 static
-void __trdsec_eigenbuild_inplace(__armas_dense_t *Q, __armas_dense_t *z)
+void __trdsec_eigenbuild_inplace(armas_x_dense_t *Q, armas_x_dense_t *z)
 {
     DTYPE zk0, zk1, dk0, dk1, t;
     int k, i;
-    __armas_dense_t QTL, QBR, Q00, q11, q12, q21, Q22, qi;
+    armas_x_dense_t QTL, QBR, Q00, q11, q12, q21, Q22, qi;
 
     EMPTY(q11); EMPTY(q12); EMPTY(q21); EMPTY(Q00);
     
@@ -567,26 +567,26 @@ void __trdsec_eigenbuild_inplace(__armas_dense_t *Q, __armas_dense_t *z)
                                __nil, &q21,  &Q22,  /**/ Q, 1, ARMAS_PBOTTOMRIGHT);
         //----------------------------------------------------------------------------
         k   = Q00.rows;
-        zk0 = __armas_get_at_unsafe(z, k);
-        dk0 = __armas_get_unsafe(&q11, 0, 0);
-        __armas_set_unsafe(&q11, 0, 0, zk0/dk0);
+        zk0 = armas_x_get_at_unsafe(z, k);
+        dk0 = armas_x_get_unsafe(&q11, 0, 0);
+        armas_x_set_unsafe(&q11, 0, 0, zk0/dk0);
 
-        for (i = 0; i < __armas_size(&q12); i++) {
-            zk1 = __armas_get_at_unsafe(z, k+i+1);
-            dk0 = __armas_get_at_unsafe(&q12, i);
-            dk1 = __armas_get_at_unsafe(&q21, i);
-            __armas_set_at_unsafe(&q12, i, zk0/dk1);
-            __armas_set_at_unsafe(&q21, i, zk1/dk0);
+        for (i = 0; i < armas_x_size(&q12); i++) {
+            zk1 = armas_x_get_at_unsafe(z, k+i+1);
+            dk0 = armas_x_get_at_unsafe(&q12, i);
+            dk1 = armas_x_get_at_unsafe(&q21, i);
+            armas_x_set_at_unsafe(&q12, i, zk0/dk1);
+            armas_x_set_at_unsafe(&q21, i, zk1/dk0);
         }
         //----------------------------------------------------------------------------
         __continue_3x3to2x2(&QTL, __nil,
                             __nil, &QBR, /**/ &Q00, &q11, &Q22, Q, ARMAS_PBOTTOMRIGHT);
     }
     // scale column eigenvector
-    for (k = 0; k < __armas_size(z); k++) {
-        __armas_column(&qi, Q, k);
-        t = __armas_nrm2(&qi, (armas_conf_t *)0);
-        __armas_invscale(&qi, t, (armas_conf_t *)0);
+    for (k = 0; k < armas_x_size(z); k++) {
+        armas_x_column(&qi, Q, k);
+        t = armas_x_nrm2(&qi, (armas_conf_t *)0);
+        armas_x_invscale(&qi, t, (armas_conf_t *)0);
     }
 }
 
@@ -612,8 +612,8 @@ void __trdsec_eigenbuild_inplace(__armas_dense_t *Q, __armas_dense_t *z)
  *     non-convergent root.
  * \ingroup lapack
  */
-int __armas_trdsec_solve(__armas_dense_t *y, __armas_dense_t *d,
-                         __armas_dense_t *z, __armas_dense_t *delta, DTYPE rho,
+int armas_x_trdsec_solve(armas_x_dense_t *y, armas_x_dense_t *d,
+                         armas_x_dense_t *z, armas_x_dense_t *delta, DTYPE rho,
                          armas_conf_t *conf)
 {
     DTYPE dlam;
@@ -623,18 +623,18 @@ int __armas_trdsec_solve(__armas_dense_t *y, __armas_dense_t *d,
         conf = armas_conf_default();
 
     // sizes need to match
-    if (__armas_size(d) != __armas_size(y)
-        || __armas_size(d) != __armas_size(delta)
-        || __armas_size(d) != __armas_size(z)) {
+    if (armas_x_size(d) != armas_x_size(y)
+        || armas_x_size(d) != armas_x_size(delta)
+        || armas_x_size(d) != armas_x_size(z)) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
 
-    for (i = 0; i < __armas_size(d); i++) {
+    for (i = 0; i < armas_x_size(d); i++) {
         if (__trdsec_root(&dlam, d, z, delta, i, rho) < 0 && err == 0) {
             err = -(i+1);
         }
-        __armas_set_at_unsafe(y, i, dlam);
+        armas_x_set_at_unsafe(y, i, dlam);
     }
     if (err)
         conf->error = ARMAS_ECONVERGE;
@@ -661,27 +661,27 @@ int __armas_trdsec_solve(__armas_dense_t *y, __armas_dense_t *d,
  *      Optional configuration block
  * \ingroup lapack
  */
-int __armas_trdsec_solve_vec(__armas_dense_t *y, __armas_dense_t *v, __armas_dense_t *Qd,
-                             __armas_dense_t *d, __armas_dense_t *z,
+int armas_x_trdsec_solve_vec(armas_x_dense_t *y, armas_x_dense_t *v, armas_x_dense_t *Qd,
+                             armas_x_dense_t *d, armas_x_dense_t *z,
                              DTYPE rho, armas_conf_t *conf)
 {
-    __armas_dense_t delta;
+    armas_x_dense_t delta;
     DTYPE dlam;
     int i, err = 0;
     if (!conf)
         conf = armas_conf_default();
 
-    if (__armas_size(v) != __armas_size(z)
-        || __armas_size(v) != __armas_size(d)) {
+    if (armas_x_size(v) != armas_x_size(z)
+        || armas_x_size(v) != armas_x_size(d)) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-    for (i = 0; i < __armas_size(d); i++) {
-        __armas_row(&delta, Qd, i);
+    for (i = 0; i < armas_x_size(d); i++) {
+        armas_x_row(&delta, Qd, i);
         if (__trdsec_root(&dlam, d, z, &delta, i, rho) < 0 && err == 0) {
             err = -(i+1);
         }
-        __armas_set_at_unsafe(y, i, dlam);
+        armas_x_set_at_unsafe(y, i, dlam);
     }
     if (err == 0) {
         __trdsec_update_vec_delta(v, Qd, d, rho);
@@ -709,7 +709,7 @@ int __armas_trdsec_solve_vec(__armas_dense_t *y, __armas_dense_t *v, __armas_den
  * \retval -1 Error, `conf.error` holds error code.
  * \ingroup lapack
  */
-int __armas_trdsec_eigen(__armas_dense_t *Q, __armas_dense_t *v, __armas_dense_t *Qd,
+int armas_x_trdsec_eigen(armas_x_dense_t *Q, armas_x_dense_t *v, armas_x_dense_t *Qd,
                          armas_conf_t *conf)
 {
     if (!conf)
@@ -719,7 +719,7 @@ int __armas_trdsec_eigen(__armas_dense_t *Q, __armas_dense_t *v, __armas_dense_t
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-    if (Q->rows != __armas_size(v) || Qd->rows != __armas_size(v)) {
+    if (Q->rows != armas_x_size(v) || Qd->rows != armas_x_size(v)) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
@@ -747,27 +747,27 @@ int __armas_trdsec_eigen(__armas_dense_t *Q, __armas_dense_t *v, __armas_dense_t
  *  Computes as in (3) equation 3.3
  */
 static inline
-void __update_vec(DTYPE *vk, __armas_dense_t *d, __armas_dense_t *dl, int index, DTYPE rho)
+void __update_vec(DTYPE *vk, armas_x_dense_t *d, armas_x_dense_t *dl, int index, DTYPE rho)
 {
     DTYPE n0, n1, dn, dk, val, p0, p1;
     int k, N;
 
-    N  = __armas_size(d);
-    dk = __armas_get_at_unsafe(d, index);
-    dn = __armas_get_at_unsafe(dl, N-1);
+    N  = armas_x_size(d);
+    dk = armas_x_get_at_unsafe(d, index);
+    dn = armas_x_get_at_unsafe(dl, N-1);
 
     // compute; prod j; (lambda_j - d_k)/(d_j - d_k) , j = 0..index-1
     p0 = __ONE;
     for (k = 0; k < index; k++) {
-        n0 = dk - __armas_get_at_unsafe(dl, k);
-        n1 = dk - __armas_get_at_unsafe(d, k);
+        n0 = dk - armas_x_get_at_unsafe(dl, k);
+        n1 = dk - armas_x_get_at_unsafe(d, k);
         p0 *= n0/n1;
     }
     p1 = __ONE;
     // compute; prod j; (lambda_j - d_k)/(d_j+1 - d_k) , j = index..N-2
     for (k = index; k < N-1; k++) {
-        n0 = __armas_get_at_unsafe(dl, k) - dk;
-        n1 = __armas_get_at_unsafe(d, k+1) - dk;
+        n0 = armas_x_get_at_unsafe(dl, k) - dk;
+        n1 = armas_x_get_at_unsafe(d, k+1) - dk;
         p1 *= n0/n1;
     }
 
@@ -792,14 +792,14 @@ void __update_vec(DTYPE *vk, __armas_dense_t *d, __armas_dense_t *dl, int index,
  * For details see (3). Computation as equation 3.3 in (3)
  */
 static inline
-void __trdsec_update_vec(__armas_dense_t *z, __armas_dense_t *dl,
-                         __armas_dense_t *d, DTYPE rho)
+void __trdsec_update_vec(armas_x_dense_t *z, armas_x_dense_t *dl,
+                         armas_x_dense_t *d, DTYPE rho)
 {
     DTYPE zk;
     int i;
-    for (i = 0; i < __armas_size(d); i++) {
+    for (i = 0; i < armas_x_size(d); i++) {
         __update_vec(&zk, d, dl, i, rho);
-        __armas_set_at_unsafe(z, i, zk);
+        armas_x_set_at_unsafe(z, i, zk);
     }
 }
 
@@ -812,34 +812,34 @@ void __trdsec_update_vec(__armas_dense_t *z, __armas_dense_t *dl,
  *  See (3) equation 3.1.
  */
 static inline
-void __trdsec_eigenvec(__armas_dense_t *qi, __armas_dense_t *d,
-                       __armas_dense_t *z, DTYPE lmbda)
+void __trdsec_eigenvec(armas_x_dense_t *qi, armas_x_dense_t *d,
+                       armas_x_dense_t *z, DTYPE lmbda)
 {
     DTYPE dk, zk, t, s;
     int k;
-    for (k = 0; k < __armas_size(d); k++) {
-        zk = __armas_get_at_unsafe(z, k);
-        dk = __armas_get_at_unsafe(d, k);
+    for (k = 0; k < armas_x_size(d); k++) {
+        zk = armas_x_get_at_unsafe(z, k);
+        dk = armas_x_get_at_unsafe(d, k);
         t = zk/(dk - lmbda);
-        __armas_set_at_unsafe(qi, k, t);
+        armas_x_set_at_unsafe(qi, k, t);
     }
-    s = __armas_nrm2(qi, (armas_conf_t *)0);
-    __armas_invscale(qi, s, (armas_conf_t *)0);
+    s = armas_x_nrm2(qi, (armas_conf_t *)0);
+    armas_x_invscale(qi, s, (armas_conf_t *)0);
 }
 
 /*
  * \brief Compute eigenvectors 
  */
 static
-void __trdsec_eigen_build(__armas_dense_t *Q, __armas_dense_t *dl,
-                          __armas_dense_t *d, __armas_dense_t *z)
+void __trdsec_eigen_build(armas_x_dense_t *Q, armas_x_dense_t *dl,
+                          armas_x_dense_t *d, armas_x_dense_t *z)
 {
-    __armas_dense_t qi;
+    armas_x_dense_t qi;
     DTYPE lmbda;
     int k;
-    for (k = 0; k < __armas_size(d); k++) {
-        __armas_column(&qi, Q, k);
-        lmbda = __armas_get_at_unsafe(dl, k);
+    for (k = 0; k < armas_x_size(d); k++) {
+        armas_x_column(&qi, Q, k);
+        lmbda = armas_x_get_at_unsafe(dl, k);
         __trdsec_eigenvec(&qi, d, z, lmbda);
     }
 }

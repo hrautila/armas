@@ -17,34 +17,34 @@
 
 int test_reduce(int M, int N, int lb, int verbose, int flags)
 {
-  __Matrix A0, A1, tau0, tau1, W;
+  armas_x_dense_t A0, A1, tau0, tau1, W;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
   char uplo = flags & ARMAS_LOWER ? 'L' : 'U';
-  __Dtype n0, n1;
+  DTYPE n0, n1;
 
-  matrix_init(&A0, N, N);
-  matrix_init(&A1, N, N);
-  matrix_init(&tau0, N, 1);
-  matrix_init(&tau1, N, 1);
+  armas_x_init(&A0, N, N);
+  armas_x_init(&A1, N, N);
+  armas_x_init(&tau0, N, 1);
+  armas_x_init(&tau1, N, 1);
 
   conf.lb = lb;
-  wsize = matrix_trdreduce_work(&A0, &conf);
-  matrix_init(&W, wsize, 1);
+  wsize = armas_x_trdreduce_work(&A0, &conf);
+  armas_x_init(&W, wsize, 1);
 
   // set source data
-  matrix_set_values(&A0, unitrand, flags);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, flags);
+  armas_x_mcopy(&A1, &A0);
 
   conf.lb = 0;
-  matrix_trdreduce(&A0, &tau0, &W, flags, &conf);
+  armas_x_trdreduce(&A0, &tau0, &W, flags, &conf);
 
   conf.lb = lb;
-  matrix_trdreduce(&A1, &tau1, &W, flags, &conf);
+  armas_x_trdreduce(&A1, &tau1, &W, flags, &conf);
 
 
-  n0 = rel_error((__Dtype *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  n1 = rel_error((__Dtype *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+  n0 = rel_error((DTYPE *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  n1 = rel_error((DTYPE *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
   ok = isFINE(n0, N*__ERROR);
 
   printf("%s: unblk.TRD(A,%c) == blk.TRD(A,%c)\n", PASS(ok), uplo, uplo);
@@ -53,11 +53,11 @@ int test_reduce(int M, int N, int lb, int verbose, int flags)
 
     printf("  || error.tau||      : %e [%d]\n", n1, ndigits(n1));
   }
-  matrix_release(&A0);
-  matrix_release(&A1);
-  matrix_release(&tau0);
-  matrix_release(&tau1);
-  matrix_release(&W);
+  armas_x_release(&A0);
+  armas_x_release(&A1);
+  armas_x_release(&tau0);
+  armas_x_release(&tau1);
+  armas_x_release(&W);
   return ok;
 }
 
@@ -65,51 +65,51 @@ int test_reduce(int M, int N, int lb, int verbose, int flags)
 // compute ||A - Q*T*Q.T||
 int test_mult_trd(int M, int N, int lb, int verbose, int flags)
 {
-  __Matrix A0, A1, tau0,  W, T0, T1, e1, e2, d1, d2;
+  armas_x_dense_t A0, A1, tau0,  W, T0, T1, e1, e2, d1, d2;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
-  __Dtype nrm;
+  DTYPE nrm;
   char *uplo = flags & ARMAS_UPPER ? "UPPER" : "LOWER";
 
-  matrix_init(&A0, N, N);
-  matrix_init(&A1, N, N);
-  matrix_init(&T0, N, N);
-  matrix_init(&T1, N, N);
-  matrix_init(&tau0, N, 1);
+  armas_x_init(&A0, N, N);
+  armas_x_init(&A1, N, N);
+  armas_x_init(&T0, N, N);
+  armas_x_init(&T1, N, N);
+  armas_x_init(&tau0, N, 1);
 
   conf.lb = lb;
-  wsize = matrix_trdreduce_work(&A0, &conf);
-  matrix_init(&W, wsize, 1);
+  wsize = armas_x_trdreduce_work(&A0, &conf);
+  armas_x_init(&W, wsize, 1);
 
   // set source data
-  matrix_set_values(&A0, unitrand, flags);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, flags);
+  armas_x_mcopy(&A1, &A0);
 
   conf.lb = lb;
-  matrix_trdreduce(&A0, &tau0, &W, flags, &conf);
+  armas_x_trdreduce(&A0, &tau0, &W, flags, &conf);
 
   // make tridiagonal matrix T0
-  matrix_diag(&d1, &A0, 0);
-  matrix_diag(&d2, &T0, 0);
-  matrix_mcopy(&d2, &d1);
+  armas_x_diag(&d1, &A0, 0);
+  armas_x_diag(&d2, &T0, 0);
+  armas_x_mcopy(&d2, &d1);
   if (flags & ARMAS_UPPER) {
-    matrix_diag(&e1, &A0, 1);
+    armas_x_diag(&e1, &A0, 1);
   } else {
-    matrix_diag(&e1, &A0, -1);
+    armas_x_diag(&e1, &A0, -1);
   }
   // copy off-diagonals
-  matrix_diag(&e2, &T0, 1);
-  matrix_mcopy(&e2, &e1);
-  matrix_diag(&e2, &T0, -1);
-  matrix_mcopy(&e2, &e1);
+  armas_x_diag(&e2, &T0, 1);
+  armas_x_mcopy(&e2, &e1);
+  armas_x_diag(&e2, &T0, -1);
+  armas_x_mcopy(&e2, &e1);
 
   // compute Q*T*Q.T
-  matrix_trdmult(&T0, &A0, &tau0, &W, flags|ARMAS_LEFT, &conf);
-  matrix_trdmult(&T0, &A0, &tau0, &W, flags|ARMAS_RIGHT|ARMAS_TRANS, &conf);
+  armas_x_trdmult(&T0, &A0, &tau0, &W, flags|ARMAS_LEFT, &conf);
+  armas_x_trdmult(&T0, &A0, &tau0, &W, flags|ARMAS_RIGHT|ARMAS_TRANS, &conf);
 
   // make result triangular (original matrix)
-  matrix_make_trm(&T0, flags);
-  nrm = rel_error((__Dtype *)0, &T0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  armas_x_make_trm(&T0, flags);
+  nrm = rel_error((DTYPE *)0, &T0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isFINE(nrm, N*__ERROR);
   printf("%s: [%s] Q*T*Q.T == A\n", PASS(ok), uplo);
   if (verbose > 0) {
@@ -122,49 +122,49 @@ int test_mult_trd(int M, int N, int lb, int verbose, int flags)
 // compute ||T - Q.T*A*Q||
 int test_mult_a(int M, int N, int lb, int verbose, int flags)
 {
-  __Matrix A0, A1, tau0,  W, T0, T1, e1, e2, d1, d2;
+  armas_x_dense_t A0, A1, tau0,  W, T0, T1, e1, e2, d1, d2;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
-  __Dtype nrm;
+  DTYPE nrm;
   char *uplo = flags & ARMAS_UPPER ? "UPPER" : "LOWER";
 
-  matrix_init(&A0, N, N);
-  matrix_init(&A1, N, N);
-  matrix_init(&T0, N, N);
-  matrix_init(&T1, N, N);
-  matrix_init(&tau0, N, 1);
+  armas_x_init(&A0, N, N);
+  armas_x_init(&A1, N, N);
+  armas_x_init(&T0, N, N);
+  armas_x_init(&T1, N, N);
+  armas_x_init(&tau0, N, 1);
 
   conf.lb = lb;
-  wsize = matrix_trdreduce_work(&A0, &conf);
-  matrix_init(&W, wsize, 1);
+  wsize = armas_x_trdreduce_work(&A0, &conf);
+  armas_x_init(&W, wsize, 1);
 
   // set source data; make it full symmetric
-  matrix_set_values(&A0, unitrand, ARMAS_SYMM);
-  matrix_mcopy(&A1, &A0);
+  armas_x_set_values(&A0, unitrand, ARMAS_SYMM);
+  armas_x_mcopy(&A1, &A0);
 
   conf.lb = lb;
-  matrix_trdreduce(&A0, &tau0, &W, flags, &conf);
+  armas_x_trdreduce(&A0, &tau0, &W, flags, &conf);
 
   // make tridiagonal matrix T0
-  matrix_diag(&d1, &A0, 0);
-  matrix_diag(&d2, &T0, 0);
-  matrix_mcopy(&d2, &d1);
+  armas_x_diag(&d1, &A0, 0);
+  armas_x_diag(&d2, &T0, 0);
+  armas_x_mcopy(&d2, &d1);
   if (flags & ARMAS_UPPER) {
-    matrix_diag(&e1, &A0, 1);
+    armas_x_diag(&e1, &A0, 1);
   } else {
-    matrix_diag(&e1, &A0, -1);
+    armas_x_diag(&e1, &A0, -1);
   }
   // copy off-diagonals
-  matrix_diag(&e2, &T0, 1);
-  matrix_mcopy(&e2, &e1);
-  matrix_diag(&e2, &T0, -1);
-  matrix_mcopy(&e2, &e1);
+  armas_x_diag(&e2, &T0, 1);
+  armas_x_mcopy(&e2, &e1);
+  armas_x_diag(&e2, &T0, -1);
+  armas_x_mcopy(&e2, &e1);
 
   // compute Q.T*A*Q
-  matrix_trdmult(&A1, &A0, &tau0, &W, flags|ARMAS_LEFT|ARMAS_TRANS, &conf);
-  matrix_trdmult(&A1, &A0, &tau0, &W, flags|ARMAS_RIGHT, &conf);
+  armas_x_trdmult(&A1, &A0, &tau0, &W, flags|ARMAS_LEFT|ARMAS_TRANS, &conf);
+  armas_x_trdmult(&A1, &A0, &tau0, &W, flags|ARMAS_RIGHT, &conf);
 
-  nrm = rel_error((__Dtype *)0, &T0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  nrm = rel_error((DTYPE *)0, &T0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isFINE(nrm, N*__ERROR);
   printf("%s: [%s] Q.T*A*Q == T\n", PASS(ok), uplo);
   if (verbose > 0) {
@@ -176,35 +176,35 @@ int test_mult_a(int M, int N, int lb, int verbose, int flags)
 
 int test_build(int M, int N, int lb, int K, int verbose, int flags)
 {
-  __Matrix A0, tauq0, d0, W, QQt;
+  armas_x_dense_t A0, tauq0, d0, W, QQt;
   armas_conf_t conf = *armas_conf_default();
   int ok, wsize;
-  __Dtype nrm;
+  DTYPE nrm;
   int tN = M < N ? M : N;
   char *uplo = flags & ARMAS_UPPER ? "UPPER" : "LOWER";
 
-  matrix_init(&A0, N, N);
-  matrix_init(&tauq0, tN, 1);
+  armas_x_init(&A0, N, N);
+  armas_x_init(&tauq0, tN, 1);
   //------------------------------------------------------
 
   conf.lb = lb;
-  wsize = matrix_trdreduce_work(&A0, &conf);
-  matrix_init(&W, wsize, 1);
+  wsize = armas_x_trdreduce_work(&A0, &conf);
+  armas_x_init(&W, wsize, 1);
 
   // set source data
-  matrix_set_values(&A0, unitrand, flags);
+  armas_x_set_values(&A0, unitrand, flags);
   // reduce to tridiagonal matrix
   conf.lb = lb;
-  matrix_trdreduce(&A0, &tauq0, &W, flags, &conf);
+  armas_x_trdreduce(&A0, &tauq0, &W, flags, &conf);
   // ----------------------------------------------------------------
   // Q-matrix
-  matrix_trdbuild(&A0, &tauq0, &W, K, flags, &conf);
-  matrix_init(&QQt, N, N);
-  matrix_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
-  matrix_diag(&d0, &QQt, 0);
-  matrix_madd(&d0, -1.0, ARMAS_NONE);
+  armas_x_trdbuild(&A0, &tauq0, &W, K, flags, &conf);
+  armas_x_init(&QQt, N, N);
+  armas_x_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+  armas_x_diag(&d0, &QQt, 0);
+  armas_x_madd(&d0, -1.0, ARMAS_NONE);
 
-  nrm = matrix_mnorm(&QQt, ARMAS_NORM_ONE, &conf);
+  nrm = armas_x_mnorm(&QQt, ARMAS_NORM_ONE, &conf);
     
   ok = isFINE(nrm, N*__ERROR);
   printf("%s: [%s] I == Q*Q.T\n", PASS(ok), uplo);
@@ -212,10 +212,10 @@ int test_build(int M, int N, int lb, int K, int verbose, int flags)
     printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
   }
   //------------------------------------------------------
-  matrix_release(&A0);
-  matrix_release(&tauq0);
-  matrix_release(&W);
-  matrix_release(&QQt);
+  armas_x_release(&A0);
+  armas_x_release(&tauq0);
+  armas_x_release(&W);
+  armas_x_release(&QQt);
   return ok;
 }
 

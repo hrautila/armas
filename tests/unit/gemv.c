@@ -11,8 +11,8 @@
 int main(int argc, char **argv) {
 
   armas_conf_t conf;
-  __Matrix X, Y, Y0, A, At;
-  __Dtype nrm_y, nrm_z;
+  armas_x_dense_t X, Y, Y0, A, At;
+  DTYPE nrm_y, nrm_z;
   
   int ok, opt;
   int verbose = 1;
@@ -37,27 +37,27 @@ int main(int argc, char **argv) {
     M = N = atoi(argv[optind]);
   }
 
-  matrix_init(&Y, M, 1);
-  matrix_init(&Y0, M, 1);
-  matrix_init(&X, N, 1);
-  matrix_init(&A, M, N);
-  matrix_init(&At, N, M);
+  armas_x_init(&Y, M, 1);
+  armas_x_init(&Y0, M, 1);
+  armas_x_init(&X, N, 1);
+  armas_x_init(&A, M, N);
+  armas_x_init(&At, N, M);
   
-  matrix_set_values(&Y, zero, ARMAS_NULL);
-  matrix_set_values(&Y0, zero, ARMAS_NULL);
-  matrix_set_values(&X, unitrand, ARMAS_NULL);
-  matrix_set_values(&A, unitrand, ARMAS_NULL);
-  matrix_transpose(&At, &A);
+  armas_x_set_values(&Y, zero, ARMAS_NULL);
+  armas_x_set_values(&Y0, zero, ARMAS_NULL);
+  armas_x_set_values(&X, unitrand, ARMAS_NULL);
+  armas_x_set_values(&A, unitrand, ARMAS_NULL);
+  armas_x_transpose(&At, &A);
 
   // Y = A*X
-  matrix_mvmult(&Y, &A, &X, 1.0, 0.0, 0, &conf);
-  nrm_y = matrix_nrm2(&Y, &conf);
+  armas_x_mvmult(&Y, &A, &X, 1.0, 0.0, 0, &conf);
+  nrm_y = armas_x_nrm2(&Y, &conf);
   // Y = Y - A*X
-  matrix_mvmult(&Y, &At, &X, -1.0, 1.0, ARMAS_TRANS, &conf);
+  armas_x_mvmult(&Y, &At, &X, -1.0, 1.0, ARMAS_TRANS, &conf);
   if (N < 10 && verbose > 1) {
-    printf("Y\n"); matrix_printf(stdout, "%5.2f", &Y);
+    printf("Y\n"); armas_x_printf(stdout, "%5.2f", &Y);
   }
-  nrm_z = matrix_nrm2(&Y, &conf);
+  nrm_z = armas_x_nrm2(&Y, &conf);
   ok = nrm_z == 0.0 || isOK(nrm_z/nrm_y, N) ? 1 : 0;
   printf("%6s : gemv(A, X) == gemv(A.T, X, T)\n", PASS(ok));
   if (verbose > 0) {

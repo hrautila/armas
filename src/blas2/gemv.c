@@ -17,7 +17,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_mvmult) && defined(__gemv_recursive)
+#if defined(armas_x_mvmult) && defined(__gemv_recursive)
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
@@ -315,19 +315,19 @@ void __gemv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  *
  * @ingroup blas2
  */
-int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_dense_t *X,
+int armas_x_mvmult(armas_x_dense_t *Y, const armas_x_dense_t *A, const armas_x_dense_t *X,
                    DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
 {
   int ok;
   mvec_t x, y;
   mdata_t A0;
-  int nx = __armas_size(X);
-  int ny = __armas_size(Y);
+  int nx = armas_x_size(X);
+  int ny = armas_x_size(Y);
   
   if (!conf)
     conf = armas_conf_default();
 
-  if (__armas_size(A) == 0 || __armas_size(X) == 0 || __armas_size(Y) == 0)
+  if (armas_x_size(A) == 0 || armas_x_size(X) == 0 || armas_x_size(Y) == 0)
     return 0;
   
   if (X->rows != 1 && X->cols != 1) {
@@ -365,7 +365,7 @@ int __armas_mvmult(__armas_dense_t *Y, const __armas_dense_t *A, const __armas_d
 
   // single precision here
   if (beta != 1.0) {
-    __armas_scale(Y, beta, conf);
+    armas_x_scale(Y, beta, conf);
   }
   if (conf->optflags & ARMAS_ORECURSIVE) {
     __gemv_recursive(&y, &A0, &x, alpha, beta, flags, 0, nx, 0, ny);

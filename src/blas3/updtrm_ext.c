@@ -14,7 +14,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(__armas_update_trm) && defined(__update_trm_blk)
+#if defined(armas_x_update_trm) && defined(__update_trm_blk)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions

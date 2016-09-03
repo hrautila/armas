@@ -142,7 +142,7 @@ DTYPE __vec_sum_ext0(const mvec_t *X,  int N)
  *
  * @ingroup blas1ext
  */
-ABSTYPE __armas_ex_asum(const __armas_dense_t *x, armas_conf_t *conf)
+ABSTYPE armas_x_ex_asum(const armas_x_dense_t *x, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
@@ -155,7 +155,7 @@ ABSTYPE __armas_ex_asum(const __armas_dense_t *x, armas_conf_t *conf)
 
     const mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
 
-    return __vec_asum_ext(&X, __armas_size(x));
+    return __vec_asum_ext(&X, armas_x_size(x));
 }
 
 
@@ -166,7 +166,7 @@ ABSTYPE __armas_ex_asum(const __armas_dense_t *x, armas_conf_t *conf)
  *
  * @ingroup blas1
  */
-DTYPE __armas_ex_sum(const __armas_dense_t *x, armas_conf_t *conf)
+DTYPE armas_x_ex_sum(const armas_x_dense_t *x, armas_conf_t *conf)
 {
     DTYPE s;
     if (!conf)
@@ -180,7 +180,7 @@ DTYPE __armas_ex_sum(const __armas_dense_t *x, armas_conf_t *conf)
 
     const mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
   
-    return __vec_sum_ext(&X, __armas_size(x));
+    return __vec_sum_ext(&X, armas_x_size(x));
 }
 #endif
 

@@ -14,7 +14,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_blas) 
+#if defined(armas_x_blas) 
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -58,9 +58,9 @@ DTYPE __zeros(int i, int j)
  *   A22  =   l21*l21.t + L22*L22.t  => A22 = A22 - l21*l21.T
  */
 static
-int __unblk_cholpv_lower(__armas_dense_t *A, armas_pivot_t *P, DTYPE xstop, armas_conf_t *conf)
+int __unblk_cholpv_lower(armas_x_dense_t *A, armas_pivot_t *P, DTYPE xstop, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABL, ABR, A00, a11, a21, A22, D;
+    armas_x_dense_t ATL, ABL, ABR, A00, a11, a21, A22, D;
     armas_pivot_t pT, pB, p0, p1, p2;
     int im;
     DTYPE a11val;
@@ -81,12 +81,12 @@ int __unblk_cholpv_lower(__armas_dense_t *A, armas_pivot_t *P, DTYPE xstop, arma
         __pivot_repart_2x1to3x1(&pT,  /**/
                                 &p0, &p1, &p2,       /**/ P, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------------
-        __armas_diag(&D, &ABR, 0);
-        im = __armas_iamax(&D, conf);
-        a11val = __armas_get_at_unsafe(&D, im);
+        armas_x_diag(&D, &ABR, 0);
+        im = armas_x_iamax(&D, conf);
+        a11val = armas_x_get_at_unsafe(&D, im);
         if (a11val <= xstop) {
             // stopping criteria satisfied; zero trailing matrix ABR;
-            __armas_set_values(&ABR, __zeros, ARMAS_LOWER);
+            armas_x_set_values(&ABR, __zeros, ARMAS_LOWER);
             // return rank
             return ATL.rows;
         }
@@ -98,11 +98,11 @@ int __unblk_cholpv_lower(__armas_dense_t *A, armas_pivot_t *P, DTYPE xstop, arma
         // save pivot; positive index 
         armas_pivot_set(&p1, 0, im + ATL.rows + 1);
 
-        a11val = __armas_get_unsafe(&a11, 0, 0);
+        a11val = armas_x_get_unsafe(&a11, 0, 0);
         a11val = __SQRT(a11val);
-        __armas_set_unsafe(&a11, 0, 0, a11val);
-        __armas_scale(&a21, __ONE/a11val, conf);
-        __armas_mvupdate_sym(&A22, &a21, -__ONE, ARMAS_LOWER, conf);
+        armas_x_set_unsafe(&a11, 0, 0, a11val);
+        armas_x_scale(&a21, __ONE/a11val, conf);
+        armas_x_mvupdate_sym(&A22, &a21, -__ONE, ARMAS_LOWER, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL, __nil,
                             &ABL,  &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -114,15 +114,15 @@ int __unblk_cholpv_lower(__armas_dense_t *A, armas_pivot_t *P, DTYPE xstop, arma
 
 // compute D - diag(x*x.T);
 static inline
-void __update_diag(__armas_dense_t *D, __armas_dense_t *X)
+void __update_diag(armas_x_dense_t *D, armas_x_dense_t *X)
 {
     DTYPE d, x;
     int k;
-    for (k = 0; k < __armas_size(D); k++) {
-        d  = __armas_get_at_unsafe(D, k);
-        x  = __armas_get_at_unsafe(X, k);
+    for (k = 0; k < armas_x_size(D); k++) {
+        d  = armas_x_get_at_unsafe(D, k);
+        x  = armas_x_get_at_unsafe(X, k);
         d -= x*x;
-        __armas_set_at_unsafe(D, k, d);
+        armas_x_set_at_unsafe(D, k, d);
     }
 }
 
@@ -131,11 +131,11 @@ void __update_diag(__armas_dense_t *D, __armas_dense_t *X)
  * trailing matrix; 
  */
 static
-int __unblk_cholpv_lower_ncol(__armas_dense_t *A, __armas_dense_t *D,
+int __unblk_cholpv_lower_ncol(armas_x_dense_t *A, armas_x_dense_t *D,
                               armas_pivot_t *P, DTYPE xstop, int ncol, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABL, ABR, A00, a10, a11, A20, a21, A22;
-    __armas_dense_t DT, DB, D0, d1, D2;
+    armas_x_dense_t ATL, ABL, ABR, A00, a10, a11, A20, a21, A22;
+    armas_x_dense_t DT, DB, D0, d1, D2;
     armas_pivot_t pT, pB, p0, p1, p2;
     int im;
     DTYPE a11val;
@@ -143,8 +143,8 @@ int __unblk_cholpv_lower_ncol(__armas_dense_t *A, __armas_dense_t *D,
     EMPTY(a11); EMPTY(A00); EMPTY(ABL);
     
     // make copy of diagonal elements;
-    __armas_diag(&D0, A, 0);
-    __armas_copy(D, &D0, conf);
+    armas_x_diag(&D0, A, 0);
+    armas_x_copy(D, &D0, conf);
     
     __partition_2x2(&ATL, __nil,
                     &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -164,29 +164,29 @@ int __unblk_cholpv_lower_ncol(__armas_dense_t *A, __armas_dense_t *D,
         __pivot_repart_2x1to3x1(&pT,  /**/
                                 &p0, &p1, &p2,       /**/ P, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------------
-        im = __armas_iamax(&DB, conf);
-        a11val = __armas_get_at_unsafe(&DB, im);
+        im = armas_x_iamax(&DB, conf);
+        a11val = armas_x_get_at_unsafe(&DB, im);
         if (a11val <= xstop) {
-            __armas_set_values(&ABR, __zeros, ARMAS_LOWER);
+            armas_x_set_values(&ABR, __zeros, ARMAS_LOWER);
             return ATL.cols;
         }
         // pivot??
         if (im != 0) {
             __apply_bkpivot_lower(&ABR, 0, im, conf);
             __swap_rows(&ABL, 0, im, conf);
-            a11val = __armas_get_at_unsafe(&DB, im);
-            __armas_set_at_unsafe(&DB, im, __armas_get_at_unsafe(&DB, 0));
-            __armas_set_at_unsafe(&DB, 0,  a11val);
+            a11val = armas_x_get_at_unsafe(&DB, im);
+            armas_x_set_at_unsafe(&DB, im, armas_x_get_at_unsafe(&DB, 0));
+            armas_x_set_at_unsafe(&DB, 0,  a11val);
         }
         // save pivot; positive index 
         armas_pivot_set(&p1, 0, im+ATL.rows+1);
 
-        a11val = __armas_get_at_unsafe(&d1, 0);
+        a11val = armas_x_get_at_unsafe(&d1, 0);
         a11val = __SQRT(a11val);
-        __armas_set_unsafe(&a11, 0, 0, a11val);
+        armas_x_set_unsafe(&a11, 0, 0, a11val);
         // update a21 with prevous; a21 := a21 - A20*a10
-        __armas_mvmult(&a21, &A20, &a10, -__ONE, __ONE, 0, conf);
-        __armas_scale(&a21, __ONE/a11val, conf);
+        armas_x_mvmult(&a21, &A20, &a10, -__ONE, __ONE, 0, conf);
+        armas_x_scale(&a21, __ONE/a11val, conf);
         // update diagonal; diag(A22) = D2 - diag(a21*a21.T); 
         if (ncol > 0)
             __update_diag(&D2, &a21);
@@ -206,10 +206,10 @@ int __unblk_cholpv_lower_ncol(__armas_dense_t *A, __armas_dense_t *D,
  * Blocked pivoting Cholesky factorization
  */
 static
-int __blk_cholpv_lower(__armas_dense_t *A, __armas_dense_t *W, 
+int __blk_cholpv_lower(armas_x_dense_t *A, armas_x_dense_t *W, 
                        armas_pivot_t *P, DTYPE xstop, int lb, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ABL, ABR, A00, A11, A21, A22, D;
+    armas_x_dense_t ATL, ABL, ABR, A00, A11, A21, A22, D;
     armas_pivot_t pT, pB, p0, p1, p2;
     int k, e, np;
 
@@ -228,11 +228,11 @@ int __blk_cholpv_lower(__armas_dense_t *A, __armas_dense_t *W,
         __pivot_repart_2x1to3x1(&pT,  /**/
                                 &p0, &p1, &p2,       /**/ P, lb, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------------
-        __armas_make(&D, ABR.rows, 1, ABR.rows, __armas_data(W));
+        armas_x_make(&D, ABR.rows, 1, ABR.rows, armas_x_data(W));
         // if non-zero then stopping criteria satisfied with 
         e = __unblk_cholpv_lower_ncol(&ABR, &D, &p1, xstop, A11.cols, conf);
         // partial pivot of rows on left side; update pivot indexes;
-        __armas_pivot(&ABL, &p1, ARMAS_PIVOT_ROWS|ARMAS_PIVOT_FORWARD, conf);
+        armas_x_pivot(&ABL, &p1, ARMAS_PIVOT_ROWS|ARMAS_PIVOT_FORWARD, conf);
         np = e < A11.cols ? e : A11.cols;
         for (k = 0; k < np; k++) {
             armas_pivot_set_unsafe(&p1, k, armas_pivot_get_unsafe(&p1, k)+ATL.rows);
@@ -241,7 +241,7 @@ int __blk_cholpv_lower(__armas_dense_t *A, __armas_dense_t *W,
             return e + ATL.rows;
         }
         // A22 = A22 - A21*A21.T
-        __armas_update_sym(&A22, &A21, -__ONE, __ONE, ARMAS_LOWER, conf);
+        armas_x_update_sym(&A22, &A21, -__ONE, __ONE, ARMAS_LOWER, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL, __nil,
                             &ABL,  &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -252,7 +252,7 @@ int __blk_cholpv_lower(__armas_dense_t *A, __armas_dense_t *W,
     if (ABR.cols > 0) {
         e = __unblk_cholpv_lower(&ABR, &pB, xstop, conf);
         // pivot left side
-        __armas_pivot(&ABL, &pB, ARMAS_PIVOT_ROWS|ARMAS_PIVOT_FORWARD, conf);
+        armas_x_pivot(&ABL, &pB, ARMAS_PIVOT_ROWS|ARMAS_PIVOT_FORWARD, conf);
         np = e < ABR.cols ? e : ABR.cols;
         for (k = 0; k < np; k++) {
             armas_pivot_set_unsafe(&pB, k, armas_pivot_get_unsafe(&pB, k)+ATL.rows);
@@ -284,9 +284,9 @@ int __blk_cholpv_lower(__armas_dense_t *A, __armas_dense_t *W,
  *   A22   = u12*u12.T + U22.T*U22 => A22 = A22 - u12*u12.T
  */
 static
-int __unblk_cholpv_upper(__armas_dense_t *A, armas_pivot_t *P, DTYPE xstop, armas_conf_t *conf)
+int __unblk_cholpv_upper(armas_x_dense_t *A, armas_pivot_t *P, DTYPE xstop, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ATR, ABR, A00, a11, a12, A22, D; 
+    armas_x_dense_t ATL, ATR, ABR, A00, a11, a12, A22, D; 
     armas_pivot_t pT, pB, p0, p1, p2;
     int im;
     DTYPE a11val;
@@ -307,12 +307,12 @@ int __unblk_cholpv_upper(__armas_dense_t *A, armas_pivot_t *P, DTYPE xstop, arma
         __pivot_repart_2x1to3x1(&pT,  /**/
                                 &p0, &p1, &p2,       /**/ P, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------------
-        __armas_diag(&D, &ABR, 0);
-        im = __armas_iamax(&D, conf); 
-        a11val = __armas_get_at_unsafe(&D, im);
+        armas_x_diag(&D, &ABR, 0);
+        im = armas_x_iamax(&D, conf); 
+        a11val = armas_x_get_at_unsafe(&D, im);
         if (a11val <= xstop) {
             // not full rank
-            __armas_set_values(&ABR, __zeros, ARMAS_UPPER);
+            armas_x_set_values(&ABR, __zeros, ARMAS_UPPER);
             return ATL.cols;
         }
         // pivoting
@@ -323,12 +323,12 @@ int __unblk_cholpv_upper(__armas_dense_t *A, armas_pivot_t *P, DTYPE xstop, arma
         // save pivot; positive index 
         armas_pivot_set(&p1, 0, im + ATL.rows + 1);
 
-        a11val = __armas_get_unsafe(&a11, 0, 0);
+        a11val = armas_x_get_unsafe(&a11, 0, 0);
         a11val = __SQRT(a11val);
-        __armas_set_unsafe(&a11, 0, 0, a11val);
+        armas_x_set_unsafe(&a11, 0, 0, a11val);
         // u12 = a12/a11
-        __armas_scale(&a12, __ONE/a11val, conf);
-         __armas_mvupdate_sym(&A22, &a12, -__ONE, ARMAS_UPPER, conf);
+        armas_x_scale(&a12, __ONE/a11val, conf);
+         armas_x_mvupdate_sym(&A22, &a12, -__ONE, ARMAS_UPPER, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  &ATR,
                             __nil, &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -344,11 +344,11 @@ int __unblk_cholpv_upper(__armas_dense_t *A, armas_pivot_t *P, DTYPE xstop, arma
  * trailing matrix; Y is A.rows,ncol matrix that will hold U21*D1
  */
 static
-int __unblk_cholpv_upper_ncol(__armas_dense_t *A, __armas_dense_t *D, 
+int __unblk_cholpv_upper_ncol(armas_x_dense_t *A, armas_x_dense_t *D, 
                               armas_pivot_t *P, DTYPE xstop, int ncol, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ATR, ABR, A00, a01, A02, a11, a12, A22;
-    __armas_dense_t DT, DB, D0, d1, D2;
+    armas_x_dense_t ATL, ATR, ABR, A00, a01, A02, a11, a12, A22;
+    armas_x_dense_t DT, DB, D0, d1, D2;
     armas_pivot_t pT, pB, p0, p1, p2;
     int im;
     DTYPE a11val;
@@ -356,8 +356,8 @@ int __unblk_cholpv_upper_ncol(__armas_dense_t *A, __armas_dense_t *D,
     EMPTY(a11); EMPTY(A00); EMPTY(ATR);
     
     // make copy of diagonal elements;
-    __armas_diag(&D0, A, 0);
-    __armas_copy(D, &D0, conf);
+    armas_x_diag(&D0, A, 0);
+    armas_x_copy(D, &D0, conf);
     
     __partition_2x2(&ATL,  &ATR,
                     __nil, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -377,29 +377,29 @@ int __unblk_cholpv_upper_ncol(__armas_dense_t *A, __armas_dense_t *D,
         __pivot_repart_2x1to3x1(&pT,  /**/
                                 &p0, &p1, &p2,       /**/ P, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------------
-        im = __armas_iamax(&DB, conf);
-        a11val = __armas_get_at_unsafe(&DB, im);
+        im = armas_x_iamax(&DB, conf);
+        a11val = armas_x_get_at_unsafe(&DB, im);
         if (a11val <= xstop) {
-            __armas_set_values(&ABR, __zeros, ARMAS_UPPER);
+            armas_x_set_values(&ABR, __zeros, ARMAS_UPPER);
             return ATL.cols;
         }
         if (im != 0) {
             // pivot
             __apply_bkpivot_upper_top(&ABR,  0, im, conf);
             __swap_cols(&ATR, 0, im, conf);
-            a11val = __armas_get_at_unsafe(&DB, im);
-            __armas_set_at_unsafe(&DB, im, __armas_get_at_unsafe(&DB, 0));
-            __armas_set_at_unsafe(&DB, 0,  a11val);
+            a11val = armas_x_get_at_unsafe(&DB, im);
+            armas_x_set_at_unsafe(&DB, im, armas_x_get_at_unsafe(&DB, 0));
+            armas_x_set_at_unsafe(&DB, 0,  a11val);
         }
         // save pivot; positive index 
         armas_pivot_set(&p1, 0, im + ATL.rows + 1);
 
-        a11val = __armas_get_at_unsafe(&d1, 0);
+        a11val = armas_x_get_at_unsafe(&d1, 0);
         a11val = __SQRT(a11val);
-        __armas_set_unsafe(&a11, 0, 0, a11val);
+        armas_x_set_unsafe(&a11, 0, 0, a11val);
         // update a01 with prevous; a12 := a12 - A02.T*a01
-        __armas_mvmult(&a12, &A02, &a01, -__ONE, __ONE, ARMAS_TRANS, conf);
-        __armas_scale(&a12, __ONE/a11val, conf);
+        armas_x_mvmult(&a12, &A02, &a01, -__ONE, __ONE, ARMAS_TRANS, conf);
+        armas_x_scale(&a12, __ONE/a11val, conf);
         if (ncol > 0)
             __update_diag(&D2, &a12);
         // ---------------------------------------------------------------------------
@@ -415,10 +415,10 @@ int __unblk_cholpv_upper_ncol(__armas_dense_t *A, __armas_dense_t *D,
 
 
 static
-int __blk_cholpv_upper(__armas_dense_t *A, __armas_dense_t *W,
+int __blk_cholpv_upper(armas_x_dense_t *A, armas_x_dense_t *W,
                        armas_pivot_t *P, DTYPE xstop, int lb, armas_conf_t *conf)
 {
-    __armas_dense_t ATL, ATR, ABR, A00, A11, A12, A22, D;
+    armas_x_dense_t ATL, ATR, ABR, A00, A11, A12, A22, D;
     armas_pivot_t pT, pB, p0, p1, p2;
     int k, e, np;
 
@@ -438,11 +438,11 @@ int __blk_cholpv_upper(__armas_dense_t *A, __armas_dense_t *W,
         __pivot_repart_2x1to3x1(&pT,  /**/
                                 &p0, &p1, &p2,       /**/ P, lb, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------------
-        __armas_make(&D, ABR.cols, 1, ABR.cols, __armas_data(W));
+        armas_x_make(&D, ABR.cols, 1, ABR.cols, armas_x_data(W));
         
         e =__unblk_cholpv_upper_ncol(&ABR, &D, &p1, xstop, A11.cols, conf);
         // pivot colums above; update pivot indexes
-        __armas_pivot(&ATR, &p1, ARMAS_PIVOT_COLS|ARMAS_PIVOT_FORWARD, conf);
+        armas_x_pivot(&ATR, &p1, ARMAS_PIVOT_COLS|ARMAS_PIVOT_FORWARD, conf);
         np = e < A11.cols ? e : A11.cols;
         for (k = 0; k < np; k++) {
             armas_pivot_set_unsafe(&p1, k, armas_pivot_get_unsafe(&p1, k)+ATL.rows);
@@ -450,7 +450,7 @@ int __blk_cholpv_upper(__armas_dense_t *A, __armas_dense_t *W,
         if (e != A11.cols) {
             return e + ATL.cols;
         }
-        __armas_update_sym(&A22, &A12, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANS, conf);
+        armas_x_update_sym(&A22, &A12, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANS, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  &ATR,
                             __nil, &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -459,7 +459,7 @@ int __blk_cholpv_upper(__armas_dense_t *A, __armas_dense_t *W,
     }
     if (ABR.cols > 0) {
         e = __unblk_cholpv_upper(&ABR, &pB, xstop, conf);
-        __armas_pivot(&ATR, &pB, ARMAS_PIVOT_COLS|ARMAS_PIVOT_FORWARD, conf);
+        armas_x_pivot(&ATR, &pB, ARMAS_PIVOT_COLS|ARMAS_PIVOT_FORWARD, conf);
         np = e < ABR.cols ? e : ABR.cols;
         for (k = 0; k < np; k++) {
             armas_pivot_set_unsafe(&pB, k, armas_pivot_get_unsafe(&pB, k)+ATL.rows);
@@ -492,12 +492,12 @@ int __blk_cholpv_upper(__armas_dense_t *A, __armas_dense_t *W,
  * \retval >0 ok; computed rank of pivoted matrix
  * \retval <0 error
  */
-int __cholfactor_pv(__armas_dense_t *A, __armas_dense_t *W,
+int __cholfactor_pv(armas_x_dense_t *A, armas_x_dense_t *W,
                     armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
     int ws, lb, err = 0;
     DTYPE xstop;
-    __armas_dense_t D;
+    armas_x_dense_t D;
 
     if (!conf)
         conf = armas_conf_default();
@@ -513,12 +513,12 @@ int __cholfactor_pv(__armas_dense_t *A, __armas_dense_t *W,
     }
 
     lb = conf->lb;
-    ws = __armas_size(W);
+    ws = armas_x_size(W);
     if (ws < A->cols)
         ws = 0;
 
-    __armas_diag(&D, A, 0);
-    xstop = __armas_amax(&D, conf) * A->rows * __EPS;
+    armas_x_diag(&D, A, 0);
+    xstop = armas_x_amax(&D, conf) * A->rows * __EPS;
 
     if (lb == 0 || ws == 0 || A->rows <= lb) {
         // unblocked code
@@ -555,14 +555,14 @@ int __cholfactor_pv(__armas_dense_t *A, __armas_dense_t *W,
  * \retval  0 ok
  * \retval -1 error
  */
-int __cholsolve_pv(__armas_dense_t *B, __armas_dense_t *A, 
+int __cholsolve_pv(armas_x_dense_t *B, armas_x_dense_t *A, 
                    armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
     int pivot1_dir, pivot2_dir;
     if (!conf)
         conf = armas_conf_default();
     
-    if (__armas_size(B) == 0 || __armas_size(A) == 0)
+    if (armas_x_size(B) == 0 || armas_x_size(A) == 0)
         return 0;
 
     if (A->rows != A->cols || A->cols != B->rows) {
@@ -578,21 +578,21 @@ int __cholsolve_pv(__armas_dense_t *B, __armas_dense_t *A,
     pivot1_dir = ARMAS_PIVOT_FORWARD;
     pivot2_dir = ARMAS_PIVOT_BACKWARD;
 
-    __armas_pivot(B, P, ARMAS_PIVOT_ROWS|pivot1_dir, conf);
+    armas_x_pivot(B, P, ARMAS_PIVOT_ROWS|pivot1_dir, conf);
 
     /*
      * A*X = (LL^T)*X = B -> X = L^-T*(L^-1*B)
      * A*X = (U^TU)*X = B -> X = U^-1*(U^-T*B)
      */
     if (flags & ARMAS_UPPER) {
-        __armas_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANS, conf);
-        __armas_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_UPPER, conf);
+        armas_x_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANS, conf);
+        armas_x_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_UPPER, conf);
     } else {
-        __armas_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_LOWER, conf);
-        __armas_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANS, conf);
+        armas_x_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_LOWER, conf);
+        armas_x_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANS, conf);
     }
 
-    __armas_pivot(B, P, ARMAS_PIVOT_ROWS|pivot2_dir, conf);
+    armas_x_pivot(B, P, ARMAS_PIVOT_ROWS|pivot2_dir, conf);
 
     return 0;
 }

@@ -18,78 +18,78 @@
 
 int test_ident(int N, int lb, int flags, int verbose)
 {
-    __Matrix A0, A1, A2, C, W, D;
-    __Dtype n0;
+    armas_x_dense_t A0, A1, A2, C, W, D;
+    DTYPE n0;
     char *blk = lb == 0 ? "unblk" : "  blk";
     char uplo = flags & ARMAS_LOWER ? 'L' : 'U';
     int ok;
     armas_conf_t conf = *armas_conf_default();
     
-    matrix_init(&A0, N, N);
-    matrix_init(&A1, N, N);
-    matrix_init(&A2, N, N);
-    matrix_init(&C, N, N);
-    matrix_init(&W, N, lb == 0 ? 1 : lb);
+    armas_x_init(&A0, N, N);
+    armas_x_init(&A1, N, N);
+    armas_x_init(&A2, N, N);
+    armas_x_init(&C, N, N);
+    armas_x_init(&W, N, lb == 0 ? 1 : lb);
 
     // symmetric positive definite matrix A*A.T
-    matrix_set_values(&A0, unitrand, 0);
-    matrix_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
-    matrix_make_trm(&A1, flags);
-    matrix_mcopy(&A0, &A1);
+    armas_x_set_values(&A0, unitrand, 0);
+    armas_x_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    armas_x_make_trm(&A1, flags);
+    armas_x_mcopy(&A0, &A1);
 
     // identity; D = diag(C)
-    matrix_diag(&D, &C, 0);
-    matrix_set_values(&D, one, 0);
+    armas_x_diag(&D, &C, 0);
+    armas_x_set_values(&D, one, 0);
 
     conf.lb = lb;
-    matrix_cholfactor(&A1, (__Matrix *)0, ARMAS_NOPIVOT, flags, &conf);
-    matrix_inverse_spd(&A1, &W, flags, &conf);
+    armas_x_cholfactor(&A1, (armas_x_dense_t *)0, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_inverse_spd(&A1, &W, flags, &conf);
 
     // A2 = A1*I
-    matrix_mult_sym(&A2, &A1, &C, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
-    matrix_mult_sym(&C, &A0, &A2, 1.0, 0.0, flags, &conf);
+    armas_x_mult_sym(&A2, &A1, &C, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
+    armas_x_mult_sym(&C, &A0, &A2, 1.0, 0.0, flags, &conf);
 
     // diag(C) -= 1.0
-    matrix_madd(&D, -1.0, 0);
-    n0 = matrix_mnorm(&C, ARMAS_NORM_INF, &conf);
+    armas_x_madd(&D, -1.0, 0);
+    n0 = armas_x_mnorm(&C, ARMAS_NORM_INF, &conf);
     ok = isFINE(n0, N*__ERROR);
 
     printf("%s: %c %s.A.-1*A == I\n", PASS(ok), uplo, blk);
     printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     
-    matrix_release(&A0);
-    matrix_release(&A1);
-    matrix_release(&A2);
-    matrix_release(&C);
-    matrix_release(&W);
+    armas_x_release(&A0);
+    armas_x_release(&A1);
+    armas_x_release(&A2);
+    armas_x_release(&C);
+    armas_x_release(&W);
     return 1 - ok;
 }
 
 int test_equal(int N, int lb, int flags, int verbose)
 {
-    __Matrix A0, A1, W;
-    __Dtype n0;
+    armas_x_dense_t A0, A1, W;
+    DTYPE n0;
     char *blk = lb == 0 ? "unblk" : "  blk";
     char uplo = flags & ARMAS_LOWER ? 'L' : 'U';
     int ok;
     armas_conf_t conf = *armas_conf_default();
     
-    matrix_init(&A0, N, N);
-    matrix_init(&A1, N, N);
-    matrix_init(&W, N, lb == 0 ? 1 : lb);
+    armas_x_init(&A0, N, N);
+    armas_x_init(&A1, N, N);
+    armas_x_init(&W, N, lb == 0 ? 1 : lb);
 
     // symmetric positive definite matrix A*A.T
-    matrix_set_values(&A0, unitrand, 0);
-    matrix_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
-    matrix_make_trm(&A1, flags);
-    matrix_mcopy(&A0, &A1);
+    armas_x_set_values(&A0, unitrand, 0);
+    armas_x_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    armas_x_make_trm(&A1, flags);
+    armas_x_mcopy(&A0, &A1);
 
     conf.lb = lb;
-    matrix_cholfactor(&A1, (__Matrix *)0, ARMAS_NOPIVOT, flags, &conf);
-    matrix_inverse_spd(&A1, &W, flags, &conf);
+    armas_x_cholfactor(&A1, (armas_x_dense_t *)0, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_inverse_spd(&A1, &W, flags, &conf);
 
-    matrix_cholfactor(&A1, (__Matrix *)0, ARMAS_NOPIVOT, flags, &conf);
-    matrix_inverse_spd(&A1, &W, flags, &conf);
+    armas_x_cholfactor(&A1, (armas_x_dense_t *)0, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_inverse_spd(&A1, &W, flags, &conf);
     
     n0 = rel_error(&n0, &A1, &A0, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
@@ -97,9 +97,9 @@ int test_equal(int N, int lb, int flags, int verbose)
     printf("%s: %c %s.(A.-1).-1 == A\n", PASS(ok), uplo, blk);
     printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
 
-    matrix_release(&A0);
-    matrix_release(&A1);
-    matrix_release(&W);
+    armas_x_release(&A0);
+    armas_x_release(&A1);
+    armas_x_release(&W);
     return 1 - ok;
 }
 

@@ -16,7 +16,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_mvupdate_sym)
+#if defined(armas_x_mvupdate_sym)
 #define __ARMAS_PROVIDES 1
 #endif
 // this module requires external public functions
@@ -65,15 +65,15 @@ extern int __update_trmv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  *
  * @ingroup blas2
  */
-int __armas_mvupdate_sym(__armas_dense_t *A,
-                         const __armas_dense_t *X,
+int armas_x_mvupdate_sym(armas_x_dense_t *A,
+                         const armas_x_dense_t *X,
                          DTYPE alpha, int flags, armas_conf_t *conf)
 {
   mvec_t x;
   mdata_t A0;
-  int nx = __armas_size(X);
+  int nx = armas_x_size(X);
 
-  if (__armas_size(A) == 0 || __armas_size(X) == 0)
+  if (armas_x_size(A) == 0 || armas_x_size(X) == 0)
     return 0;
   
   if (!conf)

@@ -270,16 +270,16 @@ int __trsv_ext_unb(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N)
  *
  * @ingroup blas2
  */
-int __armas_ex_mvsolve_trm(__armas_dense_t *X,  const __armas_dense_t *A, 
+int armas_x_ex_mvsolve_trm(armas_x_dense_t *X,  const armas_x_dense_t *A, 
                            DTYPE alpha, int flags, armas_conf_t *conf)
 {
   int ok;
   mvec_t x, y, dx;
   mdata_t A0;
   DTYPE dbuf[16];
-  int nx = __armas_size(X);
+  int nx = armas_x_size(X);
   
-  if (__armas_size(A) == 0 || __armas_size(X) == 0)
+  if (armas_x_size(A) == 0 || armas_x_size(X) == 0)
     return 0;
   
   if (!conf)

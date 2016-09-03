@@ -7,54 +7,55 @@
 #include <float.h>
 
 #include "testing.h"
+/*
 #if FLOAT32
-#define __ERROR 1e-6
+#define _ERROR 1e-6
 #else
-#define __ERROR 1e-14
+#define _ERROR 1e-14
 #endif
-
+*/
 #define NAME "evd"
 
 int test_1(int N, int flags, int verbose)
 {
-    __Matrix A, A0, D, W, I, sD, V, T;
+    armas_x_dense_t A, A0, D, I0, sD, V, T, W;
     armas_conf_t conf = *armas_conf_default();
-    __Dtype n0, n1, nrm_A;
+    DTYPE n0, n1, nrm_A;
     int err, ok;
     char *uplo = flags & ARMAS_LOWER ? "L" : "U";
     
-    matrix_init(&A, N, N);
-    matrix_init(&A0, N, N);
-    matrix_init(&V, N, N);
-    matrix_init(&I, N, N);
-    matrix_init(&D, N, 1);
-    matrix_init(&W, N*N, 1);
+    armas_x_init(&A, N, N);
+    armas_x_init(&A0, N, N);
+    armas_x_init(&V, N, N);
+    armas_x_init(&I0, N, N);
+    armas_x_init(&D, N, 1);
+    armas_x_init(&W, N*N, 1);
 
-    matrix_set_values(&A, unitrand, ARMAS_SYMM);
-    matrix_mcopy(&A0, &A);
-    nrm_A = matrix_mnorm(&A0, ARMAS_NORM_ONE, &conf);
+    armas_x_set_values(&A, unitrand, ARMAS_SYMM);
+    armas_x_mcopy(&A0, &A);
+    nrm_A = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf);
     
-    err = matrix_eigen_sym(&D, &A, &W, flags|ARMAS_WANTV, &conf);
+    err = armas_x_eigen_sym(&D, &A, &W, flags|ARMAS_WANTV, &conf);
     if (err) {
         printf("err = %d, %d\n", err, conf.error);
         return 0;
     }
     
-    matrix_diag(&sD, &I, 0);
-    matrix_mult(&I, &A, &A, 1.0, 0.0, ARMAS_TRANSB, &conf);
-    matrix_madd(&sD, -1.0, ARMAS_ANY);
-    n0 = matrix_mnorm(&I, ARMAS_NORM_ONE, &conf);
+    armas_x_diag(&sD, &I0, 0);
+    armas_x_mult(&I0, &A, &A, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    armas_x_madd(&sD, -1.0, ARMAS_ANY);
+    n0 = armas_x_mnorm(&I0, ARMAS_NORM_ONE, &conf);
 
-    matrix_mcopy(&V, &A);
-    matrix_mult_diag(&V, &D, ARMAS_RIGHT, &conf);
-    matrix_mult(&A0, &V, &A, -1.0, 1.0, ARMAS_TRANSB, &conf);
+    armas_x_mcopy(&V, &A);
+    armas_x_mult_diag(&V, &D, ARMAS_RIGHT, &conf);
+    armas_x_mult(&A0, &V, &A, -1.0, 1.0, ARMAS_TRANSB, &conf);
 
     if (N < 10 && verbose > 2) {
-        printf("D:\n"); matrix_printf(stdout, "%6.3f", matrix_col_as_row(&T, &D));
-        printf("I - V.T*V:\n"); matrix_printf(stdout, "%6.3f", &I);
-        printf("A - V*D*V.T:\n"); matrix_printf(stdout, "%6.3f", &A0);
+        printf("D:\n"); armas_x_printf(stdout, "%6.3f", armas_x_col_as_row(&T, &D));
+        printf("I - V.T*V:\n"); armas_x_printf(stdout, "%6.3f", &I0);
+        printf("A - V*D*V.T:\n"); armas_x_printf(stdout, "%6.3f", &A0);
     }        
-    n1 = matrix_mnorm(&A0, ARMAS_NORM_ONE, &conf);
+    n1 = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf);
     n1 /= nrm_A;
     ok = isOK(n1, N);
 

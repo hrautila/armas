@@ -25,7 +25,7 @@
 #define CMEMSIZE 384*1024L
 //! \endcond
 
-static int __armas_init_flag = 0;
+static int armas_x_init_flag = 0;
 
 static armas_conf_t __default_conf = {
   .mb = 64,             // MB (row count)
@@ -290,7 +290,7 @@ void armas_init()
   int n, val;
   long nproc;
 
-  if (__armas_init_flag)
+  if (armas_x_init_flag)
     return;
 
   // this returns number of processors, not number of cores
@@ -384,7 +384,7 @@ void armas_init()
     armas_sched_conf(&__default_sched, &__default_conf, 64);
   }
 #endif
-  __armas_init_flag = 1;
+  armas_x_init_flag = 1;
 }
 
 

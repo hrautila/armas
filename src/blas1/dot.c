@@ -12,7 +12,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_dot) 
+#if defined(armas_x_dot) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
@@ -115,7 +115,7 @@ DTYPE __vec_dot_recursive(const mvec_t *X, const mvec_t *Y, int n)
  *
  * @ingroup blas1
  */
-DTYPE __armas_dot(const __armas_dense_t *x, const __armas_dense_t *y, armas_conf_t *conf)
+DTYPE armas_x_dot(const armas_x_dense_t *x, const armas_x_dense_t *y, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
@@ -129,7 +129,7 @@ DTYPE __armas_dot(const __armas_dense_t *x, const __armas_dense_t *y, armas_conf
     if (conf) conf->error = ARMAS_ENEED_VECTOR;
 	return __ZERO;
   }
-  if (__armas_size(x) != __armas_size(y)) {
+  if (armas_x_size(x) != armas_x_size(y)) {
     if (conf) conf->error = ARMAS_ESIZE;
     return __ZERO;
   }
@@ -139,14 +139,14 @@ DTYPE __armas_dot(const __armas_dense_t *x, const __armas_dense_t *y, armas_conf
 
   // extended precision 
   if (HAVE_EXT_PRECISION && (conf->optflags & ARMAS_OEXTPREC)) {
-    return __vec_dot_ext(&Y, &X, __armas_size(y));
+    return __vec_dot_ext(&Y, &X, armas_x_size(y));
   }
   
   // single precision
   if (conf->optflags & ARMAS_ONAIVE)
-    return __vec_dot(&Y, &X, __armas_size(y));
+    return __vec_dot(&Y, &X, armas_x_size(y));
 
-  return __vec_dot_recursive(&Y, &X, __armas_size(y));
+  return __vec_dot_recursive(&Y, &X, armas_x_size(y));
 }
 
 #endif /* __ARMAS_REQUIRES && __ARMAS_PROVIDES */

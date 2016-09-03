@@ -14,7 +14,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_blas1) && defined(__armas_blas2)
+#if defined(armas_x_blas1) && defined(armas_x_blas2)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -92,19 +92,19 @@
  */
 
 static inline
-int __internal_householder(__armas_dense_t *a11, __armas_dense_t *x,
-                           __armas_dense_t *tau, int flags, armas_conf_t *conf)
+int __internal_householder(armas_x_dense_t *a11, armas_x_dense_t *x,
+                           armas_x_dense_t *tau, int flags, armas_conf_t *conf)
 {
     DTYPE normx, alpha, beta, delta, sign, safmin, rsafmin, t;
     int nscale = 0;
 
-    normx = __armas_nrm2(x, conf);
+    normx = armas_x_nrm2(x, conf);
     if (normx == 0.0) {
-        __armas_set(tau, 0, 0, 0.0);
+        armas_x_set(tau, 0, 0, 0.0);
         return 0;
     }
 
-    alpha = __armas_get(a11, 0, 0);
+    alpha = armas_x_get(a11, 0, 0);
     sign = __SIGN(alpha) ? -1.0 : 1.0;
     
     beta = __HYPOT(alpha, normx);
@@ -115,13 +115,13 @@ int __internal_householder(__armas_dense_t *a11, __armas_dense_t *x,
         rsafmin = 1.0/safmin;
         do {
             nscale++;
-            __armas_scale(x, rsafmin, conf);
+            armas_x_scale(x, rsafmin, conf);
             beta *= rsafmin;
             alpha *= rsafmin;
         } while (beta < safmin);
 
         // now beta in [safmin ... 1.0]
-        normx = __armas_nrm2(x, conf);
+        normx = armas_x_nrm2(x, conf);
         beta = __HYPOT(alpha, normx);
     }
 
@@ -159,13 +159,13 @@ int __internal_householder(__armas_dense_t *a11, __armas_dense_t *x,
         t = -delta/beta;
         break;
     }
-    __armas_scale(x, 1.0/delta, conf);
-    __armas_set(tau, 0, 0, t);
+    armas_x_scale(x, 1.0/delta, conf);
+    armas_x_set(tau, 0, 0, t);
     
     while (nscale-- > 0) {
         beta *= safmin;
     }
-    __armas_set(a11, 0, 0, beta);
+    armas_x_set(a11, 0, 0, beta);
     
     return 0;
 }
@@ -205,8 +205,8 @@ int __internal_householder(__armas_dense_t *a11, __armas_dense_t *x,
  *
  *  \retval 0 
  */
-int __armas_house(__armas_dense_t *a11, __armas_dense_t *x,
-                  __armas_dense_t *tau, int flags, armas_conf_t *conf)
+int armas_x_house(armas_x_dense_t *a11, armas_x_dense_t *x,
+                  armas_x_dense_t *tau, int flags, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
@@ -214,29 +214,29 @@ int __armas_house(__armas_dense_t *a11, __armas_dense_t *x,
 }
 
 // library internal 
-void __compute_householder(__armas_dense_t *a11, __armas_dense_t *x,
-                             __armas_dense_t *tau, armas_conf_t *conf)
+void __compute_householder(armas_x_dense_t *a11, armas_x_dense_t *x,
+                             armas_x_dense_t *tau, armas_conf_t *conf)
 {
     int flags = (conf->optflags & ARMAS_NONNEG) != 0 ? ARMAS_NONNEG : 0;
     __internal_householder(a11, x, tau, flags, conf);
 }
 
 // library internal 
-void __compute_householder_vec(__armas_dense_t *x, __armas_dense_t *tau, armas_conf_t *conf) {
-    __armas_dense_t alpha, x2;
+void __compute_householder_vec(armas_x_dense_t *x, armas_x_dense_t *tau, armas_conf_t *conf) {
+    armas_x_dense_t alpha, x2;
 
-    if (__armas_size(x) == 0) {
-        __armas_set(tau, 0, 0, 0.0);
+    if (armas_x_size(x) == 0) {
+        armas_x_set(tau, 0, 0, 0.0);
         return;
     }
                               
     int flags = (conf->optflags & ARMAS_NONNEG) != 0 ? ARMAS_NONNEG : 0;
 
-    __armas_submatrix(&alpha, x, 0, 0, 1, 1);
+    armas_x_submatrix(&alpha, x, 0, 0, 1, 1);
     if (x->rows == 1) {
-        __armas_submatrix(&x2, x, 0, 1, 1, __armas_size(x)-1);
+        armas_x_submatrix(&x2, x, 0, 1, 1, armas_x_size(x)-1);
     } else {
-        __armas_submatrix(&x2, x, 1, 0, __armas_size(x)-1, 1);
+        armas_x_submatrix(&x2, x, 1, 0, armas_x_size(x)-1, 1);
     }
     //__compute_householder(&alpha, &x2, tau, conf);
     __internal_householder(&alpha, &x2, tau, flags, conf);
@@ -244,22 +244,22 @@ void __compute_householder_vec(__armas_dense_t *x, __armas_dense_t *tau, armas_c
 
 
 // library internal 
-void __compute_householder_rev(__armas_dense_t *x, __armas_dense_t *tau, armas_conf_t *conf) {
-    __armas_dense_t alpha, x2;
+void __compute_householder_rev(armas_x_dense_t *x, armas_x_dense_t *tau, armas_conf_t *conf) {
+    armas_x_dense_t alpha, x2;
 
-    if (__armas_size(x) == 0) {
-        __armas_set(tau, 0, 0, 0.0);
+    if (armas_x_size(x) == 0) {
+        armas_x_set(tau, 0, 0, 0.0);
         return;
     }
 
     int flags = (conf->optflags & ARMAS_NONNEG) != 0 ? ARMAS_NONNEG : 0;
 
     if (x->rows == 1) {
-        __armas_submatrix(&alpha, x, 0, -1, 1, 1);
-        __armas_submatrix(&x2, x, 0, 0, 1, __armas_size(x)-1);
+        armas_x_submatrix(&alpha, x, 0, -1, 1, 1);
+        armas_x_submatrix(&x2, x, 0, 0, 1, armas_x_size(x)-1);
     } else {
-        __armas_submatrix(&alpha, x, -1, 0, 1, 1);
-        __armas_submatrix(&x2, x, 0, 0, __armas_size(x)-1, 1);
+        armas_x_submatrix(&alpha, x, -1, 0, 1, 1);
+        armas_x_submatrix(&x2, x, 0, 0, armas_x_size(x)-1, 1);
     }
     //__compute_householder(&alpha, &x2, tau, conf);
     __internal_householder(&alpha, &x2, tau, flags, conf);
@@ -283,36 +283,36 @@ void __compute_householder_rev(__armas_dense_t *x, __armas_dense_t *tau, armas_c
  *
  * Intermediate work space w1 required as parameter, no allocation.
  */
-int __apply_householder2x1(__armas_dense_t *tau, __armas_dense_t *v,
-                           __armas_dense_t *a1,  __armas_dense_t *A2,
-                           __armas_dense_t *w1,  int flags, armas_conf_t *conf)
+int __apply_householder2x1(armas_x_dense_t *tau, armas_x_dense_t *v,
+                           armas_x_dense_t *a1,  armas_x_dense_t *A2,
+                           armas_x_dense_t *w1,  int flags, armas_conf_t *conf)
 {
     DTYPE tval;
-    tval = __armas_get(tau, 0, 0);
+    tval = armas_x_get(tau, 0, 0);
     if (tval == 0.0) {
         return 0;
     }
 
     // w1 = a1
-    __armas_axpby(w1, a1, 1.0, 0.0, conf);
+    armas_x_axpby(w1, a1, 1.0, 0.0, conf);
     if (flags & ARMAS_LEFT) {
         // w1 = a1 + A2.T*v
-        __armas_mvmult(w1, A2, v, 1.0, 1.0, ARMAS_TRANSA, conf);
+        armas_x_mvmult(w1, A2, v, 1.0, 1.0, ARMAS_TRANSA, conf);
     } else {
         // w1 = a1 + A2*v
-        __armas_mvmult(w1, A2, v, 1.0, 1.0, ARMAS_NONE, conf);
+        armas_x_mvmult(w1, A2, v, 1.0, 1.0, ARMAS_NONE, conf);
     }
     // w1 = tau*w1
-    __armas_scale(w1, tval, conf);
+    armas_x_scale(w1, tval, conf);
   
     // a1 = a1 - w1
-    __armas_axpy(a1, w1, -1.0, conf);
+    armas_x_axpy(a1, w1, -1.0, conf);
 
     // A2 = A2 - v*w1
     if (flags & ARMAS_LEFT) {
-        __armas_mvupdate(A2, v, w1, -1.0, conf);
+        armas_x_mvupdate(A2, v, w1, -1.0, conf);
     } else {
-        __armas_mvupdate(A2, w1, v, -1.0, conf);
+        armas_x_mvupdate(A2, w1, v, -1.0, conf);
     }
     return 0;
 }
@@ -326,25 +326,25 @@ int __apply_householder2x1(__armas_dense_t *tau, __armas_dense_t *v,
  *  RIGHT:  A = A*H = A - tau*A*v*v.T = A - tau*w1*v.T
  *  LEFT:   A = H*A = A - tau*v*v.T*A = A - tau*v*A.T*v = A - tau*v*w1
  */
-int __apply_householder1x1(__armas_dense_t *tau, __armas_dense_t *v,
-                           __armas_dense_t *A, __armas_dense_t *w,  int flags, armas_conf_t *conf) 
+int __apply_householder1x1(armas_x_dense_t *tau, armas_x_dense_t *v,
+                           armas_x_dense_t *A, armas_x_dense_t *w,  int flags, armas_conf_t *conf) 
 {
     DTYPE tval;
 
-    tval = __armas_get(tau, 0, 0);
+    tval = armas_x_get(tau, 0, 0);
     if (tval == 0.0) {
         return 0;
     }
     if (flags & ARMAS_LEFT) {
         // w = A.T*v
-        __armas_mvmult(w, A, v, 1.0, 0.0, ARMAS_TRANS, conf);
+        armas_x_mvmult(w, A, v, 1.0, 0.0, ARMAS_TRANS, conf);
         // A = A - tau*v*w
-        __armas_mvupdate(A, v, w, -tval, conf);
+        armas_x_mvupdate(A, v, w, -tval, conf);
     } else {
         // w = A*v
-        __armas_mvmult(w,  A, v, 1.0, 0.0, ARMAS_NONE, conf);
+        armas_x_mvmult(w,  A, v, 1.0, 0.0, ARMAS_NONE, conf);
         // A = A - tau*w*v
-        __armas_mvupdate(A, w, v, -tval, conf);
+        armas_x_mvupdate(A, w, v, -tval, conf);
     }
     return 0;
 }
@@ -370,18 +370,18 @@ int __apply_householder1x1(__armas_dense_t *tau, __armas_dense_t *v,
  *     Confugration block
  *
  */
-int __armas_house_apply(__armas_dense_t *tau, __armas_dense_t *v,
-                        __armas_dense_t *a1,  __armas_dense_t *A2,
-                        __armas_dense_t *w,  int flags, armas_conf_t *conf)
+int armas_x_house_apply(armas_x_dense_t *tau, armas_x_dense_t *v,
+                        armas_x_dense_t *a1,  armas_x_dense_t *A2,
+                        armas_x_dense_t *w,  int flags, armas_conf_t *conf)
 {
-    __armas_dense_t w1;
+    armas_x_dense_t w1;
     if (!conf)
         conf = armas_conf_default();
-    if (__armas_size(w) < __armas_size(a1)) {
+    if (armas_x_size(w) < armas_x_size(a1)) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-    __armas_make(&w1, __armas_size(a1), 1, __armas_size(a1), __armas_data(w));
+    armas_x_make(&w1, armas_x_size(a1), 1, armas_x_size(a1), armas_x_data(w));
     return __apply_householder2x1(tau, v, a1, A2, &w1, flags, conf);
 }
 

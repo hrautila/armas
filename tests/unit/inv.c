@@ -19,28 +19,28 @@
 
 int test_equal(int N, int lb, int verbose)
 {
-    __Matrix A0, A1, W;
-    __Dtype n0, n1;
+    armas_x_dense_t A0, A1, W;
+    DTYPE n0, n1;
     char *blk = lb == 0 ? "unblk" : "  blk";
     int ok, fails = 0;;
     armas_pivot_t P;
     armas_conf_t conf = *armas_conf_default();
     
-    matrix_init(&A0, N, N);
-    matrix_init(&A1, N, N);
-    matrix_init(&W, N, lb == 0 ? 1 : lb);
+    armas_x_init(&A0, N, N);
+    armas_x_init(&A1, N, N);
+    armas_x_init(&W, N, lb == 0 ? 1 : lb);
     armas_pivot_init(&P, N);
 
-    matrix_set_values(&A0, unitrand, 0);
-    matrix_mcopy(&A1, &A0);
+    armas_x_set_values(&A0, unitrand, 0);
+    armas_x_mcopy(&A1, &A0);
 
 
     conf.lb = lb;
-    matrix_lufactor(&A1, &P, &conf);
-    matrix_inverse(&A1, &W, &P, &conf);
+    armas_x_lufactor(&A1, &P, &conf);
+    armas_x_inverse(&A1, &W, &P, &conf);
 
-    matrix_lufactor(&A1, &P, &conf);
-    matrix_inverse(&A1, &W, &P, &conf);
+    armas_x_lufactor(&A1, &P, &conf);
+    armas_x_inverse(&A1, &W, &P, &conf);
 
     n0 = rel_error(&n1, &A1, &A0, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
@@ -50,38 +50,38 @@ int test_equal(int N, int lb, int verbose)
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
 
-    matrix_release(&A0);
-    matrix_release(&A1);
-    matrix_release(&W);
+    armas_x_release(&A0);
+    armas_x_release(&A1);
+    armas_x_release(&W);
     return fails;
 }
 
 int test_ident(int N, int lb, int verbose)
 {
-    __Matrix A0, A1, C, W, D;
-    __Dtype n0;
+    armas_x_dense_t A0, A1, C, W, D;
+    DTYPE n0;
     char *blk = lb == 0 ? "unblk" : "  blk";
     int ok, fails = 0;;
     armas_pivot_t P;
     armas_conf_t conf = *armas_conf_default();
     
-    matrix_init(&A0, N, N);
-    matrix_init(&A1, N, N);
-    matrix_init(&C, N, N);
-    matrix_init(&W, N, lb == 0 ? 1 : lb);
+    armas_x_init(&A0, N, N);
+    armas_x_init(&A1, N, N);
+    armas_x_init(&C, N, N);
+    armas_x_init(&W, N, lb == 0 ? 1 : lb);
     armas_pivot_init(&P, N);
 
-    matrix_set_values(&A0, unitrand, 0);
-    matrix_mcopy(&A1, &A0);
-    matrix_diag(&D, &C, 0);
+    armas_x_set_values(&A0, unitrand, 0);
+    armas_x_mcopy(&A1, &A0);
+    armas_x_diag(&D, &C, 0);
 
     conf.lb = lb;
-    matrix_lufactor(&A1, &P, &conf);
-    matrix_inverse(&A1, &W, &P, &conf);
+    armas_x_lufactor(&A1, &P, &conf);
+    armas_x_inverse(&A1, &W, &P, &conf);
 
-    matrix_mult(&C, &A1, &A0, 1.0, 0.0, 0, &conf);
-    matrix_madd(&D, -1.0, 0);
-    n0 = matrix_mnorm(&C, ARMAS_NORM_INF, &conf);
+    armas_x_mult(&C, &A1, &A0, 1.0, 0.0, 0, &conf);
+    armas_x_madd(&D, -1.0, 0);
+    n0 = armas_x_mnorm(&C, ARMAS_NORM_INF, &conf);
     ok = isFINE(n0, N*__ERROR);
     fails += 1 - ok;
     printf("%s: %s.A.-1*A == I\n", PASS(ok), blk);
@@ -89,9 +89,9 @@ int test_ident(int N, int lb, int verbose)
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
 
-    matrix_release(&A0);
-    matrix_release(&A1);
-    matrix_release(&W);
+    armas_x_release(&A0);
+    armas_x_release(&A1);
+    armas_x_release(&W);
     return fails;
 }
 

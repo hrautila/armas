@@ -13,11 +13,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_lqsolve) 
+#if defined(armas_x_lqsolve) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_lqmult) 
+#if defined(armas_x_lqmult) 
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -76,10 +76,10 @@ int __ws_lqsolve(int M, int N, int lb)
  *
  * Compatible with lapack.GELS (the m >= n part)
  */
-int __armas_lqsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau,
-                    __armas_dense_t *W, int flags, armas_conf_t *conf)
+int armas_x_lqsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
+                    armas_x_dense_t *W, int flags, armas_conf_t *conf)
 {
-  __armas_dense_t L, BL, BB;
+  armas_x_dense_t L, BL, BB;
   int wsmin, ok;
 
   if (!conf)
@@ -92,40 +92,40 @@ int __armas_lqsolve(__armas_dense_t *B, __armas_dense_t *A, __armas_dense_t *tau
   }
 
   wsmin = __ws_lqsolve(B->rows, B->cols, 0);
-  if (! W || __armas_size(W) < wsmin) {
+  if (! W || armas_x_size(W) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
   }
-  __armas_submatrix(&L, A, 0, 0, A->rows, A->rows);
-  __armas_submatrix(&BL, B, 0, 0, A->rows, B->cols);
+  armas_x_submatrix(&L, A, 0, 0, A->rows, A->rows);
+  armas_x_submatrix(&BL, B, 0, 0, A->rows, B->cols);
 
   if (flags & ARMAS_TRANS) {
     // solve least square problem min || A.T*X - B ||
 
     // B' = Q.T*B
-    ONERROR(__armas_lqmult(B, A, tau, W, ARMAS_LEFT, conf));
+    ONERROR(armas_x_lqmult(B, A, tau, W, ARMAS_LEFT, conf));
     
     // X = L.-1*B'
-    ONERROR(__armas_solve_trm(&BL, &L, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf));
+    ONERROR(armas_x_solve_trm(&BL, &L, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf));
 
   } else {
     // solve underdetermined system A*X = B
     // B' = L.-1*B
-    ONERROR(__armas_solve_trm(&BL, &L, 1.0, ARMAS_LEFT|ARMAS_LOWER, conf));
+    ONERROR(armas_x_solve_trm(&BL, &L, 1.0, ARMAS_LEFT|ARMAS_LOWER, conf));
 
     // clear bottom part of B
-    __armas_submatrix(&BB, B, A->rows, 0, -1, -1);
-    __armas_mscale(&BB, 0.0, ARMAS_ANY);
+    armas_x_submatrix(&BB, B, A->rows, 0, -1, -1);
+    armas_x_mscale(&BB, 0.0, ARMAS_ANY);
     
     // X = Q.T*B'
-    ONERROR(__armas_lqmult(B, A, tau, W, ARMAS_LEFT|ARMAS_TRANS, conf));
+    ONERROR(armas_x_lqmult(B, A, tau, W, ARMAS_LEFT|ARMAS_TRANS, conf));
   }
   return 0;
 }
 
 
 //! \brief Workspace size for lqsolve.
-int __armas_lqsolve_work(__armas_dense_t *B, armas_conf_t *conf)
+int armas_x_lqsolve_work(armas_x_dense_t *B, armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();

@@ -13,11 +13,11 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_bdsvd) 
+#if defined(armas_x_bdsvd) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_gvcompute) && defined(__armas_gvupdate) && defined(__bdsvd2x2_vec)
+#if defined(armas_x_gvcompute) && defined(armas_x_gvupdate) && defined(__bdsvd2x2_vec)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -36,40 +36,40 @@
  * \brief Rotate lower bidiagonal matrix to upper bidiagonal matrix.
  */
 static inline
-void bdmake_upper(__armas_dense_t *D, __armas_dense_t *E,
-                  __armas_dense_t *U, __armas_dense_t *C,
-                  __armas_dense_t *CS)
+void bdmake_upper(armas_x_dense_t *D, armas_x_dense_t *E,
+                  armas_x_dense_t *U, armas_x_dense_t *C,
+                  armas_x_dense_t *CS)
 {
-    __armas_dense_t Cl, Sl;
+    armas_x_dense_t Cl, Sl;
     DTYPE cosl, sinl, r, d0, e0, d1;
-    int saves, k, N = __armas_size(D);
+    int saves, k, N = armas_x_size(D);
 
     saves = 0;
     if (U || C) {
-        __armas_subvector(&Cl, CS, 0, N);
-        __armas_subvector(&Sl, CS, N, N);
+        armas_x_subvector(&Cl, CS, 0, N);
+        armas_x_subvector(&Sl, CS, N, N);
         saves = 1;
     }
-    d0 = __armas_get_at_unsafe(D, 0);
+    d0 = armas_x_get_at_unsafe(D, 0);
     for (k = 0; k < N-1; k++) {
-        e0 = __armas_get_at_unsafe(E, k);
-        d1 = __armas_get_at_unsafe(D, k+1);
-        __armas_gvcompute(&cosl, &sinl, &r,  d0, e0);
-        __armas_set_at_unsafe(D, k, r);
-        __armas_set_at_unsafe(E, k, sinl*d1);
+        e0 = armas_x_get_at_unsafe(E, k);
+        d1 = armas_x_get_at_unsafe(D, k+1);
+        armas_x_gvcompute(&cosl, &sinl, &r,  d0, e0);
+        armas_x_set_at_unsafe(D, k, r);
+        armas_x_set_at_unsafe(E, k, sinl*d1);
         d0 = cosl*d1;
-        __armas_set_at_unsafe(D, k+1, d0);
+        armas_x_set_at_unsafe(D, k+1, d0);
         if (saves) {
-            __armas_set_at_unsafe(&Cl, k, cosl);
-            __armas_set_at_unsafe(&Sl, k, sinl);
+            armas_x_set_at_unsafe(&Cl, k, cosl);
+            armas_x_set_at_unsafe(&Sl, k, sinl);
         }
     }
 
     if (U && k > 0) {
-        __armas_gvupdate(U, 0, &Cl, &Sl, N-1, ARMAS_RIGHT);
+        armas_x_gvupdate(U, 0, &Cl, &Sl, N-1, ARMAS_RIGHT);
     }
     if (C && k > 0) {
-        __armas_gvupdate(C, 0, &Cl, &Sl, N-1, ARMAS_LEFT);
+        armas_x_gvupdate(C, 0, &Cl, &Sl, N-1, ARMAS_LEFT);
     }
 }
 
@@ -112,18 +112,18 @@ void bdmake_upper(__armas_dense_t *D, __armas_dense_t *E,
  * Corresponds to lapack.xBDSQR
  * \ingroup lapack
  */
-int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
-                  __armas_dense_t *U, __armas_dense_t *V,
-                  __armas_dense_t *W, int flags, armas_conf_t *conf)
+int armas_x_bdsvd(armas_x_dense_t *D, armas_x_dense_t *E,
+                  armas_x_dense_t *U, armas_x_dense_t *V,
+                  armas_x_dense_t *W, int flags, armas_conf_t *conf)
 {
-    __armas_dense_t CS, *uu, *vv;
-    int err, N = __armas_size(D);
+    armas_x_dense_t CS, *uu, *vv;
+    int err, N = armas_x_size(D);
     ABSTYPE tol = 8.0;
 
-    uu = (__armas_dense_t *)0;
-    vv = (__armas_dense_t *)0;
+    uu = (armas_x_dense_t *)0;
+    vv = (armas_x_dense_t *)0;
     // check for sizes
-    if (! (__armas_isvector(D) && __armas_isvector(E))) {
+    if (! (armas_x_isvector(D) && armas_x_isvector(E))) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -1;
     }
@@ -151,20 +151,20 @@ int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
         }
         vv = V;
     }
-    if (__armas_size(E) != N-1) {
+    if (armas_x_size(E) != N-1) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-    if ((uu || vv) && __armas_size(W) < 4*N) {
+    if ((uu || vv) && armas_x_size(W) < 4*N) {
         // if eigenvectors needed then must have workspace
         conf->error = ARMAS_EWORK;
         return -1;
     }
 
     if (uu || vv) {
-        __armas_make(&CS, 4*N, 1, 4*N, __armas_data(W));
+        armas_x_make(&CS, 4*N, 1, 4*N, armas_x_data(W));
     } else {
-        __armas_make(&CS, 0, 0, 1, (DTYPE *)0);
+        armas_x_make(&CS, 0, 0, 1, (DTYPE *)0);
     }
     if (flags & ARMAS_LOWER) {
         // rotate to UPPER bidiagonal
@@ -192,10 +192,10 @@ int __armas_bdsvd(__armas_dense_t *D, __armas_dense_t *E,
  * \brief Workspace need to compute SVD of bidiagonal or bidiagonalizable matrix S.
  * \ingroup lapack
  */
-int __armas_bdsvd_work(__armas_dense_t *S, armas_conf_t *conf)
+int armas_x_bdsvd_work(armas_x_dense_t *S, armas_conf_t *conf)
 {
-    if (__armas_isvector(S)) {
-        return 4*__armas_size(S);
+    if (armas_x_isvector(S)) {
+        return 4*armas_x_size(S);
     }
     return 4*(S->rows < S->cols ? S->rows : S->cols);
 }

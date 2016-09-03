@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__armas_mvupdate_sym)
+#if defined(armas_x_mvupdate_sym)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -28,18 +28,18 @@ void __syrf(char *uplo, int *n, DTYPE *alpha, DTYPE *X,
             int *incx, DTYPE *A, int *lda)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t a, x;
+    armas_x_dense_t a, x;
     int flags = 0;
 
     flags |= toupper(*uplo) == 'L' ? ARMAS_LOWER : ARMAS_UPPER;
 
-    __armas_make(&a, *n, *n, *lda, A);
+    armas_x_make(&a, *n, *n, *lda, A);
     if (*incx == 1) {
-        __armas_make(&x, *n, 1, *n, X);
+        armas_x_make(&x, *n, 1, *n, X);
     } else {
-        __armas_make(&x, 1, *n, *incx, X);
+        armas_x_make(&x, 1, *n, *incx, X);
     }
-    __armas_mvupdate_sym(&a, &x, *alpha, flags, conf);
+    armas_x_mvupdate_sym(&a, &x, *alpha, flags, conf);
 }
 #endif
 
@@ -48,7 +48,7 @@ void __cblas_syr(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,  cons
                  const DTYPE alpha, DTYPE *X, const int incx, DTYPE *A, const int lda)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t Aa, x;
+    armas_x_dense_t Aa, x;
     int flags = 0;
     
     if (order == CblasRowMajor) {
@@ -57,13 +57,13 @@ void __cblas_syr(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,  cons
         flags = uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
     }
 
-    __armas_make(&Aa, N, N, lda, A);
+    armas_x_make(&Aa, N, N, lda, A);
     if (incx == 1) {
-        __armas_make(&x, N, 1, N, X);
+        armas_x_make(&x, N, 1, N, X);
     } else {
-        __armas_make(&x, 1, N, incx, X);
+        armas_x_make(&x, 1, N, incx, X);
     }
-    __armas_mvupdate_sym(&Aa, &x, alpha, flags, conf);
+    armas_x_mvupdate_sym(&Aa, &x, alpha, flags, conf);
 }
 
 #endif

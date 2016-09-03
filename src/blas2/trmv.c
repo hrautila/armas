@@ -17,7 +17,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__armas_mvupdate_trm) && defined(__trmv_recursive)
+#if defined(armas_x_mvupdate_trm) && defined(__trmv_recursive)
 #define __ARMAS_PROVIDES 1
 #endif
 // this module requires no external public functions
@@ -343,14 +343,14 @@ void __trmv_recursive(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N
  *
  * @ingroup blas2
  */
-int __armas_mvmult_trm(__armas_dense_t *X,  const __armas_dense_t *A, 
+int armas_x_mvmult_trm(armas_x_dense_t *X,  const armas_x_dense_t *A, 
                        DTYPE alpha, int flags, armas_conf_t *conf)
 {
   mvec_t x;
   mdata_t A0;
-  int nx = __armas_size(X);
+  int nx = armas_x_size(X);
   
-  if (__armas_size(A) == 0 || __armas_size(X) == 0)
+  if (armas_x_size(A) == 0 || armas_x_size(X) == 0)
     return 0;
 
   if (!conf)

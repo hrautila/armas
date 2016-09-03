@@ -51,7 +51,7 @@
  * @return Pointer to initialized matrix.
  * \ingroup matrix
  */
-__armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c)
+armas_x_dense_t *armas_x_init(armas_x_dense_t *m, int r, int c)
 {
   int doff;
 
@@ -68,7 +68,7 @@ __armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c)
   m->__data = calloc(m->__nbytes, sizeof(DTYPE));
   if ( !m->__data ) {
     m->__nbytes = 0;
-    return (__armas_dense_t *)0;
+    return (armas_x_dense_t *)0;
   }
   // convert to number of bytes
   m->__nbytes *= sizeof(DTYPE);
@@ -94,10 +94,10 @@ __armas_dense_t *__armas_init(__armas_dense_t *m, int r, int c)
  * @retval NULL Failed
  * \ingroup matrix
  */
-__armas_dense_t *__armas_transpose(__armas_dense_t *A, __armas_dense_t *B)
+armas_x_dense_t *armas_x_transpose(armas_x_dense_t *A, armas_x_dense_t *B)
 {
   if (A->rows != B->cols || A->cols != B->rows)
-    return (__armas_dense_t *)0;
+    return (armas_x_dense_t *)0;
   
   __CPTRANS(A->elems, A->step, B->elems, B->step, B->rows, B->cols);
   return A;
@@ -118,17 +118,17 @@ __armas_dense_t *__armas_transpose(__armas_dense_t *A, __armas_dense_t *B)
  * @retval NULL Incompatible sizes
  * \ingroup matrix
  */
-__armas_dense_t *__armas_mcopy(__armas_dense_t *A, __armas_dense_t *B)
+armas_x_dense_t *armas_x_mcopy(armas_x_dense_t *A, armas_x_dense_t *B)
 {
-  if (__armas_isvector(A) && __armas_isvector(B)) {
-    if (__armas_size(A) != __armas_size(B))
-      return (__armas_dense_t *)0;
+  if (armas_x_isvector(A) && armas_x_isvector(B)) {
+    if (armas_x_size(A) != armas_x_size(B))
+      return (armas_x_dense_t *)0;
     // blas1 vector copy
-    __armas_copy(A, B, (armas_conf_t *)0);
+    armas_x_copy(A, B, (armas_conf_t *)0);
     return A;
   }
   if (A->rows != B->rows || A->cols != B->cols)
-    return (__armas_dense_t *)0;
+    return (armas_x_dense_t *)0;
   
   __CP(A->elems, A->step, B->elems, B->step, B->rows, B->cols);
   return A;
@@ -146,9 +146,9 @@ __armas_dense_t *__armas_mcopy(__armas_dense_t *A, __armas_dense_t *B)
  * @retval NULL Failed
  * \ingroup matrix
  */
-__armas_dense_t *__armas_newcopy(__armas_dense_t *A)
+armas_x_dense_t *armas_x_newcopy(armas_x_dense_t *A)
 {
-  __armas_dense_t *Anew = __armas_alloc(A->rows, A->cols);
+  armas_x_dense_t *Anew = armas_x_alloc(A->rows, A->cols);
   if (Anew) {
     __CP(Anew->elems, Anew->step, A->elems, A->step, A->rows, A->cols);
   }
@@ -173,7 +173,7 @@ __armas_dense_t *__armas_newcopy(__armas_dense_t *A)
  * @retval 1 equal
  * \ingroup matrix
  */
-int __armas_intolerance(const __armas_dense_t *A, const __armas_dense_t *B, ABSTYPE atol, ABSTYPE rtol)
+int armas_x_intolerance(const armas_x_dense_t *A, const armas_x_dense_t *B, ABSTYPE atol, ABSTYPE rtol)
 {
   register int i, j;
   ABSTYPE df, ref;
@@ -212,13 +212,13 @@ static const ABSTYPE ATOL = 1e-8;
  * @retval 1 equal
  * \ingroup matrix
  */
-int __armas_allclose(const __armas_dense_t *A, const __armas_dense_t *B)
+int armas_x_allclose(const armas_x_dense_t *A, const armas_x_dense_t *B)
 {
-  return __armas_intolerance(A, B, ATOL, RTOL);
+  return armas_x_intolerance(A, B, ATOL, RTOL);
 }
 
 
-void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m)
+void armas_x_printf(FILE *out, const char *efmt, const armas_x_dense_t *m)
 {
   unsigned int i, j;
   if (!m)
@@ -248,9 +248,9 @@ void __armas_printf(FILE *out, const char *efmt, const __armas_dense_t *m)
   }
 }
 
-void __armas_print(const __armas_dense_t *m, FILE *out)
+void armas_x_print(const armas_x_dense_t *m, FILE *out)
 {
-  __armas_printf(out, "%8.1", m);
+  armas_x_printf(out, "%8.1", m);
 }
 
 
@@ -280,26 +280,26 @@ void __armas_print(const __armas_dense_t *m, FILE *out)
  * @returns -1 Failure
  * \ingroup matrix
  */
-int __armas_set_values(__armas_dense_t *A, __armas_valuefunc_t value, int flags)
+int armas_x_set_values(armas_x_dense_t *A, armas_x_valuefunc_t value, int flags)
 {
   int i, j;
   switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_SYMM)) {
   case ARMAS_UPPER:
     for (j = 0; j < A->cols; j++) {
       for (i = 0; i < j && i < A->rows; i++) {
-        __armas_set_unsafe(A, i, j, value(i, j));
+        armas_x_set_unsafe(A, i, j, value(i, j));
       }
       // don't set diagonal on upper trapezoidal matrix (cols > rows)
       if (j < A->rows && !(flags & ARMAS_UNIT))
-        __armas_set_unsafe(A, j, j, value(j, j));
+        armas_x_set_unsafe(A, j, j, value(j, j));
     }
     break;
   case ARMAS_LOWER:
     for (j = 0; j < A->cols; j++) {
       if (j < A->rows && !(flags & ARMAS_UNIT))
-        __armas_set_unsafe(A, j, j, value(j, j));
+        armas_x_set_unsafe(A, j, j, value(j, j));
       for (i = j+1; i < A->rows; i++) {
-        __armas_set_unsafe(A, i, j, value(i, j));
+        armas_x_set_unsafe(A, i, j, value(i, j));
       }
     }
     break;
@@ -309,15 +309,15 @@ int __armas_set_values(__armas_dense_t *A, __armas_valuefunc_t value, int flags)
     for (j = 0; j < A->cols; j++) {
       A->elems[j*A->step + j] = flags & ARMAS_UNIT ? __ONE : value(j, j);
       for (i = j+1; i < A->rows; i++) {
-        __armas_set_unsafe(A, i, j, value(i, j));
-        __armas_set_unsafe(A, j, i, __armas_get_unsafe(A, i, j));
+        armas_x_set_unsafe(A, i, j, value(i, j));
+        armas_x_set_unsafe(A, j, i, armas_x_get_unsafe(A, i, j));
       }
     }
     break;
   default:
     for (j = 0; j < A->cols; j++) {
       for (i = 0; i < A->rows; i++) {
-        __armas_set_unsafe(A, i, j, value(i, j));
+        armas_x_set_unsafe(A, i, j, value(i, j));
       }
     }
   }
@@ -340,7 +340,7 @@ int __armas_set_values(__armas_dense_t *A, __armas_valuefunc_t value, int flags)
  *
  * \ingroup matrix
  */
-void __armas_make_trm(__armas_dense_t *m, int flags)
+void armas_x_make_trm(armas_x_dense_t *m, int flags)
 {
   int i, j;
   if (flags & ARMAS_UPPER) {
@@ -382,17 +382,17 @@ void __armas_make_trm(__armas_dense_t *m, int flags)
  *
  * \ingroup matrix
  */
-int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
+int armas_x_mscale(armas_x_dense_t *m, const DTYPE alpha, int flags)
 {
   int c, n;
-  __armas_dense_t C;
+  armas_x_dense_t C;
   switch (flags & (ARMAS_SYMM|ARMAS_UPPER|ARMAS_LOWER)) {
   case ARMAS_UPPER:
     // scale strictly upper triangular part, if UNIT set, don't touch diagonal
     n = flags & ARMAS_UNIT ? 1 : 0;
     for (c = n; c < m->rows; c++) {
-      __armas_submatrix(&C, m, c, c+n, 1, m->rows-c-n);
-      __armas_scale(&C, alpha, (armas_conf_t *)0);
+      armas_x_submatrix(&C, m, c, c+n, 1, m->rows-c-n);
+      armas_x_scale(&C, alpha, (armas_conf_t *)0);
     }
     break;
 
@@ -400,8 +400,8 @@ int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
     // scale strictly lower triangular part. if UNIT set, don't touch diagonal
     n = flags & ARMAS_UNIT ? 1 : 0;
     for (c = 0; c < m->cols-n; c++) {
-      __armas_submatrix(&C, m, c+n, c, m->rows-c-n, 1);
-      __armas_scale(&C, alpha, (armas_conf_t *)0);
+      armas_x_submatrix(&C, m, c+n, c, m->rows-c-n, 1);
+      armas_x_scale(&C, alpha, (armas_conf_t *)0);
     }
     break;
 
@@ -428,17 +428,17 @@ int __armas_mscale(__armas_dense_t *m, const DTYPE alpha, int flags)
  * @param [in] flags flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
  * \ingroup matrix
  */
-int __armas_madd(__armas_dense_t *m, DTYPE alpha, int flags)
+int armas_x_madd(armas_x_dense_t *m, DTYPE alpha, int flags)
 {
   int c, n;
-  __armas_dense_t C;
+  armas_x_dense_t C;
   switch (flags & (ARMAS_SYMM|ARMAS_UPPER|ARMAS_LOWER)) {
   case ARMAS_UPPER:
     // scale strictly upper triangular part, if UNIT set, don't touch diagonal
     // (works for upper trapezoidal matrix too)
     n = flags & ARMAS_UNIT ? 1 : 0;
     for (c = n; c < m->rows; c++) {
-      __armas_submatrix(&C, m, c, c+n, 1, m->rows-c-n);
+      armas_x_submatrix(&C, m, c, c+n, 1, m->rows-c-n);
       __blk_add((mdata_t *)&C, alpha, C.rows, C.cols);
     }
     break;
@@ -448,7 +448,7 @@ int __armas_madd(__armas_dense_t *m, DTYPE alpha, int flags)
     // (works for lower trapezoidal matrix too)
     n = flags & ARMAS_UNIT ? 1 : 0;
     for (c = 0; c < m->cols-n; c++) {
-      __armas_submatrix(&C, m, c+n, c, m->rows-c-n, 1);
+      armas_x_submatrix(&C, m, c+n, c, m->rows-c-n, 1);
       __blk_add((mdata_t *)&C, alpha, C.rows, C.cols);
     }
     break;

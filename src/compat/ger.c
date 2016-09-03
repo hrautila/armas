@@ -13,7 +13,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(ENABLE_COMPAT) && defined(__armas_mvupdate)
+#if defined(ENABLE_COMPAT) && defined(armas_x_mvupdate)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -28,22 +28,22 @@ void __gerf(int *m, int *n, DTYPE *alpha, DTYPE *X,
             int *incx, DTYPE *Y, int *incy, DTYPE *A, int *lda)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t y, a, x;
+    armas_x_dense_t y, a, x;
 
-    __armas_make(&a, *m, *n, *lda, A);
+    armas_x_make(&a, *m, *n, *lda, A);
     if (*incy == 1) {
         // column vector
-        __armas_make(&y, *n, 1, *n, Y);
+        armas_x_make(&y, *n, 1, *n, Y);
     } else {
         // row vector
-        __armas_make(&y, 1, *n, *incy, Y);
+        armas_x_make(&y, 1, *n, *incy, Y);
     }
     if (*incx == 1) {
-        __armas_make(&x, *m, 1, *m, X);
+        armas_x_make(&x, *m, 1, *m, X);
     } else {
-        __armas_make(&x, 1, *m, *incx, X);
+        armas_x_make(&x, 1, *m, *incx, X);
     }
-    __armas_mvupdate(&a, &x, &y, *alpha, conf);
+    armas_x_mvupdate(&a, &x, &y, *alpha, conf);
 }
 #endif
 
@@ -53,27 +53,27 @@ void __cblas_ger(const enum CBLAS_ORDER order, const int M,
                  DTYPE *Y, const int incy, DTYPE *A, const int lda)
 {
     armas_conf_t *conf = armas_conf_default();
-    __armas_dense_t y, a, x;
+    armas_x_dense_t y, a, x;
 
     if (incy == 1) {
         // column vector
-        __armas_make(&y, N, 1, N, Y);
+        armas_x_make(&y, N, 1, N, Y);
     } else {
         // row vector
-        __armas_make(&y, 1, N, incy, Y);
+        armas_x_make(&y, 1, N, incy, Y);
     }
     if (incx == 1) {
-        __armas_make(&x, M, 1, M, X);
+        armas_x_make(&x, M, 1, M, X);
     } else {
-        __armas_make(&x, 1, M, incx, X);
+        armas_x_make(&x, 1, M, incx, X);
     }
 
     if (order == CblasRowMajor) {
-        __armas_make(&a, N, M, lda, A);
-        __armas_mvupdate(&a, &y, &x, alpha, conf);
+        armas_x_make(&a, N, M, lda, A);
+        armas_x_mvupdate(&a, &y, &x, alpha, conf);
     } else {
-        __armas_make(&a, M, N, lda, A);
-        __armas_mvupdate(&a, &x, &y, alpha, conf);
+        armas_x_make(&a, M, N, lda, A);
+        armas_x_mvupdate(&a, &x, &y, alpha, conf);
     }
 }
 #endif

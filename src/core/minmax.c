@@ -10,7 +10,7 @@
 #include "dtype.h"
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(__armas_aminmax)
+#if defined(armas_x_aminmax)
 #define __ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
@@ -47,21 +47,21 @@
  * @return 
  *    0 for success, -1 for error
  */
-int __armas_aminmax(DTYPE *min, DTYPE *max, const __armas_dense_t *A, int flags)
+int armas_x_aminmax(DTYPE *min, DTYPE *max, const armas_x_dense_t *A, int flags)
 {
   int i, j;
   DTYPE _min, _max, aval;
 
-  if (__armas_size(A) == 0)
+  if (armas_x_size(A) == 0)
     return 0;
 
-  _min = _max = __ABS(__armas_get_unsafe(A, 0, 0));
+  _min = _max = __ABS(armas_x_get_unsafe(A, 0, 0));
 
   switch (flags & (ARMAS_LOWER|ARMAS_UPPER)) {
   case ARMAS_LOWER:
     for (j = 0; j < A->cols; j++) {
       for (i = j; i < A->rows; i++) {
-        aval = __ABS(__armas_get_unsafe(A, i, j));
+        aval = __ABS(armas_x_get_unsafe(A, i, j));
         _min = __MINF(_min, aval);
         _max = __MAXF(_max, aval);
       }
@@ -71,7 +71,7 @@ int __armas_aminmax(DTYPE *min, DTYPE *max, const __armas_dense_t *A, int flags)
   case ARMAS_UPPER:
     for (j = 0; j < A->cols; j++) {
       for (i = 0; i <= j && i < A->rows; i++) {
-        aval = __ABS(__armas_get_unsafe(A, i, j));
+        aval = __ABS(armas_x_get_unsafe(A, i, j));
         _min = __MINF(_min, aval);
         _max = __MAXF(_max, aval);
       }
@@ -81,7 +81,7 @@ int __armas_aminmax(DTYPE *min, DTYPE *max, const __armas_dense_t *A, int flags)
   default:
     for (j = 0; j < A->cols; j++) {
       for (i = 0; i < A->rows; i++) {
-        aval = __ABS(__armas_get_unsafe(A, i, j));
+        aval = __ABS(armas_x_get_unsafe(A, i, j));
         _min = __MINF(_min, aval);
         _max = __MAXF(_max, aval);
       }
