@@ -35,7 +35,7 @@ Currently tested only for single and double precision real numbers.
 
 ### Installation
 
-For compiling and installing from GitHub tree.
+For compiling and installing from GitHub tree. Compiles with gcc 5.x and gcc 6.x.
 ```sh
   @ ./bootstrap.sh
   $ ./configure CFLAGS=-O3
