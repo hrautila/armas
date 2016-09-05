@@ -587,9 +587,5 @@ typedef double ABSTYPE;
 
 
 #endif  /* __ARMAS_DTYPE_H */
-#else 
-
-// name defintions for Doxygen 
-#include "doxy.h"
 
 #endif /* __DOXYGEN */
