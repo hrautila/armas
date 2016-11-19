@@ -6,35 +6,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#if defined(FLOAT32)
-#include <armas/smatrix.h>
-typedef armas_s_dense_t __Matrix ;
-typedef float __Dtype;
-
-#define PREC "single"
-
-#define matrix_init       armas_s_init
-#define matrix_set_values armas_s_set_values
-#define matrix_mult       armas_s_mult
-#define matrix_transpose  armas_s_transpose
-#define matrix_release    armas_s_release
-#define matrix_printf     armas_s_printf
-#else
-#include <armas/dmatrix.h>
-typedef armas_d_dense_t __Matrix ;
-typedef double __Dtype;
-
-#define PREC "double"
-
-#define matrix_init       armas_d_init
-#define matrix_set_values armas_d_set_values
-#define matrix_mult       armas_d_mult
-#define matrix_transpose  armas_d_transpose
-#define matrix_release    armas_d_release
-#define matrix_printf     armas_d_printf
-
-#endif
-#include "helper.h"
+#include "unit/testing.h"
 
 int main(int argc, char **argv)
 {
@@ -46,7 +18,7 @@ int main(int argc, char **argv)
   int verbose = 0;
   double rt, min, max, avg;
   armas_conf_t conf;
-  __Matrix C, A, B;
+  armas_x_dense_t C, A, B;
 
   armas_init();
   conf = *armas_conf_default();
@@ -82,13 +54,13 @@ int main(int argc, char **argv)
   if (nproc > 0)
     conf.maxproc = nproc;
 
-  matrix_init(&C, N, N);
-  matrix_init(&A, N, N);
-  matrix_init(&B, N, N);
+  armas_x_init(&C, N, N);
+  armas_x_init(&A, N, N);
+  armas_x_init(&B, N, N);
   
-  matrix_set_values(&C, zero, ARMAS_NULL);
-  matrix_set_values(&A, unitrand, ARMAS_NULL);
-  matrix_set_values(&B, unitrand, ARMAS_NULL);
+  armas_x_set_values(&C, zero, ARMAS_NULL);
+  armas_x_set_values(&A, unitrand, ARMAS_NULL);
+  armas_x_set_values(&B, unitrand, ARMAS_NULL);
 
   // C = A*B
   min = max = avg = 0.0;
@@ -96,7 +68,7 @@ int main(int argc, char **argv)
     flush();
     rt = time_msec();
 
-    matrix_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
+    armas_x_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
     
     rt = time_msec() - rt;
 

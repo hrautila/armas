@@ -1,7 +1,7 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -I../ -I../../src
+AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -I../ -I../../src -I../../src/inc
 
 LDADD = ../../src/libarmasd.la
 

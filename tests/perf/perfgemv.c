@@ -4,16 +4,15 @@
 #include <unistd.h>
 #include <time.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "unit/testing.h"
 
-main(int argc, char **argv) {
+int main(int argc, char **argv) {
 
   int verbose = 0;
   int count = 5;
   double rt, min, max, avg;
   armas_conf_t conf; 
-  armas_d_dense_t X, Y, Y0, Y1, A, At;
+  armas_x_dense_t X, Y, Y0, Y1, A, At;
 
   int ok, opt, i;
   int N = 1701;
@@ -51,22 +50,22 @@ main(int argc, char **argv) {
   switch (algo) {
   case 'N':
   case 'n':
-    conf.optflags = ARMAS_SNAIVE;
+    conf.optflags = ARMAS_ONAIVE;
     break;
   case 'R':
   case 'r':
   default:
-    conf.optflags = ARMAS_RECURSIVE;
+    conf.optflags = ARMAS_ORECURSIVE;
     break;
   }    
 
-  armas_d_init(&Y, N, 1);
-  armas_d_init(&X, N, 1);
-  armas_d_init(&A, N, N);
+  armas_x_init(&Y, N, 1);
+  armas_x_init(&X, N, 1);
+  armas_x_init(&A, N, N);
   
-  armas_d_set_values(&Y, zero, ARMAS_NULL);
-  armas_d_set_values(&X, unitrand, ARMAS_NULL);
-  armas_d_set_values(&A, unitrand, ARMAS_NULL);
+  armas_x_set_values(&Y, zero, ARMAS_NULL);
+  armas_x_set_values(&X, unitrand, ARMAS_NULL);
+  armas_x_set_values(&A, unitrand, ARMAS_NULL);
 
   // C = A*B
   min = max = avg = 0.0;
@@ -74,7 +73,7 @@ main(int argc, char **argv) {
     flush();
     rt = time_msec();
 
-    armas_d_mvmult(&Y, &A, &X, 1.0, 0.0, ARMAS_NONE, &conf);
+    armas_x_mvmult(&Y, &A, &X, 1.0, 0.0, ARMAS_NONE, &conf);
     
     rt = time_msec() - rt;
 
@@ -94,6 +93,7 @@ main(int argc, char **argv) {
   int64_t nops = 2*(int64_t)N*N;
   printf("N: %4d, %8.4f, %8.4f, %8.4f Gflops\n",
 	 N, gflops(max, nops), gflops(avg, nops), gflops(min, nops));
+  return 0;
 }
 
 // Local Variables:

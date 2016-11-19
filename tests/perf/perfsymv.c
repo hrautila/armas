@@ -4,8 +4,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "unit/testing.h"
 
 int main(int argc, char **argv)
 {
@@ -14,7 +13,7 @@ int main(int argc, char **argv)
   int count = 5;
   double rt, min, max, avg;
   armas_conf_t conf;
-  armas_d_dense_t X, Y, Y0, Y1, A, At;
+  armas_x_dense_t X, Y, Y0, Y1, A, At;
 
   int ok, opt, i;
   int N = 1701;
@@ -61,13 +60,13 @@ int main(int argc, char **argv)
     break;
   }    
 
-  armas_d_init(&Y, N, 1);
-  armas_d_init(&X, N, 1);
-  armas_d_init(&A, N, N);
+  armas_x_init(&Y, N, 1);
+  armas_x_init(&X, N, 1);
+  armas_x_init(&A, N, N);
   
-  armas_d_set_values(&Y, zero, ARMAS_NULL);
-  armas_d_set_values(&X, unitrand, ARMAS_NULL);
-  armas_d_set_values(&A, unitrand, ARMAS_SYMM);
+  armas_x_set_values(&Y, zero, ARMAS_NULL);
+  armas_x_set_values(&X, unitrand, ARMAS_NULL);
+  armas_x_set_values(&A, unitrand, ARMAS_SYMM);
 
   // C = A*B
   min = max = avg = 0.0;
@@ -75,7 +74,7 @@ int main(int argc, char **argv)
     flush();
     rt = time_msec();
 
-    armas_d_mvmult_sym(&Y, &A, &X, 1.0, 0.0, ARMAS_LOWER, &conf);
+    armas_x_mvmult_sym(&Y, &A, &X, 1.0, 0.0, ARMAS_LOWER, &conf);
     
     rt = time_msec() - rt;
 

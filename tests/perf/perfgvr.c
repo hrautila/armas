@@ -8,11 +8,10 @@
 #include <float.h>
 #include <immintrin.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "unit/testing.h"
 
 static inline
-void gvright(armas_d_dense_t *A, double c, double s, int c1, int c2, int row, int nrow)
+void gvright(armas_x_dense_t *A, double c, double s, int c1, int c2, int row, int nrow)
 {
     double v0, v1, t0, t1, *y0, *y1;
     int k;
@@ -26,7 +25,7 @@ void gvright(armas_d_dense_t *A, double c, double s, int c1, int c2, int row, in
     }
 }
 
-int test_gvright(armas_d_dense_t *A, double c, double s)
+int test_gvright(armas_x_dense_t *A, double c, double s)
 {
   int k;
   for (k = 0; k < A->cols-1; k++) {
@@ -37,7 +36,7 @@ int test_gvright(armas_d_dense_t *A, double c, double s)
 
 #ifdef __AVX__
 static inline
-void gvright_avx(armas_d_dense_t *A, double c, double s, int c1, int c2, int row, int nrow)
+void gvright_avx(armas_x_dense_t *A, double c, double s, int c1, int c2, int row, int nrow)
 {
     register __m256d V0, V1, V2, V3, T0, T1, X0, X1, COS, SIN;
     double *y0, *y1, t0;
@@ -75,7 +74,7 @@ void gvright_avx(armas_d_dense_t *A, double c, double s, int c1, int c2, int row
 #endif
 
 
-int test_gvright_avx(armas_d_dense_t *A, double c, double s)
+int test_gvright_avx(armas_x_dense_t *A, double c, double s)
 {
 #ifdef __AVX__
   int k;
@@ -92,7 +91,7 @@ int test_gvright_avx(armas_d_dense_t *A, double c, double s)
 // ------------------------------------------------------------------------------
 
 static inline
-void gvleft(armas_d_dense_t *A, double c, double s, int r1, int r2, int col, int ncol)
+void gvleft(armas_x_dense_t *A, double c, double s, int r1, int r2, int col, int ncol)
 {
     double t0, t1, *y0, *y1;
     int k, n;
@@ -106,7 +105,7 @@ void gvleft(armas_d_dense_t *A, double c, double s, int r1, int r2, int col, int
     }
 }
 
-int test_gvleft(armas_d_dense_t *A, double c, double s)
+int test_gvleft(armas_x_dense_t *A, double c, double s)
 {
   int k;
   for (k = 0; k < A->rows-1; k++) {
@@ -116,7 +115,7 @@ int test_gvleft(armas_d_dense_t *A, double c, double s)
 }
 
 #ifdef __AVX__
-void gvleft_avx(armas_d_dense_t *A, double c, double s, int r1, int r2, int col, int ncol)
+void gvleft_avx(armas_x_dense_t *A, double c, double s, int r1, int r2, int col, int ncol)
 {
     register __m256d V0, V1, V2, V3, T0, T1, T2, T3, X0, X1, X2, X3, COS, SIN, Z;
     double *y0, *y1, t0;
@@ -160,7 +159,7 @@ void gvleft_avx(armas_d_dense_t *A, double c, double s, int r1, int r2, int col,
 }
 #endif
 
-int test_gvleft_avx(armas_d_dense_t *A, double c, double s)
+int test_gvleft_avx(armas_x_dense_t *A, double c, double s)
 {
 #ifdef __AVX__
   int k;
@@ -176,13 +175,14 @@ int test_gvleft_avx(armas_d_dense_t *A, double c, double s)
 
 // ------------------------------------------------------------------------------
 
-main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
   int verbose = 0;
   int count = 5;
   double rt, min, max, avg;
   double a = 0.7, b = -0.88, c;
-  armas_d_dense_t A;
+  armas_x_dense_t A;
 
   int ok, opt, i;
   long k, N = 3000, M = 10;
@@ -220,8 +220,8 @@ main(int argc, char **argv) {
   long seed = (long)time(0);
   srand48(seed);
 
-  armas_d_init(&A, N, N);
-  armas_d_set_values(&A, unitrand, ARMAS_ANY);
+  armas_x_init(&A, N, N);
+  armas_x_set_values(&A, unitrand, ARMAS_ANY);
 
   // C = A*B
   min = max = avg = 0.0;
@@ -269,6 +269,7 @@ main(int argc, char **argv) {
   printf("N: %4ld, %8.4f, %8.4f, %8.4f Gflops\n", N,
          gflops(max, nops), gflops(avg, nops), gflops(min, nops));
   printf("c=%.f\n", c);
+  return 0;
 }
 
 // Local Variables:

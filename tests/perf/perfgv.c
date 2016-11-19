@@ -8,9 +8,7 @@
 #include <float.h>
 #include <immintrin.h>
 
-#include <armas/dmatrix.h>
-#include "helper.h"
-
+#include "unit/testing.h"
 
 //---------------------------------------------------------------------------------
 
@@ -186,13 +184,14 @@ int test_gvcomp(double a, double b, long N)
 
 // ------------------------------------------------------------------------------
 
-main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
   int verbose = 0;
   int count = 5;
   double rt, min, max, avg;
   double a = 0.7, b = -0.88, c;
-  armas_d_dense_t A;
+  armas_x_dense_t A;
 
   int ok, opt, i;
   long k, N = 30000000;
@@ -273,6 +272,7 @@ main(int argc, char **argv) {
   printf("N: %4ld, %8.4f, %8.4f, %8.4f Gflops\n", N,
          gflops(max, nops), gflops(avg, nops), gflops(min, nops));
   printf("c=%.f\n", c);
+  return 0;
 }
 
 // Local Variables:

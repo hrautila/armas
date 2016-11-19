@@ -6,9 +6,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-//#include "armas.h"
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include "unit/testing.h"
 
 int main(int argc, char **argv)
 {
@@ -25,7 +23,7 @@ int main(int argc, char **argv)
   int verbose = 0;
   double rt, min, max, avg;
   armas_conf_t conf;
-  armas_d_dense_t C, A, B;
+  armas_x_dense_t C, A, B;
 
   while ((opt = getopt(argc, argv, "vc:P:a:s:t:T:")) != -1) {
     switch (opt) {
@@ -78,11 +76,11 @@ int main(int argc, char **argv)
     printf(".mb=%d, .nb=%d, .kb=%d, .wb=%d\n", conf.mb, conf.nb, conf.kb,conf.wb);
     printf(".maxproc=%d\n", conf.maxproc);
   }
-  armas_d_init(&A, N, N);
-  armas_d_init(&B, N, N);
+  armas_x_init(&A, N, N);
+  armas_x_init(&B, N, N);
   
-  armas_d_set_values(&A, one, flags);
-  armas_d_set_values(&B, one, ARMAS_NULL);
+  armas_x_set_values(&A, one, flags);
+  armas_x_set_values(&B, one, ARMAS_NULL);
 
   // C = A*B
   min = max = avg = 0.0;
@@ -90,11 +88,11 @@ int main(int argc, char **argv)
     flush();
     rt = time_msec();
 
-    armas_d_mult_trm(&B, &A, 1.0, flags, &conf);
+    armas_x_mult_trm(&B, &A, 1.0, flags, &conf);
     
     rt = time_msec() - rt;
 
-    armas_d_set_values(&B, one, ARMAS_NULL);
+    armas_x_set_values(&B, one, ARMAS_NULL);
     
     if (i == 0) {
       min = max = avg = rt;

@@ -6,11 +6,10 @@
 #include <time.h>
 #include <sys/time.h>
 
-//#include "armas.h"
-#include <armas/dmatrix.h>
-#include "helper.h"
+#include  "unit/testing.h"
 
-main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
   int ok, opt, i;
   int count = 5;
@@ -19,7 +18,7 @@ main(int argc, char **argv) {
   int verbose = 0;
   double rt, min, max, avg;
   armas_conf_t conf;
-  armas_d_dense_t C, A, B;
+  armas_x_dense_t C, A, B;
 
   armas_init();
   conf = *armas_conf_default();
@@ -49,13 +48,13 @@ main(int argc, char **argv) {
   //conf.mb = 96; conf.nb = 128; conf.kb = 160;
   //conf.maxproc = nproc;
 
-  armas_d_init(&C, N, N);
-  armas_d_init(&A, N, N);
-  armas_d_init(&B, N, N);
+  armas_x_init(&C, N, N);
+  armas_x_init(&A, N, N);
+  armas_x_init(&B, N, N);
   
-  armas_d_set_values(&C, zero, ARMAS_NULL);
-  armas_d_set_values(&A, unitrand, ARMAS_SYMM);
-  armas_d_set_values(&B, unitrand, ARMAS_NULL);
+  armas_x_set_values(&C, zero, ARMAS_NULL);
+  armas_x_set_values(&A, unitrand, ARMAS_SYMM);
+  armas_x_set_values(&B, unitrand, ARMAS_NULL);
 
   // C = A*B
   min = max = avg = 0.0;
@@ -63,7 +62,7 @@ main(int argc, char **argv) {
     flush();
     rt = time_msec();
 
-    armas_d_mult_sym(&C, &A, &B, 1.0, 0.0, ARMAS_LEFT|ARMAS_UPPER, &conf);
+    armas_x_mult_sym(&C, &A, &B, 1.0, 0.0, ARMAS_LEFT|ARMAS_UPPER, &conf);
     
     rt = time_msec() - rt;
 
@@ -82,6 +81,7 @@ main(int argc, char **argv) {
   int64_t nops = 2*(int64_t)N*N*N;
   printf("N: %4d, %8.4f, %8.4f, %8.4f Gflops\n",
 	 N, gflops(max, nops), gflops(avg, nops), gflops(min, nops));
+  return 0;
 }
 
 // Local Variables:
