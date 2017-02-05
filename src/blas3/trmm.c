@@ -324,15 +324,15 @@ int armas_x_mult_trm(armas_x_dense_t *B, const armas_x_dense_t *A,
   }
 
   // normal precision here; extended precision not enabled neither requested
-  switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-  case ARMAS_SNAIVE:
+  switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_ORECURSIVE)) {
+  case ARMAS_ONAIVE:
     __trmm_unb(_B, _A, alpha, flags, A->cols, 0, ie);
     break;
-  case ARMAS_RECURSIVE:
-    __trmm_recursive(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb);
+  case ARMAS_ORECURSIVE:
+    __trmm_recursive(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb, cbuf);
     break;
   default:
-    __trmm_blk(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb);
+    __trmm_blk(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb, cbuf);
     break;
   }
   return 0;

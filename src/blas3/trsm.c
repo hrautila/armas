@@ -336,26 +336,26 @@ int armas_x_solve_trm(armas_x_dense_t *B, const armas_x_dense_t *A,
   mdata_t *_B = (mdata_t*)B;
   const mdata_t *_A = (const mdata_t *)A;
   int ie = flags & ARMAS_RIGHT ? B->rows : B->cols;
+  armas_cbuf_t *cbuf = conf->cbuf ? conf->cbuf : armas_cbuf_default();
 
   // if extended precision enabled and requested
   if (HAVE_EXT_PRECISION && (conf->optflags&ARMAS_OEXTPREC)) {
       // compiler dead code pruning removes following if HAVE_EXT_PRECISION == 0
     __solve_ext(_B, _A, alpha, flags, A->cols, 0, ie,
-                conf->kb, conf->nb, conf->mb, conf->optflags);
+                conf->kb, conf->nb, conf->mb, conf->optflags, cbuf);
     return 0;
   }
 
-  armas_cbuf_t *cbuf = armas_cbuf_default();
   // otherwise; normal precision here
-  switch (conf->optflags & (ARMAS_SNAIVE|ARMAS_RECURSIVE)) {
-  case ARMAS_SNAIVE:
+  switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_ORECURSIVE)) {
+  case ARMAS_ONAIVE:
     if (flags & ARMAS_RIGHT) {
       __solve_right_unb(_B, _A, alpha, flags, A->cols, 0, ie);
     } else {
       __solve_left_unb(_B, _A, alpha, flags, A->cols, 0, ie);
     }
     break;
-  case ARMAS_RECURSIVE:
+  case ARMAS_ORECURSIVE:
     __solve_recursive(_B, _A, alpha, flags, A->cols, 0, ie, conf->kb, conf->nb, conf->mb, cbuf);
     break;
   default:
