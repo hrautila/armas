@@ -120,6 +120,9 @@ int armas_x_bdsvd(armas_x_dense_t *D, armas_x_dense_t *E,
     int err, N = armas_x_size(D);
     ABSTYPE tol = 8.0;
 
+    if (!conf)
+        conf = armas_conf_default();
+    
     uu = (armas_x_dense_t *)0;
     vv = (armas_x_dense_t *)0;
     // check for sizes
