@@ -32,7 +32,7 @@
 //! \endcond
 
 /**
- * @brief Compute \f$ A = A*diag(D) \f$ or \f$ A = diag(D)*A \f$
+ * @brief Compute \f$ A = alpha*A*diag(D) \f$ or \f$ A = alpha*diag(D)*A \f$
  *
  * @param A
  *      Target matrix or vector.
@@ -43,7 +43,7 @@
  * @param conf
  *      Optional blocking configuration
  */
-int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, armas_conf_t *conf)
+int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, DTYPE alpha, int flags, armas_conf_t *conf)
 {
     armas_x_dense_t c, d0;
     const armas_x_dense_t *d;
@@ -65,7 +65,7 @@ int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, a
         }
         for (k = 0; k < armas_x_size(d); k++) {
             DTYPE aval = armas_x_get_at_unsafe(A, k)*armas_x_get_at_unsafe(d, k);
-            armas_x_set_at_unsafe(A, k, aval);
+            armas_x_set_at_unsafe(A, k, alpha*aval);
         }
         return 0;
     }
@@ -79,7 +79,7 @@ int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, a
         // scale columns; 
         for (k = 0; k < armas_x_size(d); k++) {
             armas_x_column(&c, A, k);
-            armas_x_scale(&c, armas_x_get_at_unsafe(d, k), conf);
+            armas_x_scale(&c, alpha*armas_x_get_at_unsafe(d, k), conf);
         }
         break;
     case ARMAS_LEFT:
@@ -91,7 +91,7 @@ int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, a
         // scale rows; for each column element-wise multiply of D element
         for (k = 0; k < armas_x_size(d); k++) {
             armas_x_row(&c, A, k);
-            armas_x_scale(&c, armas_x_get_at_unsafe(d, k), conf);
+            armas_x_scale(&c, alpha*armas_x_get_at_unsafe(d, k), conf);
         }
         break;
     }
@@ -99,7 +99,7 @@ int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, a
 }
 
 /**
- * @brief Compute \f$ A = A*diag(D)^-1 \f$ or \f$ A = diag(D)^-1*A \f$
+ * @brief Compute \f$ A = alpha*A*diag(D)^-1 \f$ or \f$ A = alpha*diag(D)^-1*A \f$
  *
  * @param A
  *      Target matrix or vector.
@@ -110,7 +110,7 @@ int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, a
  * @param conf
  *      Optional blocking configuration
  */
-int armas_x_solve_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, armas_conf_t *conf)
+int armas_x_solve_diag(armas_x_dense_t *A, const armas_x_dense_t *D, DTYPE alpha, int flags, armas_conf_t *conf)
 {
     armas_x_dense_t c, d0;
     const armas_x_dense_t *d;
@@ -132,7 +132,7 @@ int armas_x_solve_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, 
         }
         for (k = 0; k < armas_x_size(d); k++) {
             DTYPE aval = armas_x_get_at_unsafe(A, k)/armas_x_get_at_unsafe(d, k);
-            armas_x_set_at_unsafe(A, k, aval);
+            armas_x_set_at_unsafe(A, k, alpha*aval);
         }
         return 0;
     }
@@ -146,7 +146,7 @@ int armas_x_solve_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, 
         // scale columns; 
         for (k = 0; k < armas_x_size(d); k++) {
             armas_x_column(&c, A, k);
-            armas_x_invscale(&c, armas_x_get_at_unsafe(d, k), conf);
+            armas_x_invscale(&c, alpha*armas_x_get_at_unsafe(d, k), conf);
         }
         break;
     case ARMAS_LEFT:
@@ -158,7 +158,7 @@ int armas_x_solve_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, 
         // scale rows; for each column element-wise multiply of D element
         for (k = 0; k < armas_x_size(d); k++) {
             armas_x_row(&c, A, k);
-            armas_x_invscale(&c, armas_x_get_at_unsafe(d, k), conf);
+            armas_x_invscale(&c, alpha*armas_x_get_at_unsafe(d, k), conf);
         }
         break;
     }

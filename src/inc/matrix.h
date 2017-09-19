@@ -743,8 +743,8 @@ extern int armas_x_ldlsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_
 // additional
 extern int armas_x_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c);
 extern void armas_x_discriminant(DTYPE *d, DTYPE a, DTYPE b, DTYPE c);
-extern int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, armas_conf_t *conf);
-extern int armas_x_solve_diag(armas_x_dense_t *A, const armas_x_dense_t *D, int flags, armas_conf_t *conf);
+extern int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, DTYPE alpha, int flags, armas_conf_t *conf);
+extern int armas_x_solve_diag(armas_x_dense_t *A, const armas_x_dense_t *D, DTYPE alpha, int flags, armas_conf_t *conf);
 
 extern int armas_x_pivot(armas_x_dense_t *A, armas_pivot_t *P, unsigned int flags, armas_conf_t *conf);
 extern int armas_x_pivot_rows(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf);
