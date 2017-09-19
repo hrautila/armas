@@ -97,7 +97,7 @@ int test_mult_qpt(int M, int N, int lb, int verbose)
 
   // extract B from A
   armas_x_mcopy(&B, &A0);
-  if (M > N) {
+  if (M >= N) {
     // zero subdiagonal entries
     armas_x_submatrix(&Btmp, &B, 0, 0, M, N);
     armas_x_make_trm(&Btmp, ARMAS_UPPER);
@@ -161,7 +161,7 @@ int test_mult_qtp(int M, int N, int lb, int verbose)
 
   // extract B from A
   armas_x_mcopy(&B, &A0);
-  if (M > N) {
+  if (M >= N) {
     // zero subdiagonal entries
     armas_x_submatrix(&Btmp, &B, 0, 0, M, N);
     armas_x_make_trm(&Btmp, ARMAS_UPPER);
@@ -324,9 +324,9 @@ int main(int argc, char **argv)
     fails++;
   if (! test_build_qp(M, N, LB, N/2, ARMAS_WANTP, verbose))
     fails++;
-  if (! test_build_qp(N, M, LB, N/2, ARMAS_WANTQ, verbose))
+  if (! test_build_qp(N, M, LB, N, ARMAS_WANTQ, verbose))
     fails++;
-  if (! test_build_qp(N, M, LB, N/2, ARMAS_WANTP, verbose))
+  if (! test_build_qp(N, M, LB, N, ARMAS_WANTP, verbose))
     fails++;
 
   exit(fails);

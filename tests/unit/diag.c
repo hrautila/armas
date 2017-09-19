@@ -25,12 +25,12 @@ int test_left(int M, int N, int verbose)
   armas_x_mcopy(&A1, &A0);
   armas_x_set_values(&D, unitrand, ARMAS_ANY);
 
-  armas_x_mult_diag(&A1, &D, ARMAS_LEFT, &conf);
+  armas_x_mult_diag(&A1, &D, 1.0, ARMAS_LEFT, &conf);
   if (verbose > 1 && N < 10) {
     printf("A0\n"); armas_x_printf(stdout, "%6.3f", &A0);
     printf("A1\n"); armas_x_printf(stdout, "%6.3f", &A1);
   }
-  armas_x_solve_diag(&A1, &D, ARMAS_LEFT, &conf);
+  armas_x_solve_diag(&A1, &D, 1.0, ARMAS_LEFT, &conf);
 #if 0
   armas_x_scale_plus(&A1, &A0, 1.0, -1.0, ARMAS_NOTRANS, &conf);
   if (verbose > 1 && N < 10) {
@@ -62,12 +62,12 @@ int test_right(int M, int N, int verbose)
   armas_x_mcopy(&A1, &A0);
   armas_x_set_values(&D, unitrand, ARMAS_ANY);
 
-  armas_x_mult_diag(&A1, &D, ARMAS_RIGHT, &conf);
+  armas_x_mult_diag(&A1, &D, 1.0, ARMAS_RIGHT, &conf);
   if (verbose > 1 && N < 10) {
     printf("A0\n"); armas_x_printf(stdout, "%6.3f", &A0);
     printf("A1\n"); armas_x_printf(stdout, "%6.3f", &A1);
   }
-  armas_x_solve_diag(&A1, &D, ARMAS_RIGHT, &conf);
+  armas_x_solve_diag(&A1, &D, 1.0, ARMAS_RIGHT, &conf);
 #if 0
   armas_x_scale_plus(&A1, &A0, 1.0, -1.0, ARMAS_NOTRANS, &conf);
   if (verbose > 1 && N < 10) {
