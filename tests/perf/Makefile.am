@@ -7,11 +7,16 @@ LDADD = ../../src/libarmasd.la
 
 noinst_HEADERS = ../helper.h
 
-noinst_PROGRAMS = dgemm dsymm dtrmm dtrsm dsymv dgemv dtrmv dger dsyr2 perfgv perfgvr sgemm
+noinst_PROGRAMS = dgemm dsymm dtrmm dtrsm dsymv dgemv dtrmv dger dsyr2 perfgv perfgvr
+
+if ENABLE_FLOAT32
+noinst_PROGRAMS += sgemm
 
 sgemm_SOURCES = perfgemm.c ../helper.c
 sgemm_CFLAGS = -DFLOAT32 $(AM_CFLAGS)
 sgemm_LDADD = ../../src/libarmass.la
+
+endif
 
 dgemm_SOURCES = perfgemm.c ../helper.c
 
