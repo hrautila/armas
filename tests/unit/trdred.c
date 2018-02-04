@@ -200,7 +200,7 @@ int test_build(int M, int N, int lb, int K, int verbose, int flags)
   // Q-matrix
   armas_x_trdbuild(&A0, &tauq0, &W, K, flags, &conf);
   armas_x_init(&QQt, N, N);
-  armas_x_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+  armas_x_mult(0.0, &QQt, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
   armas_x_diag(&d0, &QQt, 0);
   armas_x_madd(&d0, -1.0, ARMAS_NONE);
 

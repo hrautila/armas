@@ -111,8 +111,8 @@ int test_tall(int M, int N, int flags, int type, int verbose)
     armas_x_bdsvd(&D, &E, &U, &V, &W, flags|ARMAS_WANTU|ARMAS_WANTV, &conf);
 
     // compute: U.T*A*V
-    armas_x_mult(&C, &U, &A0, 1.0, 0.0, ARMAS_TRANSA, &conf);
-    armas_x_mult(&At, &C, &V, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &C, 1.0, &U, &A0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &At,1.0, &C, &V, ARMAS_TRANSB, &conf);
 
     if (verbose > 2 && N < 10) {
         printf("D:\n"); armas_x_printf(stdout, "%6.3f", &D);
@@ -132,7 +132,7 @@ int test_tall(int M, int N, int flags, int type, int verbose)
         fails++;
 
     // compute: ||I - U.T*U||
-    armas_x_mult(&C, &U, &U, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &C, 1.0, &U, &U, ARMAS_TRANSA, &conf);
     armas_x_diag(&sD, &C, 0);
     armas_x_madd(&sD, -1.0, 0);
 
@@ -146,7 +146,7 @@ int test_tall(int M, int N, int flags, int type, int verbose)
 
 
     // compute ||I - V*V.T||_1
-    armas_x_mult(&C, &V, &V, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &C, 1.0, &V, &V, ARMAS_TRANSA, &conf);
     armas_x_madd(&sD, -1.0, 0);
 
     nrm = armas_x_mnorm(&C, ARMAS_NORM_ONE, &conf);

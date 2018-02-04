@@ -124,7 +124,7 @@ int __blk_inverse_fused(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_co
         armas_x_mscale(&A21, __ZERO, 0);
 
         // A1 := A1 - A2*L21
-        armas_x_mult(&A1, &A2, &L21, -__ONE, __ONE, 0, conf);
+        armas_x_mult(__ONE, &A1, -__ONE, &A2, &L21, 0, conf);
         // A1 := A1*L11.-1
         armas_x_solve_trm(&A1, &L11, __ONE, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
         // ---------------------------------------------------------------------------

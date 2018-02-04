@@ -42,13 +42,13 @@ int test_1(int N, int flags, int verbose)
     }
     
     armas_x_diag(&sD, &I0, 0);
-    armas_x_mult(&I0, &A, &A, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &I0, 1.0, &A, &A, ARMAS_TRANSB, &conf);
     armas_x_madd(&sD, -1.0, ARMAS_ANY);
     n0 = armas_x_mnorm(&I0, ARMAS_NORM_ONE, &conf);
 
     armas_x_mcopy(&V, &A);
     armas_x_mult_diag(&V, &D, 1.0, ARMAS_RIGHT, &conf);
-    armas_x_mult(&A0, &V, &A, -1.0, 1.0, ARMAS_TRANSB, &conf);
+    armas_x_mult(1.0, &A0, -1.0, &V, &A, ARMAS_TRANSB, &conf);
 
     if (N < 10 && verbose > 2) {
         printf("D:\n"); armas_x_printf(stdout, "%6.3f", armas_x_col_as_row(&T, &D));

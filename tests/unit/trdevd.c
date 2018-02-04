@@ -114,8 +114,8 @@ int test_eigen(int N, int type, DTYPE coeff, int verbose)
 
     armas_x_trdeigen(&D, &E, &V, &W, ARMAS_WANTV, &conf);
     // compute: U.T*A*V
-    armas_x_mult(&C, &V, &A0, 1.0, 0.0, ARMAS_TRANSA, &conf);
-    armas_x_mult(&A0, &C, &V, 1.0, 0.0, ARMAS_NOTRANS, &conf);
+    armas_x_mult(0.0, &C, 1.0, &V, &A0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &A0, 1.0, &C, &V, ARMAS_NOTRANS, &conf);
 
     if (verbose > 2 && N < 10) {
         printf("D:\n"); armas_x_printf(stdout, "%6.3f", &D);
@@ -135,7 +135,7 @@ int test_eigen(int N, int type, DTYPE coeff, int verbose)
         fails++;
 
     // compute ||I - V*V.T||_1
-    armas_x_mult(&C, &V, &V, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &C, 1.0, &V, &V, ARMAS_TRANSA, &conf);
     armas_x_diag(&sD, &C, 0);
     armas_x_madd(&sD, -1.0, 0);
 

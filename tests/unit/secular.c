@@ -71,7 +71,7 @@ int test1(int N, double beta, int verbose)
 
     armas_x_trdsec_solve_vec(&D1, &Z1, &Q, &D0, &Z0, rho, &conf);
     armas_x_trdsec_eigen(&Q, &Z1, &Q, &conf);
-    armas_x_mult(&II, &Q, &Q, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &II, 1.0, &Q, &Q, ARMAS_TRANSA, &conf);
     if (verbose > 2 && N <= 10) {
         printf("D1:\n"); armas_x_printf(stdout, "%13e", &D1);
         armas_x_axpy(&Z1, &Z0, -1.0, &conf);

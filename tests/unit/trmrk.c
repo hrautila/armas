@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 
   printf("C(M,N)  M > N: M=%d, N=%d, K=%d\n", M, N, N/2);
   // upper(C)
-  armas_x_mult(&C0, &A, &B, alpha, 0.0, ARMAS_NULL, &conf);
+  armas_x_mult(0.0, &C0, alpha, &A, &B, ARMAS_NULL, &conf);
   armas_x_make_trm(&C0, ARMAS_UPPER);
   armas_x_set_values(&C, zero, ARMAS_NULL);
   armas_x_make_trm(&C, ARMAS_UPPER);
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // lower(C)
-  armas_x_mult(&C0, &A, &B, alpha, 0.0, ARMAS_NULL, &conf);
+  armas_x_mult(0.0, &C0, alpha, &A, &B, ARMAS_NULL, &conf);
   armas_x_make_trm(&C0, ARMAS_LOWER);
   armas_x_make_trm(&C, ARMAS_LOWER);
 
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
   armas_x_transpose(&Bt, &B);
 
   armas_x_set_values(&C, zero, ARMAS_NULL);
-  armas_x_mult(&C0, &A, &B, alpha, 0.0, ARMAS_NULL, &conf);
+  armas_x_mult(0.0, &C0, alpha, &A, &B, ARMAS_NULL, &conf);
   armas_x_make_trm(&C0, ARMAS_UPPER);
 
   printf("C(M,N)  M < N: M=%d, N=%d, K=%d\n", M, N, N/2);
@@ -268,7 +268,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 1. C = lower(C) + A*B
-  armas_x_mult(&C0, &A, &B, alpha, 0.0, ARMAS_NULL, &conf);
+  armas_x_mult(0.0, &C0, alpha, &A, &B, ARMAS_NULL, &conf);
   armas_x_make_trm(&C0, ARMAS_LOWER);
 
   armas_x_set_values(&C, zero, ARMAS_NULL);

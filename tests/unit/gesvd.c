@@ -52,19 +52,19 @@ int test1(int M, int N, int verbose)
 
     armas_x_diag(&sD, &V1, 0);
     // compute: I - U.T*U
-    armas_x_mult(&V1, &U, &U, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &V1, 1.0, &U, &U, ARMAS_TRANSA, &conf);
     armas_x_madd(&sD, -1.0, ARMAS_ANY);
     n0 = armas_x_mnorm(&V1, ARMAS_NORM_ONE, &conf);
 
     // compute: I - V*V.T
-    armas_x_mult(&V1, &V, &V, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &V1, 1.0, &V, &V, ARMAS_TRANSA, &conf);
     armas_x_madd(&sD, -1.0, ARMAS_ANY);
     n1 = armas_x_mnorm(&V1, ARMAS_NORM_ONE, &conf);
 
     // compute: A - U*S*V.T
     armas_x_diag(&sD, &A0, 0);
     armas_x_mult_diag(&U, &D, 1.0, ARMAS_RIGHT, &conf);
-    armas_x_mult(&A0, &U, &V, -1.0, 1.0, ARMAS_NONE, &conf);
+    armas_x_mult(1.0, &A0, -1.0, &U, &V, ARMAS_NONE, &conf);
     n2 = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
     ok = isOK(n2, 10*M);
@@ -124,13 +124,13 @@ int test2(int M, int N, int verbose)
     }
 
     // compute: I - U.T*U
-    armas_x_mult(&U1, &U, &U, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &U1, 1.0, &U, &U, ARMAS_TRANSA, &conf);
     armas_x_diag(&sD, &U1, 0);
     armas_x_madd(&sD, -1.0, ARMAS_ANY);
     n0 = armas_x_mnorm(&U1, ARMAS_NORM_ONE, &conf);
     
     // compute: I - V*V.T
-    armas_x_mult(&V1, &V, &V, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &V1, 1.0, &V, &V, ARMAS_TRANSA, &conf);
     armas_x_diag(&sD, &V1, 0);
     armas_x_madd(&sD, -1.0, ARMAS_ANY);
     n1 = armas_x_mnorm(&V1, ARMAS_NORM_ONE, &conf);
@@ -139,8 +139,8 @@ int test2(int M, int N, int verbose)
     armas_x_diag(&sD, &Sg, 0);
     armas_x_copy(&sD, &S, &conf);
 
-    armas_x_mult(&A1, &U, &Sg, 1.0, 0.0, ARMAS_NONE, &conf);
-    armas_x_mult(&A0, &A1, &V, -1.0, 1.0, ARMAS_NONE, &conf);
+    armas_x_mult(0.0, &A1, 1.0, &U, &Sg, ARMAS_NONE, &conf);
+    armas_x_mult(1.0, &A0, -1.0, &A1, &V, ARMAS_NONE, &conf);
     n2 = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
     ok = isOK(n2, 10*M);
@@ -200,20 +200,20 @@ int test3(int M, int N, int verbose)
 
     armas_x_diag(&sD, &U1, 0);
     // compute: I - U.T*U
-    armas_x_mult(&U1, &U, &U, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &U1, 1.0, &U, &U, ARMAS_TRANSA, &conf);
     armas_x_madd(&sD, -1.0, ARMAS_ANY);
     n0 = armas_x_mnorm(&U1, ARMAS_NORM_ONE, &conf);
 
     //armas_x_diag(&sD, &V1, 0);
     // compute: I - V*V.T
-    armas_x_mult(&U1, &V, &V, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &U1, 1.0, &V, &V, ARMAS_TRANSB, &conf);
     armas_x_madd(&sD, -1.0, ARMAS_ANY);
     n1 = armas_x_mnorm(&U1, ARMAS_NORM_ONE, &conf);
 
     // compute: A - U*S*V.T
     armas_x_diag(&sD, &A0, 0);
     armas_x_mult_diag(&V, &D, 1.0, ARMAS_LEFT, &conf);
-    armas_x_mult(&A0, &U, &V, -1.0, 1.0, ARMAS_NONE, &conf);
+    armas_x_mult(1.0, &A0, -1.0, &U, &V, ARMAS_NONE, &conf);
     n2 = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
     ok = isOK(n2, 10*N);
@@ -272,13 +272,13 @@ int test4(int M, int N, int verbose)
     }
 
     // compute: I - U.T*U
-    armas_x_mult(&U1, &U, &U, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &U1, 1.0, &U, &U, ARMAS_TRANSA, &conf);
     armas_x_diag(&sD, &U1, 0);
     armas_x_madd(&sD, -1.0, ARMAS_ANY);
     n0 = armas_x_mnorm(&U1, ARMAS_NORM_ONE, &conf);
     
     // compute: I - V*V.T
-    armas_x_mult(&V1, &V, &V, 1.0, 0.0, ARMAS_TRANSA, &conf);
+    armas_x_mult(0.0, &V1, 1.0, &V, &V, ARMAS_TRANSA, &conf);
     armas_x_diag(&sD, &V1, 0);
     armas_x_madd(&sD, -1.0, ARMAS_ANY);
     n1 = armas_x_mnorm(&V1, ARMAS_NORM_ONE, &conf);
@@ -287,8 +287,8 @@ int test4(int M, int N, int verbose)
     armas_x_diag(&sD, &Sg, 0);
     armas_x_copy(&sD, &S, &conf);
 
-    armas_x_mult(&A1, &Sg, &V, 1.0, 0.0, ARMAS_NONE, &conf);
-    armas_x_mult(&A0, &U, &A1, -1.0, 1.0, ARMAS_NONE, &conf);
+    armas_x_mult(0.0, &A1, 1.0, &Sg, &V, ARMAS_NONE, &conf);
+    armas_x_mult(1.0, &A0, -1.0, &U, &A1, ARMAS_NONE, &conf);
     n2 = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
     ok = isOK(n2, 10*N);

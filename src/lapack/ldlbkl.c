@@ -204,7 +204,7 @@ int __unblk_bkfactor_lower(armas_x_dense_t *A, armas_x_dense_t *W,
       armas_x_submatrix(&cwrk, W, 0, 0, a21.rows, a21.cols);
       armas_x_mcopy(&cwrk, &a21);
       // a21 := a21*a11.-1
-      armas_x_mult(&a21, &cwrk, &a11inv, scale, 0.0, ARMAS_NONE, conf);
+      armas_x_mult(0.0, &a21, scale, &cwrk, &a11inv, ARMAS_NONE, conf);
       // A22 := A22 - a21*a11.-1*a21.T = A22 - a21*cwrk.T
       armas_x_update_trm(&A22, &a21, &cwrk, -1.0, 1.0, ARMAS_LOWER|ARMAS_TRANSB, conf);
       // store pivot points
@@ -428,7 +428,7 @@ int __unblk_bkbounded_lower(armas_x_dense_t *A, armas_x_dense_t *W,
       // cwrk = a21
       armas_x_submatrix(&cwrk, &w11, np, 0, a21.rows, np);
       // a21 := a21*a11.-1
-      armas_x_mult(&a21, &cwrk, &a11inv, scale, 0.0, ARMAS_NONE, conf);
+      armas_x_mult(0.0, &a21, scale, &cwrk, &a11inv, ARMAS_NONE, conf);
       armas_x_set(&a11, 0, 0, a);
       armas_x_set(&a11, 1, 0, b);
       armas_x_set(&a11, 1, 1, d);
@@ -607,7 +607,7 @@ int __unblk_bksolve_lower(armas_x_dense_t *B, armas_x_dense_t *A,
         scale = apb*dpb - 1.0;
         scale *= b;
         // B2 = B2 - a21*b1
-        armas_x_mult(&B2, &a21, &b1, -1.0, 1.0, ARMAS_NONE, conf);
+        armas_x_mult(__ONE, &B2, -__ONE, &a21, &b1, ARMAS_NONE, conf);
         // b1 = a11.-1*b1.T
         // (2x2 block, no function for doing this in-place)
         for (k = 0; k < b1.cols; k++) {
@@ -630,7 +630,7 @@ int __unblk_bksolve_lower(armas_x_dense_t *B, armas_x_dense_t *A,
         }
         nc -= 1;
       } else if (np == 2) {
-        armas_x_mult(&b1, &a21, &B2, -1.0, 1.0, ARMAS_TRANSA, conf);
+        armas_x_mult(__ONE, &b1, -__ONE, &a21, &B2, ARMAS_TRANSA, conf);
         if (pr != -nc) {
           // swap rows on bottom part of B
           __merge2x1(&Bx, &b1, &B2);

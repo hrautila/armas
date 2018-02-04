@@ -106,7 +106,7 @@ int test_qrbuild_identity(int M, int N, int K, int lb, int verbose)
   armas_x_qrbuild(&A0, &tau0, &W, K, &conf);
 
   // C0 = Q.T*Q 
-  armas_x_mult(&C0, &A0, &A0, 1.0, 0.0, ARMAS_TRANSA, &conf);
+  armas_x_mult(0.0, &C0, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
 
   n0 = rel_error(&n1, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(n0, N);

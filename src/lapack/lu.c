@@ -86,7 +86,7 @@ int __blk_lufactor_nopiv(armas_x_dense_t *A, int lb, armas_conf_t *conf)
     // A21 = A21.-1*triu(A11)
     armas_x_solve_trm(&A21, &A11, 1.0, ARMAS_RIGHT|ARMAS_UPPER, conf);
     // A22 = A22 - A21*A12
-    armas_x_mult(&A22, &A21, &A12, -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mult(__ONE, &A22, -__ONE, &A21, &A12, ARMAS_NONE, conf);
     // ---------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil,
                         __nil, &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -216,9 +216,9 @@ int __blk_lufactor(armas_x_dense_t *A, armas_pivot_t *P, int lb, armas_conf_t *c
     // a. A01 = trilu(A00) \ A01
     armas_x_solve_trm(&A01, &A00, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
     // b. A11 = A11 - A10*A01
-    armas_x_mult(&A11, &A10, &A01, -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mult(__ONE, &A11, -__ONE, &A10, &A01, ARMAS_NONE, conf);
     // c. A21 = A21 - A20*A01
-    armas_x_mult(&A21, &A20, &A01, -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mult(__ONE, &A21, -__ONE, &A20, &A01, ARMAS_NONE, conf);
     // HERE: current block has been updated with effects of earlier computations.
 
     // B. factor ( A11 ) 

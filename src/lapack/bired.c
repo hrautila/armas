@@ -364,9 +364,9 @@ int __blk_bdreduce_left(armas_x_dense_t *A,
     armas_x_set(&A12, A12.rows-1, 0, 1.0);
 
     // A22 := A22 - U2*Y2.T
-    armas_x_mult(&A22, &A21, &Y2, -1.0, 1.0, ARMAS_TRANSB, conf);
+    armas_x_mult(1.0, &A22, -1.0, &A21, &Y2, ARMAS_TRANSB, conf);
     // A22 := A22 - Z2*V2.T
-    armas_x_mult(&A22, &Z2, &A12,  -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mult(1.0, &A22, -1.0, &Z2, &A12,  ARMAS_NONE, conf);
 
     // restore super-diagonal entry
     armas_x_set(&A12, A12.rows-1, 0, v0);
@@ -717,9 +717,9 @@ int __blk_bdreduce_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
     armas_x_set(&A21, 0, A21.cols-1, 1.0);
 
     // A22 := A22 - U2*Z2.T
-    armas_x_mult(&A22, &A21, &Z2, -1.0, 1.0, ARMAS_TRANSB, conf);
+    armas_x_mult(__ONE, &A22, -__ONE, &A21, &Z2, ARMAS_TRANSB, conf);
     // A22 := A22 - Y2*V2.T
-    armas_x_mult(&A22, &Y2, &A12,  -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mult(__ONE, &A22, -__ONE, &Y2, &A12,  ARMAS_NONE, conf);
 
     // restore super-diagonal entry
     armas_x_set(&A21, 0, A21.cols-1, v0);

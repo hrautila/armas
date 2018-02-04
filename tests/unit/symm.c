@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 #endif
   // C0 = symm(upper(A)*B);  C1 = A*B
   armas_x_mult_sym(&C0, &A, &B, 1.0, 0.0, ARMAS_LEFT|ARMAS_UPPER, &conf);
-  armas_x_mult(&C1, &A, &B, 1.0, 0.0, 0, &conf);
+  armas_x_mult(0.0, &C1, 1.0, &A, &B, 0, &conf);
 
   n0 = rel_error(&n1, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 
   // C = B*upper(A)
   armas_x_mult_sym(&C0, &A, &B, 1.0, 0.0, ARMAS_RIGHT|ARMAS_UPPER, &conf);
-  armas_x_mult(&C1, &B, &A, 1.0, 0.0, 0, &conf);
+  armas_x_mult(0.0, &C1, 1.0, &B, &A, 0, &conf);
 
   n0 = rel_error(&n1, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 
   // LOWER
   armas_x_mult_sym(&C0, &A, &B, 1.0, 0.0, ARMAS_LEFT|ARMAS_LOWER, &conf);
-  armas_x_mult(&C1, &A, &B, 1.0, 0.0, 0, &conf);
+  armas_x_mult(0.0, &C1, 1.0, &A, &B, 0, &conf);
   n0 = rel_error(&n1, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
 
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
 
   // C = B*upper(A)
   armas_x_mult_sym(&C0, &A, &B, 1.0, 0.0, ARMAS_RIGHT|ARMAS_LOWER, &conf);
-  armas_x_mult(&C1, &B, &A, 1.0, 0.0, 0, &conf);
+  armas_x_mult(0.0, &C1, 1.0, &B, &A, 0, &conf);
   n0 = rel_error(&n1, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
 

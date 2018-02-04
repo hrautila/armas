@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   armas_x_make_trm(&C, ARMAS_UPPER);
   armas_x_update_sym(&C, &A, alpha, 0.0, ARMAS_UPPER, &conf);
 
-  armas_x_mult(&C0, &A, &At, alpha, 0.0, ARMAS_NULL, &conf);
+  armas_x_mult(0.0, &C0, alpha, &A, &At, ARMAS_NULL, &conf);
   armas_x_make_trm(&C0, ARMAS_UPPER);
   if (verbose > 1 && N < 10) {
     printf("syrk(C)\n"); armas_x_printf(stdout, "%5.2f", &C);
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
   armas_x_make_trm(&C, ARMAS_UPPER);
   armas_x_update_sym(&C, &At, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
 
-  armas_x_mult(&C0, &At, &At, alpha, 0.0, ARMAS_TRANSA, &conf);
+  armas_x_mult(0.0, &C0, alpha, &At, &At, ARMAS_TRANSA, &conf);
   armas_x_make_trm(&C0, ARMAS_UPPER);
 
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
   armas_x_make_trm(&C, ARMAS_LOWER);
   armas_x_update_sym(&C, &A, alpha, 0.0, ARMAS_LOWER, &conf);
 
-  armas_x_mult(&C0, &A, &At, alpha, 0.0, ARMAS_NULL, &conf);
+  armas_x_mult(0.0, &C0, alpha, &A, &At, ARMAS_NULL, &conf);
   armas_x_make_trm(&C0, ARMAS_LOWER);
 
   if (verbose > 1 && N < 10) {
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
   armas_x_make_trm(&C, ARMAS_LOWER);
   armas_x_update_sym(&C, &At, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
 
-  armas_x_mult(&C0, &At, &At, alpha, 0.0, ARMAS_TRANSA, &conf);
+  armas_x_mult(0.0, &C0, alpha, &At, &At, ARMAS_TRANSA, &conf);
   armas_x_make_trm(&C0, ARMAS_LOWER);
 
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);

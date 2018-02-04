@@ -33,7 +33,7 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
 
   // set source data (A = A*A.T)
   armas_x_set_values(&A0, zeromean, ARMAS_ANY);
-  armas_x_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+  armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
   armas_x_mcopy(&A0, &A1);
 
   armas_x_set_values(&B0, unitrand, ARMAS_ANY);
@@ -47,7 +47,7 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   armas_x_cholsolve(&X0, &A0, ARMAS_NOPIVOT, flags, &conf);
 
   // X0 = A*X0 - B0
-  armas_x_mult(&B0, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
+  armas_x_mult(1.0, &B0, -1.0, &A1, &X0, ARMAS_NONE, &conf);
   nrm = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
   ok = isFINE(nrm, N*__ERROR);
 
@@ -77,7 +77,7 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
   // set source data
   armas_x_set_values(&A0, unitrand, ARMAS_ANY);
   // A = A*A.T; positive semi-definite
-  armas_x_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+  armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
   armas_x_mcopy(&A0, &A1);
 
   conf.lb = 0; 
@@ -118,7 +118,7 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     armas_pivot_init(&P, N);
     
     armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
     armas_x_make_trm(&A1, flags);
     armas_x_mcopy(&A0, &A1);
     if (N < 10) {
@@ -182,13 +182,13 @@ int test_cholpv_solve(int M, int N, int lb, int flags, int verbose)
     armas_pivot_init(&P0, N);
     
     armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
     armas_x_mcopy(&A0, &A1);
     armas_x_make_trm(&A0, flags);
 
     armas_x_set_values(&B0, zeromean, 0);
     // B = A*B0
-    armas_x_mult(&B, &A1, &B0, 1.0, 0.0, 0, &conf);
+    armas_x_mult(0.0, &B, 1.0, &A1, &B0, 0, &conf);
 
     conf.lb = lb;
     if ((e = armas_x_cholfactor(&A0, &W, &P0, flags, &conf)) < 0) 

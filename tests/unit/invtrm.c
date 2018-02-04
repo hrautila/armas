@@ -96,7 +96,7 @@ int test_ident(int N, int lb, int flags, int verbose)
     armas_x_inverse_trm(&A1, flags, &conf);
 
     // C = A*A.-1
-    armas_x_mult(&C, &A0, &A1, 1.0, 0.0, 0, &conf);
+    armas_x_mult(0.0, &C, 1.0, &A0, &A1, 0, &conf);
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_INF, ARMAS_NONE, &conf);
     ok = isFINE(n0, N*__ERROR);
     //ok = isOK(n0, N);
@@ -110,7 +110,7 @@ int test_ident(int N, int lb, int flags, int verbose)
     conf.lb = lb;
     armas_x_inverse_trm(&A2, flags, &conf);
 
-    armas_x_mult(&C, &A0, &A2, 1.0, 0.0, 0, &conf);
+    armas_x_mult(0.0, &C, 1.0, &A0, &A2, 0, &conf);
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_INF, ARMAS_NONE, &conf);
     ok = isFINE(n0, N*__ERROR);
     fails += 1 - ok;

@@ -44,7 +44,7 @@ int test_qr(int M, int N, int verbose)
   }
 
   // compute A1 = A1 - Q*R
-  armas_x_mult(&A1, &Qt, &A0, -1.0, 1.0, ARMAS_TRANSA, conf);
+  armas_x_mult(1.0, &A1, -1.0, &Qt, &A0, ARMAS_TRANSA, conf);
 
   nrm = armas_x_mnorm(&A1, ARMAS_NORM_ONE, conf);
   nrm /= nrm_A;
@@ -90,7 +90,7 @@ int test_lq(int M, int N, int verbose)
   }
 
   // compute A1 = A1 - L*Q
-  armas_x_mult(&A1, &A0, &Qt, -1.0, 1.0, ARMAS_TRANSB, conf);
+  armas_x_mult(1.0, &A1, -1.0, &A0, &Qt, ARMAS_TRANSB, conf);
 
   nrm = armas_x_mnorm(&A1, ARMAS_NORM_ONE, conf);
   nrm /= nrm_A;

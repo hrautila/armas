@@ -79,7 +79,7 @@ int test_ident(int N, int lb, int verbose)
     armas_x_lufactor(&A1, &P, &conf);
     armas_x_inverse(&A1, &W, &P, &conf);
 
-    armas_x_mult(&C, &A1, &A0, 1.0, 0.0, 0, &conf);
+    armas_x_mult(0.0, &C, 1.0, &A1, &A0, 0, &conf);
     armas_x_madd(&D, -1.0, 0);
     n0 = armas_x_mnorm(&C, ARMAS_NORM_INF, &conf);
     ok = isFINE(n0, N*__ERROR);

@@ -34,7 +34,7 @@ int test_lss(int M, int N, int K, int lb, int verbose)
   armas_x_set_values(&X0, unitrand, ARMAS_ANY);
 
   // compute: B0 = A0.T*X0
-  armas_x_mult(&B0, &A0, &X0, 1.0, 0.0, ARMAS_TRANSA, &conf);
+  armas_x_mult(0.0, &B0, 1.0, &A0, &X0, ARMAS_TRANSA, &conf);
 
   conf.lb = lb;
   wsize = armas_x_lqfactor_work(&A0, &conf);
@@ -94,7 +94,7 @@ int test_min(int M, int N, int K, int lb, int verbose)
 
   // B = B - A*X
   armas_x_submatrix(&B, &B0, 0, 0, M, K);
-  armas_x_mult(&B, &A1, &X0, -1.0, 1.0, ARMAS_NONE, &conf);
+  armas_x_mult(1.0, &B, -1.0, &A1, &X0, ARMAS_NONE, &conf);
 
   nrm = armas_x_mnorm(&B, ARMAS_NORM_ONE, &conf) / nrm0;
   ok = isOK(nrm, N);

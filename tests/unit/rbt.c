@@ -117,18 +117,18 @@ int test_update_rbt(int N, int P, int verbose)
 
     if (P == 2) {
         // RBT: <N/2>: U1.T*A1;  U1.T*A1*U1
-        armas_x_mult(&Ax, &U1, &A1, __RSQRT2, 0.0, ARMAS_TRANSA, &conf);
-        armas_x_mult(&A1, &Ax, &U1, __RSQRT2, 0.0, 0, &conf);
+        armas_x_mult(0.0, &Ax, __RSQRT2, &U1, &A1, ARMAS_TRANSA, &conf);
+        armas_x_mult(0.0, &A1, __RSQRT2, &Ax, &U1, 0, &conf);
         
         clear_extra(&A1, N, 1);
 
         // RBT <N>:  U2.T*U1.T*A1*U1;  U2.T*U1.T*A1*U1*U2
-        armas_x_mult(&Ax, &U2, &A1, __RSQRT2, 0.0, ARMAS_TRANSA, &conf);
-        armas_x_mult(&A1, &Ax, &U2, __RSQRT2, 0.0, 0, &conf);
+        armas_x_mult(0.0, &Ax, __RSQRT2, &U2, &A1, ARMAS_TRANSA, &conf);
+        armas_x_mult(0.0, &A1, __RSQRT2, &Ax, &U2, 0, &conf);
     } else if (P == 1) {
         // RBT <N>: U2.T*A1; U2.T*A*U2
-        armas_x_mult(&Ax, &U2, &A1, __RSQRT2, 0.0, ARMAS_TRANSA, &conf);
-        armas_x_mult(&A1, &Ax, &U2, __RSQRT2, 0.0, 0, &conf);
+        armas_x_mult(0.0, &Ax, __RSQRT2, &U2, &A1, ARMAS_TRANSA, &conf);
+        armas_x_mult(0.0, &A1, __RSQRT2, &Ax, &U2, 0, &conf);
     }
 
     // compute RBT 
@@ -218,7 +218,7 @@ int test_rbt_lufactor(int N, int P, int verbose)
     armas_x_lusolve(&X1, &A1, (armas_pivot_t *)0, 0, &conf);
     // X = V*B
     armas_x_mult_rbt(&X1, &V, ARMAS_LEFT, &conf);
-    armas_x_mult(&B1, &A0, &X1, 1.0, 0.0, 0, &conf);
+    armas_x_mult(0.0, &B1, 1.0, &A0, &X1, 0, &conf);
     n0 = rel_error(&n1, &B1, &B0, ARMAS_NORM_INF, 0, &conf);
     ok = n0 == 0.0 || isFINE(n0, N*MAX_ERROR);
     fails += 1 - ok;
@@ -236,7 +236,7 @@ int test_rbt_lufactor(int N, int P, int verbose)
     armas_x_mcopy(&X1, &B0);
     armas_x_lusolve(&X1, &A1, (armas_pivot_t *)0, 0, &conf);
     
-    armas_x_mult(&B1, &A0, &X1, 1.0, 0.0, 0, &conf);
+    armas_x_mult(0.0, &B1, 1.0, &A0, &X1, 0, &conf);
     n0 = rel_error(&n1, &B1, &B0, ARMAS_NORM_INF, 0, &conf);
     if (verbose > 0) {
         printf("   || rel error/genp || : %e, [%d]\n", n0, ndigits(n0));
@@ -251,7 +251,7 @@ int test_rbt_lufactor(int N, int P, int verbose)
     armas_x_mcopy(&X1, &B0);
     armas_x_lusolve(&X1, &A1, &p, 0, &conf);
     
-    armas_x_mult(&B1, &A0, &X1, 1.0, 0.0, 0, &conf);
+    armas_x_mult(0.0, &B1, 1.0, &A0, &X1, 0, &conf);
     n0 = rel_error(&n1, &B1, &B0, ARMAS_NORM_INF, 0, &conf);
     if (verbose > 0) {
         printf("   || rel error/gepp || : %e, [%d]\n", n0, ndigits(n0));

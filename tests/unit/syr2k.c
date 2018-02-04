@@ -53,8 +53,8 @@ int main(int argc, char **argv)
   armas_x_make_trm(&C, ARMAS_UPPER);
   armas_x_update2_sym(&C, &A, &B, alpha, 0.0, ARMAS_UPPER, &conf);
 
-  armas_x_mult(&C0, &A, &Bt, alpha, 0.0, ARMAS_NULL, &conf);
-  armas_x_mult(&C0, &B, &At, alpha, 1.0, ARMAS_NULL, &conf);
+  armas_x_mult(0.0, &C0, alpha, &A, &Bt, ARMAS_NULL, &conf);
+  armas_x_mult(1.0, &C0, alpha, &B, &At, ARMAS_NULL, &conf);
   armas_x_make_trm(&C0, ARMAS_UPPER);
 
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NULL, &conf);
@@ -72,8 +72,8 @@ int main(int argc, char **argv)
   armas_x_make_trm(&C, ARMAS_UPPER);
   armas_x_update2_sym(&C, &At, &Bt, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
 
-  armas_x_mult(&C0, &Bt, &A, alpha, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
-  armas_x_mult(&C0, &At, &B, alpha, 1.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_mult(0.0, &C0, alpha, &Bt, &A, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_mult(1.0, &C0, alpha, &At, &B, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
   armas_x_make_trm(&C0, ARMAS_UPPER);
 
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NULL, &conf);
@@ -91,8 +91,8 @@ int main(int argc, char **argv)
   armas_x_make_trm(&C, ARMAS_LOWER);
   armas_x_update2_sym(&C, &A, &B, alpha, 0.0, ARMAS_LOWER, &conf);
 
-  armas_x_mult(&C0, &A, &Bt, alpha, 0.0, ARMAS_NULL, &conf);
-  armas_x_mult(&C0, &B, &At, alpha, 1.0, ARMAS_NULL, &conf);
+  armas_x_mult(0.0, &C0, alpha, &A, &Bt, ARMAS_NULL, &conf);
+  armas_x_mult(1.0, &C0, alpha, &B, &At, ARMAS_NULL, &conf);
   armas_x_make_trm(&C0, ARMAS_LOWER);
 
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NULL, &conf);
@@ -110,8 +110,8 @@ int main(int argc, char **argv)
   armas_x_make_trm(&C, ARMAS_LOWER);
   armas_x_update2_sym(&C, &At, &Bt, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
 
-  armas_x_mult(&C0, &Bt, &A, alpha, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
-  armas_x_mult(&C0, &At, &B, alpha, 1.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_mult(0.0, &C0, alpha, &Bt, &A, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_mult(1.0, &C0, alpha, &At, &B, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
   armas_x_make_trm(&C0, ARMAS_LOWER);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NULL, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;

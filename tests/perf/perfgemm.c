@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     flush();
     rt = time_msec();
 
-    armas_x_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
+    armas_x_mult(0.0, &C, 1.0, &A, &B, 0, &conf);
     
     rt = time_msec() - rt;
 

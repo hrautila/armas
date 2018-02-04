@@ -33,7 +33,7 @@ int test_ident(int N, int lb, int flags, int verbose)
 
     // symmetric positive definite matrix A*A.T
     armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
     armas_x_make_trm(&A1, flags);
     armas_x_mcopy(&A0, &A1);
 
@@ -80,7 +80,7 @@ int test_equal(int N, int lb, int flags, int verbose)
 
     // symmetric positive definite matrix A*A.T
     armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mult(&A1, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
     armas_x_make_trm(&A1, flags);
     armas_x_mcopy(&A0, &A1);
 

@@ -97,8 +97,8 @@ int main(int argc, char **argv)
   armas_x_set_values(&B, unitrand, ARMAS_NULL);
 
   // C = A*B; C.T = B.T*A.T
-  armas_x_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
-  armas_x_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_mult(0.0, &C, 1.0, &A, &B, 0, &conf);
+  armas_x_mult(0.0, &Ct,1.0, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
 
   armas_x_transpose(&T, &Ct);
 
@@ -121,8 +121,8 @@ int main(int argc, char **argv)
   armas_x_set_values(&A, unitrand, ARMAS_NULL);
   armas_x_set_values(&B, unitrand, ARMAS_NULL);
   // C = A*B.T; Ct = B*A.T
-  armas_x_mult(&C,  &A, &B, 1.0, 0.0, ARMAS_TRANSB, &conf);
-  armas_x_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSB, &conf);
+  armas_x_mult(0.0, &C, 1.0, &A, &B, ARMAS_TRANSB, &conf);
+  armas_x_mult(0.0, &Ct, 1.0, &B, &A, ARMAS_TRANSB, &conf);
   armas_x_transpose(&T, &Ct);
 
   n0 = rel_error((DTYPE *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
@@ -143,8 +143,8 @@ int main(int argc, char **argv)
   armas_x_set_values(&A, unitrand, ARMAS_NULL);
   armas_x_set_values(&B, unitrand, ARMAS_NULL);
   // C = A.T*B; Ct = B.T*A
-  armas_x_mult(&C,  &A, &B, 1.0, 0.0, ARMAS_TRANSA, &conf);
-  armas_x_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA, &conf);
+  armas_x_mult(0.0, &C, 1.0, &A, &B, ARMAS_TRANSA, &conf);
+  armas_x_mult(0.0, &Ct,1.0, &B, &A, ARMAS_TRANSA, &conf);
   armas_x_transpose(&T, &Ct);
 
   n0 = rel_error((DTYPE *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
@@ -163,9 +163,9 @@ int main(int argc, char **argv)
   armas_x_set_values(&B, unitrand, ARMAS_NULL);
 
   // C = A*B; C.T = B.T*A.T
-  armas_x_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
+  armas_x_mult(0.0, &C, 1.0, &A, &B, 0, &conf);
   armas_x_mscale(&A, -1.0, 0);
-  armas_x_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB|ARMAS_ABSB, &conf);
+  armas_x_mult(0.0, &Ct, 1.0, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB|ARMAS_ABSB, &conf);
   armas_x_transpose(&T, &Ct);
 
   n0 = rel_error(&n1, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);

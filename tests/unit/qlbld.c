@@ -95,7 +95,7 @@ int test_build_identity(int M, int N, int K, int lb, int verbose)
   armas_x_qlbuild(&A0, &tau0, &W, K, &conf);
 
   // C0 = Q.T*Q - I
-  armas_x_mult(&C0, &A0, &A0, 1.0, 0.0, ARMAS_TRANSA, &conf);
+  armas_x_mult(0.0, &C0, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
   armas_x_diag(&D, &C0, 0);
   armas_x_add(&D, -1.0, &conf);
 

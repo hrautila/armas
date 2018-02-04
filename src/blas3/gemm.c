@@ -311,8 +311,9 @@ int __mult_schedule(int nblk, int colwise, armas_x_dense_t *C,
  *
  * @ingroup blas3
  */
-int armas_x_mult(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *B,
-                 DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
+int armas_x_mult(DTYPE beta, armas_x_dense_t *C,
+                 DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *B,
+                 int flags, armas_conf_t *conf)
 {
   int ok;
 

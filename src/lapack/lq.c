@@ -155,7 +155,7 @@ int __update_lq_left(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t *
   // W = C1.T*Y1.T = W*Y1.T
   armas_x_mult_trm(W, Y1, 1.0, ARMAS_UPPER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
   // W = W + C2.T*Y2.T
-  armas_x_mult(W, C2, Y2, 1.0, 1.0, ARMAS_TRANSA|ARMAS_TRANSB, conf);
+  armas_x_mult(__ONE, W, __ONE, C2, Y2, ARMAS_TRANSA|ARMAS_TRANSB, conf);
   // here: W = C.T*Y
 
   int bits = ARMAS_UPPER|ARMAS_RIGHT;
@@ -166,7 +166,7 @@ int __update_lq_left(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t *
   // here: W == C.T*Y*T or C.T*Y*T.T
 
   // C2 = C2 - Y2*W.T
-  armas_x_mult(C2, Y2, W, -1.0, 1.0, ARMAS_TRANSA|ARMAS_TRANSB, conf);
+  armas_x_mult(__ONE, C2, -__ONE, Y2, W, ARMAS_TRANSA|ARMAS_TRANSB, conf);
   // W = Y1*W.T ==> W.T = W*Y1
   armas_x_mult_trm(W, Y1, 1.0, ARMAS_UPPER|ARMAS_UNIT|ARMAS_RIGHT, conf);
   // C1 = C1 - W.T
@@ -195,7 +195,7 @@ int __update_lq_right(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t 
   // W = C1*Y1.T = W*Y1.T
   armas_x_mult_trm(W, Y1, 1.0, ARMAS_UPPER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
   // W = W + C2*Y2.T
-  armas_x_mult(W, C2, Y2, 1.0, 1.0, ARMAS_TRANSB, conf);
+  armas_x_mult(__ONE, W, __ONE, C2, Y2, ARMAS_TRANSB, conf);
   // here: W = C*Y
 
   int bits = ARMAS_UPPER|ARMAS_RIGHT;
@@ -206,7 +206,7 @@ int __update_lq_right(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t 
   // here: W == C*Y*T or C*Y*T.T
 
   // C2 = C2 - W*Y2
-  armas_x_mult(C2, W, Y2, -1.0, 1.0, ARMAS_NONE, conf);
+  armas_x_mult(__ONE, C2, -__ONE, W, Y2, ARMAS_NONE, conf);
   // C1 = C1 - W*Y1
   //  W = W*Y1.T
   armas_x_mult_trm(W, Y1, 1.0, ARMAS_UPPER|ARMAS_UNIT|ARMAS_RIGHT, conf);

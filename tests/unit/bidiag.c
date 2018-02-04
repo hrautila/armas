@@ -227,10 +227,10 @@ int test_build_qp(int M, int N, int lb, int K, int flags, int verbose)
     if (M < N) {
       armas_x_init(&QQt, M, M);
       armas_x_submatrix(&Qh, &A0, 0, 0, M, M);
-      armas_x_mult(&QQt, &Qh, &Qh, 1.0, 0.0, ARMAS_TRANSA, &conf);
+      armas_x_mult(0.0, &QQt, 1.0, &Qh, &Qh, ARMAS_TRANSA, &conf);
     } else {
       armas_x_init(&QQt, N, N);
-      armas_x_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSA, &conf);
+      armas_x_mult(0.0, &QQt, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
     }
     armas_x_diag(&d0, &QQt, 0);
     armas_x_madd(&d0, -1.0, ARMAS_NONE);
@@ -249,10 +249,10 @@ int test_build_qp(int M, int N, int lb, int K, int flags, int verbose)
     if (N < M) {
       armas_x_init(&QQt, N, N);
       armas_x_submatrix(&Qh, &A0, 0, 0, N, N);
-      armas_x_mult(&QQt, &Qh, &Qh, 1.0, 0.0, ARMAS_TRANSA, &conf);
+      armas_x_mult(0.0, &QQt, 1.0, &Qh, &Qh, ARMAS_TRANSA, &conf);
     } else {
       armas_x_init(&QQt, M, M);
-      armas_x_mult(&QQt, &A0, &A0, 1.0, 0.0, ARMAS_TRANSB, &conf);
+      armas_x_mult(0.0, &QQt, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
     }
     armas_x_diag(&d0, &QQt, 0);
     armas_x_madd(&d0, -1.0, ARMAS_NONE);

@@ -179,7 +179,7 @@ int __unblk_bkfactor_upper(armas_x_dense_t *A, armas_x_dense_t *W,
       armas_x_submatrix(&cwrk, W, 2, 0, a01.rows, np);
       armas_x_mcopy(&cwrk, &a01);
       // a01 := a01*a11.-1
-      armas_x_mult(&a01, &cwrk, &a11inv, scale, 0.0, ARMAS_NONE, conf);
+      armas_x_mult(0.0, &a01, scale, &cwrk, &a11inv, ARMAS_NONE, conf);
       // A00 := A00 - a01*a11.-1*a01.T = A00 - a01*cwrk.T
       armas_x_update_trm(&A00, &a01, &cwrk, -1.0, 1.0, ARMAS_UPPER|ARMAS_TRANSB, conf);
       // store pivot points
@@ -419,7 +419,7 @@ int __unblk_bkbounded_upper(armas_x_dense_t *A, armas_x_dense_t *W,
       scale /= b;
       // cwrk = a01
       // a01 := a01*a11.-1
-      armas_x_mult(&a01, &cwrk, &a11inv, scale, 0.0, ARMAS_NONE, conf);
+      armas_x_mult(0.0, &a01, scale, &cwrk, &a11inv, ARMAS_NONE, conf);
       armas_x_set(&a11, 0, 0, a);
       armas_x_set(&a11, 0, 1, b);
       armas_x_set(&a11, 1, 1, d);
@@ -589,7 +589,7 @@ int __unblk_bksolve_upper(armas_x_dense_t *B, armas_x_dense_t *A,
         scale = apb*dpb - 1.0;
         scale *= b;
         // B0 = B0 - a01*b1
-        armas_x_mult(&B0, &a01, &b1, -1.0, 1.0, ARMAS_NONE, conf);
+        armas_x_mult(__ONE, &B0, -__ONE, &a01, &b1, ARMAS_NONE, conf);
         // b1 = a11.-1*b1.T
         // (2x2 block, no function for doing this in-place)
         for (k = 0; k < b1.cols; k++) {
@@ -613,7 +613,7 @@ int __unblk_bksolve_upper(armas_x_dense_t *B, armas_x_dense_t *A,
         nc += 1;
       }
       else if (np == 2) {
-        armas_x_mult(&b1, &a01, &B0, -1.0, 1.0, ARMAS_TRANSA, conf);
+        armas_x_mult(__ONE, &b1, -__ONE, &a01, &B0, ARMAS_TRANSA, conf);
         if (pr != -nc) {
           // swap rows on top part of B
           __merge2x1(&Bx, &B0, &b1);

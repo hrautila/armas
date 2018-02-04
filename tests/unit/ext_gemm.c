@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
     printf("conf .mb, .nb, .kb: %d, %d, %d\n", conf.mb, conf.nb, conf.kb);
     armas_x_set_values(&A, one, ARMAS_NULL);
     armas_x_set_values(&B, one, ARMAS_NULL);
-    armas_x_mult(&Ce, &A, &B, 1.0, 0.0, 0, &conf);
+    armas_x_mult(0.0, &Ce, 1.0, &A, &B, 0, &conf);
   } else {
     ep_genmat(&dot, &cond, &A, &B, cwant);
     ep_gemm(&Ce, &A, &B, 1.0, 0.0, prec, ARMAS_NULL);
@@ -100,8 +100,8 @@ int main(int argc, char **argv) {
   conf.optflags = ARMAS_OEXTPREC;
 
   // C = A*B; C.T = B.T*A.T
-  armas_x_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
-  armas_x_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_mult(0.0, &C, 1.0, &A, &B, 0, &conf);
+  armas_x_mult(0.0, &Ct, 1.0, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
 
   if (verbose > 2 && N < 10) {
     printf("C.exact:\n"); armas_x_printf(stdout, "%13e", &Ce);
@@ -136,8 +136,8 @@ int main(int argc, char **argv) {
     conf.optflags ^= ARMAS_OEXTPREC;
 
     // C = A*B; C.T = B.T*A.T
-    armas_x_mult(&C, &A, &B, 1.0, 0.0, 0, &conf);
-    armas_x_mult(&Ct, &B, &A, 1.0, 0.0, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &C, 1.0, &A, &B, 0, &conf);
+    armas_x_mult(0.0, &Ct,1.0, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB, &conf);
 
     armas_x_transpose(&T, &Ct);
     m_one   = rel_error((DTYPE *)0, &C, &Ce, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
