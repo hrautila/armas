@@ -63,7 +63,7 @@ int test1(int M, int N, int verbose)
 
     // compute: A - U*S*V.T
     armas_x_diag(&sD, &A0, 0);
-    armas_x_mult_diag(&U, &D, ARMAS_RIGHT, &conf);
+    armas_x_mult_diag(&U, &D, 1.0, ARMAS_RIGHT, &conf);
     armas_x_mult(&A0, &U, &V, -1.0, 1.0, ARMAS_NONE, &conf);
     n2 = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
@@ -212,7 +212,7 @@ int test3(int M, int N, int verbose)
 
     // compute: A - U*S*V.T
     armas_x_diag(&sD, &A0, 0);
-    armas_x_mult_diag(&V, &D, ARMAS_LEFT, &conf);
+    armas_x_mult_diag(&V, &D, 1.0, ARMAS_LEFT, &conf);
     armas_x_mult(&A0, &U, &V, -1.0, 1.0, ARMAS_NONE, &conf);
     n2 = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 

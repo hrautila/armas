@@ -47,7 +47,7 @@ int test_1(int N, int flags, int verbose)
     n0 = armas_x_mnorm(&I0, ARMAS_NORM_ONE, &conf);
 
     armas_x_mcopy(&V, &A);
-    armas_x_mult_diag(&V, &D, ARMAS_RIGHT, &conf);
+    armas_x_mult_diag(&V, &D, 1.0, ARMAS_RIGHT, &conf);
     armas_x_mult(&A0, &V, &A, -1.0, 1.0, ARMAS_TRANSB, &conf);
 
     if (N < 10 && verbose > 2) {
