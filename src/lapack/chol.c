@@ -101,7 +101,7 @@ int __blk_cholfactor_lower(armas_x_dense_t *A, int lb, armas_conf_t *conf)
     armas_x_solve_trm(&A21, &A11, 1.0, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA, conf);
 
       // A22 = A22 - A21*A21.T
-    armas_x_update_sym(&A22, &A21, -1.0, 1.0, ARMAS_LOWER, conf);
+    armas_x_update_sym(__ONE, &A22, -__ONE, &A21, ARMAS_LOWER, conf);
 
     // ---------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil,
@@ -186,7 +186,7 @@ int __blk_cholfactor_upper(armas_x_dense_t *A, int lb, armas_conf_t *conf)
     armas_x_solve_trm(&A12, &A11, 1.0, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
 
       // A22 = A22 - A12.T*A12
-    armas_x_update_sym(&A22, &A12, -1.0, 1.0, ARMAS_UPPER|ARMAS_TRANSA, conf);
+    armas_x_update_sym(__ONE, &A22, -__ONE, &A12, ARMAS_UPPER|ARMAS_TRANSA, conf);
     // ---------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil,
                         __nil, &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PBOTTOMRIGHT);

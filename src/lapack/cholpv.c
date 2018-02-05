@@ -241,7 +241,7 @@ int __blk_cholpv_lower(armas_x_dense_t *A, armas_x_dense_t *W,
             return e + ATL.rows;
         }
         // A22 = A22 - A21*A21.T
-        armas_x_update_sym(&A22, &A21, -__ONE, __ONE, ARMAS_LOWER, conf);
+        armas_x_update_sym(__ONE, &A22, -__ONE, &A21, ARMAS_LOWER, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL, __nil,
                             &ABL,  &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -450,7 +450,7 @@ int __blk_cholpv_upper(armas_x_dense_t *A, armas_x_dense_t *W,
         if (e != A11.cols) {
             return e + ATL.cols;
         }
-        armas_x_update_sym(&A22, &A12, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANS, conf);
+        armas_x_update_sym(__ONE, &A22, -__ONE, &A12, ARMAS_UPPER|ARMAS_TRANS, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  &ATR,
                             __nil, &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PBOTTOMRIGHT);

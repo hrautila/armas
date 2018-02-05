@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   armas_x_mcopy(&C0, &C);
 
   armas_x_make_trm(&C, ARMAS_UPPER);
-  armas_x_update_sym(&C, &A, alpha, 0.0, ARMAS_UPPER, &conf);
+  armas_x_update_sym(0.0, &C, alpha, &A, ARMAS_UPPER, &conf);
 
   armas_x_mult(0.0, &C0, alpha, &A, &At, ARMAS_NULL, &conf);
   armas_x_make_trm(&C0, ARMAS_UPPER);
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
   armas_x_mcopy(&C0, &C);
 
   armas_x_make_trm(&C, ARMAS_UPPER);
-  armas_x_update_sym(&C, &At, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
+  armas_x_update_sym(0.0, &C, alpha, &At, ARMAS_UPPER|ARMAS_TRANSA, &conf);
 
   armas_x_mult(0.0, &C0, alpha, &At, &At, ARMAS_TRANSA, &conf);
   armas_x_make_trm(&C0, ARMAS_UPPER);
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
   armas_x_mcopy(&C0, &C);
 
   armas_x_make_trm(&C, ARMAS_LOWER);
-  armas_x_update_sym(&C, &A, alpha, 0.0, ARMAS_LOWER, &conf);
+  armas_x_update_sym(0.0, &C, alpha, &A, ARMAS_LOWER, &conf);
 
   armas_x_mult(0.0, &C0, alpha, &A, &At, ARMAS_NULL, &conf);
   armas_x_make_trm(&C0, ARMAS_LOWER);
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
   armas_x_mcopy(&C0, &C);
 
   armas_x_make_trm(&C, ARMAS_LOWER);
-  armas_x_update_sym(&C, &At, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
+  armas_x_update_sym(0.0, &C, alpha, &At, ARMAS_LOWER|ARMAS_TRANSA, &conf);
 
   armas_x_mult(0.0, &C0, alpha, &At, &At, ARMAS_TRANSA, &conf);
   armas_x_make_trm(&C0, ARMAS_LOWER);

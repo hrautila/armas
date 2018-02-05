@@ -269,7 +269,7 @@ int __blk_trdreduce_lower(armas_x_dense_t *A, armas_x_dense_t *tauq,
     armas_x_set(&A21, 0, -1, 1.0);
 
     // A22 := A22 - A21*Y2.T - Y2*A21.T
-    armas_x_update2_sym(&A22, &A21, &Y2, -1.0, 1.0, ARMAS_LOWER, conf);
+    armas_x_update2_sym(__ONE, &A22, -__ONE, &A21, &Y2, ARMAS_LOWER, conf);
 
     // restore subdiagonal entry
     armas_x_set(&A21, 0, -1, v0);
@@ -501,7 +501,7 @@ int __blk_trdreduce_upper(armas_x_dense_t *A, armas_x_dense_t *tauq,
     armas_x_set(&A01, -1, 0, 1.0);
 
     // A00 := A00 - A01*Y0.T - Y0*A01.T
-    armas_x_update2_sym(&A00, &A01, &Y0, -1.0, 1.0, ARMAS_UPPER, conf);
+    armas_x_update2_sym(__ONE, &A00, -__ONE, &A01, &Y0, ARMAS_UPPER, conf);
 
     // restore superdiagonal entry
     armas_x_set(&A01, -1, 0, v0);

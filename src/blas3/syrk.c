@@ -377,10 +377,10 @@ int __rank_schedule(int nblk, armas_x_dense_t *C, const armas_x_dense_t *A,
  * is set. If matrix is upper (lower) then
  * the strictly lower (upper) part is not referenced.
  *
- * @param[in,out] C symmetric result matrix
- * @param[in] A first operand matrix
- * @param[in] alpha scalar constant
  * @param[in] beta scalar constant
+ * @param[in,out] C symmetric result matrix
+ * @param[in] alpha scalar constant
+ * @param[in] A first operand matrix
  * @param[in] flags matrix operand indicator flags
  * @param[in,out] conf environment configuration
  *
@@ -389,8 +389,9 @@ int __rank_schedule(int nblk, armas_x_dense_t *C, const armas_x_dense_t *A,
  *
  * @ingroup blas3
  */
-int armas_x_update_sym(armas_x_dense_t *C,  const armas_x_dense_t *A, 
-                       DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
+int armas_x_update_sym(DTYPE beta, armas_x_dense_t *C,
+                       DTYPE alpha, const armas_x_dense_t *A, 
+                       int flags, armas_conf_t *conf)
 {
   int ok;
 
