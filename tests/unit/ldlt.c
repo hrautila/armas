@@ -83,7 +83,7 @@ int test_ldl_solve(int N, int lb, int flags, int verbose)
 
     armas_x_set_values(&B0, unitrand, 0);
     // B = A*B0
-    armas_x_mult_sym(&B, &A0, &B0, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
+    armas_x_mult_sym(0.0, &B, 1.0, &A0, &B0, flags|ARMAS_LEFT, &conf);
 
     conf.lb = lb;
     armas_x_ldlfactor(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
@@ -261,7 +261,7 @@ int test_ldlpv_solve(int N, int lb, int flags, int verbose)
 
     armas_x_set_values(&B0, unitrand, 0);
     // B = A*B0
-    armas_x_mult_sym(&B, &A0, &B0, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
+    armas_x_mult_sym(0.0, &B, 1.0, &A0, &B0, flags|ARMAS_LEFT, &conf);
 
     if (N < 10) {
         printf("B0:\n"); armas_x_printf(stdout, "%6.3f", &B0);

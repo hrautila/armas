@@ -109,7 +109,7 @@ int __blk_invspd_lower(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
         armas_x_mcopy(&L21, &A21);
         
         // A21 = - A22*L21*L11.-1
-        armas_x_mult_sym(&A21, &A22, &L21, - __ONE, __ZERO, ARMAS_LOWER, conf);
+        armas_x_mult_sym(__ZERO, &A21, -__ONE, &A22, &L21, ARMAS_LOWER, conf);
         armas_x_solve_trm(&A21, &A11, __ONE, ARMAS_LOWER|ARMAS_RIGHT, conf);
         
         // A11*L11 + A21.T*L21 = L11.-T -> A11 = inv(A11) - A21.T*L21*L11.-1
@@ -206,7 +206,7 @@ int __blk_invspd_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
         armas_x_mcopy(&U12, &A12);
 
         // A12 = - U11.-1*U12*A22
-        armas_x_mult_sym(&A12, &A22, &U12, -__ONE, __ZERO, ARMAS_RIGHT|ARMAS_UPPER, conf);
+        armas_x_mult_sym(__ZERO, &A12, -__ONE, &A22, &U12, ARMAS_RIGHT|ARMAS_UPPER, conf);
         armas_x_solve_trm(&A12, &A11, __ONE, ARMAS_LEFT|ARMAS_UPPER, conf);
 
         // A11 = inv(A11) - U11.-1*U12*A12.T

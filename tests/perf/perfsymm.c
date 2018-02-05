@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     flush();
     rt = time_msec();
 
-    armas_x_mult_sym(&C, &A, &B, 1.0, 0.0, ARMAS_LEFT|ARMAS_UPPER, &conf);
+    armas_x_mult_sym(0.0, &C, 1.0, &A, &B, ARMAS_LEFT|ARMAS_UPPER, &conf);
     
     rt = time_msec() - rt;
 

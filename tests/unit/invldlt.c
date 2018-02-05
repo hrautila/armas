@@ -48,7 +48,7 @@ int test_ldlnp_inv(int N, int lb, int flags, int verbose)
     armas_x_ldlfactor(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
     armas_x_ldlinverse_sym(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
 
-    armas_x_mult_sym(&C, &A0, &A1, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
+    armas_x_mult_sym(0.0, &C, 1.0, &A0, &A1, flags|ARMAS_LEFT, &conf);
 
     n0 = rel_error(&n1, &C, &C1, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
@@ -98,7 +98,7 @@ int test_ldl_inv(int N, int lb, int flags, int verbose)
     armas_x_ldlfactor(&A0, &W, &P0, flags, &conf);
     armas_x_ldlinverse_sym(&A0, &W, &P0, flags, &conf);
 
-    armas_x_mult_sym(&C, &A0, &A1, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
+    armas_x_mult_sym(0.0, &C, 1.0, &A0, &A1, flags|ARMAS_LEFT, &conf);
 
     n0 = rel_error(&n1, &C, &C1, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);

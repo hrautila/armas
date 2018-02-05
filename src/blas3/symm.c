@@ -457,11 +457,11 @@ int __mult_sym_schedule(int nblk, int colwise, armas_x_dense_t *C,
  * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
  * are executed in extended precision.
  *
+ * @param[in] beta scalar constant
  * @param[in,out] C result matrix
+ * @param[in] alpha scalar constant
  * @param[in] A symmetric matrix
  * @param[in] B second operand matrix
- * @param[in] alpha scalar constant
- * @param[in] beta scalar constant
  * @param[in] flags matrix operand indicator flags
  * @param[in,out] conf environment configuration
  *
@@ -470,8 +470,9 @@ int __mult_sym_schedule(int nblk, int colwise, armas_x_dense_t *C,
  *
  * @ingroup blas3
  */
-int armas_x_mult_sym(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *B,
-                      DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
+int armas_x_mult_sym(DTYPE beta, armas_x_dense_t *C,
+                     DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *B,
+                     int flags, armas_conf_t *conf)
 {
   int ok;
 

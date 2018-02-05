@@ -46,8 +46,8 @@ int test_ident(int N, int lb, int flags, int verbose)
     armas_x_inverse_spd(&A1, &W, flags, &conf);
 
     // A2 = A1*I
-    armas_x_mult_sym(&A2, &A1, &C, 1.0, 0.0, flags|ARMAS_LEFT, &conf);
-    armas_x_mult_sym(&C, &A0, &A2, 1.0, 0.0, flags, &conf);
+    armas_x_mult_sym(0.0, &A2, 1.0, &A1, &C, flags|ARMAS_LEFT, &conf);
+    armas_x_mult_sym(0.0, &C, 1.0, &A0, &A2, flags, &conf);
 
     // diag(C) -= 1.0
     armas_x_madd(&D, -1.0, 0);

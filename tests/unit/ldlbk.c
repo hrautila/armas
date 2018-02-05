@@ -97,7 +97,7 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   armas_x_bksolve(&X0, &A0, &W, &P0, flags, &conf);
   
   // B0 = B0 - A*X0
-  armas_x_mult_sym(&B0, &A1, &X0, -1.0, 1.0, ARMAS_LEFT|flags, &conf);
+  armas_x_mult_sym(1.0, &B0, -1.0, &A1, &X0, ARMAS_LEFT|flags, &conf);
   nrm = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &conf);
   nrm /= nrm_A;
 
