@@ -206,7 +206,7 @@ int __unblk_bkfactor_lower(armas_x_dense_t *A, armas_x_dense_t *W,
       // a21 := a21*a11.-1
       armas_x_mult(0.0, &a21, scale, &cwrk, &a11inv, ARMAS_NONE, conf);
       // A22 := A22 - a21*a11.-1*a21.T = A22 - a21*cwrk.T
-      armas_x_update_trm(&A22, &a21, &cwrk, -1.0, 1.0, ARMAS_LOWER|ARMAS_TRANSB, conf);
+      armas_x_update_trm(__ONE, &A22, -__ONE, &a21, &cwrk, ARMAS_LOWER|ARMAS_TRANSB, conf);
       // store pivot points
       pi = r + ATL.rows + 1;
       armas_pivot_set(&p1, 0, -pi);
@@ -482,7 +482,7 @@ int __blk_bkfactor_lower(armas_x_dense_t *A, armas_x_dense_t *W,
     // nblk first columns in W is original A21; A21 is A21*D1
     armas_x_submatrix(&cwrk, W, nblk, 0, A21.rows, nblk);
     // A22 := A22 - L21*D1*L21.T == A22 - A21*W.T
-    armas_x_update_trm(&A22, &A21, &cwrk, -1.0, 1.0, ARMAS_LOWER|ARMAS_TRANSB, conf);
+    armas_x_update_trm(__ONE, &A22, -__ONE, &A21, &cwrk, ARMAS_LOWER|ARMAS_TRANSB, conf);
 
     // undo partial row pivots left of diagonal from lower level
     for (k = nblk; k > 0; k--) {

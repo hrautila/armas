@@ -117,7 +117,7 @@ int __blk_invspd_lower(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
         if (__unblk_invspd_lower(&A11, &w2, conf) < 0 && err == 0)
             err = -1;
         // rank update
-        armas_x_update_trm(&A11, &A21, &L21, -__ONE, __ONE, ARMAS_TRANSA|ARMAS_LOWER, conf);
+        armas_x_update_trm(__ONE, &A11, -__ONE, &A21, &L21, ARMAS_TRANSA|ARMAS_LOWER, conf);
 
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
@@ -213,7 +213,7 @@ int __blk_invspd_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
         armas_x_solve_trm(&U12, __ONE, &A11, ARMAS_LEFT|ARMAS_UPPER, conf);
         if (__unblk_invspd_upper(&A11, &w2, conf) < 0 && err == 0)
             err = -1;
-        armas_x_update_trm(&A11, &U12, &A12, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANSB, conf);
+        armas_x_update_trm(__ONE, &A11, -__ONE, &U12, &A12, ARMAS_UPPER|ARMAS_TRANSB, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
                             __nil, &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PTOPLEFT);

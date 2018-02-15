@@ -217,7 +217,7 @@ int __blk_ldlpv_lower(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, 
                         &Y21, /**/ &YL, A11.rows, ARMAS_PTOP);
 
         // A22 = A22 - L21*D1*L21.T   (Y21 is L21*D1, A21 is L21)
-        armas_x_update_trm(&A22, &Y21, &A21, -__ONE, __ONE, ARMAS_LOWER|ARMAS_TRANSB, conf);
+        armas_x_update_trm(__ONE, &A22, -__ONE, &Y21, &A21, ARMAS_LOWER|ARMAS_TRANSB, conf);
 
         // pivot rows on left side; update pivot indexes;
         armas_x_pivot(&ABL, &p1, ARMAS_PIVOT_ROWS|ARMAS_PIVOT_FORWARD, conf);
@@ -414,7 +414,7 @@ int __blk_ldlpv_upper(armas_x_dense_t *A, armas_x_dense_t *W,
                         &Y11, /**/ &Y, A11.rows, ARMAS_PBOTTOM);
 
         // A00 = A00 - U01*D1*U01.T   (Y01 is U01*D1, A01 is U01)
-        armas_x_update_trm(&A00, &Y01, &A01, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANSB, conf);
+        armas_x_update_trm(__ONE, &A00, -__ONE, &Y01, &A01, ARMAS_UPPER|ARMAS_TRANSB, conf);
 
         // pivot rows on right side;
         armas_x_pivot(&ATR, &p1, ARMAS_PIVOT_ROWS|ARMAS_PIVOT_BACKWARD, conf);

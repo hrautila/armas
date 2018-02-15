@@ -77,10 +77,9 @@ extern int armas_x_mvsolve_trm(armas_x_dense_t *X,  const armas_x_dense_t *A,
   extern int armas_x_solve_trm(armas_x_dense_t *B, DTYPE alpha, const armas_x_dense_t *A,
 			       int flags, armas_conf_t *conf);
 
-extern int armas_x_update_trm(armas_x_dense_t *C,
-                              const armas_x_dense_t *A, const armas_x_dense_t *B,
-                              DTYPE alpha, DTYPE beta, int flags,
-                              armas_conf_t *conf);
+  extern int armas_x_update_trm(DTYPE beta, armas_x_dense_t *C,
+				DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *B,
+				int flags, armas_conf_t *conf);
 
   extern int armas_x_update_sym(DTYPE beta, armas_x_dense_t *C,
 				DTYPE alpha, const armas_x_dense_t *A,

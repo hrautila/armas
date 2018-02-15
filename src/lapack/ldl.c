@@ -152,7 +152,7 @@ int __blk_ldlnp_lower(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_conf
         armas_x_mult_diag(&L21, &D, __ONE, ARMAS_RIGHT, conf);
 
         // A22 = A22 - L21*A21.T 
-        armas_x_update_trm(&A22, &L21, &A21, -__ONE, __ONE, ARMAS_LOWER|ARMAS_TRANSB, conf);
+        armas_x_update_trm(__ONE, &A22, -__ONE, &L21, &A21, ARMAS_LOWER|ARMAS_TRANSB, conf);
 
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
@@ -192,7 +192,7 @@ int __blk_ldlnp_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_conf
         armas_x_mult_diag(&L01, &D, __ONE, ARMAS_RIGHT, conf);
 
         // A00 = A00 - L01*A01.T
-        armas_x_update_trm(&A00, &L01, &A01, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANSB, conf);
+        armas_x_update_trm(__ONE, &A00, -__ONE, &L01, &A01, ARMAS_UPPER|ARMAS_TRANSB, conf);
 
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,

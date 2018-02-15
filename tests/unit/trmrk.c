@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 1. C = upper(C) + A*B
-  armas_x_update_trm(&C, &A, &B, alpha, 0.0, ARMAS_UPPER, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &A, &B, ARMAS_UPPER, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, U|N|N) == TriU(gemm(C, A, B))\n", PASS(ok));
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 2. C = upper(C) + A.T*B
-  armas_x_update_trm(&C, &At, &B, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &At, &B, ARMAS_UPPER|ARMAS_TRANSA, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, U|T|N) == TriU(gemm(C, A, B))\n", PASS(ok));
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 3. C = upper(C) + A*B.T
-  armas_x_update_trm(&C, &A, &Bt, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSB, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &A, &Bt, ARMAS_UPPER|ARMAS_TRANSB, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, U|N|T) == TriU(gemm(C, A, B))\n", PASS(ok));
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 4. C = upper(C) + A.T*B.T
-  armas_x_update_trm(&C, &At, &Bt, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &At, &Bt, ARMAS_UPPER|ARMAS_TRANSA|ARMAS_TRANSB, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, U|T|T) == TriU(gemm(C, A, B))\n", PASS(ok));
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 1. C = lower(C) + A*B
-  armas_x_update_trm(&C, &A, &B, alpha, 0.0, ARMAS_LOWER, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &A, &B, ARMAS_LOWER, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, L|N|N) == TriL(gemm(C, A, B))\n", PASS(ok));
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 2. C = lower(C) + A.T*B
-  armas_x_update_trm(&C, &At, &B, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &At, &B, ARMAS_LOWER|ARMAS_TRANSA, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, L|T|N) == TriL(gemm(C, A, B))\n", PASS(ok));
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 3. C = lower(C) + A*B.T
-  armas_x_update_trm(&C, &A, &Bt, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSB, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &A, &Bt, ARMAS_LOWER|ARMAS_TRANSB, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, L|N|T) == TriL(gemm(C, A, B))\n", PASS(ok));
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 4. C = lower(C) + A.T*B.T
-  armas_x_update_trm(&C, &At, &Bt, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &At, &Bt, ARMAS_LOWER|ARMAS_TRANSA|ARMAS_TRANSB, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, L|T|T) == TriL(gemm(C, A, B))\n", PASS(ok));
@@ -223,7 +223,7 @@ int main(int argc, char **argv)
   // ----------------------------------------------------------------------------
   // 1. C = upper(C) + A*B
   armas_x_make_trm(&C, ARMAS_UPPER);
-  armas_x_update_trm(&C, &A, &B, alpha, 0.0, ARMAS_UPPER, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &A, &B, ARMAS_UPPER, &conf);
 
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
@@ -235,7 +235,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 2. C = upper(C) + A.T*B
-  armas_x_update_trm(&C, &At, &B, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &At, &B, ARMAS_UPPER|ARMAS_TRANSA, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, U|T|N) == TriU(gemm(C, A, B))\n", PASS(ok));
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 3. C = upper(C) + A*B.T
-  armas_x_update_trm(&C, &A, &Bt, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSB, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &A, &Bt, ARMAS_UPPER|ARMAS_TRANSB, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, U|N|T) == TriU(gemm(C, A, B))\n", PASS(ok));
@@ -257,7 +257,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 4. C = upper(C) + A.T*B.T
-  armas_x_update_trm(&C, &At, &Bt, alpha, 0.0, ARMAS_UPPER|ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &At, &Bt, ARMAS_UPPER|ARMAS_TRANSA|ARMAS_TRANSB, &conf);
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
   printf("%6s: trmupd(C, A, B, U|T|T) == TriU(gemm(C, A, B))\n", PASS(ok));
@@ -273,7 +273,7 @@ int main(int argc, char **argv)
 
   armas_x_set_values(&C, zero, ARMAS_NULL);
   armas_x_make_trm(&C, ARMAS_LOWER);
-  armas_x_update_trm(&C, &A, &B, alpha, 0.0, ARMAS_LOWER, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &A, &B, ARMAS_LOWER, &conf);
 
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 2. C = lower(C) + A.T*B
-  armas_x_update_trm(&C, &At, &B, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &At, &B, ARMAS_LOWER|ARMAS_TRANSA, &conf);
 
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
@@ -297,7 +297,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 3. C = lower(C) + A*B.T
-  armas_x_update_trm(&C, &A, &Bt, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSB, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &A, &Bt, ARMAS_LOWER|ARMAS_TRANSB, &conf);
 
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
@@ -309,7 +309,7 @@ int main(int argc, char **argv)
 
   // ----------------------------------------------------------------------------
   // 4. C = lower(C) + A.T*B.T
-  armas_x_update_trm(&C, &At, &Bt, alpha, 0.0, ARMAS_LOWER|ARMAS_TRANSA|ARMAS_TRANSB, &conf);
+  armas_x_update_trm(0.0, &C, alpha, &At, &Bt, ARMAS_LOWER|ARMAS_TRANSA|ARMAS_TRANSB, &conf);
 
   n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0 || isOK(n0, N) ? 1 : 0;
