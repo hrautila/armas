@@ -585,11 +585,11 @@ int __cholsolve_pv(armas_x_dense_t *B, armas_x_dense_t *A,
      * A*X = (U^TU)*X = B -> X = U^-1*(U^-T*B)
      */
     if (flags & ARMAS_UPPER) {
-        armas_x_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANS, conf);
-        armas_x_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_UPPER, conf);
+        armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANS, conf);
+        armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_UPPER, conf);
     } else {
-        armas_x_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_LOWER, conf);
-        armas_x_solve_trm(B, A, __ONE, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANS, conf);
+        armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_LOWER, conf);
+        armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANS, conf);
     }
 
     armas_x_pivot(B, P, ARMAS_PIVOT_ROWS|pivot2_dir, conf);

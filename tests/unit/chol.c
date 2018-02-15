@@ -139,8 +139,8 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     }
 
     // C = I*L*L.T || I*U.T*U
-    armas_x_mult_trm(&C, &A0, 1.0, flags1, &conf);
-    armas_x_mult_trm(&C, &A0, 1.0, flags2, &conf);
+    armas_x_mult_trm(&C, 1.0, &A0, flags1, &conf);
+    armas_x_mult_trm(&C, 1.0, &A0, flags2, &conf);
     armas_x_make_trm(&C, flags);
     if (N < 10 && verbose > 1) {
         printf("(1) LL.T or U.TU:\n"); armas_x_printf(stdout, "%6.3f", &C);

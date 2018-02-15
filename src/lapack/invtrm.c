@@ -95,9 +95,9 @@ int __blk_inverse_upper(armas_x_dense_t *A, int flags, int lb, armas_conf_t *con
                                __nil, __nil, &A22,  /**/  A, lb, ARMAS_PBOTTOMRIGHT);
         // ---------------------------------------------------------------------------
         // A01 := A00*A01
-        armas_x_mult_trm(&A01, &A00, __ONE, ARMAS_LEFT|ARMAS_UPPER|flags, conf);
+        armas_x_mult_trm(&A01, __ONE, &A00, ARMAS_LEFT|ARMAS_UPPER|flags, conf);
         // A01 := -A01*A11.-1
-        armas_x_solve_trm(&A01, &A11, -__ONE, ARMAS_RIGHT|ARMAS_UPPER|flags, conf);
+        armas_x_solve_trm(&A01, -__ONE, &A11, ARMAS_RIGHT|ARMAS_UPPER|flags, conf);
         // inv(&A11)
         if (__unblk_inverse_upper(&A11, flags, conf) != 0 && err == 0)
             err = -1;
@@ -171,9 +171,9 @@ int __blk_inverse_lower(armas_x_dense_t *A, int flags, int lb, armas_conf_t *con
                                __nil, &A21,  &A22,  /**/  A, lb, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------------
         // A21 := A22*A21
-        armas_x_mult_trm(&A21, &A22, __ONE, ARMAS_LEFT|ARMAS_LOWER|flags, conf);
+        armas_x_mult_trm(&A21, __ONE, &A22, ARMAS_LEFT|ARMAS_LOWER|flags, conf);
         // A21 := -A21*A11.-1
-        armas_x_solve_trm(&A21, &A11, -__ONE, ARMAS_RIGHT|ARMAS_LOWER|flags, conf);
+        armas_x_solve_trm(&A21, -__ONE, &A11, ARMAS_RIGHT|ARMAS_LOWER|flags, conf);
         // inv(&A11)
         if (__unblk_inverse_lower(&A11, flags, conf) != 0 && err == 0)
             err = -1;

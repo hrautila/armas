@@ -106,12 +106,12 @@ int armas_x_lqsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau
     ONERROR(armas_x_lqmult(B, A, tau, W, ARMAS_LEFT, conf));
     
     // X = L.-1*B'
-    ONERROR(armas_x_solve_trm(&BL, &L, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf));
+    ONERROR(armas_x_solve_trm(&BL, __ONE, &L, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf));
 
   } else {
     // solve underdetermined system A*X = B
     // B' = L.-1*B
-    ONERROR(armas_x_solve_trm(&BL, &L, 1.0, ARMAS_LEFT|ARMAS_LOWER, conf));
+    ONERROR(armas_x_solve_trm(&BL, __ONE, &L, ARMAS_LEFT|ARMAS_LOWER, conf));
 
     // clear bottom part of B
     armas_x_submatrix(&BB, B, A->rows, 0, -1, -1);

@@ -378,7 +378,7 @@ int __blk_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *tau,
     // A2 := A2 - VB*T*A21.T
     beta = armas_x_get(&A21, 0, -1);
     armas_x_set(&A21, 0, -1, 1.0);
-    armas_x_mult_trm(&VB, T, 1.0, ARMAS_UPPER|ARMAS_RIGHT, conf);
+    armas_x_mult_trm(&VB, __ONE, T, ARMAS_UPPER|ARMAS_RIGHT, conf);
     armas_x_mult(__ONE, &A2, -__ONE, &VB, &A21, ARMAS_TRANSB, conf);
     armas_x_set(&A21, 0, -1, beta);
     

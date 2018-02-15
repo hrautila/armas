@@ -141,7 +141,7 @@ int __blk_ldlnp_lower(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_conf
         armas_x_diag(&D, &A11, 0);
         
         // A21 = A21*A11.-T
-        armas_x_solve_trm(&A21, &A11, __ONE, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANS, conf);
+        armas_x_solve_trm(&A21, __ONE, &A11, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANS, conf);
         // A21 = A21.D.-1  (=L21)
         armas_x_solve_diag(&A21, &D, __ONE, ARMAS_RIGHT, conf);
 
@@ -181,7 +181,7 @@ int __blk_ldlnp_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_conf
         armas_x_diag(&D, &A11, 0);
         
         // A01 = A01*A11.-T
-        armas_x_solve_trm(&A01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT|ARMAS_TRANS, conf);
+        armas_x_solve_trm(&A01, __ONE, &A11, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT|ARMAS_TRANS, conf);
         // A01 = A01.D.-1  (=L01)
         armas_x_solve_diag(&A01, &D, __ONE, ARMAS_RIGHT, conf);
 
@@ -290,14 +290,14 @@ int __ldlsolve_np(armas_x_dense_t *B, armas_x_dense_t *A, int flags, armas_conf_
 
     if (flags & ARMAS_TRANS) {
         // X = L.-1*(D.-1*(L.-T*B))
-        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_TRANS|ARMAS_LEFT, conf);
+        armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_TRANS|ARMAS_LEFT, conf);
         armas_x_solve_diag(B, A, __ONE, ARMAS_LEFT, conf);
-        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
+        armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
     } else {
         // X = L.-T*(D.-1*(L.-1*B))
-        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
+        armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
         armas_x_solve_diag(B, A, __ONE, ARMAS_LEFT, conf);
-        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_TRANS, conf);
+        armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_TRANS, conf);
     }
     return 0;
 }

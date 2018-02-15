@@ -261,8 +261,8 @@ int __mult_trm_schedule(int nblk,
  * are executed in extended precision.
  *
  * @param[in,out] B  Result matrix
- * @param[in]   A Triangular operand matrix
  * @param[in]   alpha scalar multiplier
+ * @param[in]   A Triangular operand matrix
  * @param[in]   flags option bits
  * @param[in,out] conf environment configuration
  *
@@ -271,8 +271,11 @@ int __mult_trm_schedule(int nblk,
  *
  * @ingroup blas3
  */
-int armas_x_mult_trm(armas_x_dense_t *B, const armas_x_dense_t *A, 
-                      DTYPE alpha, int flags, armas_conf_t *conf)
+int armas_x_mult_trm(armas_x_dense_t *B,
+                     DTYPE alpha,
+                     const armas_x_dense_t *A, 
+                     int flags,
+                     armas_conf_t *conf)
 {
   int ok;
 

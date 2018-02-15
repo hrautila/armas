@@ -103,7 +103,7 @@ int armas_x_qrsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau
     // solve ovedetermined system A.T*X = B
 
     // B' = R.-1*B
-    ONERROR(armas_x_solve_trm(&BT, &R, 1.0, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf));
+    ONERROR(armas_x_solve_trm(&BT, __ONE, &R, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf));
 
     // clear bottom part of B
     armas_x_submatrix(&BB, B, A->cols, 0, -1, -1);
@@ -118,7 +118,7 @@ int armas_x_qrsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau
     ONERROR(armas_x_qrmult(B, A, tau, W, ARMAS_LEFT|ARMAS_TRANS, conf));
     
     // X = R.-1*B'
-    ONERROR(armas_x_solve_trm(&BT, &R, 1.0, ARMAS_LEFT|ARMAS_UPPER, conf));
+    ONERROR(armas_x_solve_trm(&BT, __ONE, &R, ARMAS_LEFT|ARMAS_UPPER, conf));
   }
   return 0;
 }

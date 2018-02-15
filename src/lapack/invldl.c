@@ -126,10 +126,10 @@ int __blk_invldl_lower(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
         
         // A21 = - A22*L21*L11.-1
         armas_x_mult_sym(__ZERO, &A21, -__ONE, &A22, &L21, ARMAS_LOWER, conf);
-        armas_x_solve_trm(&A21, &A11, __ONE, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
+        armas_x_solve_trm(&A21, __ONE, &A11, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
         
         // A11*L11 + A21.T*L21 = L11.-T -> A11 = inv(A11) - A21.T*L21*L11.-1
-        armas_x_solve_trm(&L21, &A11, __ONE, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
+        armas_x_solve_trm(&L21, __ONE, &A11, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
         if (__unblk_invldl_lower(&A11, &w2, conf) < 0 && err == 0)
             err = -1;
         // rank update
@@ -231,10 +231,10 @@ int __blk_invldl_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
 
         // A01 = - A00*U01*U11.-1
         armas_x_mult_sym(__ZERO, &A01, -__ONE, &A00, &U01, ARMAS_LEFT|ARMAS_UPPER, conf);
-        armas_x_solve_trm(&A01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT, conf);
+        armas_x_solve_trm(&A01, __ONE, &A11, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT, conf);
 
         // A11 = inv(A11) - A01.T*U01*U11.-1
-        armas_x_solve_trm(&U01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT, conf);
+        armas_x_solve_trm(&U01, __ONE, &A11, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT, conf);
         if (__unblk_invldl_upper(&A11, &w2, conf) < 0 && err == 0)
             err = -1;
         armas_x_update_trm(&A11, &A01, &U01, -__ONE, __ONE, ARMAS_UPPER|ARMAS_TRANSA, conf);

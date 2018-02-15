@@ -540,14 +540,14 @@ int armas_x_ldlsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P, i
 
     if (flags & ARMAS_TRANS) {
         // X = L.-1*(D.-1*(L.-T*B))
-        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_TRANS|ARMAS_LEFT, conf);
+        armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_TRANS|ARMAS_LEFT, conf);
         armas_x_solve_diag(B, A, __ONE, ARMAS_LEFT, conf);
-        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
+        armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
     } else {
         // X = L.-T*(D.-1*(L.-1*B))
-        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
+        armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
         armas_x_solve_diag(B, A, __ONE, ARMAS_LEFT, conf);
-        armas_x_solve_trm(B, A, __ONE, flags|ARMAS_UNIT|ARMAS_TRANS, conf);
+        armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_TRANS, conf);
     }
 
     armas_x_pivot(B, P, ARMAS_PIVOT_ROWS|pivot2_dir, conf);

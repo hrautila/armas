@@ -43,7 +43,7 @@ void compute(DTYPE *ne, DTYPE *re,
   //*ne = armas_d_mnorm(C, ARMAS_NORM_ONE, conf);
 
   // B = A*B
-  armas_x_mult_trm(B, A, 1.0, flags, conf);
+  armas_x_mult_trm(B, 1.0, A, flags, conf);
   if (verbose > 1 && A->rows < 10) {
     printf("exc(A*B):\n"); armas_x_printf(stdout, "%13e", C);
     printf("trm(A)*B:\n"); armas_x_printf(stdout, "%13e", B);

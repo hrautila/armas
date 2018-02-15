@@ -98,7 +98,7 @@ int __blk_cholfactor_lower(armas_x_dense_t *A, int lb, armas_conf_t *conf)
       err = err == 0 ? -1 : err;
     }
     // A21 = A21 * tril(A11).-T
-    armas_x_solve_trm(&A21, &A11, 1.0, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA, conf);
+    armas_x_solve_trm(&A21, __ONE, &A11, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA, conf);
 
       // A22 = A22 - A21*A21.T
     armas_x_update_sym(__ONE, &A22, -__ONE, &A21, ARMAS_LOWER, conf);
@@ -183,7 +183,7 @@ int __blk_cholfactor_upper(armas_x_dense_t *A, int lb, armas_conf_t *conf)
       err = err == 0 ? -1 : err;
     }
     // A12 = tril(A11).-T * A12
-    armas_x_solve_trm(&A12, &A11, 1.0, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
+    armas_x_solve_trm(&A12, __ONE, &A11, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
 
       // A22 = A22 - A12.T*A12
     armas_x_update_sym(__ONE, &A22, -__ONE, &A12, ARMAS_UPPER|ARMAS_TRANSA, conf);
@@ -311,12 +311,12 @@ int armas_x_cholsolve(armas_x_dense_t *B, armas_x_dense_t *A,
 
   if (flags & ARMAS_LOWER) {
     // solve A*X = B; X = A.-1*B == (L*L.T).-1*B == L.-T*(L.-1*B)
-    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_LOWER, conf);
-    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf);
+    armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_LOWER, conf);
+    armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf);
   } else {
     // solve A*X = B;  X = A.-1*B == (U.T*U).-1*B == U.-1*(U.-T*B)
-    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
-    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_UPPER, conf);
+    armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
+    armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_UPPER, conf);
   }
   return 0;
 }

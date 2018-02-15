@@ -82,9 +82,9 @@ int __blk_lufactor_nopiv(armas_x_dense_t *A, int lb, armas_conf_t *conf)
     // A11 = LU(A11)
     __unblk_lufactor_nopiv(&A11, conf);
     // A12 = trilu(A11)*A12.-1
-    armas_x_solve_trm(&A12, &A11, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
+    armas_x_solve_trm(&A12, __ONE, &A11, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
     // A21 = A21.-1*triu(A11)
-    armas_x_solve_trm(&A21, &A11, 1.0, ARMAS_RIGHT|ARMAS_UPPER, conf);
+    armas_x_solve_trm(&A21, __ONE, &A11, ARMAS_RIGHT|ARMAS_UPPER, conf);
     // A22 = A22 - A21*A12
     armas_x_mult(__ONE, &A22, -__ONE, &A21, &A12, ARMAS_NONE, conf);
     // ---------------------------------------------------------------------------
@@ -173,7 +173,7 @@ int __unblk_lufactor(armas_x_dense_t *A, armas_pivot_t *P, int offset, armas_con
   if (ABR.cols > 0) {
     // here A.rows < A.cols; handle the right columns
     armas_x_pivot_rows(&ATR, P, ARMAS_PIVOT_FORWARD, conf);
-    armas_x_solve_trm(&ATR, &ATL, 1.0, ARMAS_LEFT|ARMAS_UNIT|ARMAS_LOWER, conf);
+    armas_x_solve_trm(&ATR, __ONE, &ATL, ARMAS_LEFT|ARMAS_UNIT|ARMAS_LOWER, conf);
   }
   return err;
 }
@@ -214,7 +214,7 @@ int __blk_lufactor(armas_x_dense_t *A, armas_pivot_t *P, int lb, armas_conf_t *c
     // A. apply previous pivots and updates to current column   
     armas_x_pivot_rows(&A1, &p0, ARMAS_PIVOT_FORWARD, conf);
     // a. A01 = trilu(A00) \ A01
-    armas_x_solve_trm(&A01, &A00, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
+    armas_x_solve_trm(&A01, __ONE, &A00, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
     // b. A11 = A11 - A10*A01
     armas_x_mult(__ONE, &A11, -__ONE, &A10, &A01, ARMAS_NONE, conf);
     // c. A21 = A21 - A20*A01
@@ -245,7 +245,7 @@ int __blk_lufactor(armas_x_dense_t *A, armas_pivot_t *P, int lb, armas_conf_t *c
   if (ABR.cols > 0) {
     // here A.rows < A.cols; handle the right columns
     armas_x_pivot_rows(&ATR, P, ARMAS_PIVOT_FORWARD, conf);
-    armas_x_solve_trm(&ATR, &ATL, 1.0, ARMAS_LEFT|ARMAS_UNIT|ARMAS_LOWER, conf);
+    armas_x_solve_trm(&ATR, __ONE, &ATL, ARMAS_LEFT|ARMAS_UNIT|ARMAS_LOWER, conf);
   }
   return err;
 }
@@ -338,12 +338,12 @@ int armas_x_lusolve(armas_x_dense_t *B, armas_x_dense_t *A,
 
   if (flags & ARMAS_TRANS) {
     // solve A.T*X = B; X = A.-T*B == (L.T*U.T).-1*B == U.-T*(L.-T*B)
-    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANSA, conf);
-    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
+    armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANSA, conf);
+    armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf);
   } else {
     // solve A*X = B;  X = A.-1*B == (L*U).-1*B == U.-1*(L.-1*B)
-    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
-    armas_x_solve_trm(B, A, 1.0, ARMAS_LEFT|ARMAS_UPPER, conf);
+    armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
+    armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_UPPER, conf);
   }
   return 0;
 }

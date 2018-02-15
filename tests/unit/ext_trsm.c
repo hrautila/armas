@@ -144,7 +144,7 @@ void compute(double *ne, double *re,
 {
   DTYPE e;
   // B = A*B
-  armas_x_solve_trm(B, A, 1.0, flags, conf);
+  armas_x_solve_trm(B, 1.0, A, flags, conf);
   if (verbose > 1 && B->cols < 10) {
     printf("A.-1*B:\n"); armas_x_printf(stdout, "%13e", B);
   }

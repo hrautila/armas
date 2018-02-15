@@ -46,9 +46,9 @@ int test_ldl(int N, int lb, int flags, int verbose)
     flags2 = flags|ARMAS_TRANS|ARMAS_UNIT|ARMAS_RIGHT;
 
     // C = I*A; C = C*D; C = C*L^T
-    armas_x_mult_trm(&C, &A0, 1.0, flags1, &conf);
+    armas_x_mult_trm(&C, 1.0, &A0, flags1, &conf);
     armas_x_mult_diag(&C, &D0, 1.0, flags|ARMAS_RIGHT, &conf);
-    armas_x_mult_trm(&C, &A0, 1.0, flags2, &conf);
+    armas_x_mult_trm(&C, 1.0, &A0, flags2, &conf);
     armas_x_make_trm(&C, flags);
 
     n0 = rel_error(&n1, &C, &A1, ARMAS_NORM_INF, 0, &conf);
@@ -135,9 +135,9 @@ int test_ldlpv(int N, int lb, int flags, int verbose)
     flags2 = flags|ARMAS_TRANS|ARMAS_UNIT|ARMAS_RIGHT;
 
     // C = ((I*L)*D)*L^T
-    armas_x_mult_trm(&C, &A0, 1.0, flags1, &conf);
+    armas_x_mult_trm(&C, 1.0, &A0, flags1, &conf);
     armas_x_mult_diag(&C, &D0, 1.0, flags|ARMAS_RIGHT, &conf);
-    armas_x_mult_trm(&C, &A0, 1.0, flags2, &conf);
+    armas_x_mult_trm(&C, 1.0, &A0, flags2, &conf);
     armas_x_make_trm(&C, flags);
     if (flags & ARMAS_LOWER) {
         armas_x_pivot(&C, &P, ARMAS_PIVOT_LOWER|ARMAS_PIVOT_BACKWARD, &conf);
@@ -201,9 +201,9 @@ int test_ldlpv_transpose(int N, int lb, int flags, int verbose)
     armas_x_diag(&D1, &A1, 0);
 
     // C = ((I*L)*D)*L.T
-    armas_x_mult_trm(&C0, &A0, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, &conf);
+    armas_x_mult_trm(&C0, 1.0, &A0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, &conf);
     armas_x_mult_diag(&C0, &D0, 1.0, ARMAS_LOWER|ARMAS_RIGHT, &conf);
-    armas_x_mult_trm(&C0, &A0, 1.0, ARMAS_LOWER|ARMAS_TRANS|ARMAS_UNIT|ARMAS_RIGHT, &conf);
+    armas_x_mult_trm(&C0, 1.0, &A0, ARMAS_LOWER|ARMAS_TRANS|ARMAS_UNIT|ARMAS_RIGHT, &conf);
     armas_x_make_trm(&C0, ARMAS_LOWER);
     armas_x_pivot(&C0, &P0, ARMAS_PIVOT_LOWER|ARMAS_PIVOT_BACKWARD, &conf);
 
@@ -212,9 +212,9 @@ int test_ldlpv_transpose(int N, int lb, int flags, int verbose)
         printf("P:\n"); armas_pivot_printf(stdout, "%d", &P0);
     }
     // C = ((I*U)*D)*U.T
-    armas_x_mult_trm(&C1, &A1, 1.0, ARMAS_UPPER|ARMAS_UNIT|ARMAS_RIGHT, &conf);
+    armas_x_mult_trm(&C1, 1.0, &A1, ARMAS_UPPER|ARMAS_UNIT|ARMAS_RIGHT, &conf);
     armas_x_mult_diag(&C1, &D1, 1.0, ARMAS_UPPER|ARMAS_RIGHT, &conf);
-    armas_x_mult_trm(&C1, &A1, 1.0, ARMAS_UPPER|ARMAS_TRANS|ARMAS_UNIT|ARMAS_RIGHT, &conf);
+    armas_x_mult_trm(&C1, 1.0, &A1, ARMAS_UPPER|ARMAS_TRANS|ARMAS_UNIT|ARMAS_RIGHT, &conf);
     armas_x_make_trm(&C1, ARMAS_UPPER);
     armas_x_pivot(&C1, &P1, ARMAS_PIVOT_UPPER|ARMAS_PIVOT_FORWARD, &conf);
 

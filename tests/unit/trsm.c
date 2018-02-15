@@ -95,7 +95,7 @@ int test_left_right(int N, int verbose)
   armas_x_set_values(&A, one, ARMAS_SYMM);
   armas_x_transpose(&At, &A);
   armas_x_set_values(&B, one, ARMAS_ANY);
-  armas_x_mult_trm(&B, &A, 1.0, ARMAS_UPPER, ARMAS_ANY);
+  armas_x_mult_trm(&B, 1.0, &A, ARMAS_UPPER, ARMAS_ANY);
   armas_x_transpose(&Bt, &B);
   if (N < 10) {
     printf("A\n"); armas_x_printf(stdout, "%6.3f", &A);
@@ -103,8 +103,8 @@ int test_left_right(int N, int verbose)
   }
   nrmB = armas_x_mnorm(&B, ARMAS_NORM_INF, &conf);
   // ||k*A.-1*B + (B.T*-k*A.-T).T|| ~ eps
-  armas_x_solve_trm(&B, &A, 2.0, ARMAS_LEFT|ARMAS_UPPER, &conf);
-  armas_x_solve_trm(&Bt, &At, -2.0, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANS, &conf);
+  armas_x_solve_trm(&B, 2.0, &A, ARMAS_LEFT|ARMAS_UPPER, &conf);
+  armas_x_solve_trm(&Bt, -2.0, &At, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANS, &conf);
   if (N < 10) {
     printf("B\n"); armas_x_printf(stdout, "%6.3f", &B);
     printf("Bt\n"); armas_x_printf(stdout, "%6.3f", &Bt);
@@ -163,11 +163,11 @@ int main(int argc, char **argv)
 
   armas_x_set_values(&B, one, ARMAS_NULL);
   armas_x_mcopy(&B0, &B);
-  armas_x_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_LEFT, &conf);
+  armas_x_mult_trm(&B, alpha, &A, ARMAS_UPPER|ARMAS_LEFT, &conf);
   if (N < 10) {
     printf("A*B:\n"); armas_x_printf(stdout, "%8.1e", &B);
   }
-  armas_x_solve_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_LEFT, &conf);
+  armas_x_solve_trm(&B, alpha, &A, ARMAS_UPPER|ARMAS_LEFT, &conf);
   if (N < 10) {
     printf("A.-1*B:\n"); armas_x_printf(stdout, "%8.1e", &B);
   }
@@ -181,8 +181,8 @@ int main(int argc, char **argv)
 
   armas_x_set_values(&B, one, ARMAS_NULL);
   armas_x_mcopy(&B0, &B);
-  armas_x_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_RIGHT, &conf);
-  armas_x_solve_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_RIGHT, &conf);
+  armas_x_mult_trm(&B, alpha, &A, ARMAS_UPPER|ARMAS_RIGHT, &conf);
+  armas_x_solve_trm(&B, alpha, &A, ARMAS_UPPER|ARMAS_RIGHT, &conf);
 
   n0 = rel_error(&n1, &B, &B0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -194,8 +194,8 @@ int main(int argc, char **argv)
 
   armas_x_set_values(&B, one, ARMAS_NULL);
   armas_x_mcopy(&B0, &B);
-  armas_x_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_LEFT|ARMAS_TRANSA, &conf);
-  armas_x_solve_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_LEFT|ARMAS_TRANSA, &conf);
+  armas_x_mult_trm(&B, alpha, &A, ARMAS_UPPER|ARMAS_LEFT|ARMAS_TRANSA, &conf);
+  armas_x_solve_trm(&B, alpha, &A, ARMAS_UPPER|ARMAS_LEFT|ARMAS_TRANSA, &conf);
 
   n0 = rel_error(&n1, &B, &B0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -207,8 +207,8 @@ int main(int argc, char **argv)
 
   armas_x_set_values(&B, one, ARMAS_NULL);
   armas_x_mcopy(&B0, &B);
-  armas_x_mult_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_RIGHT|ARMAS_TRANSA, &conf);
-  armas_x_solve_trm(&B, &A, alpha, ARMAS_UPPER|ARMAS_RIGHT|ARMAS_TRANSA, &conf);
+  armas_x_mult_trm(&B, alpha, &A, ARMAS_UPPER|ARMAS_RIGHT|ARMAS_TRANSA, &conf);
+  armas_x_solve_trm(&B, alpha, &A, ARMAS_UPPER|ARMAS_RIGHT|ARMAS_TRANSA, &conf);
 
   n0 = rel_error(&n1, &B, &B0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -223,8 +223,8 @@ int main(int argc, char **argv)
 
   armas_x_set_values(&B, one, ARMAS_NULL);
   armas_x_mcopy(&B0, &B);
-  armas_x_mult_trm(&B, &A, alpha, ARMAS_LOWER|ARMAS_LEFT, &conf);
-  armas_x_solve_trm(&B, &A, alpha, ARMAS_LOWER|ARMAS_LEFT, &conf);
+  armas_x_mult_trm(&B, alpha, &A, ARMAS_LOWER|ARMAS_LEFT, &conf);
+  armas_x_solve_trm(&B, alpha, &A, ARMAS_LOWER|ARMAS_LEFT, &conf);
 
   n0 = rel_error(&n1, &B, &B0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -236,8 +236,8 @@ int main(int argc, char **argv)
 
   armas_x_set_values(&B, one, ARMAS_NULL);
   armas_x_mcopy(&B0, &B);
-  armas_x_mult_trm(&B, &A, alpha, ARMAS_LOWER|ARMAS_RIGHT, &conf);
-  armas_x_solve_trm(&B, &A, alpha, ARMAS_LOWER|ARMAS_RIGHT, &conf);
+  armas_x_mult_trm(&B, alpha, &A, ARMAS_LOWER|ARMAS_RIGHT, &conf);
+  armas_x_solve_trm(&B, alpha, &A, ARMAS_LOWER|ARMAS_RIGHT, &conf);
 
   n0 = rel_error(&n1, &B, &B0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -249,8 +249,8 @@ int main(int argc, char **argv)
 
   armas_x_set_values(&B, one, ARMAS_NULL);
   armas_x_mcopy(&B0, &B);
-  armas_x_mult_trm(&B, &A, alpha, ARMAS_LOWER|ARMAS_LEFT|ARMAS_TRANSA, &conf);
-  armas_x_solve_trm(&B, &A, alpha, ARMAS_LOWER|ARMAS_LEFT|ARMAS_TRANSA, &conf);
+  armas_x_mult_trm(&B, alpha, &A, ARMAS_LOWER|ARMAS_LEFT|ARMAS_TRANSA, &conf);
+  armas_x_solve_trm(&B, alpha, &A, ARMAS_LOWER|ARMAS_LEFT|ARMAS_TRANSA, &conf);
 
   n0 = rel_error(&n1, &B, &B0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -262,8 +262,8 @@ int main(int argc, char **argv)
 
   armas_x_set_values(&B, one, ARMAS_NULL);
   armas_x_mcopy(&B0, &B);
-  armas_x_mult_trm(&B, &A, alpha, ARMAS_LOWER|ARMAS_RIGHT|ARMAS_TRANSA, &conf);
-  armas_x_solve_trm(&B, &A, alpha, ARMAS_LOWER|ARMAS_RIGHT|ARMAS_TRANSA, &conf);
+  armas_x_mult_trm(&B, alpha, &A, ARMAS_LOWER|ARMAS_RIGHT|ARMAS_TRANSA, &conf);
+  armas_x_solve_trm(&B, alpha, &A, ARMAS_LOWER|ARMAS_RIGHT|ARMAS_TRANSA, &conf);
 
   n0 = rel_error(&n1, &B, &B0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;

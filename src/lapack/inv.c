@@ -110,9 +110,9 @@ int __blk_inverse_fused(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_co
         if ((e = armas_x_inverse_trm(&A11, ARMAS_UPPER, conf)) < 0 && err == 0)
             err = e;
         // A01 := A01*A11
-        armas_x_mult_trm(&A01, &A11, __ONE, ARMAS_RIGHT|ARMAS_UPPER, conf);
+        armas_x_mult_trm(&A01, __ONE, &A11, ARMAS_RIGHT|ARMAS_UPPER, conf);
         // A01 := -A00^-1*A01
-        armas_x_solve_trm(&A01, &A00, - __ONE, ARMAS_LEFT|ARMAS_UPPER, conf);
+        armas_x_solve_trm(&A01, -__ONE, &A00, ARMAS_LEFT|ARMAS_UPPER, conf);
 
         // inverse A; copy A11,A21 to workspace
         __merge2x1(&AB, &A11, &A21);
@@ -126,7 +126,7 @@ int __blk_inverse_fused(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_co
         // A1 := A1 - A2*L21
         armas_x_mult(__ONE, &A1, -__ONE, &A2, &L21, 0, conf);
         // A1 := A1*L11.-1
-        armas_x_solve_trm(&A1, &L11, __ONE, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
+        armas_x_solve_trm(&A1, __ONE, &L11, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  __nil,
                             __nil, &ABR, /**/  &A00, &A11, &A22,   A, ARMAS_PTOPLEFT);

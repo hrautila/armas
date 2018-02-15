@@ -183,7 +183,7 @@ int __update_rq_left(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t *
   // W = C1.T
   armas_x_scale_plus(W, C1, 0.0, 1.0, ARMAS_TRANSB, conf);
   // W = C1.T*Y1.T = W*Y1.T
-  armas_x_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
+  armas_x_mult_trm(W, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
   // W = W + C2.T*Y2.T
   armas_x_mult(__ONE, W, __ONE, C2, Y2, ARMAS_TRANSA|ARMAS_TRANSB, conf);
   // here: W = C.T*Y
@@ -192,13 +192,13 @@ int __update_rq_left(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t *
   if (! transpose)
     bits |= ARMAS_TRANSA;
   // W = W*T or W.T*T
-  armas_x_mult_trm(W, T, 1.0, bits, conf);
+  armas_x_mult_trm(W, __ONE, T, bits, conf);
   // here: W == C.T*Y*T or C.T*Y*T.T
 
   // C2 = C2 - Y2*W.T
   armas_x_mult(__ONE, C2, -__ONE, Y2, W, ARMAS_TRANSA|ARMAS_TRANSB, conf);
   // W = Y1*W.T ==> W.T = W*Y1
-  armas_x_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
+  armas_x_mult_trm(W, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
   // C1 = C1 - W.T
   armas_x_scale_plus(C1, W, 1.0, -1.0, ARMAS_TRANSB, conf);
   // here: C = (I - Y*T*Y.T)*C or C = (I - Y*T.Y.T).T*C
@@ -223,7 +223,7 @@ int __update_rq_right(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t 
   // W = C1
   armas_x_scale_plus(W, C1, 0.0, 1.0, ARMAS_NONE, conf);
   // W = C1*Y1 = W*Y1
-  armas_x_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
+  armas_x_mult_trm(W, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
   // W = W + C2*Y2.T
   armas_x_mult(__ONE, W, __ONE, C2, Y2, ARMAS_TRANSB, conf);
   // here: W = C*Y
@@ -232,14 +232,14 @@ int __update_rq_right(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t 
   if (transpose)
     bits |= ARMAS_TRANSA;
   // W = W*T or W.T*T
-  armas_x_mult_trm(W, T, 1.0, bits, conf);
+  armas_x_mult_trm(W, __ONE, T, bits, conf);
   // here: W == C*Y*T or C*Y*T.T
 
   // C2 = C2 - W*Y2
   armas_x_mult(__ONE, C2, -__ONE, W, Y2, ARMAS_NONE, conf);
   // C1 = C1 - W*Y1
   //  W = W*Y1.T
-  armas_x_mult_trm(W, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
+  armas_x_mult_trm(W, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
   // C1 = C1 - W
   armas_x_scale_plus(C1, W, 1.0, -1.0, ARMAS_NONE, conf);
   // here: C = C*(I - Y*T*Y.T)*C or C = C*(I - Y*T.Y.T).T

@@ -90,7 +90,7 @@ int main(int argc, char **argv)
     flush();
     rt = time_msec();
 
-    armas_x_solve_trm(&B, &A, 1.0, flags, &conf);
+    armas_x_solve_trm(&B, 1.0, &A, flags, &conf);
     
     rt = time_msec() - rt;
 
