@@ -333,8 +333,8 @@ void __trmv_recursive(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N
  * are executed in extended precision.
  *
  * @param[in,out] X target and source vector
- * @param[in]     A matrix
  * @param[in]     alpha scalar multiplier
+ * @param[in]     A matrix
  * @param[in]     flags operand flags
  * @param[in]     conf  configuration block
  *
@@ -343,8 +343,8 @@ void __trmv_recursive(mvec_t *X, const mdata_t *A, DTYPE alpha, int flags, int N
  *
  * @ingroup blas2
  */
-int armas_x_mvmult_trm(armas_x_dense_t *X,  const armas_x_dense_t *A, 
-                       DTYPE alpha, int flags, armas_conf_t *conf)
+int armas_x_mvmult_trm(armas_x_dense_t *X,  DTYPE alpha, const armas_x_dense_t *A, 
+                       int flags, armas_conf_t *conf)
 {
   mvec_t x;
   mdata_t A0;

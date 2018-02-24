@@ -134,7 +134,7 @@ int __unblk_lufactor(armas_x_dense_t *A, armas_pivot_t *P, int offset, armas_con
     // A. apply previous pivots and updates to current column   
     armas_x_pivot_rows(&a1, &p0, ARMAS_PIVOT_FORWARD, conf);
     // a. a01 = trilu(A00)\a01
-    armas_x_mvsolve_trm(&a01, &A00, 1.0, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
+    armas_x_mvsolve_trm(&a01, __ONE, &A00, ARMAS_LEFT|ARMAS_LOWER|ARMAS_UNIT, conf);
     // b. a11 = a11 - a10*a01
     a11val  = armas_x_get(&a11, 0, 0);
     aa      = armas_x_dot(&a10, &a01, conf);

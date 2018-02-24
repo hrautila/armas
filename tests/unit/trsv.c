@@ -28,7 +28,7 @@ int test_row_vector(int N, int verbose, int flags)
   }
 
   armas_d_mvmult(0.0, &X, 1.0, &A, &X0, 0, &conf);
-  armas_d_mvsolve_trm(&X, &A, 1.0, flags, &conf);
+  armas_d_mvsolve_trm(&X, 1.0, &A, flags, &conf);
   n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
   if (verbose > 2 && N < 10) {
@@ -41,7 +41,7 @@ int test_row_vector(int N, int verbose, int flags)
   }
 
   armas_d_mvmult(0.0, &X, 1.0, &A, &X0, ARMAS_TRANS, &conf);
-  armas_d_mvsolve_trm(&X, &A, 1.0, flags|ARMAS_TRANS, &conf);
+  armas_d_mvsolve_trm(&X, 1.0, &A, flags|ARMAS_TRANS, &conf);
   n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
   if (verbose > 2 && N < 10) {
@@ -79,7 +79,7 @@ int test_col_vector(int N, int verbose, int flags)
   }
 
   armas_d_mvmult(0.0, &X, 1.0, &A, &X0, 0, &conf);
-  armas_d_mvsolve_trm(&X, &A, 1.0, flags, &conf);
+  armas_d_mvsolve_trm(&X, 1.0, &A, flags, &conf);
   n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
   if (verbose > 2 && N < 10) {
@@ -92,7 +92,7 @@ int test_col_vector(int N, int verbose, int flags)
   }
 
   armas_d_mvmult(0.0, &X, 1.0, &A, &X0, ARMAS_TRANS, &conf);
-  armas_d_mvsolve_trm(&X, &A, 1.0, flags|ARMAS_TRANS, &conf);
+  armas_d_mvsolve_trm(&X, 1.0, &A, flags|ARMAS_TRANS, &conf);
   n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
   if (verbose > 2 && N < 10) {

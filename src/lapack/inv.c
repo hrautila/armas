@@ -66,7 +66,7 @@ int __unblk_inverse_fused(armas_x_dense_t *A, armas_x_dense_t *W, armas_conf_t *
         a11val = __ONE/a11val;
         armas_x_set_unsafe(&a11, 0, 0, a11val);
         // 2. a01 = -a11val*A00.-1*a01
-        armas_x_mvsolve_trm(&a01, &A00, -a11val, ARMAS_UPPER, conf);
+        armas_x_mvsolve_trm(&a01, -a11val, &A00, ARMAS_UPPER, conf);
 
         // inverse A; l21 := a21; a21 = 0, we can compute full column a1 of A^-1.
         armas_x_submatrix(&l21, W, 0, 0, armas_x_size(&a21), 1);

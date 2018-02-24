@@ -48,7 +48,7 @@ int __unblk_cholupdate_lower(armas_x_dense_t *A, armas_x_dense_t *X, armas_conf_
     armas_x_dense_t XL, XR, X0, x1, X2;
     DTYPE c, s, r, a11val, x1val;
 
-    EMPTY(x1); EMPTY(a11); EMPTY(A00); EMPTY(XL);
+    EMPTY(x1); EMPTY(a11); EMPTY(A00); EMPTY(XL); EMPTY(X0);
     
     __partition_2x2(&ATL, __nil,
                     &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);
@@ -84,7 +84,7 @@ int __unblk_cholupdate_upper(armas_x_dense_t *A, armas_x_dense_t *X, armas_conf_
     armas_x_dense_t XL, XR, X0, x1, X2;
     DTYPE c, s, r, a11val, x1val;
 
-    EMPTY(x1); EMPTY(a11); EMPTY(A00); EMPTY(XL);
+    EMPTY(x1); EMPTY(a11); EMPTY(A00); EMPTY(XL); EMPTY(X0);
     
     __partition_2x2(&ATL, __nil,
                     &ABL, &ABR,   /**/  A, 0, 0, ARMAS_PTOPLEFT);

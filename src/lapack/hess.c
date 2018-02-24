@@ -160,17 +160,17 @@ int __update_vec_left_wy(armas_x_dense_t *v, armas_x_dense_t *Y1, armas_x_dense_
   
   // w0 = Y1.T*v1 + Y2.T*v2
   armas_x_axpby(&w0, &v1, 1.0, 0.0, conf);
-  armas_x_mvmult_trm(&w0, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANS, conf);
+  armas_x_mvmult_trm(&w0, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANS, conf);
   armas_x_mvmult(__ONE, &w0, __ONE, Y2, &v2, ARMAS_TRANS, conf);
   
   // w0 = opt(T)*w0
-  armas_x_mvmult_trm(&w0, T, 1.0, bits|ARMAS_UPPER, conf);
+  armas_x_mvmult_trm(&w0, __ONE, T, bits|ARMAS_UPPER, conf);
   
   // v2 = v2 - Y2*w0
   armas_x_mvmult(__ONE, &v2, -__ONE, Y2, &w0, ARMAS_NONE, conf);
   
   // v1 = v1 - Y1*w0
-  armas_x_mvmult_trm(&w0, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT, conf);
+  armas_x_mvmult_trm(&w0, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT, conf);
   armas_x_axpy(&v1, &w0, -1.0, conf);
   return 0;
 }
@@ -237,7 +237,7 @@ int __unblk_build_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *T,
     if (V0.cols > 0) {
       // y10 := T00*a10 (t01 is workspace)
       armas_x_axpby(&t01, &a10, 1.0, 0.0, conf);
-      armas_x_mvmult_trm(&t01, &T00, 1.0, ARMAS_UPPER, conf);
+      armas_x_mvmult_trm(&t01, __ONE, &T00, ARMAS_UPPER, conf);
       
       // a1 = a1 - V0*T00*a10
       armas_x_mvmult(__ONE, &a1, -__ONE, &V0, &t01, ARMAS_NONE, conf);
@@ -261,7 +261,7 @@ int __unblk_build_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *T,
       // t01 := -tauval*A20.T*a21
       armas_x_mvmult(__ZERO, &t01, -tauval, &A20, &a21, ARMAS_TRANS, conf);
       // t01 := T00*t01
-      armas_x_mvmult_trm(&t01, &T00, 1.0, ARMAS_UPPER, conf);
+      armas_x_mvmult_trm(&t01, __ONE, &T00, ARMAS_UPPER, conf);
     }
 
     // ---------------------------------------------------------------------

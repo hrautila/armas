@@ -70,7 +70,7 @@ int __unblk_inverse_upper(armas_x_dense_t *A, int flags, armas_conf_t *conf)
             armas_x_set_unsafe(&a11, 0, 0, a11val);
         } 
         // a01 = -a11val*A00*a01
-        armas_x_mvmult_trm(&a01, &A00, -a11val, ARMAS_UPPER, conf);
+        armas_x_mvmult_trm(&a01, -a11val, &A00, ARMAS_UPPER, conf);
         // ---------------------------------------------------------------------------
     next:
         __continue_3x3to2x2(&ATL,  __nil,
@@ -143,7 +143,7 @@ int __unblk_inverse_lower(armas_x_dense_t *A, int flags, armas_conf_t *conf)
             armas_x_set_unsafe(&a11, 0, 0, a11val);
         } 
         // a21 = -a11val*A22*a21
-        armas_x_mvmult_trm(&a21, &A22, -a11val, ARMAS_LOWER, conf);
+        armas_x_mvmult_trm(&a21, -a11val, &A22, ARMAS_LOWER, conf);
         // ---------------------------------------------------------------------------
     next:
         __continue_3x3to2x2(&ATL,  __nil,

@@ -69,7 +69,7 @@ void compute(double *ne, double *re,
              int flags, int prec, int verbose, armas_conf_t *conf)
 {
   // B = A*B
-  armas_x_mvsolve_trm(B, A, 1.0, flags, conf);
+  armas_x_mvsolve_trm(B, 1.0, A, flags, conf);
   if (verbose > 1 && A->rows < 10) {
     printf("A.-1*B:\n"); armas_x_printf(stdout, "%13e", B);
   }

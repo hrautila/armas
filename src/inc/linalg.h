@@ -44,22 +44,22 @@ extern int     armas_x_add(const armas_x_dense_t *X, const DTYPE alpha, armas_co
   extern int armas_x_mvmult(DTYPE beta, armas_x_dense_t *Y,
 			    DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *X,
 			    int flags, armas_conf_t *conf);
-extern int armas_x_mvupdate(armas_x_dense_t *A,
-                            DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
-                            armas_conf_t *conf);
-extern int armas_x_mvupdate2_sym(armas_x_dense_t *A,
-                                 DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
-                                 int flags, armas_conf_t *conf);
-extern int armas_x_mvupdate_sym(armas_x_dense_t *A,
-                                DTYPE alpha, const armas_x_dense_t *X,
-                                int flags, armas_conf_t *conf);
-extern int armas_x_mvupdate_trm(armas_x_dense_t *A,
-                                DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
-                                int flags, armas_conf_t *conf);
-extern int armas_x_mvmult_trm(armas_x_dense_t *X,  const armas_x_dense_t *A, 
-                              DTYPE alpha, int flags, armas_conf_t *conf);
-extern int armas_x_mvsolve_trm(armas_x_dense_t *X,  const armas_x_dense_t *A, 
-                               DTYPE alpha, int flags, armas_conf_t *conf);
+  extern int armas_x_mvupdate(armas_x_dense_t *A,
+			      DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
+			      armas_conf_t *conf);
+  extern int armas_x_mvupdate2_sym(armas_x_dense_t *A,
+				   DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
+				   int flags, armas_conf_t *conf);
+  extern int armas_x_mvupdate_sym(armas_x_dense_t *A,
+				  DTYPE alpha, const armas_x_dense_t *X,
+				  int flags, armas_conf_t *conf);
+  extern int armas_x_mvupdate_trm(armas_x_dense_t *A,
+				  DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
+				  int flags, armas_conf_t *conf);
+  extern int armas_x_mvmult_trm(armas_x_dense_t *X,  DTYPE alpha, const armas_x_dense_t *A, 
+				int flags, armas_conf_t *conf);
+  extern int armas_x_mvsolve_trm(armas_x_dense_t *X, DTYPE alpha,  const armas_x_dense_t *A, 
+				 int flags, armas_conf_t *conf);
 
 
 // Blas level 3 functions
