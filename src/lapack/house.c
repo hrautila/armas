@@ -297,10 +297,10 @@ int __apply_householder2x1(armas_x_dense_t *tau, armas_x_dense_t *v,
     armas_x_axpby(w1, a1, 1.0, 0.0, conf);
     if (flags & ARMAS_LEFT) {
         // w1 = a1 + A2.T*v
-        armas_x_mvmult(w1, A2, v, 1.0, 1.0, ARMAS_TRANSA, conf);
+        armas_x_mvmult(__ONE, w1, __ONE, A2, v, ARMAS_TRANSA, conf);
     } else {
         // w1 = a1 + A2*v
-        armas_x_mvmult(w1, A2, v, 1.0, 1.0, ARMAS_NONE, conf);
+        armas_x_mvmult(__ONE, w1, __ONE, A2, v, ARMAS_NONE, conf);
     }
     // w1 = tau*w1
     armas_x_scale(w1, tval, conf);
@@ -337,12 +337,12 @@ int __apply_householder1x1(armas_x_dense_t *tau, armas_x_dense_t *v,
     }
     if (flags & ARMAS_LEFT) {
         // w = A.T*v
-        armas_x_mvmult(w, A, v, 1.0, 0.0, ARMAS_TRANS, conf);
+        armas_x_mvmult(__ZERO, w, __ONE, A, v, ARMAS_TRANS, conf);
         // A = A - tau*v*w
         armas_x_mvupdate(A, v, w, -tval, conf);
     } else {
         // w = A*v
-        armas_x_mvmult(w,  A, v, 1.0, 0.0, ARMAS_NONE, conf);
+        armas_x_mvmult(__ZERO, w, __ONE, A, v, ARMAS_NONE, conf);
         // A = A - tau*w*v
         armas_x_mvupdate(A, w, v, -tval, conf);
     }

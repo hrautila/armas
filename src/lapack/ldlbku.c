@@ -241,7 +241,7 @@ int __build_bkpivot_upper(armas_x_dense_t *AL, armas_x_dense_t *AR,
   armas_x_copy(&wk, &src, conf);
   if (k > 0) {
     armas_x_submatrix(&wrow, WR, lr, 0, 1, WR->cols);
-    armas_x_mvmult(&wk, AR, &wrow, -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &wk, -__ONE, AR, &wrow, ARMAS_NONE, conf);
   }
   if (AL->rows == 1) {
     *nr = -1; *np = 1;
@@ -276,7 +276,7 @@ int __build_bkpivot_upper(armas_x_dense_t *AL, armas_x_dense_t *AR,
   if (k > 0) {
     // update wkp1 
     armas_x_submatrix(&wrow, WR, r, 0, 1, WR->cols);
-    armas_x_mvmult(&wkp1, AR, &wrow, -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &wkp1, -__ONE, AR, &wrow, ARMAS_NONE, conf);
   }
   // set on-diagonal entry to zero to avoid finding it
   p1 = armas_x_get(&wkp1, r, 0);
@@ -604,7 +604,7 @@ int __unblk_bksolve_upper(armas_x_dense_t *B, armas_x_dense_t *A,
 
     case 2:
       if (np == 1) {
-        armas_x_mvmult(&b1, &B0, &a01, -1.0, 1.0, ARMAS_TRANS, conf);
+        armas_x_mvmult(__ONE, &b1, -__ONE, &B0, &a01, ARMAS_TRANS, conf);
         if (pr != nc) {
           // swap rows on top part of B
           __merge2x1(&Bx, &B0, &b1);

@@ -54,7 +54,7 @@ main(int argc, char **argv) {
 
   // trmv(A, X) == gemv(A, X) 
   armas_d_mvmult_trm(&X, &A, 1.0, ARMAS_UPPER, &conf);
-  armas_d_mvmult(&Y, &A, &X0, 1.0, 0.0, ARMAS_NULL, &conf);
+  armas_d_mvmult(0.0, &Y, 1.0, &A, &X0, ARMAS_NULL, &conf);
   ok = armas_d_allclose(&Y, &X);
   printf("%6s : trmv(X, A, U|N) == gemv(upper(A), X)\n", ok ? "OK" : "FAILED");
   fails += 1 - ok;
@@ -63,7 +63,7 @@ main(int argc, char **argv) {
 
   // trmv(A.T, X) == gemv(A.T, X) 
   armas_d_mvmult_trm(&X, &A, 1.0, ARMAS_UPPER|ARMAS_TRANSA, &conf);
-  armas_d_mvmult(&Y, &A, &X0, 1.0, 0.0, ARMAS_TRANSA, &conf);
+  armas_d_mvmult(0.0, &Y, 1.0, &A, &X0, ARMAS_TRANSA, &conf);
   ok = armas_d_allclose(&Y, &X);
   printf("%6s : trmv(X, A, U|T) == gemv(upper(A).T, X)\n", ok ? "OK" : "FAILED");
   fails += 1 - ok;
@@ -76,7 +76,7 @@ main(int argc, char **argv) {
 
   // trmv(A, X) == gemv(A, X) 
   armas_d_mvmult_trm(&X, &A, 1.0, ARMAS_LOWER, &conf);
-  armas_d_mvmult(&Y, &A, &X0, 1.0, 0.0, ARMAS_NULL, &conf);
+  armas_d_mvmult(0.0, &Y, 1.0, &A, &X0, ARMAS_NULL, &conf);
   ok = armas_d_allclose(&Y, &X);
   printf("%6s : trmv(X, A, L|N) == gemv(lower(A), X)\n", ok ? "OK" : "FAILED");
   fails += 1 - ok;
@@ -85,7 +85,7 @@ main(int argc, char **argv) {
 
   // trmv(A.T, X) == gemv(A.T, X) 
   armas_d_mvmult_trm(&X, &A, 1.0, ARMAS_LOWER|ARMAS_TRANSA, &conf);
-  armas_d_mvmult(&Y, &A, &X0, 1.0, 0.0, ARMAS_TRANSA, &conf);
+  armas_d_mvmult(0.0, &Y, 1.0, &A, &X0, ARMAS_TRANSA, &conf);
   ok = armas_d_allclose(&Y, &X);
   printf("%6s : trmv(X, A, L|T) == gemv(lower(A).T, X)\n", ok ? "OK" : "FAILED");
   fails += 1 - ok;

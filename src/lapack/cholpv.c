@@ -185,7 +185,7 @@ int __unblk_cholpv_lower_ncol(armas_x_dense_t *A, armas_x_dense_t *D,
         a11val = __SQRT(a11val);
         armas_x_set_unsafe(&a11, 0, 0, a11val);
         // update a21 with prevous; a21 := a21 - A20*a10
-        armas_x_mvmult(&a21, &A20, &a10, -__ONE, __ONE, 0, conf);
+        armas_x_mvmult(__ONE, &a21, -__ONE, &A20, &a10, 0, conf);
         armas_x_scale(&a21, __ONE/a11val, conf);
         // update diagonal; diag(A22) = D2 - diag(a21*a21.T); 
         if (ncol > 0)
@@ -398,7 +398,7 @@ int __unblk_cholpv_upper_ncol(armas_x_dense_t *A, armas_x_dense_t *D,
         a11val = __SQRT(a11val);
         armas_x_set_unsafe(&a11, 0, 0, a11val);
         // update a01 with prevous; a12 := a12 - A02.T*a01
-        armas_x_mvmult(&a12, &A02, &a01, -__ONE, __ONE, ARMAS_TRANS, conf);
+        armas_x_mvmult(__ONE, &a12, -__ONE, &A02, &a01, ARMAS_TRANS, conf);
         armas_x_scale(&a12, __ONE/a11val, conf);
         if (ncol > 0)
             __update_diag(&D2, &a12);

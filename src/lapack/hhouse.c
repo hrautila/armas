@@ -230,10 +230,10 @@ int armas_x_hhouse_apply(armas_x_dense_t *tau, armas_x_dense_t *v,
     armas_x_copy(&w1, a1, conf);
     if (flags & ARMAS_LEFT) {
         // w1 = a1 + A2.T*v
-        armas_x_mvmult(&w1, A2, v, 1.0, 1.0, ARMAS_TRANSA, conf);
+        armas_x_mvmult(__ONE, &w1, __ONE, A2, v, ARMAS_TRANSA, conf);
     } else {
         // w1 = a1 + A2*v
-        armas_x_mvmult(&w1, A2, v, 1.0, 1.0, ARMAS_NONE, conf);
+        armas_x_mvmult(__ONE, &w1, __ONE, A2, v, ARMAS_NONE, conf);
     }
     // w1 = tau*w1
     armas_x_scale(&w1, tval, conf);

@@ -113,14 +113,14 @@ int __unblk_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *tau,
     armas_x_set(&a21, 0, 0, 1.0);
 
     // v1 := A2*a21
-    armas_x_mvmult(&v1, &A2, &a21, 1.0, 0.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ZERO, &v1, __ONE, &A2, &a21, ARMAS_NONE, conf);
     
     // A2 := A2 - tau*v1*a21  (A2 = A2*H(k))
     armas_x_mvupdate(&A2, &v1, &a21, -tauval, conf);
     
     armas_x_submatrix(&w12, W, 0, 0, A22.cols, 1);
     // w12 := a21.T*A22 = A22.T*a21
-    armas_x_mvmult(&w12, &A22, &a21, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w12, __ONE, &A22, &a21, ARMAS_TRANS, conf);
     // A22 := A22 - tau*a21*w12  (A22 = H(k)*A22)
     armas_x_mvupdate(&A22, &a21, &w12, -tauval, conf);
 
@@ -161,13 +161,13 @@ int __update_vec_left_wy(armas_x_dense_t *v, armas_x_dense_t *Y1, armas_x_dense_
   // w0 = Y1.T*v1 + Y2.T*v2
   armas_x_axpby(&w0, &v1, 1.0, 0.0, conf);
   armas_x_mvmult_trm(&w0, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANS, conf);
-  armas_x_mvmult(&w0, Y2, &v2, 1.0, 1.0, ARMAS_TRANS, conf);
+  armas_x_mvmult(__ONE, &w0, __ONE, Y2, &v2, ARMAS_TRANS, conf);
   
   // w0 = opt(T)*w0
   armas_x_mvmult_trm(&w0, T, 1.0, bits|ARMAS_UPPER, conf);
   
   // v2 = v2 - Y2*w0
-  armas_x_mvmult(&v2, Y2, &w0, -1.0, 1.0, ARMAS_NONE, conf);
+  armas_x_mvmult(__ONE, &v2, -__ONE, Y2, &w0, ARMAS_NONE, conf);
   
   // v1 = v1 - Y1*w0
   armas_x_mvmult_trm(&w0, Y1, 1.0, ARMAS_LOWER|ARMAS_UNIT, conf);
@@ -240,7 +240,7 @@ int __unblk_build_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *T,
       armas_x_mvmult_trm(&t01, &T00, 1.0, ARMAS_UPPER, conf);
       
       // a1 = a1 - V0*T00*a10
-      armas_x_mvmult(&a1, &V0, &t01, -1.0, 1.0, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a1, -__ONE, &V0, &t01, ARMAS_NONE, conf);
       
       // update a1 = (I - Y*T*Y.T).T*a1
       armas_x_submatrix(&Y0, A, 1, 0, A00.cols, A00.cols);
@@ -254,12 +254,12 @@ int __unblk_build_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *T,
     armas_x_set(&a21, 0, 0, 1.0);
     
     // v1 = A2*a21
-    armas_x_mvmult(&v1, &A2, &a21, 1.0, 0.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ZERO, &v1, __ONE, &A2, &a21, ARMAS_NONE, conf);
     // update T
     tauval = armas_x_get(&t11, 0, 0);
     if (tauval != 0) {
       // t01 := -tauval*A20.T*a21
-      armas_x_mvmult(&t01, &A20, &a21, -tauval, 0.0, ARMAS_TRANS, conf);
+      armas_x_mvmult(__ZERO, &t01, -tauval, &A20, &a21, ARMAS_TRANS, conf);
       // t01 := T00*t01
       armas_x_mvmult_trm(&t01, &T00, 1.0, ARMAS_UPPER, conf);
     }

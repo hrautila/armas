@@ -74,7 +74,7 @@ int __unblk_inverse_fused(armas_x_dense_t *A, armas_x_dense_t *W, armas_conf_t *
         armas_x_scale(&a21, __ZERO, conf);
 
         // a1 := a1 - A2*l21
-        armas_x_mvmult(&a1, &A2, &l21, -__ONE, __ONE, 0, conf);
+        armas_x_mvmult(__ONE, &a1, -__ONE, &A2, &l21, 0, conf);
         a11val = armas_x_get(&a11, 0, 0);
         // ---------------------------------------------------------------------------
     next:

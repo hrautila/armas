@@ -160,7 +160,7 @@ int __unblk_ldlpv_lower_ncol(armas_x_dense_t *A, armas_x_dense_t *Y,
         // ---------------------------------------------------------------------------
         a11val = armas_x_get_at_unsafe(&d1, 0);
         // update a21 with prevous; a21 := a21 - A20*y10
-        armas_x_mvmult(&a21, &A20, &y10, -__ONE, __ONE, 0, conf);
+        armas_x_mvmult(__ONE, &a21, -__ONE, &A20, &y10, 0, conf);
         // this will overwrite D2 when ncol == 0; 
         armas_x_copy(&y21, &a21, conf);
         // update diagonal; diag(A22) = D2 - diag(a21*a21.T)/a11; 
@@ -356,7 +356,7 @@ int __unblk_ldlpv_upper_ncol(armas_x_dense_t *A, armas_x_dense_t *Y,
         // ---------------------------------------------------------------------------
         a11val = armas_x_get_at_unsafe(&d1, 0);
         // update a01 with prevous; a01 := a01 - A02*y12
-        armas_x_mvmult(&a01, &A02, &y12, -__ONE, __ONE, 0, conf);
+        armas_x_mvmult(__ONE, &a01, -__ONE, &A02, &y12, 0, conf);
         // this will overwrite D0 when ncol == 0; 
         armas_x_copy(&y01, &a01, conf);
         // update diagonal; diag(A00) = D0 - diag(a01*a01.T)/a11; 

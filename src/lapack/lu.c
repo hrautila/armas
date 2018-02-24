@@ -140,7 +140,7 @@ int __unblk_lufactor(armas_x_dense_t *A, armas_pivot_t *P, int offset, armas_con
     aa      = armas_x_dot(&a10, &a01, conf);
     armas_x_set(&a11, 0, 0, a11val - aa); 
     // c. a21 = a21 - A20*a01
-    err = armas_x_mvmult(&a21, &A20, &a01, -1.0, 1.0, ARMAS_NONE, conf);
+    err = armas_x_mvmult(__ONE, &a21, -__ONE, &A20, &a01, ARMAS_NONE, conf);
     // HERE: current column has been updated with effects of earlier computations.
 
     // B. find pivot index on vector ( a11 ) == ABR[:,0] (1st column of ABR)

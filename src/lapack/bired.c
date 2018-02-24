@@ -138,7 +138,7 @@ int __unblk_bdreduce_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
     
     // y21 := a12 + A22.T*a21
     armas_x_axpby(&y21, &a12, 1.0, 0.0, conf);
-    armas_x_mvmult(&y21, &A22, &a21, 1.0, 1.0, ARMAS_TRANSA, conf);
+    armas_x_mvmult(__ONE, &y21, __ONE, &A22, &a21, ARMAS_TRANSA, conf);
 
     // a12 := a12 - tauq*y21
     armas_x_axpy(&a12, &y21, -tauqv, conf);
@@ -154,7 +154,7 @@ int __unblk_bdreduce_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // z21 := tauq*beta*v == tauq*beta*a21
     armas_x_axpby(&z21, &a21, tauqv*beta, 0.0, conf);
     // z21 := A22*v - z21 == A22*a12 - z21
-    armas_x_mvmult(&z21, &A22, &a12, 1.0, -1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(-__ONE, &z21, __ONE, &A22, &a12, ARMAS_NONE, conf);
     // A22 := A22 - tauq*u*y21 == A22 - tauq*a21*y21
     armas_x_mvupdate(&A22, &a21, &y21, -tauqv, conf);
     // A22 := A22 - taup*z21*v == A22 - taup*z21*a12
@@ -238,11 +238,11 @@ int __unblk_bdbuild_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
       aa += armas_x_dot(&z10, &a01, conf);
       armas_x_set(&a11, 0, 0, armas_x_get(&a11, 0, 0) - aa);
       // a21 := a21 - U20*y10 - Z20*v10
-      armas_x_mvmult(&a21, &A20, &y10, -1.0, 1.0, ARMAS_NONE, conf);
-      armas_x_mvmult(&a21, &Z20, &a01, -1.0, 1.0, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a21, -__ONE, &A20, &y10, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a21, -__ONE, &Z20, &a01, ARMAS_NONE, conf);
       // a12 := a12 - u10.T*Y20.T - z10.T*V20.T
-      armas_x_mvmult(&a12, &Y20, &a10, -1.0, 1.0, ARMAS_NONE, conf);
-      armas_x_mvmult(&a12, &A02, &z10, -1.0, 1.0, ARMAS_TRANS, conf);
+      armas_x_mvmult(__ONE, &a12, -__ONE, &Y20, &a10, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a12, -__ONE, &A02, &z10, ARMAS_TRANS, conf);
       // restore bidiagonal entry
       armas_x_set(&a01, -1, 0, v0);
     }
@@ -252,15 +252,15 @@ int __unblk_bdbuild_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
 
     // y21 := a12 + A22.T*u21 - Y20*U20.T*u21 - V20*Z20.T*u21
     armas_x_axpby(&y21, &a12, 1.0, 0.0, conf);
-    armas_x_mvmult(&y21, &A22, &a21, 1.0, 1.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ONE, &y21, __ONE, &A22, &a21, ARMAS_TRANS, conf);
     // w00 := U20.T*u21 [= A20.T*a21]
-    armas_x_mvmult(&w00, &A20, &a21, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w00, __ONE, &A20, &a21, ARMAS_TRANS, conf);
     // y21 := y21 - U20*w00 [U20 == A20]
-    armas_x_mvmult(&y21, &Y20, &w00, -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &y21, -__ONE, &Y20, &w00, ARMAS_NONE, conf);
     // w00 := Z20.T*u21
-    armas_x_mvmult(&w00, &Z20, &a21, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w00, __ONE, &Z20, &a21, ARMAS_TRANS, conf);
     // y21 := y21 - V20*w00  [V20 == A02.T]
-    armas_x_mvmult(&y21, &A02, &w00, -1.0, 1.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ONE, &y21, -__ONE, &A02, &w00, ARMAS_TRANS, conf);
 
     // a12 := a12 - tauq*y21
     armas_x_scale(&y21, tauqv, conf);
@@ -278,16 +278,16 @@ int __unblk_bdbuild_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // z21 := beta*u
     armas_x_axpby(&z21, &a21, beta, 0.0, conf);
     // w00 = Y20.T*v
-    armas_x_mvmult(&w00, &Y20, &a12, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w00, __ONE, &Y20, &a12, ARMAS_TRANS, conf);
     // z21 = z21 + U20*w00
-    armas_x_mvmult(&z21, &A20, &w00, 1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &z21, __ONE, &A20, &w00, ARMAS_NONE, conf);
     // w00 := V20.T*v  (V20.T == A02)
-    armas_x_mvmult(&w00, &A02, &a12, 1.0, 0.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ZERO, &w00, __ONE, &A02, &a12, ARMAS_NONE, conf);
     // z21 := z21 + Z20*w00
-    armas_x_mvmult(&z21, &Z20, &w00, 1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &z21, __ONE, &Z20, &w00, ARMAS_NONE, conf);
 
     // z21 := -taup*z21 + taup*A22*v
-    armas_x_mvmult(&z21, &A22, &a12, taupv, -taupv, ARMAS_NONE, conf);
+    armas_x_mvmult(-taupv, &z21, taupv, &A22, &a12, ARMAS_NONE, conf);
 
     // ------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  &ATR,
@@ -480,7 +480,7 @@ int __unblk_bdreduce_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
     
     // y21 := a12 + A22.T*a12
     armas_x_axpby(&y21, &a21, 1.0, 0.0, conf);
-    armas_x_mvmult(&y21, &A22, &a12, 1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &y21, __ONE, &A22, &a12, ARMAS_NONE, conf);
 
     // a21 := a21 - taup*y21
     armas_x_axpy(&a21, &y21, -taupv, conf);
@@ -497,7 +497,7 @@ int __unblk_bdreduce_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // z21 := taup*beta*a12
     armas_x_axpby(&z21, &a12, taupv*beta, 0.0, conf);
     // z21 := A22*a21 - z21
-    armas_x_mvmult(&z21, &A22, &a21, 1.0, -1.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(-__ONE, &z21, __ONE, &A22, &a21, ARMAS_TRANS, conf);
     // A22 := A22 - taup*y21*a12
     armas_x_mvupdate(&A22, &y21, &a12, -taupv, conf);
     // A22 := A22 - tauq*z21*a21
@@ -592,11 +592,11 @@ int __unblk_bdbuild_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
       aa += armas_x_dot(&y10, &a01, conf);
       armas_x_set(&a11, 0, 0, armas_x_get(&a11, 0, 0) - aa);
       // a12 := a12 - V20*y10 - Z20*u10
-      armas_x_mvmult(&a12, &A02, &y10, -1.0, 1.0, ARMAS_TRANS, conf);
-      armas_x_mvmult(&a12, &Z20, &a10, -1.0, 1.0, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a12, -__ONE, &A02, &y10, ARMAS_TRANS, conf);
+      armas_x_mvmult(__ONE, &a12, -__ONE, &Z20, &a10, ARMAS_NONE, conf);
       // a21 := a21 - Y20*v10 - U20*z10
-      armas_x_mvmult(&a21, &Y20, &a01, -1.0, 1.0, ARMAS_NONE, conf);
-      armas_x_mvmult(&a21, &A20, &z10, -1.0, 1.0, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a21, -__ONE, &Y20, &a01, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a21, -__ONE, &A20, &z10, ARMAS_NONE, conf);
       // restore bidiagonal entry
       armas_x_set(&a10, 0, -1, v0);
     }
@@ -606,15 +606,15 @@ int __unblk_bdbuild_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
 
     // y21 := a12 + A22*v21 - Y20*U20.T*v21 - V20*Z20.T*v21
     armas_x_axpby(&y21, &a21, 1.0, 0.0, conf);
-    armas_x_mvmult(&y21, &A22, &a12, 1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &y21, __ONE, &A22, &a12, ARMAS_NONE, conf);
     // w00 := U20.T*v21 [= A02*a12]
-    armas_x_mvmult(&w00, &A02, &a12, 1.0, 0.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ZERO, &w00, __ONE, &A02, &a12, ARMAS_NONE, conf);
     // y21 := y21 - U20*w00 [U20 == A20]
-    armas_x_mvmult(&y21, &Y20, &w00, -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &y21, -__ONE, &Y20, &w00, ARMAS_NONE, conf);
     // w00 := Z20.T*v21
-    armas_x_mvmult(&w00, &Z20, &a12, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w00, __ONE, &Z20, &a12, ARMAS_TRANS, conf);
     // y21 := y21 - V20*w00  
-    armas_x_mvmult(&y21, &A20, &w00, -1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &y21, -__ONE, &A20, &w00, ARMAS_NONE, conf);
 
     // a21 := a21 - taup*y21
     armas_x_scale(&y21, taupv, conf);
@@ -632,16 +632,16 @@ int __unblk_bdbuild_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // z21 := beta*v
     armas_x_axpby(&z21, &a12, beta, 0.0, conf);
     // w00 = Y20.T*u
-    armas_x_mvmult(&w00, &Y20, &a21, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w00, __ONE, &Y20, &a21, ARMAS_TRANS, conf);
     // z21 = z21 + V20*w00 (V20 == A02.T)
-    armas_x_mvmult(&z21, &A02, &w00, 1.0, 1.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ONE, &z21, __ONE, &A02, &w00, ARMAS_TRANS, conf);
     // w00 := U20.T*v  (U20.T == A20.T)
-    armas_x_mvmult(&w00, &A20, &a21, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w00, __ONE, &A20, &a21, ARMAS_TRANS, conf);
     // z21 := z21 + Z20*w00
-    armas_x_mvmult(&z21, &Z20, &w00, 1.0, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &z21, __ONE, &Z20, &w00, ARMAS_NONE, conf);
 
     // z21 := -tauq*z21 + tauq*A22*v
-    armas_x_mvmult(&z21, &A22, &a21, tauqv, -tauqv, ARMAS_TRANS, conf);
+    armas_x_mvmult(-tauqv, &z21, tauqv, &A22, &a21, ARMAS_TRANS, conf);
 
     // ------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil, 

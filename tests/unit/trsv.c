@@ -27,7 +27,7 @@ int test_row_vector(int N, int verbose, int flags)
     printf("Z:\n"); armas_d_printf(stdout, "%6.3f", &Z);
   }
 
-  armas_d_mvmult(&X, &A, &X0, 1.0, 0.0, 0, &conf);
+  armas_d_mvmult(0.0, &X, 1.0, &A, &X0, 0, &conf);
   armas_d_mvsolve_trm(&X, &A, 1.0, flags, &conf);
   n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -40,7 +40,7 @@ int test_row_vector(int N, int verbose, int flags)
     printf( "  || error ||: %e\n", n0);
   }
 
-  armas_d_mvmult(&X, &A, &X0, 1.0, 0.0, ARMAS_TRANS, &conf);
+  armas_d_mvmult(0.0, &X, 1.0, &A, &X0, ARMAS_TRANS, &conf);
   armas_d_mvsolve_trm(&X, &A, 1.0, flags|ARMAS_TRANS, &conf);
   n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -78,7 +78,7 @@ int test_col_vector(int N, int verbose, int flags)
     printf("Z:\n"); armas_d_printf(stdout, "%6.3f", &Z);
   }
 
-  armas_d_mvmult(&X, &A, &X0, 1.0, 0.0, 0, &conf);
+  armas_d_mvmult(0.0, &X, 1.0, &A, &X0, 0, &conf);
   armas_d_mvsolve_trm(&X, &A, 1.0, flags, &conf);
   n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -91,7 +91,7 @@ int test_col_vector(int N, int verbose, int flags)
     printf( "  || error ||: %e\n", n0);
   }
 
-  armas_d_mvmult(&X, &A, &X0, 1.0, 0.0, ARMAS_TRANS, &conf);
+  armas_d_mvmult(0.0, &X, 1.0, &A, &X0, ARMAS_TRANS, &conf);
   armas_d_mvsolve_trm(&X, &A, 1.0, flags|ARMAS_TRANS, &conf);
   n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
   ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;

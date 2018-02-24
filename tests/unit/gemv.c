@@ -50,10 +50,10 @@ int main(int argc, char **argv) {
   armas_x_transpose(&At, &A);
 
   // Y = A*X
-  armas_x_mvmult(&Y, &A, &X, 1.0, 0.0, 0, &conf);
+  armas_x_mvmult(0.0, &Y, 1.0, &A, &X, 0, &conf);
   nrm_y = armas_x_nrm2(&Y, &conf);
   // Y = Y - A*X
-  armas_x_mvmult(&Y, &At, &X, -1.0, 1.0, ARMAS_TRANS, &conf);
+  armas_x_mvmult(1.0, &Y, -1.0, &At, &X, ARMAS_TRANS, &conf);
   if (N < 10 && verbose > 1) {
     printf("Y\n"); armas_x_printf(stdout, "%5.2f", &Y);
   }

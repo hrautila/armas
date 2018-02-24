@@ -178,9 +178,9 @@ int __unblk_trdbuild_lower(armas_x_dense_t *A, armas_x_dense_t *tauq,
       aa += armas_x_dot(&y10, &a10, conf);
       armas_x_set(&a11, 0, 0, armas_x_get(&a11, 0, 0) - aa);
       // a21 := a21 - A20*y10
-      armas_x_mvmult(&a21, &A20, &y10, -1.0, 1.0, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a21, -__ONE, &A20, &y10, ARMAS_NONE, conf);
       // a21 := a21 - Y20*a10
-      armas_x_mvmult(&a21, &Y20, &a10, -1.0, 1.0, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a21, -__ONE, &Y20, &a10, ARMAS_NONE, conf);
 
       // restore subdiagonal value
       armas_x_set(&a10, 0, -1, v0);
@@ -197,13 +197,13 @@ int __unblk_trdbuild_lower(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // y21 := tauq*A22*a21
     armas_x_mvmult_sym(&y21, &A22, &a21, tauval, 0.0, ARMAS_LOWER, conf);
     // w12 := A20.T*a21
-    armas_x_mvmult(&w12, &A20, &a21, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w12, __ONE, &A20, &a21, ARMAS_TRANS, conf);
     // y21 := y21 - tauq*Y20*(A20.T*a21)
-    armas_x_mvmult(&y21, &Y20, &w12, -tauval, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &y21, -tauval, &Y20, &w12, ARMAS_NONE, conf);
     // w12 := Y20.T*a21
-    armas_x_mvmult(&w12, &Y20, &a21, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w12, __ONE, &Y20, &a21, ARMAS_TRANS, conf);
     // y21 := y21 - tauq*A20*(Y20.T*a21)
-    armas_x_mvmult(&y21, &A20, &w12, -tauval, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &y21, -tauval, &A20, &w12, ARMAS_NONE, conf);
     
     // beta := tauq*a21.T*y21
     beta = tauval * armas_x_dot(&a21, &y21, conf);
@@ -410,9 +410,9 @@ int __unblk_trdbuild_upper(armas_x_dense_t *A, armas_x_dense_t *tauq,
       aa += armas_x_dot(&y12, &a12, conf);
       armas_x_set(&a11, 0, 0, armas_x_get(&a11, 0, 0) - aa);
       // a01 := a01 - A02*y12
-      armas_x_mvmult(&a01, &A02, &y12, -1.0, 1.0, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a01, -__ONE, &A02, &y12, ARMAS_NONE, conf);
       // a01 := a01 - Y02*a12
-      armas_x_mvmult(&a01, &Y02, &a12, -1.0, 1.0, ARMAS_NONE, conf);
+      armas_x_mvmult(__ONE, &a01, -__ONE, &Y02, &a12, ARMAS_NONE, conf);
 
       // restore subdiagonal value
       armas_x_set(&a12, 0, 0, v0);
@@ -429,13 +429,13 @@ int __unblk_trdbuild_upper(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // y01 := tauq*A00*a01
     armas_x_mvmult_sym(&y01, &A00, &a01, tauval, 0.0, ARMAS_UPPER, conf);
     // w12 := A02.T*a01
-    armas_x_mvmult(&w12, &A02, &a01, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w12, __ONE, &A02, &a01, ARMAS_TRANS, conf);
     // y01 := y01 - tauq*Y02*(A02.T*a01)
-    armas_x_mvmult(&y01, &Y02, &w12, -tauval, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &y01, -tauval, &Y02, &w12, ARMAS_NONE, conf);
     // w12 := Y02.T*a01
-    armas_x_mvmult(&w12, &Y02, &a01, 1.0, 0.0, ARMAS_TRANS, conf);
+    armas_x_mvmult(__ZERO, &w12, __ONE, &Y02, &a01, ARMAS_TRANS, conf);
     // y01 := y01 - tauq*A02*(Y02.T*a01)
-    armas_x_mvmult(&y01, &A02, &w12, -tauval, 1.0, ARMAS_NONE, conf);
+    armas_x_mvmult(__ONE, &y01, -tauval, &A02, &w12, ARMAS_NONE, conf);
     
     // beta := tauq*a01.T*y01
     beta = tauval * armas_x_dot(&a01, &y01, conf);

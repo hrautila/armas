@@ -41,9 +41,9 @@ extern int     armas_x_add(const armas_x_dense_t *X, const DTYPE alpha, armas_co
 
 
 // Blas level 2 functions
-extern int armas_x_mvmult(armas_x_dense_t *Y,
-                          const armas_x_dense_t *A, const armas_x_dense_t *X,
-                          DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
+  extern int armas_x_mvmult(DTYPE beta, armas_x_dense_t *Y,
+			    DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *X,
+			    int flags, armas_conf_t *conf);
 extern int armas_x_mvupdate(armas_x_dense_t *A,
                             const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
                             DTYPE alpha, armas_conf_t *conf);
