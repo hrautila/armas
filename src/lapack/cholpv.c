@@ -102,7 +102,7 @@ int __unblk_cholpv_lower(armas_x_dense_t *A, armas_pivot_t *P, DTYPE xstop, arma
         a11val = __SQRT(a11val);
         armas_x_set_unsafe(&a11, 0, 0, a11val);
         armas_x_scale(&a21, __ONE/a11val, conf);
-        armas_x_mvupdate_sym(&A22, &a21, -__ONE, ARMAS_LOWER, conf);
+        armas_x_mvupdate_sym(&A22, -__ONE, &a21, ARMAS_LOWER, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL, __nil,
                             &ABL,  &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);
@@ -328,7 +328,7 @@ int __unblk_cholpv_upper(armas_x_dense_t *A, armas_pivot_t *P, DTYPE xstop, arma
         armas_x_set_unsafe(&a11, 0, 0, a11val);
         // u12 = a12/a11
         armas_x_scale(&a12, __ONE/a11val, conf);
-         armas_x_mvupdate_sym(&A22, &a12, -__ONE, ARMAS_UPPER, conf);
+        armas_x_mvupdate_sym(&A22, -__ONE, &a12, ARMAS_UPPER, conf);
         // ---------------------------------------------------------------------------
         __continue_3x3to2x2(&ATL,  &ATR,
                             __nil, &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);

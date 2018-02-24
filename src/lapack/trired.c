@@ -120,7 +120,7 @@ int __unblk_trdreduce_lower(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // y21 := y21 - 0.5*beta*a21
     armas_x_axpy(&y21, &a21, -0.5*beta, conf);
     // A22 := A22 - a21*y21.T - y21*a21.T
-    armas_x_mvupdate2_sym(&A22, &a21, &y21, -1.0, ARMAS_LOWER, conf);
+    armas_x_mvupdate2_sym(&A22, -__ONE, &a21, &y21, ARMAS_LOWER, conf);
     // restore subdiagonal
     armas_x_set(&a21, 0, 0, v0);
 
@@ -350,7 +350,7 @@ int __unblk_trdreduce_upper(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // y21 := y21 - 0.5*beta*a01
     armas_x_axpy(&y21, &a01, -0.5*beta, conf);
     // A00 := A00 - a01*y21.T - y21*a01.T
-    armas_x_mvupdate2_sym(&A00, &a01, &y21, -1.0, ARMAS_UPPER, conf);
+    armas_x_mvupdate2_sym(&A00, -__ONE, &a01, &y21, ARMAS_UPPER, conf);
     // restore subdiagonal
     armas_x_set(&a01, -1, 0, v0);
 

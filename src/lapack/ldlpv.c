@@ -75,7 +75,7 @@ int __unblk_ldlpv_lower(armas_x_dense_t *A, armas_pivot_t *P, armas_conf_t *conf
         }
         // A22 = A22 - l21*d11*l21.T = A22 - a21*a21.T/a11
         a11val = __ONE/armas_x_get_unsafe(&a11, 0, 0);
-        armas_x_mvupdate_trm(&A22, &a21, &a21, -a11val, ARMAS_LOWER, conf);
+        armas_x_mvupdate_trm(&A22, -a11val, &a21, &a21, ARMAS_LOWER, conf);
         // l21 = a21/a11
         armas_x_scale(&a21, a11val, conf);
         // save pivot; positive index 
@@ -282,7 +282,7 @@ int __unblk_ldlpv_upper(armas_x_dense_t *A, armas_pivot_t *P, armas_conf_t *conf
         // ---------------------------------------------------------------------------
         // A00 = A00 - u01*d1*u01.T = A00 - a01*a01.T/a11
         a11val = __ONE/armas_x_get_unsafe(&a11, 0, 0);
-        armas_x_mvupdate_trm(&A00, &a01, &a01, -a11val, ARMAS_UPPER, conf);
+        armas_x_mvupdate_trm(&A00, -a11val, &a01, &a01, ARMAS_UPPER, conf);
         // u01 = a01/a11
         armas_x_scale(&a01, a11val, conf);
         // save pivot; positive index 

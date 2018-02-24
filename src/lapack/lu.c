@@ -55,7 +55,7 @@ int __unblk_lufactor_nopiv(armas_x_dense_t *A, armas_conf_t *conf)
     armas_x_invscale(&a21, a11val, conf);
 
     // A22 = A22 - a21*a12
-    armas_x_mvupdate(&A22, &a21, &a12, -1.0, conf);
+    armas_x_mvupdate(&A22, -__ONE, &a21, &a12, conf);
     // ---------------------------------------------------------------------------
     __continue_3x3to2x2(&ATL,  __nil,
                         __nil, &ABR, /**/  &A00, &a11, &A22,   A, ARMAS_PBOTTOMRIGHT);

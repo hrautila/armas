@@ -55,8 +55,8 @@ extern int __update_trmv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  * part of A and upper (lower) triangular part is not referenced.
  *
  * @param[in,out]  A target matrix
- * @param[in]      X source vector
  * @param[in]      alpha scalar multiplier
+ * @param[in]      X source vector
  * @param[in]      flags flag bits 
  * @param[in]      conf configuration block
  *
@@ -66,8 +66,8 @@ extern int __update_trmv_ext_unb(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  * @ingroup blas2
  */
 int armas_x_mvupdate_sym(armas_x_dense_t *A,
-                         const armas_x_dense_t *X,
-                         DTYPE alpha, int flags, armas_conf_t *conf)
+                         DTYPE alpha, const armas_x_dense_t *X,
+                         int flags, armas_conf_t *conf)
 {
   mvec_t x;
   mdata_t A0;

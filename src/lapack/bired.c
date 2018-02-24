@@ -156,9 +156,9 @@ int __unblk_bdreduce_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // z21 := A22*v - z21 == A22*a12 - z21
     armas_x_mvmult(-__ONE, &z21, __ONE, &A22, &a12, ARMAS_NONE, conf);
     // A22 := A22 - tauq*u*y21 == A22 - tauq*a21*y21
-    armas_x_mvupdate(&A22, &a21, &y21, -tauqv, conf);
+    armas_x_mvupdate(&A22, -tauqv, &a21, &y21, conf);
     // A22 := A22 - taup*z21*v == A22 - taup*z21*a12
-    armas_x_mvupdate(&A22, &z21, &a12, -taupv, conf);
+    armas_x_mvupdate(&A22, -taupv, &z21, &a12, conf);
 
     armas_x_set(&a12, 0, 0, v0);
     // ------------------------------------------------------------------------
@@ -499,9 +499,9 @@ int __unblk_bdreduce_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // z21 := A22*a21 - z21
     armas_x_mvmult(-__ONE, &z21, __ONE, &A22, &a21, ARMAS_TRANS, conf);
     // A22 := A22 - taup*y21*a12
-    armas_x_mvupdate(&A22, &y21, &a12, -taupv, conf);
+    armas_x_mvupdate(&A22, -taupv, &y21, &a12, conf);
     // A22 := A22 - tauq*z21*a21
-    armas_x_mvupdate(&A22, &a21, &z21, -tauqv, conf);
+    armas_x_mvupdate(&A22, -tauqv, &a21, &z21, conf);
 
     armas_x_set(&a21, 0, 0, v0);
     // ------------------------------------------------------------------------

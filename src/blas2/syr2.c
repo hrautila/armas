@@ -112,8 +112,8 @@ void __update_syr2_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  * are executed in extended precision.
  *
  * @param[in,out]  A target matrix
- * @param[in]      X, Y source vector
  * @param[in]      alpha scalar multiplier
+ * @param[in]      X, Y source vector
  * @param[in]      flags flag bits 
  * @param[in]      conf configuration block
  * 
@@ -123,8 +123,8 @@ void __update_syr2_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  * @ingroup blas2
  */
 int armas_x_mvupdate2_sym(armas_x_dense_t *A,
-                          const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
-                          DTYPE alpha, int flags, armas_conf_t *conf)
+                          DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
+                          int flags, armas_conf_t *conf)
 {
   mvec_t x, y;
   mdata_t A0;

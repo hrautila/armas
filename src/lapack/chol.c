@@ -61,7 +61,7 @@ int __unblk_cholfactor_lower(armas_x_dense_t *A, armas_conf_t *conf)
       armas_x_invscale(&a21, a11val, conf);
 
       // A22 = A22 - a21*a21.T
-      armas_x_mvupdate_sym(&A22, &a21, -1.0, ARMAS_LOWER, conf);
+      armas_x_mvupdate_sym(&A22, -__ONE, &a21, ARMAS_LOWER, conf);
     } else {
       if (err == 0) {
         conf->error = a11val < 0.0 ? ARMAS_ENEGATIVE : ARMAS_ESINGULAR;
@@ -147,7 +147,7 @@ int __unblk_cholfactor_upper(armas_x_dense_t *A, armas_conf_t *conf)
       armas_x_invscale(&a12, a11val, conf);
 
       // A22 = A22 - a12*a12.T
-      armas_x_mvupdate_sym(&A22, &a12, -1.0, ARMAS_UPPER, conf);
+      armas_x_mvupdate_sym(&A22, -__ONE, &a12, ARMAS_UPPER, conf);
     } else {
       if (err == 0) {
         conf->error = a11val < 0.0 ? ARMAS_ENEGATIVE : ARMAS_ESINGULAR;

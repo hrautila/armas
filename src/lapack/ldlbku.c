@@ -158,7 +158,7 @@ int __unblk_bkfactor_upper(armas_x_dense_t *A, armas_x_dense_t *W,
     if (np == 1) {
       // A00 = A00 - a01*a01.T/a11
       a11val = armas_x_get(&a11, 0, 0);
-      armas_x_mvupdate_trm(&A00, &a01, &a01, -1.0/a11val, ARMAS_UPPER, conf);
+      armas_x_mvupdate_trm(&A00, -__ONE/a11val, &a01, &a01, ARMAS_UPPER, conf);
       // a01 = a01/a11
       armas_x_invscale(&a01, a11val, conf);
       // store pivot point relative to original matrix
@@ -572,7 +572,7 @@ int __unblk_bksolve_upper(armas_x_dense_t *B, armas_x_dense_t *A,
           __swap_rows(&BT, BT.rows-1, pr-1, conf);
         }
         // B0 = B0 - a01*b1
-        armas_x_mvupdate(&B0, &a01, &b1, -1.0, conf);
+        armas_x_mvupdate(&B0, -__ONE, &a01, &b1, conf);
         // b1 = b1/d1
         armas_x_invscale(&b1, armas_x_get(&a11, 0, 0), conf);
         nc -= 1;

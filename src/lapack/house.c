@@ -310,9 +310,9 @@ int __apply_householder2x1(armas_x_dense_t *tau, armas_x_dense_t *v,
 
     // A2 = A2 - v*w1
     if (flags & ARMAS_LEFT) {
-        armas_x_mvupdate(A2, v, w1, -1.0, conf);
+        armas_x_mvupdate(A2, -__ONE, v, w1, conf);
     } else {
-        armas_x_mvupdate(A2, w1, v, -1.0, conf);
+        armas_x_mvupdate(A2, -__ONE, w1, v, conf);
     }
     return 0;
 }
@@ -339,12 +339,12 @@ int __apply_householder1x1(armas_x_dense_t *tau, armas_x_dense_t *v,
         // w = A.T*v
         armas_x_mvmult(__ZERO, w, __ONE, A, v, ARMAS_TRANS, conf);
         // A = A - tau*v*w
-        armas_x_mvupdate(A, v, w, -tval, conf);
+        armas_x_mvupdate(A, -tval, v, w, conf);
     } else {
         // w = A*v
         armas_x_mvmult(__ZERO, w, __ONE, A, v, ARMAS_NONE, conf);
         // A = A - tau*w*v
-        armas_x_mvupdate(A, w, v, -tval, conf);
+        armas_x_mvupdate(A, -tval, w, v, conf);
     }
     return 0;
 }

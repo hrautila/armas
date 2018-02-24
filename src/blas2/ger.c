@@ -207,8 +207,8 @@ void __update_ger_recursive(mdata_t *A, const mvec_t *X, const mvec_t *Y,
  * @ingroup blas2
  */
 int armas_x_mvupdate(armas_x_dense_t *A,
-                     const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
-                     DTYPE alpha, armas_conf_t *conf)
+                     DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
+                     armas_conf_t *conf)
 {
   mvec_t x, y;
   mdata_t A0;

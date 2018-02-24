@@ -116,13 +116,13 @@ int __unblk_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *tau,
     armas_x_mvmult(__ZERO, &v1, __ONE, &A2, &a21, ARMAS_NONE, conf);
     
     // A2 := A2 - tau*v1*a21  (A2 = A2*H(k))
-    armas_x_mvupdate(&A2, &v1, &a21, -tauval, conf);
+    armas_x_mvupdate(&A2, -tauval, &v1, &a21, conf);
     
     armas_x_submatrix(&w12, W, 0, 0, A22.cols, 1);
     // w12 := a21.T*A22 = A22.T*a21
     armas_x_mvmult(__ZERO, &w12, __ONE, &A22, &a21, ARMAS_TRANS, conf);
     // A22 := A22 - tau*a21*w12  (A22 = H(k)*A22)
-    armas_x_mvupdate(&A22, &a21, &w12, -tauval, conf);
+    armas_x_mvupdate(&A22, -tauval, &a21, &w12, conf);
 
     // restore a21[0]
     armas_x_set(&a21, 0, 0, beta);

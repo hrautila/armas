@@ -243,9 +243,9 @@ int armas_x_hhouse_apply(armas_x_dense_t *tau, armas_x_dense_t *v,
 
     // A2 = A2 + v*w1
     if (flags & ARMAS_LEFT) {
-        armas_x_mvupdate(A2, v, &w1, 1.0, conf);
+        armas_x_mvupdate(A2, __ONE, v, &w1, conf);
     } else {
-        armas_x_mvupdate(A2, &w1, v, 1.0, conf);
+        armas_x_mvupdate(A2, __ONE, &w1, v, conf);
     }
     return 0;
 }
