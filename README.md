@@ -204,11 +204,11 @@ Index of maximum absolute value (blas.DIAMAX)
 ```
 Vector-vector sum Y = Y + alpha*X (blas.DAXPY)
 ```c
-   armas_d_axpy(Y, X, alpha, conf)
+   armas_d_axpy(Y, alpha, X, conf)
 ```
 Extended vector-vector sum Y = beta*Y + alpha*X 
 ```c
-   armas_d_axpby(Y, X, alpha, beta, conf)
+   armas_d_axpby(beta, Y, alpha, X, conf)
 ```
 
 ##### Vector-matrix operations (BLAS level 2)
@@ -222,31 +222,31 @@ Flag bits in operations:
 
 General matrix-vector product Y = beta*Y + alpha*op(A)*X (blas.DGEMV)
 ```c
-   armas_d_mvmult(Y, A, X, alpha, beta, flags, conf)
+   armas_d_mvmult(beta, Y, alpha, A, X, flags, conf)
 ```
 Symmetric matrix-vector product Y = beta*Y + alpha*op(A)*X (blas.DSYMV)
 ```c
-   armas_d_mvmult_sym(Y, A, X, alpha, beta, flags, conf)
+   armas_d_mvmult_sym(beta, Y, alpha, A, X, flags, conf)
 ```
 Triangular matrix-vector product Y = alpha*op(A)*Y (blas.DTRMV)
 ```c
-   armas_d_mvmult_trm(Y, A, alpha, flags, conf)
+   armas_d_mvmult_trm(Y, alpha, A, flags, conf)
 ```
 Triangular matrix-vector solve Y = alpha*op(A.-1)*Y (blas.DTRSV)
 ```c
-   armas_d_mvsolve_trm(Y, A, alpha, flags, conf)
+   armas_d_mvsolve_trm(Y, alpha, A, flags, conf)
 ```
 General matrix rank update  A = A + alpha*X*Y  (blas.GER)
 ```c
-   armas_d_mvupdate(A, X, Y, alpha, conf)
+   armas_d_mvupdate(A, alpha, X, Y, conf)
 ```
 Symmetric matrix rank update  A = A + alpha*X*X.T  (blas.SYR)
 ```c
-   armas_d_mvupdate_sym(A, X, alpha, flags, conf)
+   armas_d_mvupdate_sym(A, alpha, X, flags, conf)
 ```
 Symmetric matrix rank-2 update  A = A + alpha*X*Y.T + alpha*Y*X.T  (blas.SYR2)
 ```c
-   armas_d_mvupdate2_sym(A, X, Y, alpha, flags, conf)
+   armas_d_mvupdate2_sym(A, alpha, X, Y, flags, conf)
 ```
 
 ##### Matrix-matrix operations (BLAS level 3)
@@ -260,27 +260,27 @@ Additional flag bits in operations:
 
 General matrix-matrix product C = beta*C + alpha*op(A)*op(B) (blas.DGEMM)
 ```c
-   armas_d_mult(C, A, B, alpha, beta, flags, conf)
+   armas_d_mult(beta, C, alpha, A, B, flags, conf)
 ```
 Symmetric matrix-matrix product C = beta*C + alpha*op(A)*op(B) (blas.DSYMM)
 ```c
-   armas_d_mult_sym(C, A, B, alpha, beta, flags, conf)
+   armas_d_mult_sym(beta, C, alpha, A, B, flags, conf)
 ```
 Triangular matrix-matrix product B = alpha*op(A)*B (blas.DTRMM)
 ```c
-   armas_d_mult_trm(B, A, alpha, flags, conf)
+   armas_d_mult_trm(B, alpha, A, flags, conf)
 ```
 Triangular matrix-matrix solve B = alpha*op(A.-1)*B (blas.DTRSM)
 ```c
-   armas_d_solve_trm(Y, A, alpha, flags, conf)
+   armas_d_solve_trm(Y, alpha, A, flags, conf)
 ```
-Symmetric matrix rank-k update  A = A + alpha*X*X.T  (blas.SYRK)
+Symmetric matrix rank-k update  A = beta*A + alpha*X*X.T  (blas.SYRK)
 ```c
-   armas_d_update_sym(A, X, alpha, flags, conf)
+   armas_d_update_sym(beta, A, alpha, X, flags, conf)
 ```
-Symmetric matrix rank-2k update  A = A + alpha*X*Y.T + alpha*Y*X.T  (blas.SYRK2)
+Symmetric matrix rank-2k update  A = beta*A + alpha*X*Y.T + alpha*Y*X.T  (blas.SYRK2)
 ```c
-   armas_d_update2_sym(A, X, Y, alpha, flags, conf)
+   armas_d_update2_sym(beta, A, alpha, X, Y, flags, conf)
 ```
 
 ##### Linear algebra
