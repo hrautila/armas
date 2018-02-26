@@ -302,7 +302,7 @@ int __unblk_ql_reflector(armas_x_dense_t *T, armas_x_dense_t *A, armas_x_dense_t
     if (tauval != 0.0) {
       armas_x_set(&t11, 0, 0, tauval);
       // t21 := -tauval*(a12.T + &A02.T*a01)
-      armas_x_axpby(&t21, &a12, 1.0, 0.0, conf);
+      armas_x_axpby(__ZERO, &t21, __ONE, &a12, conf);
       armas_x_mvmult(-tauval, &t21, -tauval, &A02, &a01, ARMAS_TRANSA, conf);
       // t21 := T22*t21
       armas_x_mvmult_trm(&t21, __ONE, &T22, ARMAS_LOWER, conf);

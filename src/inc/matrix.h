@@ -494,8 +494,8 @@ extern ABSTYPE armas_x_amax(const armas_x_dense_t *X, armas_conf_t *conf);
 extern ABSTYPE armas_x_asum(const armas_x_dense_t *X, armas_conf_t *conf);
 extern ABSTYPE armas_x_nrm2(const armas_x_dense_t *X, armas_conf_t *conf);
 extern DTYPE   armas_x_dot(const armas_x_dense_t *X, const armas_x_dense_t *Y, armas_conf_t *conf);
-extern int     armas_x_axpy(armas_x_dense_t *Y, const armas_x_dense_t *X, DTYPE alpha, armas_conf_t *conf);
-extern int     armas_x_axpby(armas_x_dense_t *Y, const armas_x_dense_t *X, DTYPE alpha, DTYPE beta, armas_conf_t *conf);
+extern int     armas_x_axpy(armas_x_dense_t *Y, DTYPE alpha, const armas_x_dense_t *X, armas_conf_t *conf);
+extern int     armas_x_axpby(DTYPE beta, armas_x_dense_t *Y, DTYPE alpha, const armas_x_dense_t *X, armas_conf_t *conf);
 extern int     armas_x_copy(armas_x_dense_t *Y, const armas_x_dense_t *X, armas_conf_t *conf);
 extern int     armas_x_swap(armas_x_dense_t *Y, armas_x_dense_t *X, armas_conf_t *conf);
 
@@ -512,8 +512,8 @@ extern int armas_x_mvmult(DTYPE beta, armas_x_dense_t *Y,
 extern int armas_x_mvupdate(armas_x_dense_t *A,
                             DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,  
                             armas_conf_t *conf);
-extern int armas_x_mvmult_sym(armas_x_dense_t *Y, const armas_x_dense_t *A,
-                              const armas_x_dense_t *X, DTYPE alpha, DTYPE beta,
+extern int armas_x_mvmult_sym(DTYPE beta, armas_x_dense_t *Y,
+                              DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *X, 
                               int flags, armas_conf_t *conf);
 extern int armas_x_mvupdate2_sym(armas_x_dense_t *A,
                                  DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,  

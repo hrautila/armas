@@ -274,7 +274,7 @@ int __unblk_qr_reflector(armas_x_dense_t *T, armas_x_dense_t *A, armas_x_dense_t
     if (tauval != 0.0) {
       armas_x_set(&t11, 0, 0, tauval);
       // t01 := -tauval*(a10.T + &A20.T*a21)
-      armas_x_axpby(&t01, &a10, 1.0, 0.0, conf);
+      armas_x_axpby(__ZERO, &t01, __ONE, &a10, conf);
       armas_x_mvmult(-tauval, &t01, -tauval, &A20, &a21, ARMAS_TRANSA, conf);
       // t01 := T00*t01
       armas_x_mvmult_trm(&t01, __ONE, &T00, ARMAS_UPPER, conf);

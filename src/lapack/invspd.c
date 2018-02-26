@@ -58,7 +58,7 @@ int __unblk_invspd_lower(armas_x_dense_t *A, armas_x_dense_t *W, armas_conf_t *c
         armas_x_copy(&l21, &a21, conf);
 
         // a21 = - A22*l21 / l11
-        armas_x_mvmult_sym(&a21, &A22, &l21, - __ONE/a11val, __ZERO, ARMAS_LOWER, conf);
+        armas_x_mvmult_sym(__ZERO, &a21, -__ONE/a11val, &A22, &l21, ARMAS_LOWER, conf);
 
         // a11 = (u11.-1 - a21.T*l21)/l11 ; l11 = u11 = a11
         udot = armas_x_dot(&a21, &l21, conf);
@@ -156,7 +156,7 @@ int __unblk_invspd_upper(armas_x_dense_t *A, armas_x_dense_t *W, armas_conf_t *c
         armas_x_copy(&u12, &a12, conf);
 
         // a12 = - A22.T*u12 / u11
-        armas_x_mvmult_sym(&a12, &A22, &u12, - __ONE/a11val, __ZERO, ARMAS_UPPER|ARMAS_TRANSA, conf);
+        armas_x_mvmult_sym(__ZERO, &a12, -__ONE/a11val, &A22, &u12, ARMAS_UPPER|ARMAS_TRANSA, conf);
 
         // a11 = (u11.-1 - a12.T*u12)/l11 ; l11 = u11 = a11
         udot = armas_x_dot(&a12, &u12, conf);

@@ -239,7 +239,7 @@ int armas_x_hhouse_apply(armas_x_dense_t *tau, armas_x_dense_t *v,
     armas_x_scale(&w1, tval, conf);
   
     // a1 = a1 - w1
-    armas_x_axpy(a1, &w1, -1.0, conf);
+    armas_x_axpy(a1, -__ONE, &w1, conf);
 
     // A2 = A2 + v*w1
     if (flags & ARMAS_LEFT) {

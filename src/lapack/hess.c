@@ -159,7 +159,7 @@ int __update_vec_left_wy(armas_x_dense_t *v, armas_x_dense_t *Y1, armas_x_dense_
   armas_x_submatrix(&w0, W, 0, 0, Y1->rows, 1);
   
   // w0 = Y1.T*v1 + Y2.T*v2
-  armas_x_axpby(&w0, &v1, 1.0, 0.0, conf);
+  armas_x_axpby(__ZERO, &w0, __ONE, &v1, conf);
   armas_x_mvmult_trm(&w0, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANS, conf);
   armas_x_mvmult(__ONE, &w0, __ONE, Y2, &v2, ARMAS_TRANS, conf);
   
@@ -171,7 +171,7 @@ int __update_vec_left_wy(armas_x_dense_t *v, armas_x_dense_t *Y1, armas_x_dense_
   
   // v1 = v1 - Y1*w0
   armas_x_mvmult_trm(&w0, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT, conf);
-  armas_x_axpy(&v1, &w0, -1.0, conf);
+  armas_x_axpy(&v1, -__ONE, &w0, conf);
   return 0;
 }
 
@@ -236,7 +236,7 @@ int __unblk_build_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *T,
     // ---------------------------------------------------------------------
     if (V0.cols > 0) {
       // y10 := T00*a10 (t01 is workspace)
-      armas_x_axpby(&t01, &a10, 1.0, 0.0, conf);
+      armas_x_axpby(__ZERO, &t01, __ONE, &a10, conf);
       armas_x_mvmult_trm(&t01, __ONE, &T00, ARMAS_UPPER, conf);
       
       // a1 = a1 - V0*T00*a10
@@ -365,7 +365,7 @@ int __blk_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *tau,
     // ---------------------------------------------------------------------------
     __unblk_build_hess_gqvdg(&ABR, T, &VB, conf);
     // t1 = diag(T)
-    armas_x_axpby(&t1, &td, 1.0, 0.0, conf);
+    armas_x_axpby(__ZERO, &t1, __ONE, &td, conf);
 
     armas_x_submatrix(&Y1, &ABR, 1, 0, A11.cols, A11.cols);
     armas_x_submatrix(&Y2, &ABR, 1+A11.cols, 0, A21.rows-1, A11.cols);

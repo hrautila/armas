@@ -75,7 +75,7 @@ int __unblk_invldl_lower(armas_x_dense_t *A, armas_x_dense_t *W, armas_conf_t *c
         armas_x_make(&l21, a21.rows, 1, a21.rows, armas_x_data(W));
         armas_x_mcopy(&l21, &a21);
         // a21 = - A22*l21 
-        armas_x_mvmult_sym(&a21, &A22, &l21, -__ONE, __ZERO, ARMAS_LOWER|ARMAS_LEFT, conf);
+        armas_x_mvmult_sym(__ZERO, &a21, -__ONE, &A22, &l21, ARMAS_LOWER|ARMAS_LEFT, conf);
         // a11 = a11 - a21.T*l21
         udot    = armas_x_dot(&a21, &l21, conf);
         a11val  = __ONE/armas_x_get_unsafe(&a11, 0, 0);
@@ -180,7 +180,7 @@ int __unblk_invldl_upper(armas_x_dense_t *A, armas_x_dense_t *W, armas_conf_t *c
         armas_x_make(&u01, a01.rows, 1, a01.rows, armas_x_data(W));
         armas_x_mcopy(&u01, &a01);
         
-        armas_x_mvmult_sym(&a01, &A00, &u01, -__ONE, __ZERO, ARMAS_UPPER, conf);
+        armas_x_mvmult_sym(__ZERO, &a01, -__ONE, &A00, &u01, ARMAS_UPPER, conf);
         a11val = __ONE/armas_x_get_unsafe(&a11, 0, 0);
         udot   = armas_x_dot(&a01, &u01, conf);
         armas_x_set_unsafe(&a11, 0, 0, a11val - udot);

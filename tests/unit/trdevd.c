@@ -124,7 +124,7 @@ int test_eigen(int N, int type, DTYPE coeff, int verbose)
 
     // compute ||V.T*A*V - S|| (D is column vector, sD is row vector)
     armas_x_diag(&sD, &A0, 0);
-    armas_x_axpy(&sD, &D, -1.0, &conf);
+    armas_x_axpy(&sD, -1.0, &D, &conf);
     nrm = armas_x_mnorm(&sD, ARMAS_NORM_TWO, &conf);
     ok = isFINE(nrm, N*__ERROR_EVD);
     printf("%s: [%s] V.T*A*V == eigen(A)\n", PASS(ok), desc);

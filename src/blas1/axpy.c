@@ -132,8 +132,8 @@ void __vec_axpby(mvec_t *Y,  const mvec_t *X, DTYPE alpha, DTYPE beta, int N)
  * are executed in extended precision.
  *
  * @param[in,out] y target and source vector
- * @param[in]     x source vector
  * @param[in]     alpha scalar multiplier
+ * @param[in]     x source vector
  * @param[out]    conf configuration block
  *
  * @retval 0 Ok
@@ -141,7 +141,7 @@ void __vec_axpby(mvec_t *Y,  const mvec_t *X, DTYPE alpha, DTYPE beta, int N)
  *
  * @ingroup blas1
  */
-int armas_x_axpy(armas_x_dense_t *y, const armas_x_dense_t *x, DTYPE alpha, armas_conf_t *conf)
+int armas_x_axpy(armas_x_dense_t *y, DTYPE alpha, const armas_x_dense_t *x, armas_conf_t *conf)
 {
   // only for column or row vectors
   if (!conf)
@@ -179,10 +179,10 @@ int armas_x_axpy(armas_x_dense_t *y, const armas_x_dense_t *x, DTYPE alpha, arma
  * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
  * are executed in extended precision.
  *
- * @param[in,out] y target and source vector
- * @param[in]     x source vector
- * @param[in]     alpha scalar multiplier
  * @param[in]     beta scalar multiplier
+ * @param[in,out] y target and source vector
+ * @param[in]     alpha scalar multiplier
+ * @param[in]     x source vector
  * @param[out]    conf configuration block
  *
  * @retval 0 Ok
@@ -190,7 +190,7 @@ int armas_x_axpy(armas_x_dense_t *y, const armas_x_dense_t *x, DTYPE alpha, arma
  *
  * @ingroup blas1
  */
-int armas_x_axpby(armas_x_dense_t *y, const armas_x_dense_t *x, DTYPE alpha, DTYPE beta, armas_conf_t *conf)
+int armas_x_axpby(DTYPE beta, armas_x_dense_t *y, DTYPE alpha, const armas_x_dense_t *x, armas_conf_t *conf)
 {
   // only for column or row vectors
   if (!conf)

@@ -69,7 +69,7 @@ int __unblk_qrtfactor(armas_x_dense_t *A, armas_x_dense_t *T,
     tauval = armas_x_get_unsafe(&t11, 0, 0);
     if ( tauval != __ZERO) {
       // t01 := -tauval*(a10.T + A20.T*a21)
-      armas_x_axpby(&t01, &a12, 1.0, 0.0, conf);
+      armas_x_axpby(__ZERO, &t01, __ONE, &a12, conf);
       armas_x_mvmult(-tauval, &t01, -tauval, &A22, &a21, ARMAS_TRANSA, conf);
       // t01 := T00*t01
       armas_x_mvmult_trm(&t01, __ONE, &T00, ARMAS_UPPER, conf);

@@ -279,7 +279,7 @@ int __build_bkpivot_lower(armas_x_dense_t *AL, armas_x_dense_t *AR,
 
   armas_x_submatrix(&qrow, AR, r, 0, 1, r+1);
   armas_x_submatrix(&wkr,  &wkp1, 0, 0, r+1, 1);
-  armas_x_axpby(&wkr, &qrow, 1.0, 0.0, conf);
+  armas_x_axpby(__ZERO, &wkr, __ONE, &qrow, conf);
   if ( r < AR->rows - 1) {
     armas_x_submatrix(&qrow, AR,    r, r, AR->rows-r, 1);
     armas_x_submatrix(&wkr,  &wkp1, r, 0, AR->rows-r, 1);
@@ -409,7 +409,7 @@ int __unblk_bkbounded_lower(armas_x_dense_t *A, armas_x_dense_t *W,
       a11val = armas_x_get(&w11, 0, 0);
       armas_x_set(&a11, 0, 0, a11val);
       // a21 = a21/a11
-      armas_x_axpby(&a21, &cwrk, 1.0, 0.0, conf);
+      armas_x_axpby(__ZERO, &a21, __ONE, &cwrk, conf);
       armas_x_invscale(&a21, a11val, conf);
       // store pivot point relative to original matrix
       armas_pivot_set(&p1, 0, r+ATL.rows+1);

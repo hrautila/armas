@@ -225,10 +225,11 @@ void __symv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
  * are executed in extended precision.
  *
+ *  @param[in]      beta scalar
  *  @param[in,out]  Y   target and source vector
+ *  @param[in]      alpha scalar
  *  @param[in]      A   symmetrix lower (upper) matrix
  *  @param[in]      X   source operand vector
- *  @param[in]      alpha, beta scalars
  *  @param[in]      flags  flag bits
  *  @param[in]      conf   configuration block
  *
@@ -237,8 +238,9 @@ void __symv_recursive(mvec_t *Y, const mdata_t *A, const mvec_t *X,
  *
  * @ingroup blas2
  */
-int armas_x_mvmult_sym(armas_x_dense_t *Y, const armas_x_dense_t *A, const armas_x_dense_t *X,
-                       DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
+int armas_x_mvmult_sym(DTYPE beta, armas_x_dense_t *Y,
+                       DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *X,
+                       int flags, armas_conf_t *conf)
 {
   int ok;
   mvec_t x, y;

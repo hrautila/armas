@@ -294,7 +294,7 @@ int __apply_householder2x1(armas_x_dense_t *tau, armas_x_dense_t *v,
     }
 
     // w1 = a1
-    armas_x_axpby(w1, a1, 1.0, 0.0, conf);
+    armas_x_axpby(__ZERO, w1, __ONE, a1, conf);
     if (flags & ARMAS_LEFT) {
         // w1 = a1 + A2.T*v
         armas_x_mvmult(__ONE, w1, __ONE, A2, v, ARMAS_TRANSA, conf);
@@ -306,7 +306,7 @@ int __apply_householder2x1(armas_x_dense_t *tau, armas_x_dense_t *v,
     armas_x_scale(w1, tval, conf);
   
     // a1 = a1 - w1
-    armas_x_axpy(a1, w1, -1.0, conf);
+    armas_x_axpy(a1, -__ONE, w1, conf);
 
     // A2 = A2 - v*w1
     if (flags & ARMAS_LEFT) {

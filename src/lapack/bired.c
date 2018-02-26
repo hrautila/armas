@@ -137,11 +137,11 @@ int __unblk_bdreduce_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
     tauqv = armas_x_get(&tq1, 0, 0);
     
     // y21 := a12 + A22.T*a21
-    armas_x_axpby(&y21, &a12, 1.0, 0.0, conf);
+    armas_x_axpby(__ZERO, &y21, __ONE, &a12, conf);
     armas_x_mvmult(__ONE, &y21, __ONE, &A22, &a21, ARMAS_TRANSA, conf);
 
     // a12 := a12 - tauq*y21
-    armas_x_axpy(&a12, &y21, -tauqv, conf);
+    armas_x_axpy(&a12, -tauqv, &y21, conf);
 
     // compute householder to zero elements above 1st superdiagonal
     __compute_householder_vec(&a12, &tp1, conf);
@@ -152,7 +152,7 @@ int __unblk_bdreduce_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // [v == a12, u == a21]
     beta = armas_x_dot(&y21, &a12, conf);
     // z21 := tauq*beta*v == tauq*beta*a21
-    armas_x_axpby(&z21, &a21, tauqv*beta, 0.0, conf);
+    armas_x_axpby(__ZERO, &z21, tauqv*beta, &a21, conf);
     // z21 := A22*v - z21 == A22*a12 - z21
     armas_x_mvmult(-__ONE, &z21, __ONE, &A22, &a12, ARMAS_NONE, conf);
     // A22 := A22 - tauq*u*y21 == A22 - tauq*a21*y21
@@ -251,7 +251,7 @@ int __unblk_bdbuild_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
     tauqv = armas_x_get(&tq1, 0, 0);
 
     // y21 := a12 + A22.T*u21 - Y20*U20.T*u21 - V20*Z20.T*u21
-    armas_x_axpby(&y21, &a12, 1.0, 0.0, conf);
+    armas_x_axpby(__ZERO, &y21, __ONE, &a12, conf);
     armas_x_mvmult(__ONE, &y21, __ONE, &A22, &a21, ARMAS_TRANS, conf);
     // w00 := U20.T*u21 [= A20.T*a21]
     armas_x_mvmult(__ZERO, &w00, __ONE, &A20, &a21, ARMAS_TRANS, conf);
@@ -264,7 +264,7 @@ int __unblk_bdbuild_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
 
     // a12 := a12 - tauq*y21
     armas_x_scale(&y21, tauqv, conf);
-    armas_x_axpy(&a12, &y21, -1.0, conf);
+    armas_x_axpy(&a12, -__ONE, &y21, conf);
 
     // compute householder to zero elements above 1st superdiagonal
     __compute_householder_vec(&a12, &tp1, conf);
@@ -276,7 +276,7 @@ int __unblk_bdbuild_left(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // [v == a12, u == a21]
     beta = armas_x_dot(&y21, &a12, conf);
     // z21 := beta*u
-    armas_x_axpby(&z21, &a21, beta, 0.0, conf);
+    armas_x_axpby(__ZERO, &z21, beta, &a21, conf);
     // w00 = Y20.T*v
     armas_x_mvmult(__ZERO, &w00, __ONE, &Y20, &a12, ARMAS_TRANS, conf);
     // z21 = z21 + U20*w00
@@ -479,11 +479,11 @@ int __unblk_bdreduce_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
     taupv = armas_x_get(&tp1, 0, 0);
     
     // y21 := a12 + A22.T*a12
-    armas_x_axpby(&y21, &a21, 1.0, 0.0, conf);
+    armas_x_axpby(__ZERO, &y21, __ONE, &a21, conf);
     armas_x_mvmult(__ONE, &y21, __ONE, &A22, &a12, ARMAS_NONE, conf);
 
     // a21 := a21 - taup*y21
-    armas_x_axpy(&a21, &y21, -taupv, conf);
+    armas_x_axpy(&a21, -taupv, &y21, conf);
 
     // compute householder to zero elements above 1st superdiagonal
     __compute_householder_vec(&a21, &tq1, conf);
@@ -495,7 +495,7 @@ int __unblk_bdreduce_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // [v == a21, u == a12]
     beta = armas_x_dot(&y21, &a21, conf);
     // z21 := taup*beta*a12
-    armas_x_axpby(&z21, &a12, taupv*beta, 0.0, conf);
+    armas_x_axpby(__ZERO, &z21, taupv*beta, &a12, conf);
     // z21 := A22*a21 - z21
     armas_x_mvmult(-__ONE, &z21, __ONE, &A22, &a21, ARMAS_TRANS, conf);
     // A22 := A22 - taup*y21*a12
@@ -605,7 +605,7 @@ int __unblk_bdbuild_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
     taupv = armas_x_get(&tp1, 0, 0);
 
     // y21 := a12 + A22*v21 - Y20*U20.T*v21 - V20*Z20.T*v21
-    armas_x_axpby(&y21, &a21, 1.0, 0.0, conf);
+    armas_x_axpby(__ZERO, &y21, __ONE, &a21, conf);
     armas_x_mvmult(__ONE, &y21, __ONE, &A22, &a12, ARMAS_NONE, conf);
     // w00 := U20.T*v21 [= A02*a12]
     armas_x_mvmult(__ZERO, &w00, __ONE, &A02, &a12, ARMAS_NONE, conf);
@@ -618,7 +618,7 @@ int __unblk_bdbuild_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
 
     // a21 := a21 - taup*y21
     armas_x_scale(&y21, taupv, conf);
-    armas_x_axpy(&a21, &y21, -1.0, conf);
+    armas_x_axpy(&a21, -__ONE, &y21, conf);
 
     // compute householder to zero elements below 1st subdiagonal
     __compute_householder_vec(&a21, &tq1, conf);
@@ -630,7 +630,7 @@ int __unblk_bdbuild_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
     // [v == a12, u == a21]
     beta = armas_x_dot(&y21, &a21, conf);
     // z21 := beta*v
-    armas_x_axpby(&z21, &a12, beta, 0.0, conf);
+    armas_x_axpby(__ZERO, &z21, beta, &a12, conf);
     // w00 = Y20.T*u
     armas_x_mvmult(__ZERO, &w00, __ONE, &Y20, &a21, ARMAS_TRANS, conf);
     // z21 = z21 + V20*w00 (V20 == A02.T)

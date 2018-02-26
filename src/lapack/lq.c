@@ -263,7 +263,7 @@ int __unblk_lq_reflector(armas_x_dense_t *T, armas_x_dense_t *A, armas_x_dense_t
     if (tauval != 0.0) {
       armas_x_set(&t11, 0, 0, tauval);
       // t01 := -tauval*(a01.T + &A02.T*a21)
-      armas_x_axpby(&t01, &a01, 1.0, 0.0, conf);
+      armas_x_axpby(__ZERO, &t01, __ONE, &a01, conf);
       armas_x_mvmult(-tauval, &t01, -tauval, &A02, &a12, ARMAS_NONE, conf);
       // t01 := T00*t01
       armas_x_mvmult_trm(&t01, __ONE, &T00, ARMAS_UPPER, conf);

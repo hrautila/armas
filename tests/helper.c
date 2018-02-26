@@ -104,7 +104,8 @@ DTYPE zeromean(int i, int j) {
   return (DTYPE)(drand48() - 0.5);
 }
 
-DTYPE unitrand(int i, int j) {
+DTYPE unitrand(int i, int j)
+{
   static int init = 0;
   if (!init) {
     srand48((long)time(0));
@@ -165,7 +166,7 @@ DTYPE rel_error(DTYPE *dnorm, armas_x_dense_t *computed,
 {
     double cnrm, enrm;
     if (armas_x_is_vector(computed)) {
-      armas_x_axpy(computed, expected, -1.0, conf);
+      armas_x_axpy(computed, -1.0, expected, conf);
     } else {
       // computed = computed - expected
       armas_x_scale_plus(computed, expected, 1.0, -1.0, flags, conf);

@@ -74,7 +74,7 @@ int test1(int N, double beta, int verbose)
     armas_x_mult(0.0, &II, 1.0, &Q, &Q, ARMAS_TRANSA, &conf);
     if (verbose > 2 && N <= 10) {
         printf("D1:\n"); armas_x_printf(stdout, "%13e", &D1);
-        armas_x_axpy(&Z1, &Z0, -1.0, &conf);
+        armas_x_axpy(&Z1, -1.0, &Z0, &conf);
         printf("Z0-Z1:\n"); armas_x_printf(stdout, "%13e", &Z1);
         printf("I:\n"); armas_x_printf(stdout, "%13e", &II);
     }
