@@ -49,7 +49,7 @@ void __gemvf(char *trans, int *m, int *n, DTYPE *alpha, DTYPE *A,
     } else {
         armas_x_make(&x, 1, xlen, *incx, X);
     }
-    armas_x_mvmult(&y, &a, &x, *alpha, *beta, flags, conf);
+    armas_x_mvmult(*beta, &y, *alpha, &a, &x, flags, conf);
 }
 #endif
 
@@ -92,7 +92,7 @@ void __cblas_gemv(const enum CBLAS_ORDER order, const enum CBLAS_TRANS trans,
     } else {
         armas_x_make(&x, 1, xlen, incx, X);
     }
-    armas_x_mvmult(&y, &Aa, &x, alpha, beta, flags, conf);
+    armas_x_mvmult(beta, &y, alpha, &Aa, &x, flags, conf);
 }
 
 #endif

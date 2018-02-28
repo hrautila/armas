@@ -24,7 +24,7 @@
 #include "matrix.h"
 
 #if defined(__trsvf)
-void __trsvf(char *uplo, char *trans, char *diag, int *n, DTYPE *alpha, DTYPE *A,
+void __trsvf(char *uplo, char *trans, char *diag, int *n, DTYPE *A,
              int *lda, DTYPE *X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
@@ -51,7 +51,7 @@ void __trsvf(char *uplo, char *trans, char *diag, int *n, DTYPE *alpha, DTYPE *A
     } else {
         armas_x_make(&x, 1, *n, *incx, X);
     }
-    armas_x_mvsolve_trm(&x, &a, __ONE, flags, conf);
+    armas_x_mvsolve_trm(&x, __ONE, &a, flags, conf);
 }
 #endif
 
@@ -87,7 +87,7 @@ void __cblas_trsv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
         armas_x_make(&x, 1, N, incx, X);
     }
     armas_x_make(&Aa, N, N, lda, A);
-    armas_x_mvsolve_trm(&x, &Aa, alpha, flags, conf);
+    armas_x_mvsolve_trm(&x, alpha, &Aa, flags, conf);
 }
 
 #endif

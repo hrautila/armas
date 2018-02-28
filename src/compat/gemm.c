@@ -40,7 +40,7 @@ void __gemmf(char *transa, char *transb, int *m, int *n, int *k, DTYPE *alpha, D
     if (toupper(*transb) == 'T')
         flags |= ARMAS_TRANSB;
 
-    armas_x_mult(&c, &a, &b, *alpha, *beta, flags, conf);
+    armas_x_mult(*beta, &c, *alpha, &a, &b, flags, conf);
 }
 #endif
 
@@ -91,7 +91,7 @@ void __cblas_gemm(int order, int transa,  int transb, int M, int N,
     default:
         return;
     }
-    armas_x_mult(&Ca, &Aa, &Ba, alpha, beta, flags, &conf);
+    armas_x_mult(beta, &Ca, alpha, &Aa, &Ba, flags, &conf);
 }
 #endif
 

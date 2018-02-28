@@ -42,7 +42,7 @@ void __syrkf(char *uplo, char *trans, int *n, int *k, DTYPE *alpha, DTYPE *A,
         armas_x_make(&a, *n, *k, *lda, A);
     }
 
-    armas_x_update_sym(&c, &a, *alpha, *beta, flags, conf);
+    armas_x_update_sym(*beta, &c, *alpha, &a, flags, conf);
 }
 #endif
 
@@ -77,7 +77,7 @@ void __cblas_syrk(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
         break;
     }
     armas_x_make(&Ca, N, N, ldc, C);
-    armas_x_update_sym(&Ca, &Aa, alpha, beta, flags, conf);
+    armas_x_update_sym(beta, &Ca, alpha, &Aa, flags, conf);
 }
 
 #endif

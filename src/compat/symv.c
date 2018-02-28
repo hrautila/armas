@@ -54,7 +54,7 @@ void __symvf(char *uplo, int *n, DTYPE *alpha, DTYPE *A,
     } else {
         armas_x_make(&x, 1, *n, *incx, X);
     }
-    armas_x_mvmult_sym(&y, &a, &x, *alpha, *beta, flags, conf);
+    armas_x_mvmult_sym(*beta, &y, *alpha, &a, &x, flags, conf);
 }
 #endif
 
@@ -87,7 +87,7 @@ void __cblas_symv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
     } else {
         armas_x_make(&y, 1, N, incy, Y);
     }
-    armas_x_mvmult_sym(&y, &Aa, &x, alpha, beta, flags, &conf);
+    armas_x_mvmult_sym(beta, &y, alpha, &Aa, &x, flags, &conf);
 }
 
 #endif

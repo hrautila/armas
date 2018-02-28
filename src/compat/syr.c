@@ -39,7 +39,7 @@ void __syrf(char *uplo, int *n, DTYPE *alpha, DTYPE *X,
     } else {
         armas_x_make(&x, 1, *n, *incx, X);
     }
-    armas_x_mvupdate_sym(&a, &x, *alpha, flags, conf);
+    armas_x_mvupdate_sym(&a, *alpha, &x, flags, conf);
 }
 #endif
 
@@ -63,7 +63,7 @@ void __cblas_syr(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,  cons
     } else {
         armas_x_make(&x, 1, N, incx, X);
     }
-    armas_x_mvupdate_sym(&Aa, &x, alpha, flags, conf);
+    armas_x_mvupdate_sym(&Aa, alpha, &x, flags, conf);
 }
 
 #endif

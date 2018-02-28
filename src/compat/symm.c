@@ -47,7 +47,7 @@ void __symmf(char *side, char *uplo, int *m, int *n, DTYPE *alpha, DTYPE *A,
     }
     flags |= toupper(*uplo) == 'L' ? ARMAS_LOWER : ARMAS_UPPER;
 
-    armas_x_mult_sym(&c, &a, &b, *alpha, *beta, flags, conf);
+    armas_x_mult_sym(*beta, &c, *alpha, &a, &b, flags, conf);
 }
 #endif
 
@@ -88,7 +88,7 @@ void __cblas_symm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
         flags |= uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
         break;
     }
-    armas_x_mult_sym(&Ca, &Aa, &Ba, alpha, beta, flags, &conf);
+    armas_x_mult_sym(beta, &Ca, alpha, &Aa, &Ba, flags, &conf);
 }
 
 #endif

@@ -43,7 +43,7 @@ void __gerf(int *m, int *n, DTYPE *alpha, DTYPE *X,
     } else {
         armas_x_make(&x, 1, *m, *incx, X);
     }
-    armas_x_mvupdate(&a, &x, &y, *alpha, conf);
+    armas_x_mvupdate(&a, *alpha, &x, &y, conf);
 }
 #endif
 
@@ -70,10 +70,10 @@ void __cblas_ger(const enum CBLAS_ORDER order, const int M,
 
     if (order == CblasRowMajor) {
         armas_x_make(&a, N, M, lda, A);
-        armas_x_mvupdate(&a, &y, &x, alpha, conf);
+        armas_x_mvupdate(&a, alpha, &y, &x, conf);
     } else {
         armas_x_make(&a, M, N, lda, A);
-        armas_x_mvupdate(&a, &x, &y, alpha, conf);
+        armas_x_mvupdate(&a, alpha, &x, &y, conf);
     }
 }
 #endif

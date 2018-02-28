@@ -45,7 +45,7 @@ void __compat_axpy(const int n, const DTYPE alpha, DTYPE *X, const int incx, DTY
         armas_x_make(&y, 1, n, iy, Y);
     }
     if (incx*incy > 0) {
-        armas_x_axpy(&y, &x, alpha, conf);
+        armas_x_axpy(&y, alpha, &x, conf);
         return;
     } 
     // if not same sign then iteration direction is different (so clever)

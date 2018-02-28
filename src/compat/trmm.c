@@ -50,7 +50,7 @@ void __trmmf(char *side, char *uplo, char *transa, char *diag,int *m, int *n,
     if (toupper(*diag) == 'U')
         flags |=  ARMAS_UNIT;
 
-    armas_x_mult_trm(&b, &a, *alpha, flags, conf);
+    armas_x_mult_trm(&b, *alpha, &a, flags, conf);
 }
 #endif
 
@@ -101,7 +101,7 @@ void __cblas_trmm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
     default:
         return;
     }
-    armas_x_mult_trm(&Ba, &Aa, alpha, flags, &conf);
+    armas_x_mult_trm(&Ba, alpha, &Aa, flags, &conf);
 }
 
 #endif
