@@ -482,8 +482,8 @@ armas_x_dense_t *armas_x_col_as_row(armas_x_dense_t *row, armas_x_dense_t *col)
 
 #ifndef __ARMAS_LINALG_H
 
-extern int armas_x_scale_plus(armas_x_dense_t *A, const armas_x_dense_t *B,
-                              DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
+extern int armas_x_scale_plus(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B,
+                              int flags, armas_conf_t *conf);
 extern ABSTYPE armas_x_mnorm(const armas_x_dense_t *A, int norm, armas_conf_t *conf);
 extern ABSTYPE armas_x_norm(const armas_x_dense_t *A, int norm, int flags, armas_conf_t *conf);
 extern int     armas_x_scale_to(armas_x_dense_t *A, DTYPE from, DTYPE to, int flags, armas_conf_t *conf);

@@ -50,7 +50,7 @@ void compute(DTYPE *ne, DTYPE *re,
   }
   *re = rel_error(ne, B, C, ARMAS_NORM_INF, ARMAS_NONE, conf);
 #if 0
-  armas_d_scale_plus(B, C, 1.0, -1.0, ARMAS_NONE, conf);
+  armas_d_scale_plus(1.0, B, -1.0, C, ARMAS_NONE, conf);
 
   *re = armas_d_mnorm(B, ARMAS_NORM_ONE, conf);
 #endif

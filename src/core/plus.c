@@ -132,22 +132,23 @@ void __scale_plus(mdata_t *A, const mdata_t *B,
  *  Compute \f$A := \alpha*A + \beta*B\f$ or \f$A := \alpha*A + \beta*B^{T}\f$ if 
  *  flag bit ARMAS_TRANS or ARMAS_TRANSB is set.
  *
- * \param [in,out] A
- *      On entry first operand matrix. On exit the result matrix.
- * \param [in] B
- *      Second operand matrix
  * \param [in] alpha
  *      Scaling constant for first operand.
+ * \param [in,out] A
+ *      On entry first operand matrix. On exit the result matrix.
  * \param [in] beta
  *      Scaling constant for second operand.
+ * \param [in] B
+ *      Second operand matrix
  * \param [in] flags
  *      Indicator flags
  * \param [in] conf
  *      Configuration block
  * \ingroup matrix
  */
-int armas_x_scale_plus(armas_x_dense_t *A, const armas_x_dense_t *B,
-                       DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf)
+int armas_x_scale_plus(DTYPE alpha, armas_x_dense_t *A,
+                       DTYPE beta, const armas_x_dense_t *B,
+                       int flags, armas_conf_t *conf)
 {
   int ok;
   mdata_t *_A;

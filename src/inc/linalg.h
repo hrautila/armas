@@ -17,8 +17,8 @@ extern "C" {
 #endif
 
 
-extern int armas_x_scale_plus(armas_x_dense_t *A, const armas_x_dense_t *B,
-                              DTYPE alpha, DTYPE beta, int flags, armas_conf_t *conf);
+extern int armas_x_scale_plus(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B,
+                              int flags, armas_conf_t *conf);
 extern ABSTYPE armas_x_mnorm(const armas_x_dense_t *A, int norm, armas_conf_t *conf);
 
 extern int     armas_x_scale_to(armas_x_dense_t *A, DTYPE from, DTYPE to, int flags, armas_conf_t *conf);

@@ -169,7 +169,7 @@ DTYPE rel_error(DTYPE *dnorm, armas_x_dense_t *computed,
       armas_x_axpy(computed, -1.0, expected, conf);
     } else {
       // computed = computed - expected
-      armas_x_scale_plus(computed, expected, 1.0, -1.0, flags, conf);
+      armas_x_scale_plus(1.0, computed, -1.0, expected, flags, conf);
     }
     // ||computed - expected||
     cnrm = armas_x_mnorm(computed, norm, conf);

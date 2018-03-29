@@ -181,7 +181,7 @@ int __update_rq_left(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t *
                      int transpose, armas_conf_t *conf)
 {
   // W = C1.T
-  armas_x_scale_plus(W, C1, 0.0, 1.0, ARMAS_TRANSB, conf);
+  armas_x_scale_plus(__ZERO, W, __ONE, C1, ARMAS_TRANSB, conf);
   // W = C1.T*Y1.T = W*Y1.T
   armas_x_mult_trm(W, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
   // W = W + C2.T*Y2.T
@@ -200,7 +200,7 @@ int __update_rq_left(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t *
   // W = Y1*W.T ==> W.T = W*Y1
   armas_x_mult_trm(W, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
   // C1 = C1 - W.T
-  armas_x_scale_plus(C1, W, 1.0, -1.0, ARMAS_TRANSB, conf);
+  armas_x_scale_plus(__ONE, C1, -__ONE, W, ARMAS_TRANSB, conf);
   // here: C = (I - Y*T*Y.T)*C or C = (I - Y*T.Y.T).T*C
   return 0;
 }
@@ -221,7 +221,7 @@ int __update_rq_right(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t 
                       int transpose, armas_conf_t *conf)
 {
   // W = C1
-  armas_x_scale_plus(W, C1, 0.0, 1.0, ARMAS_NONE, conf);
+  armas_x_scale_plus(__ZERO, W, __ONE, C1, ARMAS_NONE, conf);
   // W = C1*Y1 = W*Y1
   armas_x_mult_trm(W, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
   // W = W + C2*Y2.T
@@ -241,7 +241,7 @@ int __update_rq_right(armas_x_dense_t *C1, armas_x_dense_t *C2, armas_x_dense_t 
   //  W = W*Y1.T
   armas_x_mult_trm(W, __ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
   // C1 = C1 - W
-  armas_x_scale_plus(C1, W, 1.0, -1.0, ARMAS_NONE, conf);
+  armas_x_scale_plus(__ONE, C1, -__ONE, W, ARMAS_NONE, conf);
   // here: C = C*(I - Y*T*Y.T)*C or C = C*(I - Y*T.Y.T).T
   return 0;
 }

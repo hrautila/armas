@@ -48,7 +48,7 @@ int test_lss(int M, int N, int K, int lb, int verbose)
   // X0 = X0 - A.-1*B0
   armas_x_submatrix(&X, &B0, 0, 0, N, K);
 #if 0
-  armas_x_scale_plus(&X0, &X, 1.0, -1.0, ARMAS_NONE, &conf);
+  armas_x_scale_plus(1.0, &X0, -1.0, &X, ARMAS_NONE, &conf);
   nrm = armas_x_mnorm(&X0, ARMAS_NORM_ONE, &conf);
   ok = isFINE(nrm, M*1e-12);
 #endif

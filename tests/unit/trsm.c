@@ -109,7 +109,7 @@ int test_left_right(int N, int verbose)
     printf("B\n"); armas_x_printf(stdout, "%6.3f", &B);
     printf("Bt\n"); armas_x_printf(stdout, "%6.3f", &Bt);
   }
-  armas_x_scale_plus(&B, &Bt, 1.0, 1.0, ARMAS_TRANSB, &conf);
+  armas_x_scale_plus(1.0, &B, 1.0, &Bt, ARMAS_TRANSB, &conf);
   if (N < 10) {
     printf("B + B.T\n"); armas_x_printf(stdout, "%6.3f", &B);
   }

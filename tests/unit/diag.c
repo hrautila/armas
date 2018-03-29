@@ -32,7 +32,7 @@ int test_left(int M, int N, int verbose)
   }
   armas_x_solve_diag(&A1, &D, 1.0, ARMAS_LEFT, &conf);
 #if 0
-  armas_x_scale_plus(&A1, &A0, 1.0, -1.0, ARMAS_NOTRANS, &conf);
+  armas_x_scale_plus(1.0, &A1, -1.0, &A0, ARMAS_NOTRANS, &conf);
   if (verbose > 1 && N < 10) {
     printf("A1 - A0\n"); armas_x_printf(stdout, "%6.3f", &A1);
   }
@@ -69,7 +69,7 @@ int test_right(int M, int N, int verbose)
   }
   armas_x_solve_diag(&A1, &D, 1.0, ARMAS_RIGHT, &conf);
 #if 0
-  armas_x_scale_plus(&A1, &A0, 1.0, -1.0, ARMAS_NOTRANS, &conf);
+  armas_x_scale_plus(1.0, &A1, -1.0, &A0, ARMAS_NOTRANS, &conf);
   if (verbose > 1 && N < 10) {
     printf("A1 - A0\n"); armas_x_printf(stdout, "%6.3f", &A1);
   }
