@@ -186,6 +186,24 @@ LAPACK = \
 	lapack/qrt.c \
 	lapack/dqds.c 
 
+SPARSE = \
+	sparse/icholz.c \
+	sparse/dense.c \
+	sparse/mult.c \
+	sparse/sparse.c \
+	sparse/accum.c \
+	sparse/add.c \
+	sparse/cgrad.c \
+	sparse/convert.c \
+	sparse/copy.c \
+	sparse/gemv.c \
+	sparse/gmres.c \
+	sparse/io.c \
+	sparse/sort.c \
+	sparse/symv.c \
+	sparse/trmv.c \
+	sparse/trsv.c \
+	sparse/util.c 
 
 COMPAT = \
 	compat/asum.c \
@@ -225,14 +243,18 @@ BUILT_SOURCES =
 if ENABLE_FLOAT64
 
 lib_LTLIBRARIES += libarmasd.la
-noinst_LTLIBRARIES += libd.la 
+noinst_LTLIBRARIES += libd.la libspd.la
 libarmasd_la_SOURCES = 
-libarmasd_la_LIBADD = libx.la libd.la
+libarmasd_la_LIBADD = libx.la libd.la libspd.la
 
 
 # double precision
 libd_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
 libd_la_CPPFLAGS = -DFLOAT64 
+
+# sparse double precision
+libspd_la_SOURCES = $(SPARSE)
+libspd_la_CPPFLAGS = -DFLOAT64
 
 if ENABLE_EXT_PRECISION
 # extended precision
@@ -250,7 +272,7 @@ noinst_LTLIBRARIES += libdcompat.la
 libarmasd_la_LIBADD += libdcompat.la
 endif
 
-BUILT_SOURCES += armas/dmatrix.h armas/linalgd.h
+BUILT_SOURCES += armas/dmatrix.h armas/linalgd.h armas/dsparse.h
 
 endif
 
@@ -304,26 +326,29 @@ BUILT_SOURCES += armas/zmatrix.h armas/libalgz.h
 
 endif
 
-nobase_include_HEADERS = $(BUILT_SOURCES)
+nobase_include_HEADERS = armas/armas.h $(BUILT_SOURCES)
 
 CLEANFILES = $(BUILT_SOURCES)
 
 armas/smatrix.h: inc/matrix.h
-	sed 's/armas_x_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_SMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
+	./make-header.sh $< $@ float
 
 armas/linalgs.h: inc/linalg.h
-	sed 's/armas_x_/armas_s_/g;s/_ARMAS_MAT/_ARMAS_SMAT/;s/DTYPE/float/g;s/ABSTYPE/float/g;s:"matrix.h":<armas/smatrix.h>:;s/_LINALG_/_LINALGS_/;' $< > $@
+	./make-header.sh $< $@ float
 
 armas/dmatrix.h: inc/matrix.h
-	sed 's/armas_x_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
+	./make-header.sh $< $@ double
 
 armas/linalgd.h: inc/linalg.h
-	sed 's/armas_x_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s:"matrix.h":<armas/dmatrix.h>:;s/_LINALG_/_LINALGD_/;' $< > $@
+	./make-header.sh $< $@ double
 
+armas/dsparse.h: sparse/sparse.h
+	./make-header.sh $< $@ double
 
 # comples types
 
 armas/zmatrix.h: inc/matrix.h
-	sed 's/armas_x_/armas_z_/g;s/_ARMAS_MAT/_ARMAS_ZMAT/;s/DTYPE/double complex/g;s/ABSTYPE/double/g;s/__ZERO/0.0+0.0i/g;s:/\* COMPLEX_H \*/:#include <complex.h>:' $< > $@
+	./make-header.sh $< $@ zcomplex
 
 
+###	sed 's/armas_x_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
