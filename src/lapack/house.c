@@ -91,7 +91,7 @@
  *
  */
 
-static inline
+static 
 int __internal_householder(armas_x_dense_t *a11, armas_x_dense_t *x,
                            armas_x_dense_t *tau, int flags, armas_conf_t *conf)
 {
@@ -104,7 +104,7 @@ int __internal_householder(armas_x_dense_t *a11, armas_x_dense_t *x,
         return 0;
     }
 
-    alpha = armas_x_get(a11, 0, 0);
+    alpha = armas_x_get_unsafe(a11, 0, 0);
     sign = __SIGN(alpha) ? -1.0 : 1.0;
     
     beta = __HYPOT(alpha, normx);
@@ -127,7 +127,7 @@ int __internal_householder(armas_x_dense_t *a11, armas_x_dense_t *x,
 
     switch ((flags & (ARMAS_HHNEGATIVE|ARMAS_NONNEG))) {
     case ARMAS_HHNEGATIVE|ARMAS_NONNEG:
-        // compute for Hx = [-beta; 0]^T && beta >= 0
+        // compute for Hx = [-beta; 0]^T && beta >= 0 (ARMAS_COMPLEMENT)
         if (alpha >= 0.0) {
             delta = alpha + beta;
         } else {
@@ -160,46 +160,91 @@ int __internal_householder(armas_x_dense_t *a11, armas_x_dense_t *x,
         break;
     }
     armas_x_scale(x, 1.0/delta, conf);
-    armas_x_set(tau, 0, 0, t);
+    armas_x_set_unsafe(tau, 0, 0, t);
     
     while (nscale-- > 0) {
         beta *= safmin;
     }
-    armas_x_set(a11, 0, 0, beta);
+    armas_x_set_unsafe(a11, 0, 0, beta);
     
     return 0;
 }
 
 /*
+ * Compute the unscaled Householder reflector H = I - 2*v*v^T such that Hx = beta*e_0
+ * 
+ */
+static 
+int __hhcompute_unscaled(armas_x_dense_t *x0, armas_x_dense_t *x1, 
+                         armas_x_dense_t *tau, int flags, armas_conf_t *conf)
+{
+    DTYPE normx, x0val, alpha, beta, delta, sign;
+
+    normx = armas_x_nrm2(x1, conf);
+    if (normx == 0.0) {
+        armas_x_set_unsafe(tau, 0, 0, armas_x_get_unsafe(x0, 0, 0));
+        return 0;
+    }
+
+    x0val = armas_x_get_unsafe(x0, 0, 0);
+    sign  = __SIGN(x0val) ? -1.0 : 1.0;
+    
+    beta = __HYPOT(x0val, normx);
+    
+    switch (flags & (ARMAS_NONNEG)) {
+    case ARMAS_NONNEG:
+        if (x0val <= 0.0) {
+            alpha = x0val - beta;
+            delta = __HYPOT(normx, alpha);
+        } else {
+            alpha = - normx * (normx/(x0val + beta));
+            delta = __HYPOT(normx, alpha);
+        }
+        break;
+    default:
+        beta = -sign*beta;
+        delta = __HYPOT(normx, x0val - beta);
+        alpha = x0val - beta;
+        break;
+    }
+
+    armas_x_set_unsafe(x0, 0, 0, alpha/delta);
+    armas_x_scale(x1, 1.0/delta, conf);
+    armas_x_set_unsafe(tau, 0, 0, beta);
+    return 0;
+}
+
+
+/**
  * Generates a real elementary reflector H of order n, such that
  *
- *       H x = +/- beta e_0,  H H = I 
+ *       H x = (+/-beta e_0)^T,  H H = I 
  *
  * where x is an n-element real vector. H is represented in the form
  *
- *       H = I - tau*v*v^T
+ *       H = I - tau*v*v^T  or H = I - 2*v*v^T
  *
- * where tau is a real scalar and v is a real n-element vector such
- * that v_0 = 1.0
+ * where tau is a real scalar and v is a real n-element vector.
+ * If flag ARMAS_UNIT is used to generated scaled reflector vectors then `tau`
+ * holds the scaling factor. 
  *
  * Depending on flag bits generates H such that,
  *   flags == 0
- *     Hx = beta e_0, beta in R  
+ *     Hx = (beta e_0)^T, beta in R  
  *   flags == ARMAS_NONNEG
- *     Hx = beta e_0, beta >= 0.0
- *   flags == ARMAS_HHNEGATIVE
- *     Hx == -beta e_0, beta in R
- *   flags == ARMAS_HHNEGATIVE|ARMAS_NONNEG
- *     Hx == -beta e_0, beta >= 0.0
+ *     Hx = (beta e_0)^T, beta >= 0.0
  *
  *  \param [in,out] a11
- *     On entry first element of x-vector. On exit value of beta.
+ *     On entry first element of x-vector. On exit the first element if reflector vector v.
+ *     If ARAMS_UNIT is set then a11 holds on exit the value of beta.
  *  \param [in,out] x
- *     On entry elements 1:n-1 of x. On exit elements 1:n-1 of vector v.
+ *     On entry elements 1:n-1 of x. On exit elements 1:n-1 of vector `v`.
  *  \param [out] tau
- *     On exit value scalar tau in singleton matrix.
+ *     If ARMAS_UNIT is set then on exit value scalar `tau` in singleton matrix. Otherwise the
+ *     the scalar value of `beta`.
  *  \param [in] flags
- *     Flag bits ARMAS_NONNEG, ARMAS_HHNEGATIVE
+ *     Use ARMAS_NONNEG to generate non-negative beta values. 
+ *     Use ARMAS_UNIT to generate scaled reflector vectors (stardard LAPACK).
  *  \param [in] conf
  *     Configuration block.
  *
@@ -210,7 +255,26 @@ int armas_x_house(armas_x_dense_t *a11, armas_x_dense_t *x,
 {
     if (!conf)
         conf = armas_conf_default();
-    return __internal_householder(a11, x, tau, flags, conf);
+    // scaled householder reflector (standard lapack version)
+    if ((flags & ARMAS_UNIT) != 0)
+        return __internal_householder(a11, x, tau, flags, conf);
+    // unscaled householder reflector
+    return __hhcompute_unscaled(a11, x, tau, flags, conf);
+}
+
+int armas_x_house_vec(armas_x_dense_t *x, armas_x_dense_t *tau, int flags, armas_conf_t *conf)
+{
+    armas_x_dense_t alpha, x2;
+    if (!conf)
+        conf = armas_conf_default();
+
+    armas_x_submatrix(&alpha, x, 0, 0, 1, 1);
+    if (x->rows == 1) {
+        armas_x_submatrix(&x2, x, 0, 1, 1, armas_x_size(x)-1);
+    } else {
+        armas_x_submatrix(&x2, x, 1, 0, armas_x_size(x)-1, 1);
+    }
+    return armas_x_house(&alpha, &x2, tau, flags, conf);
 }
 
 // library internal 
@@ -222,7 +286,8 @@ void __compute_householder(armas_x_dense_t *a11, armas_x_dense_t *x,
 }
 
 // library internal 
-void __compute_householder_vec(armas_x_dense_t *x, armas_x_dense_t *tau, armas_conf_t *conf) {
+void __compute_householder_vec(armas_x_dense_t *x, armas_x_dense_t *tau, armas_conf_t *conf)
+{
     armas_x_dense_t alpha, x2;
 
     if (armas_x_size(x) == 0) {
@@ -244,7 +309,8 @@ void __compute_householder_vec(armas_x_dense_t *x, armas_x_dense_t *tau, armas_c
 
 
 // library internal 
-void __compute_householder_rev(armas_x_dense_t *x, armas_x_dense_t *tau, armas_conf_t *conf) {
+void __compute_householder_rev(armas_x_dense_t *x, armas_x_dense_t *tau, armas_conf_t *conf)
+{
     armas_x_dense_t alpha, x2;
 
     if (armas_x_size(x) == 0) {
