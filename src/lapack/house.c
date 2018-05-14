@@ -354,7 +354,7 @@ int __apply_householder2x1(armas_x_dense_t *tau, armas_x_dense_t *v,
                            armas_x_dense_t *w1,  int flags, armas_conf_t *conf)
 {
     DTYPE tval;
-    tval = armas_x_get(tau, 0, 0);
+    tval = tau ? armas_x_get(tau, 0, 0) : __TWO;
     if (tval == 0.0) {
         return 0;
     }
@@ -397,8 +397,8 @@ int __apply_householder1x1(armas_x_dense_t *tau, armas_x_dense_t *v,
 {
     DTYPE tval;
 
-    tval = armas_x_get(tau, 0, 0);
-    if (tval == 0.0) {
+    tval = tau ? armas_x_get(tau, 0, 0) : __TWO;
+    if (tval == __ZERO) {
         return 0;
     }
     if (flags & ARMAS_LEFT) {
@@ -415,30 +415,32 @@ int __apply_householder1x1(armas_x_dense_t *tau, armas_x_dense_t *v,
     return 0;
 }
 
-/*
+/**
  * Applies a real elementary reflector H to a real m by n matrix A,
  * from either the left or the right. 
  *
  *  ( a1^t ) =  H * ( a1^T ) 
  *  ( A2   )        ( A2   )
  *
- *  \param [in] tau
- *     Householder scalar
- *  \param [in] v
- *     Reflector vector 
  *  \param [in,out] a1
- *     On entry top row of m by n matrix A. On exit transformed values.
+ *     On entry top row/leftmost column of matrix A. On exit transformed values.
  *  \param [in,out] A2
- *     On entry rows 2:m-1 of m by n matrix A. On exit transformed values
+ *     On entry rows/columns 2:m of matrix A. On exit transformed values
+ *  \param [in] v
+ *     Reflector vector; of length len(a1)-1 if unit scaled reflector. Otherwise of lenght len(a1).
+ *  \param [in] tau
+ *     Householder scalar or null if reflector vector is unscaled
+ *  \param [in] w
+ *     Workspace, at least of size len(a1) elements
  *  \param [in] flags
  *     Flag bits ARMAS_LEFT or ARMAS_RIGHT
  *  \param [in] conf
- *     Confugration block
+ *     Configuration block
  *
  */
-int armas_x_house_apply(armas_x_dense_t *tau, armas_x_dense_t *v,
-                        armas_x_dense_t *a1,  armas_x_dense_t *A2,
-                        armas_x_dense_t *w,  int flags, armas_conf_t *conf)
+int armas_x_houseapply2x1(armas_x_dense_t *a1,  armas_x_dense_t *A2,
+                          armas_x_dense_t *tau, armas_x_dense_t *v,
+                          armas_x_dense_t *w,  int flags, armas_conf_t *conf)
 {
     armas_x_dense_t w1;
     if (!conf)
@@ -449,6 +451,97 @@ int armas_x_house_apply(armas_x_dense_t *tau, armas_x_dense_t *v,
     }
     armas_x_make(&w1, armas_x_size(a1), 1, armas_x_size(a1), armas_x_data(w));
     return __apply_householder2x1(tau, v, a1, A2, &w1, flags, conf);
+}
+
+/**
+ * Applies a real elementary reflector H to matrix A either from left or right. 
+ *
+ *    A = H * A  or A = A * H
+ *
+ *  \param [in,out] A
+ *     On entry matrix A. On exit transformed values.
+ *  \param [in] tau
+ *     Householder scalar for unit scaled reflector or null for unscaled reflector.
+ *  \param [in] v
+ *     Reflector vector; for unscaled reflector then length is rows(A) if applying from right
+ *     and if applying from LEFT then length is cols(A). If unit scaled reflector then length one 
+ *     element shorter.
+ *  \param [in] w
+ *     Workspace, at least of size rows(A) for ARMAS_RIGHT or cols(A) for ARMAS_LEFT. If parameter
+ *     matrix A is vector then workspace is not needed.
+ *  \param [in] flags
+ *     Flag bits ARMAS_LEFT or ARMAS_RIGHT
+ *  \param [in] conf
+ *     Configuration block
+ *
+ */
+int armas_x_houseapply(armas_x_dense_t *A,
+                       armas_x_dense_t *tau, armas_x_dense_t *v,
+                       armas_x_dense_t *w, int flags, armas_conf_t *conf)
+{
+    armas_x_dense_t w1, a1, A2;
+    if (!conf)
+        conf = armas_conf_default();
+    
+    int scaled = !tau || (flags & ARMAS_UNIT) != 0 ? 1 : 0;
+    
+    if (armas_x_isvector(A)) {
+        DTYPE alpha;
+        if (scaled) {
+            if (armas_x_size(A)-1 != armas_x_size(v)) {
+                conf->error = ARMAS_ESIZE;
+                return -1;
+            }
+            armas_x_subvector(&A2, A, 1, armas_x_size(A)-1);
+            alpha = armas_x_dot(&A2, v, conf);
+            alpha += armas_x_get_unsafe(A, 0, 0);
+            alpha *= armas_x_get_unsafe(tau, 0, 0);
+            armas_x_set_unsafe(A, 0, 0, armas_x_get_unsafe(A, 0, 0) - alpha);
+            armas_x_axpy(&A2, -alpha, v, conf);
+        } else {
+            if (armas_x_size(A) != armas_x_size(v)) {
+                conf->error = ARMAS_ESIZE;
+                return -1;
+            }
+            alpha = __TWO * armas_x_dot(A, v, conf);
+            armas_x_axpy(A, -alpha, v, conf);
+        }
+        return 0;
+    }
+    // if tau != __nil then unit scaled reflector otherwise unscaled reflector
+    int ok = (flags & ARMAS_RIGHT) != 0
+        ? (scaled && A->rows-1 == armas_x_size(v)) || (!scaled && A->rows  == armas_x_size(v))
+        : (scaled && A->cols-1 == armas_x_size(v)) || (!scaled && A->cols  == armas_x_size(v));
+
+    if (!ok) {
+        conf->error = ARMAS_ESIZE;
+        return -1;
+    }
+    if (!w || armas_x_size(w) < armas_x_size(v) + scaled) {
+        conf->error = ARMAS_EWORK;
+        return -1;
+    }
+    
+    if (scaled) {
+        switch (flags & (ARMAS_RIGHT|ARMAS_LEFT)) {
+        case ARMAS_RIGHT:
+            armas_x_submatrix(&a1, A, 0, 0, A->rows, 1);
+            armas_x_submatrix(&A2, A, 0, 1, A->rows, A->cols-1);
+            break;
+        case ARMAS_LEFT:
+        default:
+            armas_x_submatrix(&a1, A, 0, 0, 1, A->cols);
+            armas_x_submatrix(&A2, A, 1, 0, A->rows-1, A->cols);
+            break;
+        }
+        armas_x_make(&w1, armas_x_size(&a1), 1, armas_x_size(&a1), armas_x_data(w));
+        return __apply_householder2x1(tau, v, &a1, &A2, &w1, flags, conf);
+    }
+    // unscaled householder reflector here
+    int   n = (flags & ARMAS_RIGHT) != 0 ? A->rows : A->cols;   
+    armas_x_make(&w1, n, 1, n, armas_x_data(w));
+    // tau is null pointer here
+    return __apply_householder1x1(tau, v, A, &w1, flags, conf);
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
