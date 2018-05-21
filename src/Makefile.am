@@ -55,6 +55,7 @@ noinst_HEADERS = \
 
 
 COMMON = \
+	core/armas.c \
 	core/support.c \
 	core/sched.c \
 	core/cache.c \
@@ -133,6 +134,7 @@ XBLAS3 = \
 	blas3/syrk_ext.c
 
 LAPACK = \
+	lapack/housem.c \
 	lapack/hhouse.c \
 	lapack/trdbis.c \
 	lapack/cholupd.c \
