@@ -719,6 +719,9 @@ extern int armas_x_houseapply(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_
                               armas_x_dense_t *w,  int flags, armas_conf_t *conf);
 extern int armas_x_houseapply2x1(armas_x_dense_t *a1, armas_x_dense_t *A2, armas_x_dense_t *tau, armas_x_dense_t *v,
                                  armas_x_dense_t *w,  int flags, armas_conf_t *conf);
+extern int armas_x_housemult(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *Q, int flags, armas_conf_t *conf);
+extern int armas_x_housemult_w(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *Q, int flags, armas_wbuf_t *wb, armas_conf_t *conf);
+
 // Hyperbolic Householder functions
 extern int armas_x_hhouse(armas_x_dense_t *a11, armas_x_dense_t *x,
                          armas_x_dense_t *tau, int flags, armas_conf_t *conf);

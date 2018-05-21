@@ -105,6 +105,8 @@
 #define armas_x_house              armas_s_house
 #define armas_x_houseapply         armas_s_houseapply
 #define armas_x_houseapply2x1      armas_s_houseapply2x1
+#define armas_x_housemult          armas_s_housemult
+#define armas_x_housemult_w        armas_s_housemult_w
 #define armas_x_hhouse             armas_s_hhouse
 #define armas_x_hhouse_apply       armas_s_hhouse_apply
 // marker for householder functions
@@ -310,6 +312,8 @@
 #define armas_x_house              armas_d_house
 #define armas_x_houseapply         armas_d_houseapply
 #define armas_x_houseapply2x1      armas_d_houseapply2x1
+#define armas_x_housemult          armas_d_housemult
+#define armas_x_housemult_w        armas_d_housemult_w
 #define armas_x_hhouse             armas_d_hhouse
 #define armas_x_hhouse_apply       armas_d_hhouse_apply
 // marker for householder functions
