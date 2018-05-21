@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 
 #ifndef __ARMAS_INLINE
 #  if __GNUC__
@@ -331,6 +332,111 @@ void armas_pivot_set_unsafe(armas_pivot_t *ptable, int k, int val)
 }
 
 extern void armas_pivot_printf(FILE* out, const char *fmt, armas_pivot_t *pivot);
+
+// ------------------------------------------------------------------------------
+// workspace
+
+/**
+ * \brief Workspace buffer
+ */
+typedef struct armas_wbuf_s {
+  char *buf;
+  size_t bytes;
+  size_t offset;
+} armas_wbuf_t;
+    
+#define ARMAS_WBNULL (armas_wbuf_t){ .buf = (char *)0, .bytes = 0, .offset = 0 }
+#define __align64(n) (((n)+7) & ~0x7)
+#define __nbits_aligned8(n) (((n) + 7) >> 3)
+
+// \brief Allocate nbytes of workspace
+__ARMAS_INLINE
+armas_wbuf_t *armas_walloc(armas_wbuf_t *W, size_t nbytes)
+{
+  W->buf = (char *)calloc(nbytes, 1);
+  W->bytes = W->buf ? nbytes : 0;
+  W->offset = 0;
+  return W->buf ? W : (armas_wbuf_t *)0;
+}
+// \brief Release workspace allocation
+__ARMAS_INLINE
+void armas_wrelease(armas_wbuf_t *W)
+{
+  if (W && W->buf) {
+    free(W->buf);
+    W->buf = (char *)0;
+    W->bytes = W->offset = 0;
+  }
+}
+    
+// \brief Reserve nbytes from workspace (aligned to 64bit access)
+__ARMAS_INLINE
+void *armas_wreserve_bytes(armas_wbuf_t *W, size_t nbytes)
+{
+  nbytes = __align64(nbytes);
+  if (!W || nbytes > W->bytes - W->offset)
+    return (char *)0;
+  char *r = &W->buf[W->offset];
+  W->offset += nbytes;
+  //memset(r, 0, nbytes);
+  return (void *)r;
+}
+    
+// \brief Reserve space for count number of elements of size 'sz'
+__ARMAS_INLINE
+void *armas_wreserve(armas_wbuf_t *W, size_t count, size_t sz)
+{
+  return armas_wreserve_bytes(W, count*sz);
+}
+
+__ARMAS_INLINE
+void *armas_wreserve_bits(armas_wbuf_t *W, size_t count)
+{
+  size_t bc = __nbits_aligned8(count);
+  return armas_wreserve_bytes(W, bc);
+}
+// \brief Reset work space reservations
+__ARMAS_INLINE
+void armas_wreset(armas_wbuf_t *W)
+{
+  W->offset = 0;
+}
+
+// \brief Zero workspace, at most n bytes or all (n == 0)
+__ARMAS_INLINE
+void armas_wzero(armas_wbuf_t *W, size_t n)
+{
+  memset(W->buf, 0, n > 0 && n <= W->bytes ? n : W->bytes);
+}
+    
+// \brief Get size of unreserved space
+__ARMAS_INLINE
+size_t armas_wbytes(const armas_wbuf_t *W)
+{
+  return W ? W->bytes - W->offset : 0;
+}
+
+// \brief Get current offset
+__ARMAS_INLINE
+size_t armas_wpos(const armas_wbuf_t *W)
+{
+  return W ? W->offset : 0;
+}
+
+// \brief Get current pointer
+__ARMAS_INLINE
+void *armas_wptr(const armas_wbuf_t *W)
+{
+  return W ? &W->buf[W->offset] : (void *)0;
+}
+    
+// \brief Set current offset to defined value
+__ARMAS_INLINE
+void armas_wsetpos(armas_wbuf_t *W, size_t pos)
+{
+  if (W && pos < W->bytes)
+    W->offset = pos;
+}
 
 
 #ifdef __cplusplus
