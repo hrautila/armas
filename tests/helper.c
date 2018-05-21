@@ -7,7 +7,7 @@
 #include <float.h>
 
 #if defined(FLOAT32)
-#include <armas/smatrix.h>
+#include "armas/smatrix.h"
 typedef float DTYPE;
 typedef armas_s_dense_t armas_x_dense_t;
 #define EPSILON FLT_EPSILON
@@ -21,7 +21,7 @@ typedef armas_s_dense_t armas_x_dense_t;
 #define armas_x_data         armas_s_data
 
 #else
-#include <armas/dmatrix.h>
+#include "armas/dmatrix.h"
 typedef double DTYPE;
 typedef armas_d_dense_t armas_x_dense_t;
 

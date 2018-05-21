@@ -31,7 +31,7 @@ if ENABLE_FLOAT64
 UNIT_TESTS += dgemm dsymm dtrmm dtrsm dsyrk dtrmrk dsyr2k dgemv dger dtrmv dtrsv diag dbase
 
 UNIT_TESTS +=  \
-	evd gesvd secular \
+	housem evd gesvd secular \
 	trdevd bdsvd givens trdred \
 	bidiag chol hess lu ldlbk \
 	qrfact qrbld qrmult qrsol \
@@ -96,6 +96,8 @@ diag_SOURCES   = diag.c ../helper.c
 diag_LDADD    = ../../src/libarmasd.la
 
 ## LAPACK
+housem_SOURCES    = housem.c ../helper.c
+housem_LDADD    = ../../src/libarmasd.la
 evd_SOURCES    = evd.c ../helper.c
 evd_LDADD    = ../../src/libarmasd.la
 gesvd_SOURCES  = gesvd.c ../helper.c
