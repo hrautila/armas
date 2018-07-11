@@ -94,6 +94,7 @@
 #define armassp_x_new          armassp_d_new
 #define armassp_x_resize       armassp_d_resize
 #define armassp_x_append       armassp_d_append
+#define armassp_x_hasdiag      armassp_d_hasdiag
 
 /* io.c */
 #define armassp_x_mmload       armassp_d_mmload
@@ -121,6 +122,10 @@
 /* illtz.c */
 #define armassp_x_init_icholz  armassp_d_init_icholz
 #define armassp_x_icholz       armassp_d_icholz
+
+/* iluz.c */
+#define armassp_x_init_iluz    armassp_d_init_iluz
+#define armassp_x_iluz         armassp_d_iluz
 
 /* gmres.c */
 #define armassp_x_gmres        armassp_d_gmres
