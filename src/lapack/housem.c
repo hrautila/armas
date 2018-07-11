@@ -63,7 +63,7 @@ __hmult_left(armas_x_dense_t *X,
     DTYPE _tau, _v0val;
     
     EMPTY(tT); EMPTY(P00); EMPTY(PTL);
-    EMPTY(X0);
+    EMPTY(X0); EMPTY(t0);
 
     if (!cf)
         cf = armas_conf_default();
@@ -182,7 +182,7 @@ __hmult_right(armas_x_dense_t *X,
     DTYPE _tau, _v0val;
     
     EMPTY(tT); EMPTY(P00); EMPTY(PTL);
-    EMPTY(XL); EMPTY(X0);
+    EMPTY(XL); EMPTY(X0); EMPTY(t0);
 
     if (!cf)
         cf = armas_conf_default();
