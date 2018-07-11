@@ -153,6 +153,65 @@ int armassp_x_append(armas_x_sparse_t *A, int m, int n, DTYPE v)
     return 0;
 }
 
+#if defined(armassp_x_hasdiag)
+/**
+ */
+int armassp_x_hasdiag(const armas_x_sparse_t *A, int diag)
+{
+    int i, j, start, end, p, roff, coff; 
+    int nc = 0;
+    
+    if (!A || A->rows != A->cols)
+        return 0;
+    if (diag < 0 && A->rows < -diag)
+        return 0;
+    if (diag > 0 && A->cols < diag)
+        return 0;
+    
+    switch (A->kind) {
+    case ARMASSP_COO: 
+        roff = diag < 0 ? 0 : diag;
+        coff = diag > 0 ? 0 : diag;
+        nc = diag < 0 ? A->rows + diag : A->cols - diag;
+        for (i = 0; i < A->nnz; i++) {
+            if (A->elems.ep[i].i + coff == A->elems.ep[i].j + roff)
+                nc--;
+        }
+        break;
+    case ARMASSP_CSC:
+        start = diag > 0 ? diag : 0;
+        end   = diag < 0 ? A->cols - diag : A->cols;
+        nc    = end - start;
+        for (i = 0, j = start; j < end; i++, j++) {
+            for (p = armassp_x_index(A, j); p < armassp_x_index(A, j+1); p++) {
+                if (armassp_x_at(A, p) == i) {
+                    nc --;
+                    break;
+                }
+            }
+        }
+        break;
+    case ARMASSP_CSR:
+        start = diag < 0 ? -diag : 0;
+        end   = diag > 0 ? A->rows - diag : A->rows;
+        nc    = end - start;
+        for (j = 0, i = start; i < end; i++, j++) {
+            for (p = armassp_x_index(A, i); p < armassp_x_index(A, i+1); p++) {
+                if (armassp_x_at(A, p) == j) {
+                    nc --;
+                    break;
+                }
+            }
+        }
+        break;
+    default:
+        nc = -1;
+        break;
+    }
+    return nc == 0;
+}
+#endif // defined(armassp_x_hasdiag)
+
 #if 0
 /**
  * \brief Allocate space for sparse accumulator
