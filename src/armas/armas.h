@@ -188,6 +188,18 @@ extern armas_cbuf_t *armas_cbuf_init(armas_cbuf_t *cbuf, size_t cmem, size_t l1m
 extern armas_cbuf_t *armas_cbuf_make(armas_cbuf_t *cbuf, void *buf, size_t cmem, size_t l1mem);
 extern void armas_cbuf_release(armas_cbuf_t *cbuf);
 
+/**
+ * @brief Configuration parameters for sparse iterative methods.
+ */
+typedef struct armassp_params_s
+{
+    int maxiter;        ///< Max iterations allowed
+    int gmres_m;        ///< Number of columns in GMRES 
+    double stop;        ///< Stopping criterion
+    int numiters;       ///< Number of iterations used
+    double residual;    ///< Result error residual
+} armassp_params_t;
+
 // pivot vectors
 
 /**
