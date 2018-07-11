@@ -14,15 +14,19 @@
 extern "C" {
 #endif
 
+#ifndef __align64
 #define __align64(n) (((n)+7) & ~0x7)
+#endif
+#ifndef __nbits_aligned8
 #define __nbits_aligned8(n) (((n) + 7) >> 3)
+#endif
     
     typedef ptrdiff_t csint;
     
     typedef enum {
         ARMASSP_UNDEF_ORDER = 0,
         ARMASSP_COL_ORDER = 1,
-        ARPASSP_ROW_ORDER = 2
+        ARMASSP_ROW_ORDER = 2
     } armassp_order_t;
 
     typedef enum {
@@ -116,7 +120,7 @@ extern "C" {
         int (*partial)(const struct armassp_x_precond_s *M, armas_x_dense_t *x, int flags, armas_conf_t *cf);
     } armassp_x_precond_t;
 
-    extern int armassp_x_init_ilu(armassp_x_precond_t *P, armas_x_sparse_t *A);
+    extern int armassp_x_init_iluz(armassp_x_precond_t *P, armas_x_sparse_t *A);
     extern int armassp_x_init_icholz(armassp_x_precond_t *P, armas_x_sparse_t *A, int flags);
     extern void armassp_x_precond_release(armassp_x_precond_t *P);
     
@@ -252,108 +256,6 @@ extern "C" {
         }
     }
 
-    // ------------------------------------------------------------------------------
-    // workspace
-
-    /**
-     * \brief Workspace buffer
-     */
-    typedef struct armas_wbuf_s {
-        char *buf;
-        size_t bytes;
-        size_t offset;
-    } armas_wbuf_t;
-    
-#define ARMAS_WBNULL (armas_wbuf_t){ .buf = (char *)0, .bytes = 0, .offset = 0 }
-
-    // \brief Allocate nbytes of workspace
-    __ARMAS_INLINE
-    armas_wbuf_t *armas_walloc(armas_wbuf_t *W, size_t nbytes)
-    {
-        W->buf = (char *)calloc(nbytes, 1);
-        W->bytes = W->buf ? nbytes : 0;
-        W->offset = 0;
-        return W->buf ? W : (armas_wbuf_t *)0;
-    }
-    // \brief Release workspace allocation
-    __ARMAS_INLINE
-    void armas_wrelease(armas_wbuf_t *W)
-    {
-        if (W && W->buf) {
-            free(W->buf);
-            W->buf = (char *)0;
-            W->bytes = W->offset = 0;
-        }
-    }
-    
-    // \brief Reserve nbytes from workspace (aligned to 64bit access)
-    __ARMAS_INLINE
-    void *armas_wreserve_bytes(armas_wbuf_t *W, size_t nbytes)
-    {
-        nbytes = __align64(nbytes);
-        if (!W || nbytes > W->bytes - W->offset)
-            return (char *)0;
-        char *r = &W->buf[W->offset];
-        W->offset += nbytes;
-        memset(r, 0, nbytes);
-        return (void *)r;
-    }
-    
-    // \brief Reserve space for count number of elements of size 'sz'
-    __ARMAS_INLINE
-    void *armas_wreserve(armas_wbuf_t *W, size_t count, size_t sz)
-    {
-        return armas_wreserve_bytes(W, count*sz);
-    }
-
-    __ARMAS_INLINE
-    void *armas_wreserve_bits(armas_wbuf_t *W, size_t count)
-    {
-        size_t bc = __nbits_aligned8(count);
-        return armas_wreserve_bytes(W, bc);
-    }
-    // \brief Reset work space reservations
-    __ARMAS_INLINE
-    void armas_wreset(armas_wbuf_t *W)
-    {
-        W->offset = 0;
-    }
-
-    // \brief Zero workspace, at most n bytes or all (n == 0)
-    __ARMAS_INLINE
-    void armas_wzero(armas_wbuf_t *W, size_t n)
-    {
-        memset(W->buf, 0, n > 0 && n <= W->bytes ? n : W->bytes);
-    }
-    
-    // \brief Get size of unreserved space
-    __ARMAS_INLINE
-    size_t armas_wbytes(const armas_wbuf_t *W)
-    {
-        return W ? W->bytes - W->offset : 0;
-    }
-
-    // \brief Get current offset
-    __ARMAS_INLINE
-    size_t armas_wpos(const armas_wbuf_t *W)
-    {
-        return W ? W->offset : 0;
-    }
-
-    // \brief Get current pointer
-    __ARMAS_INLINE
-    void *armas_wptr(const armas_wbuf_t *W)
-    {
-        return W ? &W->buf[W->offset] : (void *)0;
-    }
-    
-    // \brief Set current offset to defined value
-    __ARMAS_INLINE
-    void armas_wsetpos(armas_wbuf_t *W, size_t pos)
-    {
-        if (W && pos < W->bytes)
-            W->offset = pos;
-    }
     
     extern int armassp_x_make(armas_x_sparse_t *A, int rows, int cols, int nnz, armassp_type_enum storage, void *data, size_t dlen);
     extern armas_x_sparse_t *armassp_x_init(armas_x_sparse_t *A, int rows, int cols, int nnz, armassp_type_enum kind);
@@ -389,18 +291,18 @@ extern "C" {
                                     int flags, armas_conf_t *cf);
     
     extern int armassp_x_cgrad(armas_x_dense_t *x, const armas_x_sparse_t *A, armas_x_dense_t *b,
-                               int flags, armas_conf_t *cf);
+                               int flags, armassp_params_t *p, armas_conf_t *cf);
     extern int armassp_x_cgrad_w(armas_x_dense_t *x, const armas_x_sparse_t *A, armas_x_dense_t *b,
-                                 int flags, armas_wbuf_t *W, armas_conf_t *cf);
+                                 int flags, armassp_params_t *p, armas_wbuf_t *W, armas_conf_t *cf);
     extern int armassp_x_pcgrad_w(armas_x_dense_t *x, const armas_x_sparse_t *A, armas_x_dense_t *b,
                                   armassp_x_precond_t *P, int flags, armas_wbuf_t *W, armas_conf_t *cf);
     extern int armassp_x_pcgrad(armas_x_dense_t *x, const armas_x_sparse_t *A, armas_x_dense_t *b,
                                 armassp_x_precond_t *P, int flags, armas_conf_t *cf);
 
     extern int armassp_x_gmres(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
-                               int maxiter, int m, armas_conf_t *cf);
+                               armassp_params_t *par, armas_conf_t *cf);
     extern int armassp_x_gmres_w(armas_x_dense_t *x,  const armas_x_sparse_t *A,
-                                 const armas_x_dense_t *b, int maxiter,
+                                 const armas_x_dense_t *b, armassp_params_t *par,
                                  armas_wbuf_t *W, armas_conf_t *cf);
 
     extern int armassp_x_addto_w(armas_x_sparse_t *C, DTYPE alpha, const armas_x_sparse_t *A,
@@ -421,6 +323,7 @@ extern "C" {
     extern int armassp_x_icholz(armas_x_sparse_t *A, int flags);
     extern int armassp_x_iluz(armas_x_sparse_t *L);
 
+    extern int armassp_x_hasdiag(const armas_x_sparse_t *A, int diag);
     
 #ifdef __cplusplus
 }
