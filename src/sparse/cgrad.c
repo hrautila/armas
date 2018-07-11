@@ -53,13 +53,14 @@ int __x_cgrad(armas_x_dense_t *x,
               armas_x_dense_t *b,
               int flags,
               int maxiter,
-              DTYPE tolmult,
+              DTYPE rstop,
+              DTYPE *res,
               armas_wbuf_t *W,
               armas_conf_t *cf)
 {
     armas_x_dense_t p, Ap, r;
     int m = A->rows;
-    DTYPE dot_r, dot_p, alpha, beta, dot_r1, rstop;
+    DTYPE dot_r, dot_p, alpha, beta, dot_r1;
 
     // r0 = b - A*x
     DTYPE *t = armas_wreserve(W, m, sizeof(DTYPE));
@@ -67,7 +68,8 @@ int __x_cgrad(armas_x_dense_t *x,
     armas_x_mcopy(&r, b);
     armassp_x_mvmult_sym(__ONE, &r, -__ONE, A, x, flags, cf);
 
-    rstop = __EPSILON * (tolmult == __ZERO ? armas_x_nrm2(&r, cf) : tolmult);
+    if (rstop == __ZERO)
+        rstop = __EPSILON * armas_x_nrm2(&r, cf);
 
     // p0 = r0
     t = armas_wreserve(W, m, sizeof(DTYPE));
@@ -80,6 +82,7 @@ int __x_cgrad(armas_x_dense_t *x,
     if (maxiter == 0)
         maxiter = 4*m;
     
+    int niter = 0;
     for (int i = 0; i < maxiter; i++) {
         // Ap = A*p
         armassp_x_mvmult_sym(__ZERO, &Ap, __ONE, A, &p, flags, cf);
@@ -93,14 +96,17 @@ int __x_cgrad(armas_x_dense_t *x,
         armas_x_axpy(&r, -alpha, &Ap, cf);
 
         dot_r1 = armas_x_dot(&r, &r, cf);
-        if (sqrt(dot_r1) < rstop) {
+        if (__SQRT(dot_r1) < rstop) {
+            niter = i;
+            if (res)
+                *res = __SQRT(dot_r1);
             break;
         }
         beta = dot_r1 / dot_r;
         // p = beta*p + r;
         armas_x_scale_plus(beta, &p, __ONE, &r, 0, cf);
     }
-    return 0;
+    return niter;
 }
 
 static inline
@@ -124,6 +130,7 @@ int armassp_x_cgrad_w(armas_x_dense_t *x,
                       const armas_x_sparse_t *A,
                       armas_x_dense_t *b,
                       int flags,
+                      armassp_params_t *par,
                       armas_wbuf_t *W,
                       armas_conf_t *cf)
 {
@@ -135,29 +142,40 @@ int armassp_x_cgrad_w(armas_x_dense_t *x,
         return 0;
     }
 
+    if (A->rows == 0 || A->cols == 0)
+        return 0;
+
     if (!cf)
         cf = armas_conf_default();
     
-    if (armas_wbytes(W) < CGRAD_WSIZE(m)) {
-        cf->error = ARMAS_EWORK;
-        return -1;
-    }
-
     if (__check_parms(x, A, b) == 0) {
         cf->error = ARMAS_EINVAL;
         return -1;
     }
 
-    if (A->rows == 0 || A->cols == 0)
-        return 0;
+    if (armas_wbytes(W) < CGRAD_WSIZE(m)) {
+        cf->error = ARMAS_EWORK;
+        return -1;
+    }
 
-    return __x_cgrad(x, A, b, flags, 0, __ZERO, W, cf);
+    size_t pos = armas_wpos(W);
+    int maxiter = par && par->maxiter > 0 ? par->maxiter : m;
+    DTYPE rstop = par && par->stop != 0.0D ? (DTYPE)par->stop : __ZERO;
+    DTYPE res = __ZERO;
+    int n =  __x_cgrad(x, A, b, flags, maxiter, rstop, &res, W, cf);
+    if (par) {
+        par->numiters = n;
+        par->residual = (double)res;
+    }
+    armas_wsetpos(W, pos);
+    return 0;
 }
 
 int armassp_x_cgrad(armas_x_dense_t *x,
                     const armas_x_sparse_t *A,
                     armas_x_dense_t *b,
                     int flags,
+                    armassp_params_t *par,
                     armas_conf_t *cf)
 {
     int stat;
@@ -174,7 +192,7 @@ int armassp_x_cgrad(armas_x_dense_t *x,
     if (A->rows == 0 || A->cols == 0)
         return 0;
     
-    if (armassp_x_cgrad_w(x, A, b, flags, &W, cf) < 0) {
+    if (armassp_x_cgrad_w(x, A, b, flags, par, &W, cf) < 0) {
         cf->error = ARMAS_EWORK;
         return -1;
     }
@@ -183,7 +201,7 @@ int armassp_x_cgrad(armas_x_dense_t *x,
         cf->error = ARMAS_EWORK;
         return -1;
     }
-    stat = __x_cgrad(x, A, b, flags, 0, __ZERO, &W, cf);
+    stat = armassp_x_cgrad_w(x, A, b, flags, par, &W, cf);
 
     armas_wrelease(&W);
     return stat;
