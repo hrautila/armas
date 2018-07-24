@@ -94,7 +94,7 @@ armas_x_dense_t *armas_x_init(armas_x_dense_t *m, int r, int c)
  * @retval NULL Failed
  * \ingroup matrix
  */
-armas_x_dense_t *armas_x_transpose(armas_x_dense_t *A, armas_x_dense_t *B)
+armas_x_dense_t *armas_x_transpose(armas_x_dense_t *A, const armas_x_dense_t *B)
 {
   if (A->rows != B->cols || A->cols != B->rows)
     return (armas_x_dense_t *)0;
@@ -118,7 +118,7 @@ armas_x_dense_t *armas_x_transpose(armas_x_dense_t *A, armas_x_dense_t *B)
  * @retval NULL Incompatible sizes
  * \ingroup matrix
  */
-armas_x_dense_t *armas_x_mcopy(armas_x_dense_t *A, armas_x_dense_t *B)
+armas_x_dense_t *armas_x_mcopy(armas_x_dense_t *A, const armas_x_dense_t *B)
 {
   if (armas_x_isvector(A) && armas_x_isvector(B)) {
     if (armas_x_size(A) != armas_x_size(B))
@@ -146,7 +146,7 @@ armas_x_dense_t *armas_x_mcopy(armas_x_dense_t *A, armas_x_dense_t *B)
  * @retval NULL Failed
  * \ingroup matrix
  */
-armas_x_dense_t *armas_x_newcopy(armas_x_dense_t *A)
+armas_x_dense_t *armas_x_newcopy(const armas_x_dense_t *A)
 {
   armas_x_dense_t *Anew = armas_x_alloc(A->rows, A->cols);
   if (Anew) {

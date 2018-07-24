@@ -99,9 +99,9 @@ extern int armas_x_set_values(armas_x_dense_t *m, armas_x_valuefunc_t func, int 
 extern int armas_x_allclose(const armas_x_dense_t *A, const armas_x_dense_t *B);
 extern int armas_x_intolerance(const armas_x_dense_t *A, const armas_x_dense_t *B, ABSTYPE atol, ABSTYPE rtol);
 
-extern armas_x_dense_t *armas_x_mcopy(armas_x_dense_t *d, armas_x_dense_t *s);
-extern armas_x_dense_t *armas_x_newcopy(armas_x_dense_t *s);
-extern armas_x_dense_t *armas_x_transpose(armas_x_dense_t *d, armas_x_dense_t *s);
+extern armas_x_dense_t *armas_x_mcopy(armas_x_dense_t *d, const armas_x_dense_t *s);
+extern armas_x_dense_t *armas_x_newcopy(const armas_x_dense_t *s);
+extern armas_x_dense_t *armas_x_transpose(armas_x_dense_t *d, const armas_x_dense_t *s);
 
 extern void armas_x_make_trm(armas_x_dense_t *m, int flags);
 
