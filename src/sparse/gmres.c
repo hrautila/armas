@@ -353,7 +353,6 @@ int __gmres_loop(armas_x_dense_t *x,
     for (int j = 0; j < maxiter; j += m) {
         stat += __gmres_mgs(x, A, b, &V, &H, &w, &nrm_r1, cf);
 
-        printf("%02d |r0|: %9.2e, |r1|: %9.2e [%9.4e] rstop: %9.2e\n", j, nrm_r0, nrm_r1, nrm_r1/nrm_r0, rstop);
         // if (nrm_r1 < rstop)
         if (nrm_r1/nrm_r0 < __EPSILON) {
             break;
@@ -429,21 +428,20 @@ int __check_params(armas_x_dense_t *x,
 int armassp_x_gmres_w(armas_x_dense_t *x,
                       const armas_x_sparse_t *A,
                       const armas_x_dense_t *b,
-                      armassp_params_t *par,
                       armas_wbuf_t *W,
                       armas_conf_t *cf)
 {
-    int n = A->rows;
-    int m = par && par->gmres_m != 0 ? par->gmres_m : __GMRES_M;
+    if (!cf)
+        cf = armas_conf_default();
     
-    if (W->bytes == 0) {
+    int n = A->rows;
+    int m = cf->gmres_m > 0 ? cf->gmres_m : __GMRES_M;
+    
+    if (W && W->bytes == 0) {
         // get working size
         W->bytes = GMRES_WSIZE(n, m);
         return 0;
     }
-    if (!cf)
-        cf = armas_conf_default();
-    
     if (! __check_params(x, A, b)) {
         cf->error = ARMAS_EINVAL;
         return -1;
@@ -454,23 +452,20 @@ int armassp_x_gmres_w(armas_x_dense_t *x,
         cf->error = ARMAS_EWORK;
         return -1;
     }
-    int maxiter = par && par->maxiter > 0 ? par->maxiter : 5*A->rows;
+    int maxiter = cf->maxiter > 0 ? cf->maxiter : 5*A->rows;
     DTYPE res = __ZERO;
     int niter =  __gmres_hh_loop_fused(x, A, b, maxiter, me, &res, W, cf);
-    if (par) {
-        par->residual = res;
-        par->numiters = niter;
-    }
+    cf->residual = res;
+    cf->numiters = niter;
     return 0;
 }
 
 /**
  * \brief Solve unsymmetric linear system A*x = b with GMRES algorithm
  */
-int armassp_x_gmres(armas_x_dense_t *x, /*  */
+int armassp_x_gmres(armas_x_dense_t *x,
                     const armas_x_sparse_t *A,
                     const armas_x_dense_t *b,
-                    armassp_params_t *par,
                     armas_conf_t *cf)
 {
     armas_wbuf_t W = ARMAS_WBNULL;
@@ -483,14 +478,14 @@ int armassp_x_gmres(armas_x_dense_t *x, /*  */
         return -1;
     }
 
-    int m = par && par->gmres_m > 0 ? par->gmres_m : __GMRES_M;
+    int m = cf->gmres_m > 0 ? cf->gmres_m : __GMRES_M;
     
     int nb = GMRES_WSIZE(A->cols, m);
     if (!armas_walloc(&W, nb)) {
         cf->error = ARMAS_EWORK;
         return -1;
     }
-    int stat = armassp_x_gmres_w(x, A, b, par, &W, cf);
+     int stat = armassp_x_gmres_w(x, A, b, &W, cf);
     armas_wrelease(&W);
     return stat;
 }
