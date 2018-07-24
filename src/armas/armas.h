@@ -159,6 +159,7 @@ typedef struct _armas_cbuf_s {
  * @brief Configuration parameters
  */
 typedef struct armas_conf {
+  // -- blas parameters
   int mb;               ///< block size relative to result matrix rows (blas3)
   int nb;               ///< block size relative to result matrix cols (blas3)
   int kb;               ///< block size relative to operand matrix common dimension (blas3)
@@ -171,6 +172,13 @@ typedef struct armas_conf {
   size_t cmem;          ///< sizeof of internal per-thread cache 
   size_t l1mem;         ///< sizeof of L1 memory
   armas_cbuf_t *cbuf;   ///< user defined cache buffer
+  // -- parameters foor iterative methods
+  int maxiter;          ///< Max iterations allowed
+  int gmres_m;          ///< Number of columns in GMRES 
+  int numiters;         ///< Number of iterations used (output)
+  double stop;          ///< Absolute stopping criterion
+  double smult;         ///< Relative stopping criterion multiplier
+  double residual;      ///< Result error residual (output)
 } armas_conf_t;
 
 // use default configuration block
@@ -188,17 +196,6 @@ extern armas_cbuf_t *armas_cbuf_init(armas_cbuf_t *cbuf, size_t cmem, size_t l1m
 extern armas_cbuf_t *armas_cbuf_make(armas_cbuf_t *cbuf, void *buf, size_t cmem, size_t l1mem);
 extern void armas_cbuf_release(armas_cbuf_t *cbuf);
 
-/**
- * @brief Configuration parameters for sparse iterative methods.
- */
-typedef struct armassp_params_s
-{
-    int maxiter;        ///< Max iterations allowed
-    int gmres_m;        ///< Number of columns in GMRES 
-    double stop;        ///< Stopping criterion
-    int numiters;       ///< Number of iterations used
-    double residual;    ///< Result error residual
-} armassp_params_t;
 
 // pivot vectors
 
