@@ -116,8 +116,8 @@ extern "C" {
     typedef struct armassp_x_precond_s {
         armas_x_sparse_t *M;
         int flags;
-        int (*precond)(const struct armassp_x_precond_s *M, armas_x_dense_t *x, armas_conf_t *cf);
-        int (*partial)(const struct armassp_x_precond_s *M, armas_x_dense_t *x, int flags, armas_conf_t *cf);
+        int (*precond)(armas_x_dense_t *z, const struct armassp_x_precond_s *M, const armas_x_dense_t *x, armas_conf_t *cf);
+        int (*partial)(armas_x_dense_t *z, const struct armassp_x_precond_s *M, const armas_x_dense_t *x, int flags, armas_conf_t *cf);
     } armassp_x_precond_t;
 
     extern int armassp_x_init_iluz(armassp_x_precond_t *P, armas_x_sparse_t *A);
@@ -290,20 +290,27 @@ extern "C" {
                                     const armas_x_sparse_t *A, const armas_x_dense_t *x,
                                     int flags, armas_conf_t *cf);
     
-    extern int armassp_x_cgrad(armas_x_dense_t *x, const armas_x_sparse_t *A, armas_x_dense_t *b,
-                               int flags, armassp_params_t *p, armas_conf_t *cf);
-    extern int armassp_x_cgrad_w(armas_x_dense_t *x, const armas_x_sparse_t *A, armas_x_dense_t *b,
-                                 int flags, armassp_params_t *p, armas_wbuf_t *W, armas_conf_t *cf);
-    extern int armassp_x_pcgrad_w(armas_x_dense_t *x, const armas_x_sparse_t *A, armas_x_dense_t *b,
+    extern int armassp_x_cgrad(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
+                               int flags, armas_conf_t *cf);
+    extern int armassp_x_cgrad_w(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
+                                 int flags, armas_wbuf_t *W, armas_conf_t *cf);
+    extern int armassp_x_pcgrad_w(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
                                   armassp_x_precond_t *P, int flags, armas_wbuf_t *W, armas_conf_t *cf);
-    extern int armassp_x_pcgrad(armas_x_dense_t *x, const armas_x_sparse_t *A, armas_x_dense_t *b,
+    extern int armassp_x_pcgrad(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
                                 armassp_x_precond_t *P, int flags, armas_conf_t *cf);
 
+    extern int armassp_x_cgnr(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
+                              armas_conf_t *cf);
+    extern int armassp_x_cgnr_w(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
+                                armas_wbuf_t *W, armas_conf_t *cf);
+    extern int armassp_x_cgne(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
+                              armas_conf_t *cf);
+    extern int armassp_x_cgne_w(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
+                                armas_wbuf_t *W, armas_conf_t *cf);
     extern int armassp_x_gmres(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
-                               armassp_params_t *par, armas_conf_t *cf);
+                               armas_conf_t *cf);
     extern int armassp_x_gmres_w(armas_x_dense_t *x,  const armas_x_sparse_t *A,
-                                 const armas_x_dense_t *b, armassp_params_t *par,
-                                 armas_wbuf_t *W, armas_conf_t *cf);
+                                 const armas_x_dense_t *b, armas_wbuf_t *W, armas_conf_t *cf);
 
     extern int armassp_x_addto_w(armas_x_sparse_t *C, DTYPE alpha, const armas_x_sparse_t *A,
                                  DTYPE beta, const armas_x_sparse_t *B, int bits, armas_wbuf_t *work,

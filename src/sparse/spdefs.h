@@ -40,6 +40,10 @@
 
 /* sparse.h */
 #define armas_x_sparse_t        armas_d_sparse_t
+#define armas_x_spvec_t         armas_d_spvec_t
+#define armas_x_accum_t         armas_d_accum_t
+#define armassp_x_precond_t     armassp_d_precond_t
+
 #define armassp_x_bytes_needed  armassp_d_bytes_needed
 #define armassp_x_bytes_for     armassp_d_bytes_for
 #define armassp_x_nbytes        armassp_d_nbytes
@@ -116,6 +120,13 @@
 /* cgrad.c */
 #define armassp_x_cgrad        armassp_d_cgrad
 #define armassp_x_cgrad_w      armassp_d_cgrad_w
+/* cgnr.c */
+#define armassp_x_cgnr         armassp_d_cgnr
+#define armassp_x_cgnr_w       armassp_d_cgnr_w
+/* cgne.c */
+#define armassp_x_cgne         armassp_d_cgne
+#define armassp_x_cgne_w       armassp_d_cgne_w
+/* pcgrad.c */
 #define armassp_x_pcgrad       armassp_d_pcgrad
 #define armassp_x_pcgrad_w     armassp_d_pcgrad_w
 
