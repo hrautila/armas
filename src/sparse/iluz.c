@@ -72,12 +72,12 @@ int csr_iluz(armas_x_sparse_t *L)
         // l21 = a21/a11; A22 = A22 - l21*a12^T
         for (k = i+1; k < L->rows; k++) {
             // if A[k,i] == 0 continue
-            if ((p1 = armassp_x_nz(A, k, i)) < 0)
+            if ((p1 = armassp_x_nz(L, k, i)) < 0)
                 continue;
             // l21[k] = a21[k]/a11
             Le[p1] /= a11;
             // A22[k,:] = A22[k,:] - l21[k]*a12^T[:]
-            for (p = p1+1, u = p0+1; p < armassp_x_index(A, k+1) && u < armassp_x_index(A, i+1); ) {
+            for (p = p1+1, u = p0+1; p < armassp_x_index(L, k+1) && u < armassp_x_index(L, i+1); ) {
                 d = armassp_x_at(L, p) - armassp_x_at(L, u);
                 if (d == 0) {
                     Le[p] -= Le[p1]*Le[u];
@@ -147,11 +147,15 @@ int armassp_x_iluz(armas_x_sparse_t *L)
 }
 
 static
-int __precond_ilu(const armassp_x_precond_t *P, armas_x_dense_t *x, armas_conf_t *cf)
+int __precond_ilu(armas_x_dense_t *z, 
+                  const armassp_x_precond_t *P,
+                  const armas_x_dense_t *x, armas_conf_t *cf)
 {
+    if (z != x)
+        armas_x_mcopy(z, x);
     // x = M^-1*x = L^-1*(U^-1*x)
-    armassp_x_mvsolve_trm(x, __ONE, P->M, ARMAS_UPPER, cf);
-    armassp_x_mvsolve_trm(x, __ONE, P->M, ARMAS_UNIT|ARMAS_LOWER, cf);
+    armassp_x_mvsolve_trm(z, __ONE, P->M, ARMAS_UPPER, cf);
+    armassp_x_mvsolve_trm(z, __ONE, P->M, ARMAS_UNIT|ARMAS_LOWER, cf);
     return 0;
 }
 

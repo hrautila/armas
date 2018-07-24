@@ -240,28 +240,36 @@ int armassp_x_icholz(armas_x_sparse_t *A, int flags)
 
 
 static
-int __x_precond_icholz(const armassp_x_precond_t *P,
-                       armas_x_dense_t *x,
+int __x_precond_icholz(armas_x_dense_t *z,
+                       const armassp_x_precond_t *P,
+                       const armas_x_dense_t *x,
                        armas_conf_t *cf)
 {
+    if (z != x) {
+        armas_x_mcopy(z, x);
+    }
     if ((P->flags & ARMAS_UPPER) != 0) {
-        armassp_x_mvsolve_trm(x, 1.0, P->M, P->flags|ARMAS_TRANS, cf);
-        armassp_x_mvsolve_trm(x, 1.0, P->M, P->flags, cf);
+        armassp_x_mvsolve_trm(z, 1.0, P->M, P->flags|ARMAS_TRANS, cf);
+        armassp_x_mvsolve_trm(z, 1.0, P->M, P->flags, cf);
     } else {
         // x = M^-1*x = (LL^T)^-1*x = L^-T*(L^-1*x)
-        armassp_x_mvsolve_trm(x, 1.0, P->M, P->flags, cf);
-        armassp_x_mvsolve_trm(x, 1.0, P->M, P->flags|ARMAS_TRANS, cf);
+        armassp_x_mvsolve_trm(z, 1.0, P->M, P->flags, cf);
+        armassp_x_mvsolve_trm(z, 1.0, P->M, P->flags|ARMAS_TRANS, cf);
     }
     return 0;
 }
 
 static
-int __x_precond_icholz_partial(const armassp_x_precond_t *P,
-                               armas_x_dense_t *x,
+int __x_precond_icholz_partial(armas_x_dense_t *z,
+                               const armassp_x_precond_t *P,
+                               const armas_x_dense_t *x,
                                int flags,
                                armas_conf_t *cf)
 {
-    armassp_x_mvsolve_trm(x, 1.0, P->M, P->flags|flags, cf);
+    if (z != x) {
+        armas_x_mcopy(z, x);
+    }
+    armassp_x_mvsolve_trm(z, 1.0, P->M, P->flags|flags, cf);
     return 0;
 }
 
