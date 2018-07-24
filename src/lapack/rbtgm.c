@@ -246,7 +246,7 @@ int __rbt_recursive_right(armas_x_dense_t *A, armas_x_dense_t *R, int flags, arm
     int Nd;                    // Nd closest multiple of 2^d larger than N
 
     EMPTY(A0); EMPTY(A1); EMPTY(AL);
-    EMPTY(R0); EMPTY(R1);
+    EMPTY(R0); EMPTY(R1); EMPTY(AR);
     
     // extended size to multiple of 2^d
     Nd = (A->cols + twod - 1) & ~(twod-1);
