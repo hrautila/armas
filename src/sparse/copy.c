@@ -42,7 +42,7 @@ armas_x_sparse_t *armassp_x_copy_to(armas_x_sparse_t *A, const armas_x_sparse_t 
             Ae[k] = Be[k];
             A->ix[k] = B->ix[k];
         }
-        for (int k = 0; k < B->nptr; k++) {
+        for (int k = 0; k <= B->nptr; k++) {
             A->ptr[k] = B->ptr[k];
         }
         A->nptr = B->nptr;
