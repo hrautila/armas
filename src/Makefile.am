@@ -196,6 +196,9 @@ SPARSE = \
 	sparse/accum.c \
 	sparse/add.c \
 	sparse/cgrad.c \
+	sparse/pcgrad.c \
+	sparse/cgnr.c \
+	sparse/cgne.c \
 	sparse/convert.c \
 	sparse/copy.c \
 	sparse/gemv.c \
