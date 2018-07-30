@@ -141,6 +141,9 @@
 /* gmres.c */
 #define armassp_x_gmres        armassp_d_gmres
 #define armassp_x_gmres_w      armassp_d_gmres_w
+/* pgmres.c */
+#define armassp_x_pgmres       armassp_d_pgmres
+#define armassp_x_pgmres_w     armassp_d_pgmres_w
 
 /* diag.c */
 #define armassp_x_mult_diag    armassp_d_mult_diag

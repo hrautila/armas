@@ -311,6 +311,11 @@ extern "C" {
                                armas_conf_t *cf);
     extern int armassp_x_gmres_w(armas_x_dense_t *x,  const armas_x_sparse_t *A,
                                  const armas_x_dense_t *b, armas_wbuf_t *W, armas_conf_t *cf);
+    extern int armassp_x_pgmres(armas_x_dense_t *x, const armas_x_sparse_t *A, const armas_x_dense_t *b,
+                                const armassp_x_precond_t *M, armas_conf_t *cf);
+    extern int armassp_x_pgmres_w(armas_x_dense_t *x,  const armas_x_sparse_t *A,
+                                  const armas_x_dense_t *b, const armassp_x_precond_t *M,
+                                  armas_wbuf_t *W, armas_conf_t *cf);
 
     extern int armassp_x_addto_w(armas_x_sparse_t *C, DTYPE alpha, const armas_x_sparse_t *A,
                                  DTYPE beta, const armas_x_sparse_t *B, int bits, armas_wbuf_t *work,
