@@ -189,6 +189,7 @@ LAPACK = \
 	lapack/dqds.c 
 
 SPARSE = \
+	sparse/iluz.c \
 	sparse/icholz.c \
 	sparse/dense.c \
 	sparse/mult.c \
@@ -203,6 +204,7 @@ SPARSE = \
 	sparse/copy.c \
 	sparse/gemv.c \
 	sparse/gmres.c \
+	sparse/pgmres.c \
 	sparse/io.c \
 	sparse/sort.c \
 	sparse/symv.c \
