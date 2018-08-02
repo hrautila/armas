@@ -119,7 +119,70 @@ void __x_add_csr_tn(armas_x_sparse_t *C,
 }
 
 
+static
+void __x_add_csc_nn(armas_x_sparse_t *C,
+                    DTYPE alpha, const armas_x_sparse_t *A,
+                    DTYPE beta, const armas_x_sparse_t *B,
+                    armas_x_accum_t *spa)
+{
+    int i, p;
+    DTYPE val;
+    
+    C->nnz = 0;
+    armas_x_accum_clear(spa);
+    
+    for (i = 0; i < A->cols; i++) {
+        for (p = A->ptr[i]; p < A->ptr[i+1]; p++) {
+            val = alpha*armassp_x_value(A, p);
+            armas_x_accum_addpos(spa, armassp_x_at(A, p), val, i);
+        }
+        for (p = B->ptr[i]; p < B->ptr[i+1]; p++) {
+            val = beta*armassp_x_value(B, p);
+            armas_x_accum_addpos(spa, armassp_x_at(B, p), val, i);
+        }
+        // gather data to C[i,:] row
+        armas_x_accum_gather(C, 1.0, spa, i, C->size);
+        spa->tail = 0;
+    }
+    C->ptr[A->cols] = C->nnz;
+    C->nptr = A->cols;
+}
 
+static
+void __x_add_csc_nt(armas_x_sparse_t *C,
+                    DTYPE alpha, const armas_x_sparse_t *A,
+                    DTYPE beta, const armas_x_sparse_t *B,
+                    armas_x_accum_t *spa)
+{
+    int i, j, p;
+    DTYPE val;
+    
+    C->nnz = 0;
+    armas_x_accum_clear(spa);
+    
+    for (i = 0; i < A->cols; i++) {
+        for (p = A->ptr[i]; p < A->ptr[i+1]; p++) {
+            val = alpha*armassp_x_value(A, p);
+            armas_x_accum_addpos(spa, armassp_x_at(A, p), val, i);
+        }
+        
+        for (j = 0; j < B->cols; j++) {
+            if ((p = armassp_x_nz(B, j, i)) < 0)
+                continue;
+            val = beta*armassp_x_value(B, p);
+            armas_x_accum_addpos(spa, j, val, i);
+        }
+        // gather data to C[i,:] row
+        armas_x_accum_gather(C, 1.0, spa, i, C->size);
+        spa->tail = 0;
+    }
+    C->ptr[A->cols] = C->nnz;
+    C->nptr = A->cols;
+}
+
+/** 
+ *
+ */
 int armassp_x_addto_w(armas_x_sparse_t *C,
                       DTYPE alpha,
                       const armas_x_sparse_t *A,
@@ -156,13 +219,24 @@ int armassp_x_addto_w(armas_x_sparse_t *C,
 
     switch (bits & (ARMAS_TRANSA|ARMAS_TRANSB)) {
     case ARMAS_TRANSB:
-        __x_add_csr_nt(C, alpha, A, beta, B, &spa);
+        if (A->kind == ARMASSP_CSC) {
+            __x_add_csc_nt(C, alpha, A, beta, B, &spa);
+        } else {
+            __x_add_csr_nt(C, alpha, A, beta, B, &spa);
+        }
         break;
     case ARMAS_TRANSA:
-        __x_add_csr_tn(C, alpha, A, beta, B, &spa);
+        if (A->kind == ARMASSP_CSC) {
+        } else {
+            __x_add_csr_tn(C, alpha, A, beta, B, &spa);
+        }
         break;
     default:
-        __x_add_csr_nn(C, alpha, A, beta, B, &spa);
+        if (A->kind == ARMASSP_CSC) {
+            __x_add_csc_nn(C, alpha, A, beta, B, &spa);
+        } else {
+            __x_add_csr_nn(C, alpha, A, beta, B, &spa);
+        }
         break;
     }
     // release used workspace
@@ -170,6 +244,9 @@ int armassp_x_addto_w(armas_x_sparse_t *C,
     return 0;
 }
 
+/** 
+ *
+ */
 armas_x_sparse_t *armassp_x_add(DTYPE alpha,
                                 const armas_x_sparse_t *A,
                                 DTYPE beta,
@@ -200,7 +277,7 @@ armas_x_sparse_t *armassp_x_add(DTYPE alpha,
 
     armassp_x_addto_w(C, alpha, A, beta, B, bits, &work, cf);
     armas_wrelease(&work);
-    return 0;
+    return C;
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
