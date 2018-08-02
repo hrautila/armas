@@ -707,8 +707,10 @@ extern int armas_x_svd_work(armas_x_dense_t *D, int flags, armas_conf_t *conf);
 
 // Eigen
 extern int armas_x_eigen_sym(armas_x_dense_t *D, armas_x_dense_t *A,
-                             armas_x_dense_t *W, int flags, armas_conf_t *conf);
-  
+                             armas_x_dense_t *W, int flags, armas_conf_t *conf); 
+extern int armas_x_eigen_sym_selected(armas_x_dense_t *D, armas_x_dense_t *A, armas_x_dense_t *W, 
+                                      armas_x_eigen_parameter_t *params, int flags, armas_conf_t *conf);
+
 // DQDS
 extern int armas_x_dqds(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *W, armas_conf_t *conf);
 
@@ -746,8 +748,8 @@ extern int armas_x_ldlsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_
 // additional
 extern int armas_x_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c);
 extern void armas_x_discriminant(DTYPE *d, DTYPE a, DTYPE b, DTYPE c);
-extern int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, DTYPE alpha, int flags, armas_conf_t *conf);
-extern int armas_x_solve_diag(armas_x_dense_t *A, const armas_x_dense_t *D, DTYPE alpha, int flags, armas_conf_t *conf);
+extern int armas_x_mult_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D, int flags, armas_conf_t *conf);
+extern int armas_x_solve_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D, int flags, armas_conf_t *conf);
 
 extern int armas_x_pivot(armas_x_dense_t *A, armas_pivot_t *P, unsigned int flags, armas_conf_t *conf);
 extern int armas_x_pivot_rows(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf);

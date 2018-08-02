@@ -43,7 +43,7 @@
  * @param conf
  *      Optional blocking configuration
  */
-int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, DTYPE alpha, int flags, armas_conf_t *conf)
+int armas_x_mult_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D, int flags, armas_conf_t *conf)
 {
     armas_x_dense_t c, d0;
     const armas_x_dense_t *d;
@@ -110,7 +110,7 @@ int armas_x_mult_diag(armas_x_dense_t *A, const armas_x_dense_t *D, DTYPE alpha,
  * @param conf
  *      Optional blocking configuration
  */
-int armas_x_solve_diag(armas_x_dense_t *A, const armas_x_dense_t *D, DTYPE alpha, int flags, armas_conf_t *conf)
+int armas_x_solve_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D, int flags, armas_conf_t *conf)
 {
     armas_x_dense_t c, d0;
     const armas_x_dense_t *d;

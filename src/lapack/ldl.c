@@ -143,13 +143,13 @@ int __blk_ldlnp_lower(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_conf
         // A21 = A21*A11.-T
         armas_x_solve_trm(&A21, __ONE, &A11, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANS, conf);
         // A21 = A21.D.-1  (=L21)
-        armas_x_solve_diag(&A21, &D, __ONE, ARMAS_RIGHT, conf);
+        armas_x_solve_diag(&A21, __ONE, &D, ARMAS_RIGHT, conf);
 
         // Wrk = L21 = D1*L21.T
         armas_x_make(&L21, A21.rows, A21.cols, A21.rows, armas_x_data(W));
         armas_x_mcopy(&L21, &A21);
         // L21 = L21*D
-        armas_x_mult_diag(&L21, &D, __ONE, ARMAS_RIGHT, conf);
+        armas_x_mult_diag(&L21, __ONE, &D, ARMAS_RIGHT, conf);
 
         // A22 = A22 - L21*A21.T 
         armas_x_update_trm(__ONE, &A22, -__ONE, &L21, &A21, ARMAS_LOWER|ARMAS_TRANSB, conf);
@@ -183,13 +183,13 @@ int __blk_ldlnp_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_conf
         // A01 = A01*A11.-T
         armas_x_solve_trm(&A01, __ONE, &A11, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT|ARMAS_TRANS, conf);
         // A01 = A01.D.-1  (=L01)
-        armas_x_solve_diag(&A01, &D, __ONE, ARMAS_RIGHT, conf);
+        armas_x_solve_diag(&A01, __ONE, &D, ARMAS_RIGHT, conf);
 
         // Wrk = L01 = D1*L01.T
         armas_x_make(&L01, A01.rows, A01.cols, A01.rows, armas_x_data(W));
         armas_x_mcopy(&L01, &A01);
         // L01 = L01*D
-        armas_x_mult_diag(&L01, &D, __ONE, ARMAS_RIGHT, conf);
+        armas_x_mult_diag(&L01, __ONE, &D, ARMAS_RIGHT, conf);
 
         // A00 = A00 - L01*A01.T
         armas_x_update_trm(__ONE, &A00, -__ONE, &L01, &A01, ARMAS_UPPER|ARMAS_TRANSB, conf);
@@ -291,12 +291,12 @@ int __ldlsolve_np(armas_x_dense_t *B, armas_x_dense_t *A, int flags, armas_conf_
     if (flags & ARMAS_TRANS) {
         // X = L.-1*(D.-1*(L.-T*B))
         armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_TRANS|ARMAS_LEFT, conf);
-        armas_x_solve_diag(B, A, __ONE, ARMAS_LEFT, conf);
+        armas_x_solve_diag(B, __ONE, A, ARMAS_LEFT, conf);
         armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
     } else {
         // X = L.-T*(D.-1*(L.-1*B))
         armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_LEFT, conf);
-        armas_x_solve_diag(B, A, __ONE, ARMAS_LEFT, conf);
+        armas_x_solve_diag(B, __ONE, A, ARMAS_LEFT, conf);
         armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_TRANS, conf);
     }
     return 0;
