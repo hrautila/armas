@@ -101,7 +101,8 @@ void bdmake_upper(armas_x_dense_t *D, armas_x_dense_t *E,
  * \param[out] W
  *      Workspace of size 4*N.
  * \param[in] flags
- *      Indicators, *ARMAS_WANTU*, *ARMAS_WANTV*
+ *      Indicators, *ARMAS_WANTU*, *ARMAS_WANTV*. Use *ARMAS_FORWARD* to force
+ *      implicit QR-iteration only in forward direction from top to bottom.
  * \param[in,out] conf
  *      Configuration block.
  *
@@ -181,7 +182,7 @@ int armas_x_bdsvd(armas_x_dense_t *D, armas_x_dense_t *E,
     if (conf->optflags & ARMAS_OBSVD_GOLUB) {
         err =__bdsvd_golub(D, E, uu, vv, &CS, tol,  conf);
     } else {
-        err =__bdsvd_demmel(D, E, uu, vv, &CS, tol,  conf);
+        err =__bdsvd_demmel(D, E, uu, vv, &CS, tol, flags, conf);
     }
     if (err == 0) {
         __eigen_sort(D, uu, vv, __nil, conf);

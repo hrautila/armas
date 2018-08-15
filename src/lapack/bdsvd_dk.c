@@ -114,7 +114,7 @@ void estimate_sval(DTYPE *smin, DTYPE *smax, armas_x_dense_t *D, armas_x_dense_t
  */
 int __bdsvd_demmel(armas_x_dense_t *D, armas_x_dense_t *E,
                    armas_x_dense_t *U, armas_x_dense_t *V,
-                   armas_x_dense_t *CS, DTYPE tol, armas_conf_t *conf)
+                   armas_x_dense_t *CS, DTYPE tol, int flags, armas_conf_t *conf)
 {
     int N, work, maxit, i, n, k, nrot, ip, iq, zero, saves, abstol, forwards;
     int ipold, iqold;
@@ -221,7 +221,7 @@ int __bdsvd_demmel(armas_x_dense_t *D, armas_x_dense_t *E,
             d0 = __ABS(armas_x_get_at_unsafe(D, ip));
             d1 = __ABS(armas_x_get_at_unsafe(D, iq-1));
             // select direction
-            forwards = d1 >= d0;
+            forwards = d1 >= d0 || (flags & ARMAS_FORWARD) != 0;
         }
 
         // convergence
