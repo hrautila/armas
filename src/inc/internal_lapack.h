@@ -187,8 +187,8 @@ extern int __bdsvd_demmel(armas_x_dense_t *D, armas_x_dense_t *E,
 // tridiagonal EVD
 extern void __sym_eigen2x2(DTYPE *z1, DTYPE *z2, DTYPE a, DTYPE b, DTYPE c);
 extern void __sym_eigen2x2vec(DTYPE *z1, DTYPE *z2, DTYPE *cs, DTYPE *sn, DTYPE a, DTYPE b, DTYPE c);
-extern int __trdevd_qr(armas_x_dense_t *D, armas_x_dense_t *E,
-		       armas_x_dense_t *V, armas_x_dense_t *CS, ABSTYPE tol, armas_conf_t *conf);
+//extern int __trdevd_qr(armas_x_dense_t *D, armas_x_dense_t *E,
+//		       armas_x_dense_t *V, armas_x_dense_t *CS, ABSTYPE tol, int flags, armas_conf_t *conf);
 
 
 
