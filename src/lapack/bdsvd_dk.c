@@ -195,6 +195,11 @@ int __bdsvd_demmel(armas_x_dense_t *D, armas_x_dense_t *E,
             continue;
         }
 
+        if ((iq - ip) == 1) {
+            iq -= 1;
+            continue;
+        }
+        
         if ((iq - ip) == 2) {
             // 2x2 block, do separately
             DTYPE smin, smax, cosl, sinl, cosr, sinr;

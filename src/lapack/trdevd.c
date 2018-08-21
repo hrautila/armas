@@ -39,8 +39,9 @@
  *
  * Lapack: DSTEQR
  */
+static
 int __trdevd_qr(armas_x_dense_t *D, armas_x_dense_t *E,
-                armas_x_dense_t *V, armas_x_dense_t *CS, ABSTYPE tol, armas_conf_t *conf)
+                armas_x_dense_t *V, armas_x_dense_t *CS, ABSTYPE tol, int flags, armas_conf_t *conf)
 {
     int ip, iq, iqold, ipold, k, N, n, maxiter, nrot;
     int forwards = 1, stop = 0, saves = 0;
@@ -89,6 +90,11 @@ int __trdevd_qr(armas_x_dense_t *D, armas_x_dense_t *E,
             continue;
         }
 
+        if ((iq-ip) == 1) {
+            iq -= 1;
+            continue;
+        }
+            
         if ((iq-ip) == 2) {
             // 2x2 block
             DTYPE a, b, c, e0, e1, cs, sn;
@@ -112,7 +118,7 @@ int __trdevd_qr(armas_x_dense_t *D, armas_x_dense_t *E,
             ipold = ip; iqold = iq;
             d0 = __ABS(armas_x_get_at_unsafe(D, ip));
             d1 = __ABS(armas_x_get_at_unsafe(D, iq-1));
-            forwards = d1 >= d0;
+            forwards = d1 >= d0 || (flags & ARMAS_FORWARD) != 0;
         }
 
         armas_x_subvector(&sD, D, ip, iq-ip);
@@ -223,7 +229,7 @@ int armas_x_trdeigen(armas_x_dense_t *D, armas_x_dense_t *E,
     if (conf->tolmult > 0) {
         tol = ((ABSTYPE)conf->tolmult) * __EPS;
     }
-    err =__trdevd_qr(D, E, vv, &CS, tol, conf);
+    err =__trdevd_qr(D, E, vv, &CS, tol, flags, conf);
 
     if (err == 0) {
         __sort_eigenvec(D, vv, __nil, __nil, ARMAS_ASC);
