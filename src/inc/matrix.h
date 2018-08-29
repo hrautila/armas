@@ -562,16 +562,23 @@ extern int armas_x_update2_sym(DTYPE beta, armas_x_dense_t *C,
 // Bidiagonal reduction
 extern int armas_x_bdreduce(armas_x_dense_t *A, armas_x_dense_t *tauq, armas_x_dense_t *taup,
                             armas_x_dense_t *W, armas_conf_t *conf);
+extern int armas_x_bdreduce_w(armas_x_dense_t *A, armas_x_dense_t *tauq, armas_x_dense_t *taup,
+                              armas_wbuf_t *w, armas_conf_t *conf);
 extern int armas_x_bdbuild(armas_x_dense_t *A, armas_x_dense_t *tau,
                            armas_x_dense_t *W, int K, int flags, armas_conf_t *conf);
+extern int armas_x_bdbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau,
+                             int K, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_bdmult(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
                           armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_bdmult_w(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
+                            int flags, armas_wbuf_t *w, armas_conf_t *conf);
 extern int armas_x_bdreduce_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_bdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf);
 extern int armas_x_bdbuild_work(armas_x_dense_t *A, int flags, armas_conf_t *conf);
 
 // Cholesky
 extern int armas_x_cholfactor(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int armas_x_cholfactor_w(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_cholsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P, int flags,
                              armas_conf_t *conf);
 extern int armas_x_cholupdate(armas_x_dense_t *A, armas_x_dense_t *X, int flags, armas_conf_t *conf);
@@ -579,8 +586,12 @@ extern int armas_x_cholupdate(armas_x_dense_t *A, armas_x_dense_t *X, int flags,
 // Hessenberg reduction
 extern int armas_x_hessreduce(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
                               armas_conf_t *conf);
+extern int armas_x_hessreduce_w(armas_x_dense_t *A, armas_x_dense_t *tau, armas_wbuf_t *wrk,
+                                armas_conf_t *conf);
 extern int armas_x_hessmult(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
                             armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_hessmult_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                              int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_hessreduce_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_hessmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf);
 
@@ -592,8 +603,12 @@ extern int armas_x_lusolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t
 // Symmetric LDL; Bunch-Kauffman
 extern int armas_x_bkfactor(armas_x_dense_t *A, armas_x_dense_t *W,
                             armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int armas_x_bkfactor_w(armas_x_dense_t *A,  armas_pivot_t *P, int flags,
+                              armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_bksolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *W,
                            armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int armas_x_bksolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_pivot_t *P,
+                             int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_bkfactor_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_bksolve_work(armas_x_dense_t *A, armas_conf_t *conf);
 
@@ -608,6 +623,14 @@ extern int armas_x_lqreflector(armas_x_dense_t *T, armas_x_dense_t *V, armas_x_d
                                armas_conf_t *conf);
 extern int armas_x_lqsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
                            armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_lqbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau, int K,
+                             armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_lqfactor_w(armas_x_dense_t *A, armas_x_dense_t *tau, armas_wbuf_t *wrk,
+                            armas_conf_t *conf);
+extern int armas_x_lqmult_w(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                            int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_lqsolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                             int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_lqbuild_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_lqfactor_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_lqmult_work(armas_x_dense_t *C, int flags, armas_conf_t *conf);
@@ -622,6 +645,15 @@ extern int armas_x_qlmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_
                           armas_x_dense_t *W, int flags, armas_conf_t *conf);
 extern int armas_x_qlreflector(armas_x_dense_t *T, armas_x_dense_t *V, armas_x_dense_t *tau,
                                armas_conf_t *conf);
+extern int armas_x_qlbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau, int K,
+                             armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_qlfactor_w(armas_x_dense_t *A, armas_x_dense_t *tau, armas_wbuf_t *wrk,
+                            armas_conf_t *conf);
+extern int armas_x_qlmult_w(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                            int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_qlsolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                             int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+
 extern int armas_x_qlbuild_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_qlfactor_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_qlmult_work(armas_x_dense_t *C, int flags, armas_conf_t *conf);
@@ -637,6 +669,16 @@ extern int armas_x_qrreflector(armas_x_dense_t *T, armas_x_dense_t *V, armas_x_d
                                armas_conf_t *conf);
 extern int armas_x_qrsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
                            armas_x_dense_t *W, int flags, armas_conf_t *conf);
+
+extern int armas_x_qrbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau, int K,
+                             armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_qrfactor_w(armas_x_dense_t *A, armas_x_dense_t *tau, armas_wbuf_t *wrk,
+                              armas_conf_t *conf);
+extern int armas_x_qrmult_w(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                            int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_qrsolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                             int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+
 extern int armas_x_qrbuild_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_qrfactor_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_qrmult_work(armas_x_dense_t *C, int flags, armas_conf_t *conf);
@@ -657,6 +699,15 @@ extern int armas_x_rqreflector(armas_x_dense_t *T, armas_x_dense_t *V, armas_x_d
                                armas_conf_t *conf);
 extern int armas_x_rqsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
                            armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_rqbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau, int K, 
+                             armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_rqfactor_w(armas_x_dense_t *A, armas_x_dense_t *tau, armas_wbuf_t *wrk,
+                            armas_conf_t *conf);
+extern int armas_x_rqmult_w(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                            int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_rqsolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                             int flags, armas_wbuf_t *W, armas_conf_t *conf);
+
 extern int armas_x_rqbuild_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_rqfactor_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_rqmult_work(armas_x_dense_t *C, int flags, armas_conf_t *conf);
@@ -669,6 +720,13 @@ extern int armas_x_trdbuild(armas_x_dense_t *A, armas_x_dense_t *tau,
                             armas_x_dense_t *W, int K, int flags, armas_conf_t *conf);
 extern int armas_x_trdmult(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
                            armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_trdreduce_w(armas_x_dense_t *A, armas_x_dense_t *tau, int flags,
+                               armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_trdbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau,
+                              int K, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_trdmult_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                             int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+
 extern int armas_x_trdreduce_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_trdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf);
 extern int armas_x_trdbuild_work(armas_x_dense_t *A, armas_conf_t *conf);
@@ -699,20 +757,29 @@ extern int armas_x_gvrot_vec(armas_x_dense_t *X, armas_x_dense_t *Y, DTYPE c, DT
 // Bidiagonal SVD
 extern int armas_x_bdsvd(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *U, armas_x_dense_t *V,
                          armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_bdsvd_w(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *U, armas_x_dense_t *V,
+                           int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_bdsvd_work(armas_x_dense_t *D, armas_conf_t *conf);
 
 extern int armas_x_svd(armas_x_dense_t *S, armas_x_dense_t *U, armas_x_dense_t *V, armas_x_dense_t *A,
                        armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_svd_w(armas_x_dense_t *S, armas_x_dense_t *U, armas_x_dense_t *V, armas_x_dense_t *A,
+                         int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_svd_work(armas_x_dense_t *D, int flags, armas_conf_t *conf);
 
 // Eigen
 extern int armas_x_eigen_sym(armas_x_dense_t *D, armas_x_dense_t *A,
                              armas_x_dense_t *W, int flags, armas_conf_t *conf); 
+extern int armas_x_eigen_sym_w(armas_x_dense_t *D, armas_x_dense_t *A,
+                               int flags, armas_wbuf_t *wrk, armas_conf_t *conf); 
 extern int armas_x_eigen_sym_selected(armas_x_dense_t *D, armas_x_dense_t *A, armas_x_dense_t *W, 
                                       armas_x_eigen_parameter_t *params, int flags, armas_conf_t *conf);
+extern int armas_x_eigen_sym_selected_w(armas_x_dense_t *D, armas_x_dense_t *A, armas_x_eigen_parameter_t *params,
+                                        int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 
 // DQDS
 extern int armas_x_dqds(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *W, armas_conf_t *conf);
+extern int armas_x_dqds_w(armas_x_dense_t *D, armas_x_dense_t *E, armas_wbuf_t *wrk, armas_conf_t *conf);
 
 // Householder functions
 extern int armas_x_house(armas_x_dense_t *a11, armas_x_dense_t *x,
@@ -740,9 +807,14 @@ extern int armas_x_inverse_trm(armas_x_dense_t *A, int flags, armas_conf_t *conf
 extern int armas_x_inverse(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, armas_conf_t *conf);
 extern int armas_x_inverse_spd(armas_x_dense_t *A, armas_x_dense_t *W, int flags, armas_conf_t *conf);
 extern int armas_x_ldlinverse_sym(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int armas_x_inverse_w(armas_x_dense_t *A, armas_pivot_t *P, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_inverse_spd_w(armas_x_dense_t *A, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_ldlinverse_sym_w(armas_x_dense_t *A, armas_pivot_t *P, int flags,
+                                    armas_wbuf_t *wrk, armas_conf_t *conf);
 
 // LDL.T symmetric
 extern int armas_x_ldlfactor(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int armas_x_ldlfactor_w(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_ldlsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf);
   
 // additional

@@ -264,18 +264,24 @@
 
 // Bidiagonal reduction
 #define armas_x_bdreduce         armas_d_bdreduce
+#define armas_x_bdreduce_w       armas_d_bdreduce_w
 #define armas_x_bdreduce_work    armas_d_bdreduce_work
 #define armas_x_bdmult           armas_d_bdmult
+#define armas_x_bdmult_w         armas_d_bdmult_w
 #define armas_x_bdmult_work      armas_d_bdmult_work
 #define armas_x_bdbuild          armas_d_bdbuild
+#define armas_x_bdbuild_w        armas_d_bdbuild_w
 #define armas_x_bdbuild_work     armas_d_bdbuild_work
 
 // Symmetric LDL functions
 #define armas_x_bkfactor        armas_d_bkfactor
+#define armas_x_bkfactor_w      armas_d_bkfactor_w
 #define armas_x_bkfactor_work   armas_d_bkfactor_work
 #define armas_x_bksolve         armas_d_bksolve
+#define armas_x_bksolve_w       armas_d_bksolve_w
 #define armas_x_bksolve_work    armas_d_bksolve_work
 #define armas_x_ldlfactor       armas_d_ldlfactor
+#define armas_x_ldlfactor_w     armas_d_ldlfactor_w
 #define armas_x_ldlupdate       armas_d_ldlupdate
 #define armas_x_ldlsolve        armas_d_ldlsolve
 
@@ -291,6 +297,7 @@
 
 // Cholesky 
 #define armas_x_cholfactor       armas_d_cholfactor
+#define armas_x_cholfactor_w     armas_d_cholfactor_w
 #define armas_x_cholupdate       armas_d_cholupdate
 #define armas_x_cholsolve        armas_d_cholsolve
 // internal pivoting versions
@@ -299,8 +306,10 @@
 
 // Hessenberg functions
 #define armas_x_hessreduce       armas_d_hessreduce
+#define armas_x_hessreduce_w     armas_d_hessreduce_w
 #define armas_x_hessreduce_work  armas_d_hessreduce_work
 #define armas_x_hessmult         armas_d_hessmult
+#define armas_x_hessmult_w       armas_d_hessmult_w
 #define armas_x_hessmult_work    armas_d_hessmult_work
 
 // householder functions
@@ -321,13 +330,17 @@
 
 // LQ functions
 #define armas_x_lqbuild         armas_d_lqbuild
+#define armas_x_lqbuild_w       armas_d_lqbuild_w
 #define armas_x_lqbuild_work    armas_d_lqbuild_work
 #define armas_x_lqfactor        armas_d_lqfactor
+#define armas_x_lqfactor_w      armas_d_lqfactor_w
 #define armas_x_lqfactor_work   armas_d_lqfactor_work
 #define armas_x_lqmult          armas_d_lqmult
+#define armas_x_lqmult_w        armas_d_lqmult_w
 #define armas_x_lqmult_work     armas_d_lqmult_work
 #define armas_x_lqreflector     armas_d_lqreflector
 #define armas_x_lqsolve         armas_d_lqsolve
+#define armas_x_lqsolve_w       armas_d_lqsolve_w
 #define armas_x_lqsolve_work    armas_d_lqsolve_work
 // internal LQ related functions available for others
 #define __update_lq_left        __d_update_lq_left
@@ -340,12 +353,17 @@
 
 // QL functions
 #define armas_x_qlbuild         armas_d_qlbuild
+#define armas_x_qlbuild_w       armas_d_qlbuild_w
 #define armas_x_qlbuild_work    armas_d_qlbuild_work
 #define armas_x_qlfactor        armas_d_qlfactor
+#define armas_x_qlfactor_w      armas_d_qlfactor_w
 #define armas_x_qlfactor_work   armas_d_qlfactor_work
 #define armas_x_qlmult          armas_d_qlmult
+#define armas_x_qlmult_w        armas_d_qlmult_w
 #define armas_x_qlmult_work     armas_d_qlmult_work
 #define armas_x_qlreflector     armas_d_qlreflector
+#define armas_x_qlsolve         armas_d_qlsolve
+#define armas_x_qlsolve_w       armas_d_qlsolve_w
 // internal QL related function available for others
 #define __update_ql_left        __d_update_ql_left
 #define __update_ql_right       __d_update_ql_right
@@ -353,13 +371,17 @@
 
 // QR functions
 #define armas_x_qrfactor        armas_d_qrfactor
+#define armas_x_qrfactor_w      armas_d_qrfactor_w
 #define armas_x_qrfactor_work   armas_d_qrfactor_work
 #define armas_x_qrmult          armas_d_qrmult
+#define armas_x_qrmult_w        armas_d_qrmult_w
 #define armas_x_qrmult_work     armas_d_qrmult_work
 #define armas_x_qrbuild         armas_d_qrbuild
+#define armas_x_qrbuild_w       armas_d_qrbuild_w
 #define armas_x_qrbuild_work    armas_d_qrbuild_work
 #define armas_x_qrreflector     armas_d_qrreflector
 #define armas_x_qrsolve         armas_d_qrsolve
+#define armas_x_qrsolve_w       armas_d_qrsolve_w
 #define armas_x_qrsolve_work    armas_d_qrsolve_work
 // internal QR related function available for others
 #define __update_qr_left        __d_update_qr_left
@@ -369,18 +391,25 @@
 
 // QRT functions
 #define armas_x_qrtfactor       armas_d_qrtfactor
+#define armas_x_qrtfactor_w     armas_d_qrtfactor_w
 #define armas_x_qrtfactor_work  armas_d_qrtfactor_work
 #define armas_x_qrtmult         armas_d_qrtmult
+#define armas_x_qrtmult_w       armas_d_qrtmult_w
 #define armas_x_qrtmult_work    armas_d_qrtmult_work
 
 // RQ functions
 #define armas_x_rqbuild         armas_d_rqbuild
+#define armas_x_rqbuild_w       armas_d_rqbuild_w
 #define armas_x_rqbuild_work    armas_d_rqbuild_work
 #define armas_x_rqfactor        armas_d_rqfactor
+#define armas_x_rqfactor_w      armas_d_rqfactor_w
 #define armas_x_rqfactor_work   armas_d_rqfactor_work
 #define armas_x_rqmult          armas_d_rqmult
+#define armas_x_rqmult_w        armas_d_rqmult_w
 #define armas_x_rqmult_work     armas_d_rqmult_work
 #define armas_x_rqreflector     armas_d_rqreflector
+#define armas_x_rqsolve         armas_d_rqsolve
+#define armas_x_rqsolve_w       armas_d_rqsolve_w
 // internal RQ related function available for others
 #define __update_rq_left        __d_update_rq_left
 #define __update_rq_right       __d_update_rq_right
@@ -388,13 +417,17 @@
 
 // Tridiagonalization functions
 #define armas_x_trdreduce       armas_d_trdreduce
+#define armas_x_trdreduce_w     armas_d_trdreduce_w
 #define armas_x_trdreduce_work  armas_d_trdreduce_work
 #define armas_x_trdbuild        armas_d_trdbuild
+#define armas_x_trdbuild_w      armas_d_trdbuild_w
 #define armas_x_trdbuild_work   armas_d_trdbuild_work
 #define armas_x_trdmult         armas_d_trdmult
+#define armas_x_trdmult_w       armas_d_trdmult_w
 #define armas_x_trdmult_work    armas_d_trdmult_work
 // Tridiagonal EVD
 #define armas_x_trdeigen        armas_d_trdeigen
+#define armas_x_trdeigen_w      armas_d_trdeigen_w
 #define armas_x_trdbisect       armas_d_trdbisect
 #define armas_x_trdsec_solve    armas_d_trdsec_solve
 #define armas_x_trdsec_eigen    armas_d_trdsec_eigen
@@ -402,7 +435,9 @@
 
 // Eigenvalue
 #define armas_x_eigen_sym           armas_d_eigen_sym
+#define armas_x_eigen_sym_w         armas_d_eigen_sym_w
 #define armas_x_eigen_sym_selected  armas_d_eigen_sym_selected
+#define armas_x_eigen_sym_selected_w armas_d_eigen_sym_selected_w
 
 // Givens
 #define armas_x_gvcompute       armas_d_gvcompute
@@ -414,8 +449,10 @@
 
 // Bidiagonal SVD
 #define armas_x_bdsvd           armas_d_bdsvd
+#define armas_x_bdsvd_w         armas_d_bdsvd_w
 #define armas_x_bdsvd_work      armas_d_bdsvd_work
 #define armas_x_dqds            armas_d_dqds
+#define armas_x_dqds_w          armas_d_dqds_w
 
 // internal 
 #define __bdsvd2x2              __d_bdsvd2x2
@@ -425,6 +462,7 @@
 
 // SVD
 #define armas_x_svd		armas_d_svd
+#define armas_x_svd_w           armas_d_svd_w
 #define armas_x_svd_work	armas_d_svd_work
 
 // Butterfly
@@ -438,8 +476,11 @@
 // inverse
 #define armas_x_inverse_trm     armas_d_inverse_trm
 #define armas_x_inverse         armas_d_inverse
+#define armas_x_inverse_w       armas_d_inverse_w
 #define armas_x_inverse_spd     armas_d_inverse_spd
+#define armas_x_inverse_spd_w   armas_d_inverse_spd_w
 #define armas_x_ldlinverse_sym  armas_d_ldlinverse_sym
+#define armas_x_ldlinverse_sym_w armas_d_ldlinverse_sym_w
 
 // internal
 #define __sym_eigen2x2          __d_sym_eigen2x2
