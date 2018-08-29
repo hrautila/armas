@@ -33,10 +33,18 @@
 #include "internal_lapack.h"
 //! \endcond
 
+// bytes needed
 static inline
 int __ws_ldlfactor(int M, int N, int lb)
 {
-  return lb == 0 ? 2*N : (lb+1)*N;
+  return (N < 2*lb || lb == 0) ? 2*N : (lb+1)*N;
+}
+
+static inline
+size_t __ws_bytes(int M, int N, int lb)
+{
+  size_t sz = (N < 2*lb || lb == 0) ? 2*N : (lb+1)*N;
+  return __align64(sz*sizeof(DTYPE));
 }
 
 
@@ -130,6 +138,109 @@ int armas_x_bkfactor(armas_x_dense_t *A, armas_x_dense_t *W,
 }
 
 /**
+ * \brief Compute LDL^T factorization of real symmetric matrix.
+ *
+ * Computes of a real symmetric matrix A using Bunch-Kauffman pivoting method.
+ * The form of factorization is 
+ *
+ *    \f$ A = LDL^T \f$ or \f$ A = UDU^T \f$
+ *
+ * where L (or U) is product of permutation and unit lower (or upper) triangular matrix
+ * and D is block diagonal symmetric matrix with 1x1 and 2x2 blocks.
+ *
+ * \param[in,out] A
+ *      On entry, the N-by-N symmetric matrix A. If flags bit *ARMAS_LOWER* (or *ARMSA_UPPER*)
+ *      is set then lower (or upper) triangular matrix and strictly upper (or lower) part
+ *      is not accessed. On exit, the block diagonal matrix D and lower (or upper) triangular
+ *      product matrix L (or U).
+ *  \param[out] P
+ *      Pivot vector. On exit details of interchanges and the block structure of D. If
+ *      \f$ P[k] > 0 \f$ then \f$ D[k,k] \f$ is 1x1 and rows and columns k and \f$ P[k]-1 \f$ 
+ *      were changed. If \f$ P[k] == P[k+1] < 0 \f$ then \f$ D[k,k] \f$ is 2x2.
+ *      If A is lower then rows and columns \f$ k+1,  P[k]-1 \f$ were changed. 
+ *      And if A is upper then rows and columns \f$ k, P[k]-1 \f$ were changed.
+ * \param[in] flags 
+ *      Indicator bits, *ARMAS_LOWER* or *ARMAS_UPPER*.
+ *  \param[in] wb
+ *      Workspace buffer. If non null and .bytes is zero then size (bytes) of workspace is 
+ *      calculated, saved into .bytes member and function returns immediately with success.
+ *  \param[in,out] conf 
+ *      Optional blocking configuration. If not provided then default blocking
+ *      as returned by `armas_conf_default()` is used. 
+ *
+ *  Unblocked algorithm is used if blocking configuration `conf.lb` is zero or 
+ *  if `N < conf.lb`.
+ *
+ *  Compatible with lapack.SYTRF.
+ * \ingroup lapack
+ */
+int armas_x_bkfactor_w(armas_x_dense_t *A,
+                       armas_pivot_t *P,
+                       int flags,
+                       armas_wbuf_t *wb,
+                       armas_conf_t *conf)
+{
+  armas_x_dense_t Wrk;
+  int lb, k;
+  size_t wsmin, wsneed, wpos;
+
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (A->rows != A->cols || A->cols != armas_pivot_size(P)) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+  lb = conf->lb;
+  if (wb && wb->bytes == 0) {
+    // compute workspace
+    wb->bytes = __ws_bytes(A->rows, A->cols, lb);
+    return 0;
+  }
+  wpos = armas_wpos(wb);
+  
+  // get minumum bytes needed unblocked factorization
+  wsmin = __ws_bytes(A->rows, A->cols, 0);
+  if (armas_wbytes(wb) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+  // adjust blocking factor for workspace; 
+  wsneed = __ws_bytes(A->rows, A->cols, lb);
+  if (lb > 0 && armas_wbytes(wb) < wsneed) {   
+    lb = wsneed / (A->rows*sizeof(DTYPE)) - 1;
+    if (lb < 6)
+      lb = 0;
+  }
+
+  // clear pivots
+  for (k = 0; k < armas_pivot_size(P); k++) {
+    armas_pivot_set(P, k, 0);
+  }
+
+  if (lb == 0 || A->cols <= lb) {
+    armas_x_make(&Wrk, A->rows, 2, A->rows, armas_wptr(wb));
+    if (flags & ARMAS_UPPER) {
+      __unblk_bkfactor_upper(A, &Wrk, P, conf);
+    }
+    else {
+      __unblk_bkfactor_lower(A, &Wrk, P, conf);
+    }
+  }
+  else {
+    armas_x_make(&Wrk, A->rows, lb+1, A->rows, armas_wptr(wb));
+    if (flags & ARMAS_UPPER) {
+      __blk_bkfactor_upper(A, &Wrk, P, lb, conf);
+    }
+    else {
+      __blk_bkfactor_lower(A, &Wrk, P, lb, conf);
+    }
+  }
+  armas_wsetpos(wb, wpos);
+  return 0;
+}
+
+/**
  * \brief Compute workspace size for `bkfactor()`
  *
  * \param[in] A
@@ -194,6 +305,44 @@ int armas_x_bksolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *W,
       return err;
     // second part: X = U.-T*Z
     err =__unblk_bksolve_upper(B, A, P, 2, conf);
+  }
+  return err;
+}
+
+int armas_x_bksolve_w(armas_x_dense_t *B,
+                      const armas_x_dense_t *A,
+                      const armas_pivot_t *P,
+                      int flags,
+                      armas_wbuf_t *wb,
+                      armas_conf_t *conf)
+{
+  int err = 0;
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (A->cols != B->rows) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+  if (wb && wb->bytes == 0) {
+    // no need for workspace for time being;
+    return 0;
+  }
+
+  // TODO: don't loose the const'ness of A and P for time being
+  if (flags & ARMAS_LOWER) {
+    // first part: Z = D.-1*(L.-1*B)
+    if ((err = __unblk_bksolve_lower(B, (armas_x_dense_t *)A, (armas_pivot_t *)P, 1, conf)) < 0)
+      return err;
+    // second part: X = L.-T*Z
+    err = __unblk_bksolve_lower(B, (armas_x_dense_t *)A, (armas_pivot_t *)P, 2, conf);
+  }
+  else {
+    // first part: Z = D.-1*(U.-1*B)
+    if ((err = __unblk_bksolve_upper(B, (armas_x_dense_t *)A, (armas_pivot_t *)P, 1, conf)) < 0)
+      return err;
+    // second part: X = U.-T*Z
+    err =__unblk_bksolve_upper(B, (armas_x_dense_t *)A, (armas_pivot_t *)P, 2, conf);
   }
   return err;
 }
