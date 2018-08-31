@@ -33,6 +33,9 @@
 #include "partition.h"
 //! \endcond
 
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
 
 static inline
 int __ws_qrfactor(int M, int N, int lb)
@@ -380,6 +383,129 @@ int armas_x_qrfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *
     
     __blk_qrfactor(A, tau, &T, &Wrk, lb, conf);
   }
+  return 0;
+}
+
+// workspace bytes needed for QR factorization
+static inline
+int __qrf_bytes(int M, int N, int lb)
+{
+  return __align64((lb > 0 ? lb*N : N)*sizeof(DTYPE));
+}
+
+/**
+ * \brief Compute QR factorization of a M-by-N matrix \f$ A = QR \f$
+ *
+ * \param[in,out] A
+ *      On entry, the M-by-N matrix A, M >= N. On exit, upper triangular matrix R
+ *      and the orthogonal matrix Q as product of elementary reflectors.
+ *
+ * \param[out] tau
+ *      On exit, the scalar factors of the elementary reflectors.
+ *
+ * \param[in] wb 
+ *      Workspace buffer needed for factorization. If workspace is too small for blocked
+ *      factorization then actual blocking factor is adjusted to fit into provided space.
+ *      To compute size of the required space call the function with workspace bytes set to zero. 
+ *      Size of workspace is returned in  `wb.bytes` and no other computation or parameter size 
+ *      checking is done and function returns with success.
+ *
+ * \param[in,out] conf 
+ *      The blocking configuration. If nil then default blocking configuration
+ *      is used. Member conf.lb defines blocking size of blocked algorithms.
+ *      If it is zero then unblocked algorithm is used.
+ *
+ * \retval 0 succes
+ * \retval -1 error and `conf.error` set to last error. 
+ *
+ *  Last error codes returned
+ *   - `ARMAS_ESIZE`  if M < N 
+ *   - `ARMAS_EINVAL` tau is not column vector or size(tau) < N
+ *   - `ARMAS_EWORK`  if workspace is less than N elements
+ *            
+ *   
+ * #### Additional information
+ *
+ *  Ortogonal matrix Q is product of elementary reflectors H(k)
+ *
+ *      Q = H(0)H(1),...,H(K-1), where K = min(M,N) 
+ *
+ *  Elementary reflector H(k) is stored on column k of A below the diagonal with
+ *  implicit unit value on diagonal entry. The vector `tau` holds scalar factors
+ *  of the elementary reflectors.
+ *
+ *  Contents of matrix A after factorization is as follow:
+ *
+ *      ( r  r  r  r )  M=6, N=4
+ *      ( v1 r  r  r )  r   in R
+ *      ( v1 v2 r  r )  vk  in H(k)
+ *      ( v1 v2 v3 r )
+ *      ( v1 v2 v3 v4)
+ *      ( v1 v2 v3 v4) 
+ *
+ *  Compatible with lapack.xGEQRF
+ * \ingroup lapack
+ */
+int armas_x_qrfactor_w(armas_x_dense_t *A,
+                       armas_x_dense_t *tau,
+                       armas_wbuf_t *wb,
+                       armas_conf_t *conf)
+{
+  armas_x_dense_t T, Wrk;
+  size_t wsmin, wsneed, wsz = 0;
+  int lb;
+  DTYPE *buf;
+  
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (wb && wb->bytes == 0) {
+    // if column equal to or less than blocking size; then unblocked size
+    lb = A->cols <= conf->lb ? 0 : conf->lb;
+    wb->bytes = __qrf_bytes(A->rows, A->cols, lb);
+    return 0;
+  }
+
+  // must have: M >= N
+  if (A->rows < A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+  if (! armas_x_isvector(tau) || armas_x_size(tau) < A->cols) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+  
+  lb = conf->lb;
+  wsmin = __qrf_bytes(A->rows, A->cols, 0);
+  if (!wb || armas_wbytes(wb) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+  // adjust blocking factor for workspace
+  wsneed = __qrf_bytes(A->rows, A->cols, lb);
+  if (lb > 0 && (wsz = armas_wbytes(wb)) < wsneed) {
+    // need N*lb elements
+    lb  = (int)(wsz / (A->cols * sizeof(DTYPE)));
+    lb &= ~0x3;
+    if (lb < ARMAS_BLOCKING_MIN)
+      lb = 0;
+  }
+
+  wsz = armas_wpos(wb);
+  buf = (DTYPE *)armas_wptr(wb);
+  
+  if (lb == 0 || A->cols <= lb) {
+    armas_x_make(&Wrk, A->cols, 1, A->cols, buf);
+    __unblk_qrfactor(A, tau, &Wrk, conf);
+  } else {
+    // block reflector [lb,lb]; temporary space [N(A)-lb,lb]
+    armas_x_make(&T, lb, lb, lb, buf);
+    armas_x_make(&Wrk, A->cols-lb, lb, A->cols-lb, &buf[armas_x_size(&T)]);
+    
+    __blk_qrfactor(A, tau, &T, &Wrk, lb, conf);
+  }
+  armas_wsetpos(wb, wsz);
   return 0;
 }
 

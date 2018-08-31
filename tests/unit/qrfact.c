@@ -16,11 +16,10 @@
  */
 int test_factor(int M, int N, int lb, int verbose)
 {
-  armas_x_dense_t A0, A1, tau0, tau1, W, row;
-  int wsize;
+  armas_x_dense_t A0, A1, tau0, tau1, row;
   DTYPE n0, n1;
-  int wchange = lb > 8 ? 2*M : 0;
   armas_conf_t conf = *armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
   
   if (lb == 0)
     lb = 4;
@@ -36,15 +35,18 @@ int test_factor(int M, int N, int lb, int verbose)
 
   // allocate workspace according the blocked invocation
   conf.lb = lb;
-  wsize = armas_x_qrfactor_work(&A0, &conf);
-  armas_x_init(&W, wsize-wchange, 1);
-
+  if (armas_x_qrfactor_w(&A0, &tau0, &wb, &conf) != 0) {
+    printf("factor: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
+  
   // factorize
   conf.lb = 0;
-  armas_x_qrfactor(&A0, &tau0, &W, &conf);
+  armas_x_qrfactor_w(&A0, &tau0, &wb, &conf);
 
   conf.lb = lb;
-  armas_x_qrfactor(&A1, &tau1, &W, &conf);
+  armas_x_qrfactor_w(&A1, &tau1, &wb, &conf);
 
   if (verbose > 1 && N < 10) {
     printf("unblk.QR(A):\n"); armas_x_printf(stdout, "%9.2e", &A0);
@@ -75,7 +77,7 @@ int main(int argc, char **argv)
   int opt;
   int M = 787;
   int N = 741;
-  int LB = 36;
+  int LB = 64;
   int verbose = 1;
 
   while ((opt = getopt(argc, argv, "v")) != -1) {

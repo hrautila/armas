@@ -33,6 +33,10 @@
 #include "partition.h"
 //! \endcond
 
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
+
 static inline
 int __ws_qrbuild(int M, int N, int lb)
 {
@@ -253,6 +257,106 @@ int armas_x_qrbuild_work(armas_x_dense_t *A, armas_conf_t *conf)
   if (!conf)
     conf = armas_conf_default();
   return __ws_qrbuild(A->rows, A->cols, conf->lb);
+}
+
+static inline
+size_t __qrbld_bytes(int N, int lb)
+{
+  return (lb > 0 ? lb*N : N) * sizeof(DTYPE);
+}
+
+/**
+ * @brief Generate the orthogonal matrix Q
+ *
+ * Generate the M by N matrix Q with orthogonal columns which
+ * are defined as the first N columns of the product of K first elementary
+ * reflectors.
+ *
+ * @param[in,out]  A
+ *   On entry, the elementary reflectors as returned by armas_x_qrfactor().
+ *   stored below diagonal of the M by N matrix A.
+ *   On exit, the orthogonal matrix Q
+ *
+ * @param[in]  tau
+ *   Scalar coefficents of elementary reflectors
+ *
+ * @param[in]  K
+ *    The number of elementary reflectors whose product define the matrix Q
+ *
+ * @param[in]  wb
+ *    Workspace buffer needed for computation. To compute size of the required space call 
+ *    the function with workspace bytes set to zero. Size of workspace is returned in 
+ *    `wb.bytes` and no other computation or parameter size checking is done and function
+ *    returns with success.
+ *
+ * @param[in,out] conf
+ *    Blocking configuration
+ *
+ *  @retval 0  success
+ *  @retval -1 error and `conf.error` set to last error
+ *
+ *  Last error codes returned
+ *   - `ARMAS_EINVAL` A or tau is null pointer
+ *   - `ARMAS_EWORK`  if no workspace or it is less than required for unblocked computation
+ *
+ * Compatible with lapackd.ORGQR.
+ * \ingroup lapack
+ */
+int armas_x_qrbuild_w(armas_x_dense_t *A,
+                      const armas_x_dense_t *tau,
+                      int K,
+                      armas_wbuf_t *wb,
+                      armas_conf_t *conf)
+{
+  armas_x_dense_t T, Wrk;
+  size_t wsmin, wsneed, wsz = 0;
+  int lb;
+  DTYPE *buf;
+  
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (A && wb && wb->bytes == 0) {
+    wb->bytes = __qrbld_bytes(A->cols, conf->lb);
+    return 0;
+  }
+
+  if (!A || !tau) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  lb = conf->lb;
+  wsmin = __qrbld_bytes(A->cols, 0); 
+  if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+
+  // adjust blocking factor for workspace
+  wsneed = __qrbld_bytes(A->cols, lb); 
+  if (lb > 0 && wsz < wsneed) {
+    lb = (wsz / (A->cols * sizeof(DTYPE))) & ~0x3;
+    if (lb < ARMAS_BLOCKING_MIN)
+      lb = 0;
+  }
+
+  wsz = armas_wpos(wb);
+  buf = (DTYPE *)armas_wptr(wb);
+
+  if (lb == 0 || A->cols <= lb) {
+    armas_x_make(&Wrk, A->cols, 1, A->cols, buf);
+    __unblk_qrbuild(A, (armas_x_dense_t *)tau, &Wrk, A->rows-K, A->cols-K, TRUE, conf);
+  } else {
+    // block reflector at start of workspace; other temporary space after
+    armas_x_make(&T, lb, lb, lb, buf);
+    armas_x_make(&Wrk, A->cols-lb, lb, A->cols-lb, &buf[armas_x_size(&T)]);
+
+    __blk_qrbuild(A, (armas_x_dense_t *)tau, &T, &Wrk, K, lb, conf);
+  }
+  armas_wsetpos(wb, wsz);
+
+  return 0;
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

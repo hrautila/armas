@@ -18,10 +18,11 @@
 int test_mult_identity(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_x_dense_t A0, C, C1, tau0, W, D;
-  int wsize, ok;
+  armas_x_dense_t A0, C, C1, tau0, D;
+  int ok;
   DTYPE n0, n1;
   armas_conf_t conf = *armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&C, M, N);
@@ -39,14 +40,17 @@ int test_mult_identity(int M, int N, int lb, int verbose)
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_x_qrmult_work(&C, ARMAS_LEFT, &conf);
-  armas_x_init(&W, wsize, 1);
-
+  if (armas_x_qrmult_w(&C, &A0, &tau0, 0, &wb, &conf) != 0) {
+    printf("mult: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
+  
   // factorize
-  armas_x_qrfactor(&A0, &tau0, &W, &conf);
+  armas_x_qrfactor_w(&A0, &tau0, &wb, &conf);
 
-  armas_x_qrmult(&C, &A0, &tau0, &W, ARMAS_LEFT, &conf);
-  armas_x_qrmult(&C, &A0, &tau0, &W, ARMAS_LEFT|ARMAS_TRANS, &conf);
+  armas_x_qrmult_w(&C, &A0, &tau0, ARMAS_LEFT, &wb, &conf);
+  armas_x_qrmult_w(&C, &A0, &tau0, ARMAS_LEFT|ARMAS_TRANS, &wb, &conf);
 
   n0 = rel_error(&n1, &C, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(n0, N);
@@ -59,6 +63,7 @@ int test_mult_identity(int M, int N, int lb, int verbose)
   armas_x_release(&C);
   armas_x_release(&C1);
   armas_x_release(&tau0);
+  armas_wrelease(&wb);
   return ok;
 }
 
@@ -69,10 +74,11 @@ int test_mult_identity(int M, int N, int lb, int verbose)
 int test_mult_left(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_x_dense_t A0, C1, C0, tau0, W;
-  int wsize, ok;
+  armas_x_dense_t A0, C1, C0, tau0;
+  int ok;
   DTYPE n0, n1;
   armas_conf_t conf = *armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&C0, M, N);
@@ -88,16 +94,19 @@ int test_mult_left(int M, int N, int lb, int verbose)
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_x_qrmult_work(&C0, ARMAS_LEFT, &conf);
-  armas_x_init(&W, wsize, 1);
+  if (armas_x_qrmult_w(&C0, &A0, &tau0, 0, &wb, &conf) != 0) {
+    printf("mult: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
 
   // factorize
   conf.lb = lb;
-  armas_x_qrfactor(&A0, &tau0, &W, &conf);
+  armas_x_qrfactor_w(&A0, &tau0, &wb, &conf);
 
   // compute C0 = Q.T*Q*C0
-  armas_x_qrmult(&C0, &A0, &tau0, &W, ARMAS_LEFT, &conf);
-  armas_x_qrmult(&C0, &A0, &tau0, &W, ARMAS_LEFT|ARMAS_TRANS, &conf);
+  armas_x_qrmult_w(&C0, &A0, &tau0, ARMAS_LEFT, &wb, &conf);
+  armas_x_qrmult_w(&C0, &A0, &tau0, ARMAS_LEFT|ARMAS_TRANS, &wb, &conf);
 
   n0 = rel_error(&n1, &C1, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok =isOK(n0, N);
@@ -111,6 +120,7 @@ int test_mult_left(int M, int N, int lb, int verbose)
   armas_x_release(&C0);
   armas_x_release(&C1);
   armas_x_release(&tau0);
+  armas_wrelease(&wb);
   return ok; 
 }
 
@@ -122,10 +132,11 @@ int test_mult_left(int M, int N, int lb, int verbose)
 int test_mult_right(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_x_dense_t A0, C1, C0, tau0, W;
-  int wsize, ok;
+  armas_x_dense_t A0, C1, C0, tau0;
+  int ok;
   DTYPE n0, n1;
   armas_conf_t conf = *armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&C0, N, M);
@@ -141,21 +152,24 @@ int test_mult_right(int M, int N, int lb, int verbose)
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_x_qrmult_work(&C0, ARMAS_RIGHT, &conf);
-  armas_x_init(&W, wsize, 1);
-
+  if (armas_x_qrmult_w(&C0, &A0, &tau0, 0, &wb, &conf) != 0) {
+    printf("mult: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
+  
   // factorize
   conf.lb = lb;
-  armas_x_qrfactor(&A0, &tau0, &W, &conf);
+  armas_x_qrfactor_w(&A0, &tau0, &wb, &conf);
 
   // compute C0 = C0*Q.T*Q
   int err;
-  err = armas_x_qrmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT|ARMAS_TRANS, &conf);
+  err = armas_x_qrmult_w(&C0, &A0, &tau0, ARMAS_RIGHT|ARMAS_TRANS, &wb, &conf);
   if (verbose > 2 && N <= 10) {
     printf("err = %d, error = %d\n", err, conf.error);
     printf("C0*Q.T:\n"); armas_x_printf(stdout, "%9.2e", &C1);
   }
-  armas_x_qrmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT, &conf);
+  armas_x_qrmult_w(&C0, &A0, &tau0, ARMAS_RIGHT, &wb, &conf);
 
   if (verbose > 1 && N <= 10) {
     printf("C0:\n"); armas_x_printf(stdout, "%9.2e", &C0);
@@ -173,6 +187,7 @@ int test_mult_right(int M, int N, int lb, int verbose)
   armas_x_release(&C0);
   armas_x_release(&C1);
   armas_x_release(&tau0);
+  armas_wrelease(&wb);
   return ok;
 }
 
@@ -181,7 +196,7 @@ int main(int argc, char **argv)
   int opt;
   int M = 787;
   int N = 741;
-  int LB = 36;
+  int LB = 64;
   int verbose = 1;
 
   while ((opt = getopt(argc, argv, "v")) != -1) {
