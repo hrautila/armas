@@ -492,7 +492,7 @@ size_t __qrm_bytes(int K, int lb)
 }
 
 /**
- * \brief Multiply matrix with orthogonal matrix Q.
+ * @brief Multiply matrix with orthogonal matrix Q.
  *
  * Multiply and replace C with \f$ Q C \f$ or \f$ Q^T C \f$ where Q is a real orthogonal matrix
  * defined as the product of k elementary reflectors.
@@ -501,35 +501,35 @@ size_t __qrm_bytes(int K, int lb)
  *
  * as returned by qrfactor().
  *
- * \param[in,out] C
+ * @param[in,out] C
  *   On entry, the M-by-N matrix C or if flag bit *ARMAS_RIGHT* is set then N-by-M matrix
  *   On exit C is overwritten by \f$ Q C \f$ or \f$ Q^T C \f$. If bit *ARMAS_RIGHT* is 
  *   set then C is overwritten by \f$ C Q \f$ or \f$ CQ^T \f$.
  *
- * \param[in] A 
+ * @param[in] A 
  *    QR factorization as returne by qrfactor() where the lower trapezoidal
  *    part holds the elementary reflectors.
  *
- * \param[in] tau
+ * @param[in] tau
  *   The scalar factors of the elementary reflectors.
  *
- * \param[in,out] wb
+ * @param[in] flags 
+ *   Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
+ *       
+ * @param[in,out] wb
  *    Workspace buffer needed for computation. To compute size of the required space call 
  *    the function with workspace bytes set to zero. Size of workspace is returned in 
  *    `wb.bytes` and no other computation or parameter size checking is done and function
  *    returns with success.
  *
- * \param[in] flags 
- *   Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
- *       
- * \param conf
+ * @param conf
  *   Blocking configuration. Field LB defines blocking size. If it is zero
  *   unblocked invocation is assumed. Actual blocking size is adjusted
  *   to available workspace size and minimum of configured block size and
  *   block size implied by workspace is used.
  *
- *  \retval 0  success
- *  \retval -1 error and `conf.error` set to last error
+ *  @retval 0  success
+ *  @retval -1 error and `conf.error` set to last error
  *
  *  Last error codes returned
  *   - `ARMAS_ESIZE`  if n(C) != m(A) for C*op(Q) or m(C) != m(A) for op(Q)*C
