@@ -32,6 +32,10 @@
 #include "partition.h"
 //! \endcond
 
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
+
 static inline
 int __ws_lqfactor(int M, int N, int lb)
 {
@@ -381,6 +385,125 @@ int armas_x_lqfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
   if (!conf)
     conf = armas_conf_default();
   return __ws_lqfactor(A->rows, A->cols, conf->lb);
+}
+
+static inline
+size_t __lqf_bytes(int M, int lb)
+{
+  return (lb > 0 ? lb*M : M) * sizeof(DTYPE);
+}
+
+/**
+ * @brief Compute LQ factorization of a M-by-N matrix A
+ *
+ * @param[in,out] A
+ *    On entry, the M-by-N matrix A, M <= N. On exit, lower triangular matrix L
+ *    and the orthogonal matrix Q as product of elementary reflectors.
+ *
+ * @param[out] tau
+ *    On exit, the scalar factors of the elemenentary reflectors.
+ *
+ * @param[out] wb
+ *    Workspace buffer needed for factorization. If workspace is too small for blocked
+ *    factorization then actual blocking factor is adjusted to fit into provided space.
+ *    To compute size of the required space call the function with workspace bytes set to zero. 
+ *    Size of workspace is returned in  `wb.bytes` and no other computation or parameter size 
+ *    checking is done and function returns with success.
+ *
+ * @param[in,out] conf
+ *     The blocking configuration. If nil then default blocking configuration
+ *     is used. Member conf.lb defines blocking size of blocked algorithms.
+ *     If it is zero then unblocked algorithm is used.
+ *
+ * @retval  0 Success
+ * @retval -1 Failure, `conf.error` holds error code
+ *
+ *  Last error codes returned
+ *   - `ARMAS_ESIZE`  if N < M 
+ *   - `ARMAS_EINVAL` tau is not column vector or size(tau) < M
+ *   - `ARMAS_EWORK`  if workspace is less than M elements
+ *
+ * #### Additional information
+ *
+ * Ortogonal matrix Q is product of elementary reflectors H(k)
+ *
+ *     \f$ Q = H_{k-1}H_{k-2}...H_0,  K = \min(M,N) \f$
+ *
+ * Elementary reflector H(k) is stored on row k of A right of the diagonal with
+ * implicit unit value on diagonal entry. The vector TAU holds scalar factors of
+ * the elementary reflectors.
+ *
+ * Contents of matrix A after factorization is as follow:
+ *
+ *      ( l  v0 v0 v0 v0 v0 )  for M=4, N=6
+ *      ( l  l  v1 v1 v1 v1 )  l   is element of L
+ *      ( l  l  l  v2 v2 v2 )  vk  is element of H(k)
+ *      ( l  l  l  l  v3 v3 )
+ *
+ * lqfactor() is compatible with lapack.DGELQF
+ * \ingroup lapack
+ */
+int armas_x_lqfactor_w(armas_x_dense_t *A,
+                       armas_x_dense_t *tau,
+                       armas_wbuf_t *wb,
+                       armas_conf_t *conf)
+{
+  armas_x_dense_t T, Wrk;
+  size_t wsmin, wsneed, wsz = 0;
+  int lb;
+  DTYPE *buf;
+  
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (wb && wb->bytes == 0) {
+    wb->bytes = __lqf_bytes(A->rows, conf->lb);
+    return 0;
+  }
+  
+  if (!A || !tau) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+  if (! armas_x_isvector(tau) || A->rows > armas_x_size(tau)) {
+    conf->error = ARMAS_EINVAL;
+    return -1;   
+  }
+  // must have: M <= N
+  if (A->rows > A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+
+  lb = conf->lb;
+  wsmin = __lqf_bytes(A->rows, 0);
+  if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+
+  // adjust blocking factor for workspace
+  wsneed = __lqf_bytes(A->rows, lb);
+  if (lb > 0 && wsz < wsneed) {
+    lb = (wsz / (A->rows * sizeof(DTYPE))) & ~0x3;
+    if (lb < ARMAS_BLOCKING_MIN)
+      lb = 0;
+  }
+  wsz = armas_wpos(wb);
+  buf = (DTYPE *)armas_wptr(wb);
+  
+  if (lb == 0 || A->rows <= lb) {
+    armas_x_make(&Wrk, A->rows, 1, A->rows, buf);
+    __unblk_lqfactor(A, tau, &Wrk, conf);
+  } else {
+    // block reflector [lb, lb]; temporary space [N(A)-lb,lb] matrix
+    armas_x_make(&T, lb, lb, lb, buf);
+    armas_x_make(&Wrk, A->rows-lb, lb, A->rows-lb, &buf[armas_x_size(&T)]);
+
+    __blk_lqfactor(A, tau, &T, &Wrk, lb, conf);
+  }
+  armas_wsetpos(wb, wsz);
+  return 0;
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

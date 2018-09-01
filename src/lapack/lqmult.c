@@ -26,6 +26,10 @@
 #include "matrix.h"
 #include "internal_lapack.h"
 
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
+
 /*
  * Internal worksize calculation functions.
  */
@@ -484,6 +488,143 @@ int armas_x_lqmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
   return __ws_lqmult_left(A->rows, A->cols, conf->lb);
 }
 
+
+// workspace bytes required for QR multiplication
+static inline
+size_t __lqm_bytes(int K, int lb)
+{
+  return (lb  > 0 ? lb*(K+lb) : K) * sizeof(DTYPE);
+}
+
+/**
+ * @brief Multiply with orthogonal matrix Q from LQ factorization
+ *
+ * Multiply and replace C with Q*C or Q.T*C where Q is a real orthogonal matrix
+ * defined as the product of k elementary reflectors.
+ *
+ *    Q = H(k)H(k-1)...H(1)
+ *
+ * as returned by armas_x_lqfactor().
+ *
+ * @param[in,out] C
+ *     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
+ *     N-by-M matrix.  On exit C is overwritten by Q*C or Q.T*C.
+ *     If bit RIGHT is set then C is  overwritten by C*Q or C*Q.T
+ *
+ * @param[in] A
+ *     LQ factorization as returned by lqfactor() where the upper
+ *     trapezoidal part holds the elementary reflectors.
+ *
+ * @param[in] tau
+ *   The scalar factors of the elementary reflectors.
+ *
+ * @param[in] flags
+ *     Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
+ *       
+ * @param[out] W
+ *    Workspace buffer needed for computation. To compute size of the required space call 
+ *    the function with workspace bytes set to zero. Size of workspace is returned in 
+ *    `wb.bytes` and no other computation or parameter size checking is done and function
+ *    returns with success.
+ *
+ * @param[in,out] conf
+ *     Blocking configuration. Field LB defines block sized. If it is zero
+ *     unblocked invocation is assumed.
+ *
+ * @retval  0 Success
+ * @retval -1 Error, `conf.error` holds error code
+ *
+ *  Last error codes returned
+ *   - `ARMAS_ESIZE`  if m(C) != n(A) for C*op(Q) or n(C) != n(A) for op(Q)*C
+ *   - `ARMAS_EINVAL` C or A or tau is null pointer
+ *   - `ARMAS_EWORK`  if workspace is less than required for unblocked computation
+ *
+ * Compatible with lapack.DORMLQ
+ *
+ * #### Notes
+ *   m(A) is number of elementary reflectors == A.rows
+ *   n(A) is the order of the Q matrix == A.cols
+ *
+ * \cond
+ *   LEFT : m(C) == n(A)
+ *   RIGHT: n(C) == n(A)
+ * \endcond
+ * \ingroup lapack
+ */
+int armas_x_lqmult_w(armas_x_dense_t *C,
+                     const armas_x_dense_t *A,
+                     const armas_x_dense_t *tau, 
+                     int flags,
+                     armas_wbuf_t *wb,
+                     armas_conf_t *conf)
+{
+  armas_x_dense_t T, Wrk;
+  size_t wsmin, wsneed, wsz = 0;
+  int lb, K, P;
+  DTYPE *buf;
+  
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (!C || !A || !tau) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+  K = (flags & ARMAS_RIGHT) != 0 ? C->cols : C->rows;
+  if (wb && wb->bytes == 0) {
+    wb->bytes = __lqm_bytes(K, conf->lb);
+    return 0;
+  }
+
+  // check sizes; A, tau return from armas_x_qrfactor()
+  P = (flags & ARMAS_RIGHT) != 0 ? C->cols : C->rows;
+  if (P != A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+
+  lb = conf->lb;
+  wsmin = __lqm_bytes(K, 0); 
+  if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+  // adjust blocking factor for workspace
+  wsneed = __lqm_bytes(K, lb);
+  if (lb > 0 && wsz < wsneed) {
+    wsz /= sizeof(DTYPE);
+    // ws = (K + lb)*lb => lb^2 + K*lb - wsz = 0  =>  (sqrt(K^2 + 4*wsz) - K)/2
+    lb  = ((int)(__SQRT((DTYPE)(K*K + 4*wsz))) - K) / 2;
+    lb &= ~0x3;
+    if (lb < ARMAS_BLOCKING_MIN)
+      lb = 0;
+  }
+
+  wsz = armas_wpos(wb);
+  buf = (DTYPE *)armas_wptr(wb);
+
+  if (lb == 0 || A->rows <= lb) {
+    // unblocked 
+    armas_x_make(&Wrk, K, 1, K, buf);
+    if ((flags & ARMAS_RIGHT) != 0) {
+      __unblk_lqmult_right(C, (armas_x_dense_t *)A, (armas_x_dense_t *)tau, &Wrk, flags, conf);
+    } else {
+      __unblk_lqmult_left(C, (armas_x_dense_t *)A, (armas_x_dense_t *)tau, &Wrk, flags, conf);
+    }
+  } else {
+    // blocked code; block reflector T and temporary space
+    armas_x_make(&T, lb, lb, lb, buf);
+    armas_x_make(&Wrk, K, lb,  K, &buf[armas_x_size(&T)]);
+
+    if ((flags & ARMAS_RIGHT) != 0) {
+      __blk_lqmult_right(C, (armas_x_dense_t *)A, (armas_x_dense_t *)tau, &T, &Wrk, flags, lb, conf);
+    } else {
+      __blk_lqmult_left(C, (armas_x_dense_t *)A, (armas_x_dense_t *)tau, &T, &Wrk, flags, lb, conf);
+    }
+  }
+  armas_wsetpos(wb, wsz);
+  return 0;
+}
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
