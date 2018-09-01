@@ -32,6 +32,10 @@
 #include "partition.h"
 //! \endcond
 
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
+
 #define IFERROR(exp) do { \
   int _e = (exp); \
   if (_e) { printf("error at: %s:%d\n", __FILE__, __LINE__); } \
@@ -409,6 +413,78 @@ int armas_x_rqfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *
 
     __blk_rqfactor(A, tau, &T, &Wrk, lb, conf);
   }
+  return 0;
+}
+
+static inline
+size_t __rqf_bytes(int M, int lb)
+{
+  return (lb > 0 ? lb*M : M) * sizeof(DTYPE);
+}
+
+int armas_x_rqfactor_w(armas_x_dense_t *A,
+                       armas_x_dense_t *tau,
+                       armas_wbuf_t *wb,
+                       armas_conf_t *conf)
+{
+  armas_x_dense_t T, Wrk;
+  size_t wsmin, wsneed, wsz = 0;
+  int lb;
+  DTYPE *buf;
+  
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (!A) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+  if (wb && wb->bytes == 0) {
+    if (conf->lb > 0 && A->rows > conf->lb)
+      wb->bytes = (A->rows * conf->lb) * sizeof(DTYPE);
+    else 
+      wb->bytes = A->rows * sizeof(DTYPE);
+    return 0;
+  }
+
+  // must have: M <= N
+  if (A->rows > A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+  if (! armas_x_isvector(tau) || armas_x_size(tau) !=  A->rows) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+  
+  lb = conf->lb;
+  wsmin = A->rows * sizeof(DTYPE);
+  if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+  // adjust blocking factor for workspace
+  wsneed = (lb > 0 ? A->rows * lb : A->rows) * sizeof(DTYPE);
+  if (lb > 0 && wsz < wsneed) {
+    lb = ( wsz / (A->rows * sizeof(DTYPE))) & ~0x3;
+    if (lb < ARMAS_BLOCKING_MIN)
+      lb = 0;
+  }
+  
+  wsz = armas_wpos(wb);
+  buf = (DTYPE *)armas_wptr(wb);
+  
+  if (lb == 0 || A->rows <= lb) {
+    armas_x_make(&Wrk, A->rows, 1, A->rows, buf);
+    __unblk_rqfactor(A, tau, &Wrk, conf);
+  } else {
+    // block reflector [lb,lb]; temp space [n(A)-lb, lb] matrix
+    armas_x_make(&T, lb, lb, lb, buf);
+    armas_x_make(&Wrk, A->rows-lb, lb, A->rows-lb, &buf[armas_x_size(&T)]);
+
+    __blk_rqfactor(A, tau, &T, &Wrk, lb, conf);
+  }
+  armas_wsetpos(wb, wsz);
   return 0;
 }
 

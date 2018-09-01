@@ -31,6 +31,10 @@
 #include "internal_lapack.h"
 //! \endcond
 
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
+
 static inline
 int __ws_rqbuild(int M, int N, int lb)
 {
@@ -246,6 +250,76 @@ int armas_x_rqbuild_work(armas_x_dense_t *A, armas_conf_t *conf)
   return __ws_rqbuild(A->rows, A->cols, conf->lb);
 }
 
+int armas_x_rqbuild_w(armas_x_dense_t *A,
+                      const armas_x_dense_t *tau,
+                      int K,
+                      armas_wbuf_t *wb,
+                      armas_conf_t *conf)
+{
+  armas_x_dense_t T, Wrk;
+  size_t wsmin, wsz = 0;
+  int lb;
+  DTYPE *buf;
+
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (!A) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  if (wb && wb->bytes == 0) {
+    if (conf->lb > 0 && A->rows > conf->lb)
+      wb->bytes = (A->rows * conf->lb) * sizeof(DTYPE);
+    else
+      wb->bytes = A->rows * sizeof(DTYPE);
+    return 0;
+  }
+
+  if (!tau) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+  if (armas_x_size(tau) != A->rows) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+
+  lb = conf->lb;
+  wsmin = A->rows * sizeof(DTYPE);
+  if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+  // adjust blocking factor for workspace
+  //wsneed = (lb > 0 && A->rows > lb ? A->rows * lb : A->rows) * sizeof(DTYPE);
+  if (lb > 0 && A->rows > lb) {
+    wsz /= sizeof(DTYPE);
+    if (wsz < A->rows * lb) {
+      lb = (wsz / A->cols) & ~0x3;
+      if (lb < ARMAS_BLOCKING_MIN)
+        lb = 0;
+    }
+  }
+
+  wsz = armas_wpos(wb);
+  buf = (DTYPE *)armas_wptr(wb);
+
+  if (lb == 0 || A->cols <= lb) {
+    armas_x_make(&Wrk, A->rows, 1, A->rows, buf);
+    // start row: A->rows - K, column: A.cols - K
+    __unblk_rqbuild(A, (armas_x_dense_t *)tau, &Wrk, A->rows-K, A->cols-K, TRUE, conf);
+  } else {
+    // block reflector [lb, lb]; other temporary [m(A)-lb, lb]
+    armas_x_make(&T, lb, lb, lb, buf);
+    armas_x_make(&Wrk, A->rows-lb, lb, A->rows-lb, &buf[armas_x_size(&T)]);
+
+    __blk_rqbuild(A, (armas_x_dense_t *)tau, &T, &Wrk, K, lb, conf);
+  }
+  armas_wsetpos(wb, wsz);
+  return 0;
+}
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
