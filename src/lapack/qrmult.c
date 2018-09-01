@@ -547,7 +547,7 @@ int armas_x_qrmult_w(armas_x_dense_t *C,
                      armas_conf_t *conf)
 {
   armas_x_dense_t T, Wrk;
-  size_t wsmin, wsneed, wsz = 0;
+  size_t wsmin, wsz = 0;
   int lb, K, P;
   DTYPE *buf;
   armas_x_dense_t tauh;
@@ -555,39 +555,47 @@ int armas_x_qrmult_w(armas_x_dense_t *C,
   if (!conf)
     conf = armas_conf_default();
 
-  if (!C || !A || !tau) {
+  if (!C) {
     conf->error = ARMAS_EINVAL;
     return -1;
   }
 
   K = (flags & ARMAS_RIGHT) != 0 ? C->rows : C->cols;
   if (wb && wb->bytes == 0) {
-    wb->bytes = __qrm_bytes(K, conf->lb);
+    if (conf->lb > 0 && K > conf->lb)
+      wb->bytes = ((K + conf->lb) * conf->lb) * sizeof(DTYPE);
+    else
+      wb->bytes = K * sizeof(DTYPE);
     return 0;
   }
 
+  if (!A || !tau) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
   // check sizes; A, tau return from armas_x_qrfactor()
   P = (flags & ARMAS_RIGHT) != 0 ? C->cols : C->rows;
-  if (P != A->rows) {
+  if (P != A->rows || armas_x_size(tau) != A->cols) {
     conf->error = ARMAS_ESIZE;
     return -1;
   }
 
   lb = conf->lb;
-  wsmin = __qrm_bytes(K, 0); 
+  wsmin = K * sizeof(DTYPE);
   if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
   }
   // adjust blocking factor for workspace
-  wsneed = __qrm_bytes(K, lb);
-  if (lb > 0 && wsz < wsneed) {
+  if (lb > 0 && K > lb) {
     wsz /= sizeof(DTYPE);
     // ws = (K + lb)*lb => lb^2 + K*lb - wsz = 0  =>  (sqrt(K^2 + 4*wsz) - K)/2
-    lb  = ((int)(__SQRT((DTYPE)(K*K + 4*wsz))) - K) / 2;
-    lb &= ~0x3;
-    if (lb < ARMAS_BLOCKING_MIN)
-      lb = 0;
+    if (wsz < (K + lb)*lb) {
+      lb  = ((int)(__SQRT((DTYPE)(K*K + 4*wsz))) - K) / 2;
+      lb &= ~0x3;
+      if (lb < ARMAS_BLOCKING_MIN)
+        lb = 0;
+    }
   }
 
   wsz = armas_wpos(wb);
@@ -595,7 +603,7 @@ int armas_x_qrmult_w(armas_x_dense_t *C,
 
   EMPTY(tauh);
   armas_x_submatrix(&tauh, tau, 0, 0, A->cols, 1);
-  if (lb == 0 || A->cols <= lb) {
+  if (lb == 0 || K <= lb) {
     // unblocked 
     armas_x_make(&Wrk, K, 1, K, buf);
     if (flags & ARMAS_RIGHT) {
