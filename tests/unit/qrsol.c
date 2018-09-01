@@ -17,10 +17,11 @@
 int test_lss(int M, int N, int K, int lb, int verbose)
 {
   armas_x_dense_t A0, tau0;
-  armas_x_dense_t B0, X0, W, X;
+  armas_x_dense_t B0, X0, X;
   armas_conf_t conf = *armas_conf_default();
-  int ok, wsize;
+  int ok;
   DTYPE nrm, nrm0;
+  armas_wbuf_t wb = ARMAS_WBNULL;
 
   armas_x_init(&A0, M, N);
   armas_x_init(&B0, M, K);
@@ -36,28 +37,32 @@ int test_lss(int M, int N, int K, int lb, int verbose)
   armas_x_mult(0.0, &B0, 1.0, &A0, &X0, ARMAS_NONE, &conf);
 
   conf.lb = lb;
-  wsize = armas_x_qrfactor_work(&A0, &conf);
-  armas_x_init(&W, wsize, 1);
+  if (armas_x_qrsolve_w(&B0, &A0, &tau0, ARMAS_NONE, &wb, &conf) != 0) {
+    printf("solve: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
 
   // factor
-  armas_x_qrfactor(&A0, &tau0, &W, &conf);
+  armas_x_qrfactor_w(&A0, &tau0, &wb, &conf);
 
   // solve B0 = A.-1*B0
-  armas_x_qrsolve(&B0, &A0, &tau0, &W, ARMAS_NONE, &conf);
+  armas_x_qrsolve_w(&B0, &A0, &tau0, ARMAS_NONE, &wb, &conf);
 
   // X0 = X0 - A.-1*B0
   armas_x_submatrix(&X, &B0, 0, 0, N, K);
-#if 0
-  armas_x_scale_plus(1.0, &X0, -1.0, &X, ARMAS_NONE, &conf);
-  nrm = armas_x_mnorm(&X0, ARMAS_NORM_ONE, &conf);
-  ok = isFINE(nrm, M*1e-12);
-#endif
+
   nrm = rel_error(&nrm0, &X, &X0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, M);
   printf("%s: min || B - A*X ||\n", PASS(ok));
   if (verbose > 0) {
     printf("  || B - A*X ||: %e [%d]\n", nrm, ndigits(nrm));
   }
+  armas_x_release(&A0);
+  armas_x_release(&B0);
+  armas_x_release(&X0);
+  armas_x_release(&tau0);
+  armas_wrelease(&wb);
   return ok;
 }
 
@@ -66,10 +71,11 @@ int test_lss(int M, int N, int K, int lb, int verbose)
 int test_min(int M, int N, int K, int lb, int verbose)
 {
   armas_x_dense_t A0, A1, tau0;
-  armas_x_dense_t B0, X0, W, B;
+  armas_x_dense_t B0, X0, B;
   armas_conf_t conf = *armas_conf_default();
-  int ok, wsize;
+  int ok;
   DTYPE nrm, nrm0;
+  armas_wbuf_t wb = ARMAS_WBNULL;
 
   armas_x_init(&A0, M, N);
   armas_x_init(&A1, M, N);
@@ -85,15 +91,18 @@ int test_min(int M, int N, int K, int lb, int verbose)
   armas_x_set_values(&B0, unitrand, ARMAS_ANY);
 
   conf.lb = lb;
-  wsize = armas_x_qrfactor_work(&A0, &conf);
-  armas_x_init(&W, wsize, 1);
+  if (armas_x_qrsolve_w(&B0, &A0, &tau0, ARMAS_TRANS, &wb, &conf) != 0) {
+    printf("solve: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
 
   // factor
-  armas_x_qrfactor(&A0, &tau0, &W, &conf);
+  armas_x_qrfactor_w(&A0, &tau0, &wb, &conf);
 
   // X0 = A.-T*B0
   armas_x_mcopy(&X0, &B0);
-  armas_x_qrsolve(&X0, &A0, &tau0, &W, ARMAS_TRANS, &conf);
+  armas_x_qrsolve_w(&X0, &A0, &tau0, ARMAS_TRANS, &wb, &conf);
 
   // B = B - A.T*X
   armas_x_submatrix(&B, &B0, 0, 0, N, K);
@@ -106,6 +115,12 @@ int test_min(int M, int N, int K, int lb, int verbose)
   if (verbose > 0) {
     printf("  || B - A.T*X ||: %e [%d]\n", nrm, ndigits(nrm));
   }
+  armas_x_release(&A0);
+  armas_x_release(&A1);
+  armas_x_release(&B0);
+  armas_x_release(&X0);
+  armas_x_release(&tau0);
+  armas_wrelease(&wb);
   return ok;
 }
 
@@ -115,7 +130,7 @@ int main(int argc, char **argv)
   int M = 787;
   int N = 741;
   int K = N;
-  int LB = 36;
+  int LB = 48;
   int verbose = 1;
 
   while ((opt = getopt(argc, argv, "v")) != -1) {
