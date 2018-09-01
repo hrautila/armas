@@ -449,22 +449,25 @@ int armas_x_lqfactor_w(armas_x_dense_t *A,
                        armas_conf_t *conf)
 {
   armas_x_dense_t T, Wrk;
-  size_t wsmin, wsneed, wsz = 0;
+  size_t wsmin, wsz = 0;
   int lb;
   DTYPE *buf;
   
   if (!conf)
     conf = armas_conf_default();
 
-  if (wb && wb->bytes == 0) {
-    wb->bytes = __lqf_bytes(A->rows, conf->lb);
-    return 0;
-  }
-  
-  if (!A || !tau) {
+  if (!A) {
     conf->error = ARMAS_EINVAL;
     return -1;
   }
+  if (wb && wb->bytes == 0) {
+    if (conf->lb > 0 && A->rows > conf->lb)
+      wb->bytes = (A->rows * conf->lb) * sizeof(DTYPE);
+    else
+      wb->bytes = A->rows * sizeof(DTYPE);
+    return 0;
+  }
+  
   if (! armas_x_isvector(tau) || A->rows > armas_x_size(tau)) {
     conf->error = ARMAS_EINVAL;
     return -1;   
@@ -476,18 +479,20 @@ int armas_x_lqfactor_w(armas_x_dense_t *A,
   }
 
   lb = conf->lb;
-  wsmin = __lqf_bytes(A->rows, 0);
+  wsmin = A->rows * sizeof(DTYPE);
   if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
   }
 
   // adjust blocking factor for workspace
-  wsneed = __lqf_bytes(A->rows, lb);
-  if (lb > 0 && wsz < wsneed) {
-    lb = (wsz / (A->rows * sizeof(DTYPE))) & ~0x3;
-    if (lb < ARMAS_BLOCKING_MIN)
-      lb = 0;
+  if (lb > 0 && A->rows > lb) {
+    wsz /= sizeof(DTYPE);
+    if (wsz < A->rows * lb) {
+      lb = (wsz / A->rows) & ~0x3;
+      if (lb < ARMAS_BLOCKING_MIN)
+        lb = 0;
+    }
   }
   wsz = armas_wpos(wb);
   buf = (DTYPE *)armas_wptr(wb);
