@@ -39,6 +39,9 @@
   } while (0);
 #endif
   
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
 
 
 /*
@@ -413,6 +416,133 @@ int armas_x_qlfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *
 
     __blk_qlfactor(A, tau, &T, &Wrk, lb, conf);
   }
+  return 0;
+}
+
+static inline
+size_t __qlf_bytes(int N, int lb)
+{
+  return (lb > 0 ? lb*N : N) * sizeof(DTYPE);
+}
+
+
+/**
+ * @brief Compute QL factorization of a M-by-N matrix A
+ *
+ * @param[in,out] A    
+ *    On entry, the M-by-N matrix A, M >= N. On exit, lower triangular matrix L
+ *    and the orthogonal matrix Q as product of elementary reflectors.
+ *
+ * @param[out] tau  
+ *   Vector of length N. On exit, the scalar factors of the elemenentary reflectors. 
+ *
+ * @param[in,out] conf 
+ *    The blocking configuration. If nil then default blocking configuration
+ *    is used. Member conf.LB defines blocking size of blocked algorithms.
+ *    If it is zero then unblocked algorithm is used.
+ *
+ * @param wb
+ *   Workspace buffer needed for factorization. If workspace is too small for blocked
+ *   factorization then actual blocking factor is adjusted to fit into provided space.
+ *   To compute size of the required space call the function with workspace bytes set to zero. 
+ *   Size of workspace is returned in  `wb.bytes` and no other computation or parameter size 
+ *   checking is done and function returns with success.
+ *
+ * @retval  0 Success
+ * @retval -1 Error, conf.error holds error code
+ *
+ *  Last error codes returned
+ *   - `ARMAS_ESIZE`  if M < N 
+ *   - `ARMAS_EINVAL` tau is not column vector or len(tau) < N
+ *   - `ARMAS_EWORK`  if workspace is less than N elements
+ *
+ * #### Additional information
+ *
+ *  Ortogonal matrix Q is product of elementary reflectors H(k)
+ *
+ *    \f$ Q = H_{k-1}...H_1 H_0, where K = min(M,N) \f$
+ *
+ *  Elementary reflector H(k) is stored on column k of A above the diagonal with
+ *  implicit unit value on diagonal entry. The vector TAU holds scalar factors
+ *  of the elementary reflectors.
+ *
+ *  Contents of matrix A after factorization is as follow:
+ *
+ *      ( v0 v1 v2 v3 )   for M=6, N=4
+ *      ( v0 v1 v2 v3 )   l is element of L
+ *      ( l  v1 v2 v3 )   vk is element of H(k)
+ *      ( l  l  v2 v3 )
+ *      ( l  l  l  v3 )
+ *      ( l  l  l  l  )
+ *
+ *  qlfactor() is compatible with lapack.DGEQLF
+ */
+int armas_x_qlfactor_w(armas_x_dense_t *A,
+                       armas_x_dense_t *tau,
+                       armas_wbuf_t *wb,
+                       armas_conf_t *conf)
+{
+  armas_x_dense_t T, Wrk;
+  size_t wsmin, wsz = 0;
+  DTYPE *buf;
+  int lb;
+  
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (!A) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  if (wb && wb->bytes == 0) {
+    if (conf->lb > 0 && A->cols > conf->lb)
+      wb->bytes = (conf->lb * A->cols)*sizeof(DTYPE);
+    else 
+      wb->bytes = A->cols*sizeof(DTYPE);
+    return 0;
+  }
+
+  // must have: M >= N
+  if (A->rows < A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+  if (! armas_x_isvector(tau) || armas_x_size(tau) < A->cols) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  lb = conf->lb;
+  wsmin = A->cols*sizeof(DTYPE);
+  if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+  // adjust blocking factor for workspace
+  if (lb > 0 && A->cols > lb) {
+    wsz /= sizeof(DTYPE);
+    if (wsz < A->cols * lb) {
+      lb = (wsz / A->cols) & ~0x3;
+      if (lb < ARMAS_BLOCKING_MIN)
+        lb = 0;
+    }
+  }
+
+  wsz = armas_wpos(wb);
+  buf = (DTYPE *)armas_wptr(wb);
+  
+  if (lb == 0 || A->cols <= lb) {
+    armas_x_make(&Wrk, A->cols, 1, A->cols, buf);
+    __unblk_qlfactor(A, tau, &Wrk, conf);
+  } else {
+    // block reflector [lb, lb]; temporary space [N(A)-lb,lb] matrix
+    armas_x_make(&T, lb, lb, lb, buf);
+    armas_x_make(&Wrk, A->cols-lb, lb, A->cols-lb, &buf[armas_x_size(&T)]);
+
+    __blk_qlfactor(A, tau, &T, &Wrk, lb, conf);
+  }
+  armas_wsetpos(wb, wsz);
   return 0;
 }
 

@@ -32,6 +32,10 @@
 #include "partition.h"
 //! \endcond
 
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
+
 static inline
 int __ws_qlmult_left(int M, int N, int lb)
 {
@@ -453,6 +457,148 @@ int armas_x_qlmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
   }
   return __ws_qlmult_left(A->rows, A->cols, conf->lb);
 }
+
+// workspace bytes required for QL multiplication
+static inline
+size_t __qlm_bytes(int K, int lb)
+{
+  return (lb  > 0 ? lb*(K+lb) : K) * sizeof(DTYPE);
+}
+
+
+/**
+ * @brief Multiply with orthogonal Q matrix 
+ *
+ * Multiply and replace C with \f$ QC \f$ or \f$ Q^TC \f$ where Q is a real orthogonal matrix
+ * defined as the product of K first elementary reflectors.
+ *
+ *    \f$ Q = H_k H_{k-1} ... H_k \f$
+ *
+ * as returned by armas_x_qlfactor().
+ *
+ * @param[in,out] C
+ *     On entry, the M-by-N matrix C or if flag bit *ARMAS_RIGHT* is set then N-by-M matrix
+ *     On exit C is overwritten by \f$ QC \f$ or \f$ Q^TC \f$. If bit *ARMAS_LEFT* is 
+ *     set then C is overwritten by \f$ CQ \f$ or \f$ CQ^T \f$
+ *
+ * @param[in] A
+ *     An N-by-K QL factorization as returned by armas_x_qlfactor() where the upper trapezoidal
+ *     part holds the elementary reflectors.
+ *
+ * @param[in] tau
+ *    The scalar factors of the elementary reflectors, vector of length n(A)
+ *
+ * @param[in] flags
+ *    Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT* and *ARMAS_TRANS*
+ *       
+ * @param wb
+ *    Workspace buffer needed for computation. To compute size of the required space call 
+ *    the function with workspace bytes set to zero. Size of workspace is returned in 
+ *    `wb.bytes` and no other computation or parameter size checking is done and function
+ *    returns with success.
+ *
+ * @param[in] conf
+ *   Blocking configuration. Field LB defines block size. If it is zero
+ *   unblocked invocation is assumed. Actual blocking size is adjusted
+ *   to available workspace size and the smaller of configured block size and
+ *   block size implied by workspace is used.
+ *
+ * @retval  0 Succes
+ * @retval -1 Failure, `conf.error` holds error code.
+ *
+ *  Last error codes returned
+ *   - `ARMAS_ESIZE`  if n(C) != m(A) for C*op(Q) or m(C) != m(A) for op(Q)*C
+ *   - `ARMAS_EINVAL` C or A or tau is null pointer
+ *   - `ARMAS_EWORK`  if workspace is less than required for unblocked computation
+ *
+ * Compatible with lapack.DORMQL
+ */
+int armas_x_qlmult_w(armas_x_dense_t *C,
+                     const armas_x_dense_t *A,
+                     const armas_x_dense_t *tau,
+                     int flags,
+                     armas_wbuf_t *wb,
+                     armas_conf_t *conf)
+{
+  armas_x_dense_t T, Wrk;
+  size_t wsmin, wsz = 0;
+  int lb, K, P;
+  DTYPE *buf;
+  armas_x_dense_t tauh;
+
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (!C) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  K = (flags & ARMAS_RIGHT) != 0 ? C->rows : C->cols;
+  if (wb && wb->bytes == 0) {
+    if (conf->lb > 0)
+      wb->bytes = ((K + conf->lb) * conf->lb) * sizeof(DTYPE);
+    else
+      wb->bytes = K * sizeof(DTYPE);
+    return 0;
+  }
+  if (!A || !tau) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  // check sizes; A, tau return from armas_x_qrfactor()
+  P = (flags & ARMAS_RIGHT) != 0 ? C->cols : C->rows;
+  if (P != A->rows || armas_x_size(tau) != A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+
+
+  lb = conf->lb;
+  wsmin = K * sizeof(DTYPE);
+  if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+  // adjust blocking factor for workspace
+  if (lb > 0 && K > lb) {
+    wsz /= sizeof(DTYPE);
+    if (wsz < (K + lb)*lb) {
+      // ws = (K + lb)*lb => lb^2 + K*lb - wsz = 0  =>  (sqrt(K^2 + 4*wsz) - K)/2
+      lb  = ((int)(__SQRT((DTYPE)(K*K + 4*wsz))) - K) / 2;
+      lb &= ~0x3;
+      if (lb < ARMAS_BLOCKING_MIN)
+        lb = 0;
+    }
+  }
+
+  wsz = armas_wpos(wb);
+  buf = (DTYPE *)armas_wptr(wb);
+  
+  if (lb == 0 || K <= lb) {
+    armas_x_make(&Wrk, K, 1, K, buf);
+    // unblocked 
+    if (flags & ARMAS_RIGHT) {
+      __unblk_qlmult_right(C, (armas_x_dense_t *)A, (armas_x_dense_t *)tau, &Wrk, flags, conf);
+    } else {
+      __unblk_qlmult_left(C, (armas_x_dense_t *)A, (armas_x_dense_t *)tau, &Wrk, flags, conf);
+    }
+  } else {
+    // space for block reflector;  temporary space 
+    armas_x_make(&T, lb, lb, lb, buf);
+    armas_x_make(&Wrk, K, lb, K, &buf[armas_x_size(&T)]);
+
+    if (flags & ARMAS_RIGHT) {
+      __blk_qlmult_right(C, (armas_x_dense_t *)A, (armas_x_dense_t *)tau, &T, &Wrk, flags, lb, conf);
+    } else {
+      __blk_qlmult_left(C, (armas_x_dense_t *)A, (armas_x_dense_t *)tau, &T, &Wrk, flags, lb, conf);
+    }
+  }
+  armas_wsetpos(wb, wsz);
+  return 0;
+}
+
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
