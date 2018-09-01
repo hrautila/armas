@@ -17,11 +17,11 @@
 int test_build(int M, int N, int K, int lb, int verbose)
 {
   char ct = N == K ? 'N' : 'K';
-  armas_x_dense_t A0, A1, tau0, W;
-  int wsize, ok;
-  int wchange = lb > 0 ? 2*M : 0;
+  armas_x_dense_t A0, A1, tau0;
+  int ok;
   DTYPE n0;
   armas_conf_t conf = *armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&A1, M, N);
@@ -32,19 +32,22 @@ int test_build(int M, int N, int K, int lb, int verbose)
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_x_rqbuild_work(&A0, &conf);
-  armas_x_init(&W, wsize-wchange, 1);
+  if (armas_x_rqbuild_w(&A0, &tau0, 0, &wb, &conf) < 0) {
+    printf("build: workspace calculation error\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
 
   // factorize
   conf.lb = lb;
-  armas_x_rqfactor(&A0, &tau0, &W, &conf);
+  armas_x_rqfactor_w(&A0, &tau0, &wb, &conf);
   armas_x_mcopy(&A1, &A0);
     
   // compute Q = buildQ(rq(A))
   conf.lb = 0;
-  armas_x_rqbuild(&A0, &tau0, &W, K, &conf);
+  armas_x_rqbuild_w(&A0, &tau0, K, &wb, &conf);
   conf.lb = lb;
-  armas_x_rqbuild(&A1, &tau0, &W, K, &conf);
+  armas_x_rqbuild_w(&A1, &tau0, K, &wb, &conf);
 
   // ||A1 - A0||/||A0||
   n0 = rel_error((DTYPE *)0, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
@@ -57,9 +60,8 @@ int test_build(int M, int N, int K, int lb, int verbose)
 
   armas_x_release(&A0);
   armas_x_release(&A1);
-  armas_x_release(&W);
   armas_x_release(&tau0);
-
+  armas_wrelease(&wb);
   return ok;
 }
 
@@ -71,11 +73,11 @@ int test_build_identity(int M, int N, int K, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
   char ct = M == K ? 'M' : 'K';
-  armas_x_dense_t A0, C0, tau0, D, W;
-  int wsize, ok;
+  armas_x_dense_t A0, C0, tau0, D;
+  int ok;
   DTYPE n0;
   armas_conf_t conf = *armas_conf_default();
-  int wchange = lb > 0 ? 2*M : 0;
+  armas_wbuf_t wb = ARMAS_WBNULL;
 
   armas_x_init(&A0, M, N);
   armas_x_init(&C0, M, M);
@@ -86,16 +88,18 @@ int test_build_identity(int M, int N, int K, int lb, int verbose)
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_x_rqbuild_work(&A0, &conf);
-  armas_x_init(&W, wsize-wchange, 1);
+  if (armas_x_rqbuild_w(&A0, &tau0, 0, &wb, &conf) < 0)
+    printf("build: workspace calculation error\n");
+  armas_walloc(&wb, wb.bytes);
 
   // factorize
   conf.lb = lb;
-  armas_x_rqfactor(&A0, &tau0, &W, &conf);
+  armas_x_rqfactor_w(&A0, &tau0, &wb, &conf);
 
   // compute Q = buildQ(rq(A)), K first columns
   conf.lb = lb;
-  armas_x_rqbuild(&A0, &tau0, &W, K, &conf);
+  if (armas_x_rqbuild_w(&A0, &tau0, K, &wb, &conf) < 0)
+    printf("build error: %d\n", conf.error);
 
   // C0 = Q.T*Q - I
   armas_x_mult(0.0, &C0, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
@@ -112,7 +116,7 @@ int test_build_identity(int M, int N, int K, int lb, int verbose)
   //armas_x_release(&A0);
   armas_x_release(&C0);
   armas_x_release(&tau0);
-
+  armas_wrelease(&wb);
   return ok;
 }
 
