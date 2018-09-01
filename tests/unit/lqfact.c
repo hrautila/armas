@@ -16,11 +16,10 @@
  */
 int test_factor(int M, int N, int lb, int verbose)
 {
-  armas_x_dense_t A0, A1, tau0, tau1, W;
-  int wsize;
+  armas_x_dense_t A0, A1, tau0, tau1;
   DTYPE n0, n1;
-  int wchange = lb > 8 ? 2*M : 0;
   armas_conf_t conf = *armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
   
   if (lb == 0)
     lb = 4;
@@ -36,15 +35,18 @@ int test_factor(int M, int N, int lb, int verbose)
 
   // allocate workspace according the blocked invocation
   conf.lb = lb;
-  wsize = armas_x_lqfactor_work(&A0, &conf);
-  armas_x_init(&W, wsize-wchange, 1);
+  if (armas_x_lqfactor_w(&A0, &tau0, &wb, &conf) != 0) {
+    printf("factor: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
 
   // factorize
   conf.lb = 0;
-  armas_x_lqfactor(&A0, &tau0, &W, &conf);
+  armas_x_lqfactor_w(&A0, &tau0, &wb, &conf);
 
   conf.lb = lb;
-  armas_x_lqfactor(&A1, &tau1, &W, &conf);
+  armas_x_lqfactor_w(&A1, &tau1, &wb, &conf);
 
   n0 = rel_error((DTYPE *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   n1 = rel_error((DTYPE *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
@@ -59,7 +61,7 @@ int test_factor(int M, int N, int lb, int verbose)
   armas_x_release(&A1);
   armas_x_release(&tau0);
   armas_x_release(&tau1);
-
+  armas_wrelease(&wb);
   return isOK(n0, N) && isOK(n1, N);
 }
 
@@ -69,7 +71,7 @@ int main(int argc, char **argv)
   int opt;
   int N = 787;
   int M = 741;
-  int LB = 36;
+  int LB = 64;
   int verbose = 1;
 
   while ((opt = getopt(argc, argv, "v")) != -1) {
