@@ -10,6 +10,10 @@
 
 #define NAME "qlmult"
 
+#ifndef ARMAS_NIL
+#define ARMAS_NIL (armas_x_dense_t *)0
+#endif
+
 /*  ------------------------------------------------------------------------
  *  Test 2: I - Q.T*Q = 0.0
  *    OK: ||I - Q.T*Q||_1 ~~ n*eps
@@ -18,11 +22,11 @@
 int test_mult_identity(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_x_dense_t A0, C, tau0, W, D;
-  int wsize, ok;
+  armas_x_dense_t A0, C, tau0, D;
+  int ok;
   DTYPE n0;
-  int wchange = lb > 8 ? 2*M : 0;
   armas_conf_t conf = *armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&C, M, N);
@@ -38,15 +42,18 @@ int test_mult_identity(int M, int N, int lb, int verbose)
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_x_qlmult_work(&C, ARMAS_LEFT, &conf);
-  armas_x_init(&W, wsize-wchange, 1);
+  if (armas_x_qlmult_w(&C, ARMAS_NIL, ARMAS_NIL, ARMAS_LEFT, &wb, &conf) != 0) {
+    printf("mult: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
 
   // factorize
-  armas_x_qlfactor(&A0, &tau0, &W, &conf);
+  armas_x_qlfactor_w(&A0, &tau0, &wb, &conf);
 
   // compute Q.T*(Q*I)
-  armas_x_qlmult(&C, &A0, &tau0, &W, ARMAS_LEFT, &conf);
-  armas_x_qlmult(&C, &A0, &tau0, &W, ARMAS_LEFT|ARMAS_TRANS, &conf);
+  armas_x_qlmult_w(&C, &A0, &tau0, ARMAS_LEFT, &wb, &conf);
+  armas_x_qlmult_w(&C, &A0, &tau0, ARMAS_LEFT|ARMAS_TRANS, &wb, &conf);
 
   // subtract 1.0 on diagonal
   armas_x_add(&D, -1.0, &conf);
@@ -60,6 +67,7 @@ int test_mult_identity(int M, int N, int lb, int verbose)
   armas_x_release(&A0);
   armas_x_release(&C);
   armas_x_release(&tau0);
+  armas_wrelease(&wb);
   return isOK(n0, N);
 }
 
@@ -70,10 +78,11 @@ int test_mult_identity(int M, int N, int lb, int verbose)
 int test_mult_left(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_x_dense_t A0, C1, C0, tau0, W;
-  int wsize, ok;
+  armas_x_dense_t A0, C1, C0, tau0;
+  int ok;
   DTYPE n0;
   armas_conf_t conf = *armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&C0, M, N);
@@ -89,16 +98,19 @@ int test_mult_left(int M, int N, int lb, int verbose)
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_x_qlmult_work(&C0, ARMAS_LEFT, &conf);
-  armas_x_init(&W, wsize, 1);
+  if (armas_x_qlmult_w(&C0, ARMAS_NIL, ARMAS_NIL, ARMAS_LEFT, &wb, &conf) != 0) {
+    printf("mult: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
 
   // factorize
   conf.lb = lb;
-  armas_x_qlfactor(&A0, &tau0, &W, &conf);
+  armas_x_qlfactor_w(&A0, &tau0, &wb, &conf);
 
   // compute C0 = Q.T*Q*C0
-  armas_x_qlmult(&C0, &A0, &tau0, &W, ARMAS_LEFT, &conf);
-  armas_x_qlmult(&C0, &A0, &tau0, &W, ARMAS_LEFT|ARMAS_TRANS, &conf);
+  armas_x_qlmult_w(&C0, &A0, &tau0, ARMAS_LEFT, &wb, &conf);
+  armas_x_qlmult_w(&C0, &A0, &tau0, ARMAS_LEFT|ARMAS_TRANS, &wb, &conf);
 
   n0 = rel_error((DTYPE *)0, &C1, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(n0, N);
@@ -122,10 +134,11 @@ int test_mult_left(int M, int N, int lb, int verbose)
 int test_mult_right(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_x_dense_t A0, C1, C0, tau0, W;
-  int wsize, ok;
+  armas_x_dense_t A0, C1, C0, tau0;
+  int ok;
   DTYPE n0;
   armas_conf_t conf = *armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&C0, N, M);
@@ -141,16 +154,19 @@ int test_mult_right(int M, int N, int lb, int verbose)
 
   // allocate workspace according the blocked multiplication
   conf.lb = lb;
-  wsize = armas_x_qlmult_work(&C0, ARMAS_RIGHT, &conf);
-  armas_x_init(&W, wsize, 1);
+  if (armas_x_qlmult_w(&C0, ARMAS_NIL, ARMAS_NIL, ARMAS_RIGHT, &wb, &conf) != 0) {
+    printf("mult: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
 
   // factorize
   conf.lb = lb;
-  armas_x_qlfactor(&A0, &tau0, &W, &conf);
+  armas_x_qlfactor_w(&A0, &tau0, &wb, &conf);
 
   // compute C0 = C0*Q.T*Q
-  armas_x_qlmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT|ARMAS_TRANS, &conf);
-  armas_x_qlmult(&C0, &A0, &tau0, &W, ARMAS_RIGHT, &conf);
+  armas_x_qlmult_w(&C0, &A0, &tau0, ARMAS_RIGHT|ARMAS_TRANS, &wb, &conf);
+  armas_x_qlmult_w(&C0, &A0, &tau0, ARMAS_RIGHT, &wb, &conf);
 
 
   n0 = rel_error((DTYPE *)0, &C1, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
@@ -163,6 +179,7 @@ int test_mult_right(int M, int N, int lb, int verbose)
   armas_x_release(&C0);
   armas_x_release(&C1);
   armas_x_release(&tau0);
+  armas_wrelease(&wb);
   return ok;
 }
 
