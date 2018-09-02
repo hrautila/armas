@@ -204,6 +204,140 @@ int armas_x_bdsvd_work(armas_x_dense_t *S, armas_conf_t *conf)
     return 4*(S->rows < S->cols ? S->rows : S->cols);
 }
 
+/**
+ * \brief Compute SVD of bidiagonal matrix.
+ *
+ * Computes the singular values and, optionially, the left and/or right
+ * singular vectors from the SVD of a N-by-N upper or lower bidiagonal
+ * matrix. The SVD of B has the form
+ *
+ *   \f$ B = U S V^T \f$
+ *
+ * where S is the diagonal matrix with singular values, U is an orthogonal
+ * matrix of left singular vectors, and \f$ V^T \f$ is an orthogonal matrix of right
+ * singular vectors. If singular vectors are requested they must be initialized
+ * either to unit diagonal matrix or some other orthogonal matrices.
+ *
+ * \param[in,out] D
+ *      On entry, the diagonal elements of B. On exit, the singular values
+ *      of B in decreasing order.
+ * \param[in] E
+ *      On entry, the offdiagonal elements of B. On exit, E is destroyed.
+ * \param[in,out] U
+ *      On entry, initial orthogonal matrix of left singular vectors. On exit,
+ *      updated left singular vectors.
+ * \param[in,out] V
+ *      On entry, initial orthogonal matrix of right singular vectors. On exit,
+ *      updated right singular vectors.
+ * \param[in] flags
+ *      Indicators, *ARMAS_WANTU*, *ARMAS_WANTV*. Use *ARMAS_FORWARD* to force
+ *      implicit QR-iteration only in forward direction from top to bottom.
+ * \param[out] W
+ *      Workspace of size 4*N elements if eigenvectors needed.
+ * \param[in,out] conf
+ *      Configuration block.
+ *
+ * Singular values are computed with Demmel-Kahan implicit QR algorithm to
+ * high relative accuracy. Tolerance used is conf.tolmult*EPSILON. If absolute
+ * tolerance is needed, conf.optflags bit ARMAS_ABSTOL flag must be set.
+ *
+ * Corresponds to lapack.xBDSQR
+ * \ingroup lapack
+ */
+int armas_x_bdsvd_w(armas_x_dense_t *D,
+                    armas_x_dense_t *E,
+                    armas_x_dense_t *U,
+                    armas_x_dense_t *V,
+                    int flags,
+                    armas_wbuf_t *wb,
+                    armas_conf_t *conf)
+{
+    armas_x_dense_t CS, *uu, *vv;
+    int uuvv, err, N = armas_x_size(D);
+    ABSTYPE tol = 8.0;
+
+    if (!conf)
+        conf = armas_conf_default();
+    
+    if (!D) {
+        conf->error = ARMAS_EINVAL;
+        return -1;
+    }
+
+    uuvv = (flags & (ARMAS_WANTU|ARMAS_WANTV)) != 0;
+    if (uuvv && wb && wb->bytes == 0) {
+        wb->bytes = 4*N*sizeof(DTYPE);
+        return 0;
+    }
+
+    uu = (armas_x_dense_t *)0;
+    vv = (armas_x_dense_t *)0;
+    // check for sizes
+    if (! (armas_x_isvector(D) && armas_x_isvector(E))) {
+        conf->error = ARMAS_ENEED_VECTOR;
+        return -1;
+    }
+    if (flags & ARMAS_WANTU) {
+        if (! U) {
+            conf->error = ARMAS_EINVAL;
+            return -1;
+        }
+        // U columns need to be at least N
+        if (U->cols < N) {
+            conf->error = ARMAS_ESIZE;
+            return -1;
+        }
+        uu = U;
+    }
+    if (flags & ARMAS_WANTV) {
+        if (! V) {
+            conf->error = ARMAS_EINVAL;
+            return -1;
+        }
+        // V rows need to be at least N
+        if (V->rows < N) {
+            conf->error = ARMAS_ESIZE;
+            return -1;
+        }
+        vv = V;
+    }
+    if (armas_x_size(E) != N-1) {
+        conf->error = ARMAS_ESIZE;
+        return -1;
+    }
+    if ((uu || vv) && armas_wbytes(wb) < 4*N*sizeof(DTYPE)) {
+        // if eigenvectors needed then must have workspace
+        conf->error = ARMAS_EWORK;
+        return -1;
+    }
+
+    if (uu || vv) {
+        armas_x_make(&CS, 4*N, 1, 4*N, (DTYPE *)armas_wptr(wb));
+    } else {
+        armas_x_make(&CS, 0, 0, 1, (DTYPE *)0);
+    }
+    if (flags & ARMAS_LOWER) {
+        // rotate to UPPER bidiagonal
+        bdmake_upper(D, E, uu, __nil, &CS);
+    }
+
+    tol = tol*__EPS;
+    if (conf->tolmult != __ZERO) {
+        tol = ((ABSTYPE)conf->tolmult) * __EPS;
+    }
+    if (conf->optflags & ARMAS_OBSVD_GOLUB) {
+        err =__bdsvd_golub(D, E, uu, vv, &CS, tol,  conf);
+    } else {
+        err =__bdsvd_demmel(D, E, uu, vv, &CS, tol, flags, conf);
+    }
+    if (err == 0) {
+        __eigen_sort(D, uu, vv, __nil, conf);
+    } else {
+        conf->error = ARMAS_ECONVERGE;
+    }
+    return err;
+}
+
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
 // Local Variables:
