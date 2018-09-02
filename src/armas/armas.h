@@ -355,6 +355,8 @@ typedef struct armas_wbuf_s {
 } armas_wbuf_t;
     
 #define ARMAS_WBNULL (armas_wbuf_t){ .buf = (char *)0, .bytes = 0, .offset = 0 }
+#define ARMAS_NOWORK (armas_wbuf_t *)0
+
 #define __align64(n) (((n)+7) & ~0x7)
 #define __nbits_aligned8(n) (((n) + 7) >> 3)
 
