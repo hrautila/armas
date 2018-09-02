@@ -730,8 +730,11 @@ extern int armas_x_trdmult_w(armas_x_dense_t *B, const armas_x_dense_t *A, const
 extern int armas_x_trdreduce_work(armas_x_dense_t *A, armas_conf_t *conf);
 extern int armas_x_trdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf);
 extern int armas_x_trdbuild_work(armas_x_dense_t *A, armas_conf_t *conf);
+
 extern int armas_x_trdeigen(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *V,
                             armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_trdeigen_w(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *V,
+                              int flags, armas_wbuf_t *wb, armas_conf_t *conf);
 extern int armas_x_trdbisect(armas_x_dense_t *Y, armas_x_dense_t *D, armas_x_dense_t *E,
                              armas_x_eigen_parameter_t *params,  armas_conf_t *conf);
 // Secular functions solvers
