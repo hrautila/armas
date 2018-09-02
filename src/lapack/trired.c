@@ -28,6 +28,11 @@
 #include "internal_lapack.h"
 #include "partition.h"
 //! \endcond
+
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
+
 static inline
 int __ws_trdreduce(int M, int N, int lb)
 {
@@ -614,6 +619,135 @@ int armas_x_trdreduce_work(armas_x_dense_t *A, armas_conf_t *conf)
 }
 
 /**
+ * @brief Reduce symmetric matrix to tridiagonal form by similiarity transformation A = QTQ^T
+ *
+ * @param[in,out]  A
+ *      On entry, symmetric matrix with elemets stored in upper (lower) triangular
+ *      part. On exit, diagonal and first super (sub) diagonals hold matrix T.
+ *      The upper (lower) triangular part above (below) first super(sub)diagonal
+ *      is used to store orthogonal matrix Q.
+ *
+ * @param[out] tauq
+ *      Scalar coefficients of elementary reflectors.
+ *
+ * @param[in] flags
+ *      ARMAS_LOWER or ARMAS_UPPER
+ *
+ * @param[in] wb
+ *     Workspace buffer needed for computation. To compute size of the required space call 
+ *     the function with workspace bytes set to zero. Size of workspace is returned in 
+ *     `wb.bytes` and no other computation or parameter size checking is done and function
+ *     returns with success.
+ *
+ * @param[in] confs
+ *      Optional blocking configuration
+ *
+ *  @retval 0  success
+ *  @retval -1 error and `conf.error` set to last error
+ *
+ *  Last error codes returned
+ *   - `ARMAS_ESIZE`  if n(C) != m(A) for C*op(Q) or m(C) != m(A) for op(Q)*C
+ *   - `ARMAS_EINVAL` C or A or tau is null pointer
+ *   - `ARMAS_EWORK`  if workspace is less than required for unblocked computation
+ *
+ * #### Additional information
+ *
+ * If LOWER, then the matrix Q is represented as product of elementary reflectors
+ *
+ *   \f$ Q = H_1 H_2...H_{n-1}. \f$
+ *
+ * If UPPER, then the matrix Q is represented as product 
+ * 
+ *   \f$ Q = H_{n-1}...H_2 H_1,  H_k = I - tau*v_k*v_k^T. \f$
+ *
+ * The contents of A on exit is as follow for N = 5.
+ *
+ *    LOWER                    UPPER
+ *     ( d  .  .  .  . )         ( d  e  v3 v2 v1 )
+ *     ( e  d  .  .  . )         ( .  d  e  v2 v1 )
+ *     ( v1 e  d  .  . )         ( .  .  d  e  v1 )
+ *     ( v1 v2 e  d  . )         ( .  .  .  d  e  )
+ *     ( v1 v2 v3 e  d )         ( .  .  .  .  d  )
+ */
+int armas_x_trdreduce_w(armas_x_dense_t *A,
+                        armas_x_dense_t *tauq,
+                        int flags,
+                        armas_wbuf_t *wb,
+                        armas_conf_t *conf)
+{
+  armas_x_dense_t Y, Wrk;
+  size_t wsmin, wsz;
+  int lb, err = 0;
+  DTYPE *buf;
+  
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (!A) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  if (wb && wb->bytes == 0) {
+    if (conf->lb > 0 && A->cols > conf->lb)
+      wb->bytes = (A->cols * conf->lb) * sizeof(DTYPE);
+    else
+      wb->bytes = A->cols * sizeof(DTYPE);
+    return 0;
+  }
+
+  if (A->rows != A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+  if (!armas_x_isvector(tauq) && armas_x_size(tauq) != A->cols) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+  
+  wsmin = A->cols * sizeof(DTYPE);
+  if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+  // adjust blocking factor to workspace
+  lb = conf->lb;
+  if (lb > 0 && A->cols > lb) {
+    wsz /= sizeof(DTYPE);
+    if (wsz < A->cols * lb) {
+      lb = (wsz / A->cols) & ~0x3;
+      if (lb < ARMAS_BLOCKING_MIN)
+        lb = 0;
+    }
+  }
+
+  wsz = armas_wpos(wb);
+  buf = (DTYPE *)armas_wptr(wb);
+  
+  if (lb == 0 || A->cols <= lb) {
+    armas_x_make(&Wrk, A->rows, 1, A->rows, buf);
+    if (flags & ARMAS_UPPER) {
+      err = __unblk_trdreduce_upper(A, tauq, &Wrk, FALSE, conf);
+    } else {
+      err = __unblk_trdreduce_lower(A, tauq, &Wrk, conf);
+    }
+  } else {
+    armas_x_make(&Y, A->rows, lb, A->rows, buf);
+    // Make W = Y in folling. W is used in following subroutine only when reducing
+    // last block to tridiagonal form and Y is not needed anymore
+    // TODO: fix this later
+    if (flags & ARMAS_UPPER) {
+      err = __blk_trdreduce_upper(A, tauq, &Y, &Y, lb, conf);
+    } else {
+      err = __blk_trdreduce_lower(A, tauq, &Y, &Y, lb, conf);
+    }
+  }
+  armas_wsetpos(wb, wsz);
+  return err;
+}
+
+
+/**
  * \brief Multiply matrix C with orthogonal matrix Q.
  *
  * \param[in,out] C
@@ -639,6 +773,9 @@ int armas_x_trdmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *tau
 {
   armas_x_dense_t Ch, Qh, tauh;
   int err = 0;
+  
+  if (!conf)
+    conf = armas_conf_default();
   
   // default to multiplication from left is nothing defined
   if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))
@@ -677,6 +814,86 @@ int armas_x_trdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
   return armas_x_qrmult_work(A, flags, conf);
 }
 
+
+/**
+ * @brief Multiply matrix C with orthogonal matrix Q.
+ *
+ * @param[in,out] C
+ *    On entry matrix C. On exit product of C and orthogonal matrix Q.
+ * @param[in] A
+ *    Orthogonal matrix C as elementary reflectors saved in upper (lower) triangular
+ *    part of A. See trdreduce().
+ * @param[in] tau
+ *    Scalar coeffients of elementary reflectors.
+ * @param[in] flags
+ *    Indicator flags, combination of *ARMAS_LOWER*, *ARMAS_UPPER*, *ARMAS_LEFT*,
+ *    *ARMAS_RIGHT* and *ARMAS_TRANS*.
+ * @param[out] W
+ *    Workspace
+ * @param[in] conf
+ *    Blocking configuration
+ *
+ * \retval 0 Sucess
+ * \retval -1 Error
+ */
+int armas_x_trdmult_w(armas_x_dense_t *C,
+                      const armas_x_dense_t *A,
+                      const armas_x_dense_t *tau,
+                      int flags,
+                      armas_wbuf_t *wb,
+                      armas_conf_t *conf)
+{
+  armas_x_dense_t Ch, Qh, tauh;
+  int err = 0;
+  
+  if (!conf)
+    conf = armas_conf_default();
+  
+  if (!C) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  if (wb && wb->bytes == 0) {
+    if (flags & ARMAS_UPPER)
+      err = armas_x_qlmult_w(C, A, tau, flags, wb, conf);
+    else
+      err = armas_x_qrmult_w(C, A, tau, flags, wb, conf);
+    return err;
+  }
+
+  if (!A || !tau || armas_x_size(tau) != A->cols) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  int P = (flags & ARMAS_RIGHT) != 0 ? C->cols : C->rows;
+  if (P != A->rows || A->rows != A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+
+  if (flags & ARMAS_UPPER) {
+    if (flags & ARMAS_RIGHT) {
+      armas_x_submatrix(&Ch, C, 0, 0, C->rows, C->cols-1);
+    } else {
+      armas_x_submatrix(&Ch, C, 0, 0, C->rows-1, C->cols);
+    }
+    armas_x_submatrix(&Qh, A, 0, 1, A->rows-1, A->rows-1);
+    armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
+    err = armas_x_qlmult_w(&Ch, &Qh, &tauh, flags, wb, conf);
+  } else {
+    if (flags & ARMAS_RIGHT) {
+      armas_x_submatrix(&Ch, C, 0, 1, C->rows, C->cols-1);
+    } else {
+      armas_x_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
+    }
+    armas_x_submatrix(&Qh, A, 1, 0, A->rows-1, A->rows-1);
+    armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
+    err = armas_x_qrmult_w(&Ch, &Qh, &tauh, flags, wb, conf);
+  }
+  return err;
+}
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
