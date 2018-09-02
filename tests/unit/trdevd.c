@@ -86,10 +86,11 @@ void abs_minus(armas_x_dense_t *D0, armas_x_dense_t *D1)
 // test: 
 int test_eigen(int N, int type, DTYPE coeff, int verbose)
 {
-    armas_x_dense_t A0, V, D, E, sD, sE0, sE1, C, W;
+    armas_x_dense_t A0, V, D, E, sD, sE0, sE1, C;
     armas_conf_t conf = *armas_conf_default();
     DTYPE nrm;
     int ok, fails = 0;
+    armas_wbuf_t wb;
     char desc[6] = "typeX";
     desc[4] = '0' + type;
         
@@ -110,10 +111,10 @@ int test_eigen(int N, int type, DTYPE coeff, int verbose)
     armas_x_madd(&sD, 1.0, 0);
     
     armas_x_init(&C, N, N);
-    armas_x_init(&W, 4*N, 1);
+    armas_walloc(&wb, 4*N*sizeof(DTYPE));
 
-    armas_x_trdeigen(&D, &E, &V, &W, ARMAS_WANTV, &conf);
-    // compute: U.T*A*V
+    armas_x_trdeigen_w(&D, &E, &V, ARMAS_WANTV, &wb, &conf);
+    // compute: V.T*A*V
     armas_x_mult(0.0, &C, 1.0, &V, &A0, ARMAS_TRANSA, &conf);
     armas_x_mult(0.0, &A0, 1.0, &C, &V, ARMAS_NOTRANS, &conf);
 
@@ -154,7 +155,7 @@ int main(int argc, char **argv)
 {
     int opt;
     int N = 199;
-    int verbose = 0;
+    int verbose = 1;
     DTYPE coeff = 1.0;
 
     while ((opt = getopt(argc, argv, "c:v")) != -1) {
