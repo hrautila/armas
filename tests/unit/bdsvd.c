@@ -78,9 +78,10 @@ void abs_minus(armas_x_dense_t *D0, armas_x_dense_t *D1)
 // test: M >= N
 int test_tall(int M, int N, int flags, int type, int verbose)
 {
-    armas_x_dense_t A0, At, U, V, D, E, sD, sE, C, W;
+    armas_x_dense_t A0, At, U, V, D, E, sD, sE, C;
     armas_conf_t conf = *armas_conf_default();
     DTYPE nrm, nrm_A;
+    armas_wbuf_t wb;
     int ok, fails = 0;
     char *desc = flags & ARMAS_LOWER ? "lower" : "upper";
 
@@ -106,9 +107,9 @@ int test_tall(int M, int N, int flags, int type, int verbose)
     armas_x_madd(&sD, 1.0, 0);
     
     armas_x_init(&C, N, N);
-    armas_x_init(&W, 4*N, 1);
+    armas_walloc(&wb, 4*N*sizeof(DTYPE));
 
-    armas_x_bdsvd(&D, &E, &U, &V, &W, flags|ARMAS_WANTU|ARMAS_WANTV, &conf);
+    armas_x_bdsvd_w(&D, &E, &U, &V, flags|ARMAS_WANTU|ARMAS_WANTV, &wb, &conf);
 
     // compute: U.T*A*V
     armas_x_mult(0.0, &C, 1.0, &U, &A0, ARMAS_TRANSA, &conf);
