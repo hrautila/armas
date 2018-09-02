@@ -192,6 +192,9 @@ int armas_x_trdeigen(armas_x_dense_t *D, armas_x_dense_t *E,
     int err, N = armas_x_size(D);
     ABSTYPE tol = 5.0;
 
+    if (!conf)
+        conf = armas_conf_default();
+
     vv = (armas_x_dense_t *)0;
     // check for sizes
     if (! (armas_x_isvector(D) && armas_x_isvector(E))) {
@@ -221,6 +224,116 @@ int armas_x_trdeigen(armas_x_dense_t *D, armas_x_dense_t *E,
 
     if (vv) {
         armas_x_make(&CS, 2*N, 1, 2*N, armas_x_data(W));
+    } else {
+        armas_x_make(&CS, 0, 0, 1, (DTYPE *)0);
+    }
+
+    tol = tol*__EPS;
+    if (conf->tolmult > 0) {
+        tol = ((ABSTYPE)conf->tolmult) * __EPS;
+    }
+    err =__trdevd_qr(D, E, vv, &CS, tol, flags, conf);
+
+    if (err == 0) {
+        __sort_eigenvec(D, vv, __nil, __nil, ARMAS_ASC);
+    } else {
+        conf->error = ARMAS_ECONVERGE;
+    }
+    return err;
+}
+
+
+
+/**
+ * \brief Compute eigenvalues of a symmetric tridiagonal matrix T.
+ *
+ * Computes all eigenvalues and, optionally, eigenvectors of a symmetric
+ * tridiagonal matrix T.
+ *
+ * \param[in,out] D
+ *      On entry, the diagonal elements of B. On exit, the eigenvalues
+ *      of T in inreasing order.
+ * \param[in] E
+ *      On entry, the offdiagonal elements of T. On exit, E is destroyed.
+ * \param[in,out] V
+ *      On entry, initial orthogonal matrix of eigenvectors. On exit,
+ *      updated eigenvectors.
+ * \param[in] flags
+ *      Indicators *ARMAS_WANTV*
+ * \param[out] wb
+ *      Workspace of size 2*N if eigenvector wanted. If eigenvectors are not 
+ *      wanted call with constant *ARMAS_NOWORK*. If eigenvector wanted and called
+ *      with wb.bytes set to zero size of workspace is returned in wb.bytes and function
+ *      returns with success.
+ * \param[in,out] conf
+ *      Configuration block.
+ *
+ * \retval  0 Success
+ * \retval -1 Error, `conf.error` holds error code.
+ *
+ * Last error codes:
+ *   - ARMAS_EINVAL if D or E null or V null when flags ARMAS_WANTV set.
+ *   - ARMAS_ESIZE  if len(E) != len(D)-1 or m(V) != n(V) != len(D)
+ *   - ARMAS_ENEED_VECTOR if D and E are not vectors.
+ *   - ARMAS_EWORK  if eigenvectors wanted and workspace less than 2*len(D) elements.
+ *   - ARMAS_ECONVERGE if algorigthm does not converge
+ *
+ * \ingroup lapack
+ */
+int armas_x_trdeigen_w(armas_x_dense_t *D,
+                       armas_x_dense_t *E,
+                       armas_x_dense_t *V,
+                       int flags,
+                       armas_wbuf_t *wb,
+                       armas_conf_t *conf)
+{
+    armas_x_dense_t CS, *vv;
+    int err, N = armas_x_size(D);
+    ABSTYPE tol = 5.0;
+
+    if (!conf)
+        conf = armas_conf_default();
+
+    if (!D) {
+        conf->error = ARMAS_EINVAL;
+        return -1;
+    }
+
+    if ((flags & ARMAS_WANTV) != 0 && wb && wb->bytes == 0) {
+        // workspace only if eigenvector wanted
+        wb->bytes = 2*N*sizeof(DTYPE);
+        return 0;
+    }
+
+    vv = (armas_x_dense_t *)0;
+    // check for sizes
+    if (! (armas_x_isvector(D) && armas_x_isvector(E))) {
+        conf->error = ARMAS_ENEED_VECTOR;
+        return -1;
+    }
+    if (flags & ARMAS_WANTV) {
+        if (! V) {
+            conf->error = ARMAS_EINVAL;
+            return -1;
+        }
+        if (V->rows != N || V->rows != V->cols) {
+            conf->error = ARMAS_ESIZE;
+            return -1;
+        }
+        vv = V;
+    }
+    if (armas_x_size(E) != N-1) {
+        conf->error = ARMAS_ESIZE;
+        return -1;
+    }
+    if (vv && (!wb || armas_wbytes(wb) < 2*N*sizeof(DTYPE))) {
+        // if eigenvectors needed then must have workspace
+        conf->error = ARMAS_EWORK;
+        return -1;
+    }
+
+    if (vv) {
+        armas_x_make(&CS, 2*N, 1, 2*N, (DTYPE *)armas_wptr(wb));
     } else {
         armas_x_make(&CS, 0, 0, 1, (DTYPE *)0);
     }
