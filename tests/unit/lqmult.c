@@ -18,10 +18,8 @@
 int test_mult_identity(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_x_dense_t A0, C, tau0, W, D;
-  int wsize;
+  armas_x_dense_t A0, C, tau0, D;
   DTYPE n0;
-  int wchange = lb > 8 ? 2*M : 0;
   armas_conf_t conf = *armas_conf_default();
   armas_wbuf_t wb = ARMAS_WBNULL;
   
@@ -44,10 +42,6 @@ int test_mult_identity(int M, int N, int lb, int verbose)
     return 0;
   }
   armas_walloc(&wb, wb.bytes);
-#if 0
-  wsize = armas_x_lqmult_work(&C, ARMAS_LEFT, &conf);
-  armas_x_init(&W, wsize-wchange, 1);
-#endif
   // factorize
   conf.lb = lb;
   armas_x_lqfactor_w(&A0, &tau0, &wb, &conf);
@@ -79,8 +73,7 @@ int test_mult_identity(int M, int N, int lb, int verbose)
 int test_mult_left(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_x_dense_t A0, C1, C0, tau0, W;
-  int wsize;
+  armas_x_dense_t A0, C1, C0, tau0;
   DTYPE n0;
   armas_conf_t conf = *armas_conf_default();
   armas_wbuf_t wb = ARMAS_WBNULL;
@@ -104,10 +97,7 @@ int test_mult_left(int M, int N, int lb, int verbose)
     return 0;
   }
   armas_walloc(&wb, wb.bytes);
-#if 0
-  wsize = armas_x_lqmult_work(&C0, ARMAS_LEFT, &conf);
-  armas_x_init(&W, wsize, 1);
-#endif
+
   // factorize
   conf.lb = lb;
   armas_x_lqfactor_w(&A0, &tau0, &wb, &conf);
@@ -119,7 +109,7 @@ int test_mult_left(int M, int N, int lb, int verbose)
 
   n0 = rel_error((DTYPE *)0, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
 
-  printf("%s: %s Q.T*Q*C == C\n", PASS(isOK(n0, N)), blk);
+  printf("%s: %s Q.T*Q*C == C : m(C) > n(C)\n", PASS(isOK(n0, N)), blk);
   if (verbose > 0) {
     printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
   }
@@ -127,7 +117,6 @@ int test_mult_left(int M, int N, int lb, int verbose)
   armas_x_release(&A0);
   armas_x_release(&C0);
   armas_x_release(&C1);
-  //armas_x_release(&W);
   armas_x_release(&tau0);
   armas_wrelease(&wb);
   return isOK(n0, N);
@@ -135,14 +124,13 @@ int test_mult_left(int M, int N, int lb, int verbose)
 
 
 /*  -----------------------------------------------------------------------------------
- *  Test 4: C == C*Q.T*Q
+ *  Test 4: C == C*Q.T*Q  n(Q) == n(C)
  *    OK: ||C - C*Q.T*Q||_1 ~~ n*eps
  */
 int test_mult_right(int M, int N, int lb, int verbose)
 {
   char *blk = lb > 0 ? "  blk" : "unblk";
-  armas_x_dense_t A0, C1, C0, tau0, W;
-  int wsize;
+  armas_x_dense_t A0, C1, C0, tau0;
   DTYPE n0;
   armas_conf_t conf = *armas_conf_default();
   armas_wbuf_t wb = ARMAS_WBNULL;
@@ -166,28 +154,54 @@ int test_mult_right(int M, int N, int lb, int verbose)
     return 0;
   }
   armas_walloc(&wb, wb.bytes);
-#if 0
-  wsize = armas_x_lqmult_work(&C0, ARMAS_RIGHT, &conf);
-  armas_x_init(&W, wsize, 1);
-#endif
+
   // factorize
   conf.lb = lb;
   armas_x_lqfactor_w(&A0, &tau0, &wb, &conf);
 
-  // compute C0 = C0*Q.T*Q
+  // compute C0 = C0*Q.T*Q; m(C) < n(C)
   conf.error = 0;
   armas_x_lqmult_w(&C0, &A0, &tau0, ARMAS_RIGHT|ARMAS_TRANS, &wb, &conf);
   armas_x_lqmult_w(&C0, &A0, &tau0, ARMAS_RIGHT, &wb, &conf);
 
   n0 = rel_error((DTYPE *)0, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-  printf("%s: %s C*Q.T*Q == C\n", PASS(isOK(n0, N)), blk);
+  printf("%s: %s C*Q.T*Q == C : m(C) < n(C)\n", PASS(isOK(n0, N)), blk);
+  if (verbose > 0)
+    printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
+
+  armas_x_release(&C0);
+  armas_x_release(&C1);
+  armas_wrelease(&wb);
+  
+  // m(C) > n(C)
+  armas_x_init(&C0, N+M/4, N);
+  armas_x_init(&C1, N+M/4, N);
+  armas_x_set_values(&C0, unitrand, ARMAS_ANY);
+  armas_x_mcopy(&C1, &C0);
+
+  // reallocate workspace
+  wb.bytes = 0;
+  
+  conf.lb = lb;
+  if (armas_x_lqmult_w(&C0, &A0, &tau0, ARMAS_RIGHT, &wb, &conf) != 0) {
+    printf("mult: workspace calculation failure!!\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
+
+  // compute C0 = C0*Q.T*Q; m(C) > n(C) 
+  conf.error = 0;
+  armas_x_lqmult_w(&C0, &A0, &tau0, ARMAS_RIGHT|ARMAS_TRANS, &wb, &conf);
+  armas_x_lqmult_w(&C0, &A0, &tau0, ARMAS_RIGHT, &wb, &conf);
+
+  n0 = rel_error((DTYPE *)0, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+  printf("%s: %s C*Q.T*Q == C : m(C) > n(C)\n", PASS(isOK(n0, N)), blk);
   if (verbose > 0)
     printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
 
   armas_x_release(&A0);
   armas_x_release(&C0);
   armas_x_release(&C1);
-  armas_x_release(&W);
   armas_x_release(&tau0);
   armas_wrelease(&wb);
   return isOK(n0, N);
