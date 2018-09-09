@@ -237,8 +237,11 @@ int __trd_bisect(armas_x_dense_t *Y, armas_x_dense_t *D, armas_x_dense_t *E,
  * \retval  0  OK
  * \retval <0  Failed to store all requested eigenvalues to result vector
  */
-int armas_x_trdbisect(armas_x_dense_t *Y, armas_x_dense_t *D, armas_x_dense_t *E,
-                      armas_x_eigen_parameter_t *params,  armas_conf_t *conf)
+int armas_x_trdbisect(armas_x_dense_t *Y,
+                      armas_x_dense_t *D,
+                      armas_x_dense_t *E,
+                      const armas_x_eigen_parameter_t *params,
+                      armas_conf_t *conf)
 {
     //armas_x_dense_t Xrow;
     DTYPE gleft, gright, bnorm, tau;
