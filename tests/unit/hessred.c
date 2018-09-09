@@ -17,20 +17,23 @@
 
 int test_reduce(int M, int N, int lb, int verbose)
 {
-  armas_x_dense_t A0, A1, tau0, tau1, W;
+  armas_x_dense_t A0, A1, tau0, tau1;
   armas_conf_t conf = *armas_conf_default();
-  int ok, wsize;
-  int wchange = lb > 8 ? 2*M : 0;
+  int ok;
   DTYPE n0, n1;
+  armas_wbuf_t wb = ARMAS_WBNULL;
 
   armas_x_init(&A0, N, N);
   armas_x_init(&A1, N, N);
-  armas_x_init(&tau0, N, 1);
-  armas_x_init(&tau1, N, 1);
+  armas_x_init(&tau0, N-1, 1);
+  armas_x_init(&tau1, N-1, 1);
 
   conf.lb = lb;
-  wsize = armas_x_hessreduce_work(&A0, &conf);
-  armas_x_init(&W, wsize-wchange, 1);
+  if (armas_x_hessreduce_w(&A0, &tau0, &wb, &conf) < 0) {
+    printf("hess: workspace calculation error\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
 
   // set source data
   armas_x_set_values(&A0, unitrand, ARMAS_ANY);
@@ -38,11 +41,13 @@ int test_reduce(int M, int N, int lb, int verbose)
 
   // unblocked reduction
   conf.lb = 0;
-  armas_x_hessreduce(&A0, &tau0, &W, &conf);
+  if (armas_x_hessreduce_w(&A0, &tau0, &wb, &conf) < 0)
+    printf("unblocked reduce error %d\n", conf.error);
 
   // blocked reduction
   conf.lb = lb;
-  armas_x_hessreduce(&A1, &tau1, &W, &conf);
+  if (armas_x_hessreduce_w(&A1, &tau1, &wb, &conf) < 0)
+    printf("blocked reduce error: %d\n", conf.error);
 
 
   n0 = rel_error((DTYPE *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
@@ -59,29 +64,31 @@ int test_reduce(int M, int N, int lb, int verbose)
   armas_x_release(&A1);
   armas_x_release(&tau0);
   armas_x_release(&tau1);
-  armas_x_release(&W);
-
+  armas_wrelease(&wb);
   return ok;
 }
 
 
 int test_mult(int M, int N, int lb, int verbose)
 {
-  armas_x_dense_t A0, A1, B, tau0, W, Blow;
+  armas_x_dense_t A0, A1, B, tau0, Blow;
   armas_conf_t conf = *armas_conf_default();
-  int ok, wsize;
-  int wchange = lb > 8 ? 2*M : 0;
+  int ok;
   DTYPE nrm;
+  armas_wbuf_t wb = ARMAS_WBNULL;
 
   armas_x_init(&A0, N, N);
   armas_x_init(&A1, N, N);
   armas_x_init(&B, N, N);
-  armas_x_init(&tau0, N, 1);
+  armas_x_init(&tau0, N-1, 1);
 
   conf.lb = lb;
   // A is square; left and right work sizes are equal
-  wsize = armas_x_hessmult_work(&A0, ARMAS_LEFT, &conf);
-  armas_x_init(&W, wsize-wchange, 1);
+  if (armas_x_hessreduce_w(&A0, &tau0, &wb, &conf) < 0) {
+    printf("hess: workspace calculation error\n");
+    return 0;
+  }
+  armas_walloc(&wb, wb.bytes);
 
   // set source data
   armas_x_set_values(&A0, unitrand, ARMAS_ANY);
@@ -89,7 +96,8 @@ int test_mult(int M, int N, int lb, int verbose)
 
   // reduce to Hessenberg matrix
   conf.lb = lb;
-  armas_x_hessreduce(&A0, &tau0, &W, &conf);
+  if (armas_x_hessreduce_w(&A0, &tau0, &wb, &conf) < 0)
+    printf("hess: reduce error %d\n", conf.error);
 
   // extract B = Hess(A)  
   armas_x_mcopy(&B, &A0);
@@ -97,8 +105,10 @@ int test_mult(int M, int N, int lb, int verbose)
   armas_x_make_trm(&Blow, ARMAS_UPPER);
 
   // A = H*B*H.T; update B with H.T and H
-  armas_x_hessmult(&B, &A0, &tau0, &W, ARMAS_LEFT, &conf);
-  armas_x_hessmult(&B, &A0, &tau0, &W, ARMAS_RIGHT|ARMAS_TRANS, &conf);
+  if (armas_x_hessmult_w(&B, &A0, &tau0, ARMAS_LEFT, &wb, &conf) < 0)
+    printf("hessmult left: error %d\n", conf.error);
+  if (armas_x_hessmult_w(&B, &A0, &tau0, ARMAS_RIGHT|ARMAS_TRANS, &wb, &conf) < 0)
+    printf("hessmult right: error %d\n", conf.error);
 
   // B == A1?
   nrm = rel_error((DTYPE *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
@@ -112,7 +122,7 @@ int test_mult(int M, int N, int lb, int verbose)
   armas_x_release(&A1);
   armas_x_release(&B);
   armas_x_release(&tau0);
-  armas_x_release(&W);
+  armas_wrelease(&wb);
   return ok;
 }
 
