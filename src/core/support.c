@@ -34,12 +34,18 @@ static armas_conf_t __default_conf = {
   .lb = 48,             // LB (lapack blocking size)
   .maxproc = 1,         // max processors
   .wb = 480,            // WB (scheduler blocking size)
-  .error = 0,           // last error
+  .error = 0,           // last error (output)
   .optflags = 0,        // opt flags
   .tolmult = 10,        // error tolerance multiplier (tolerance = tolmult*EPSILON)
   .cmem = CMEMSIZE,     // default per-thread cache memory size
   .l1mem = CMEMSIZE/4,
-  .cbuf = (armas_cbuf_t *)0
+  .cbuf = (armas_cbuf_t *)0,
+  .maxiter = 0,         // max iterators
+  .gmres_m = 0,         // 
+  .numiters = 0,        // last iterations executed (output)
+  .stop = 0.0,          // absolute stopping criteria
+  .smult = 0.0,         // relative stopping critedia multiplier
+  .residual = 0.0       // last residual computed (output)
 };
 
 static armas_scheduler_t __default_sched = {
