@@ -18,24 +18,30 @@
 
 int test_1(int N, int flags, int verbose)
 {
-    armas_x_dense_t A, A0, D, I0, sD, V, T, W;
+    armas_x_dense_t A, A0, D, I0, sD, V, T;
     armas_conf_t conf = *armas_conf_default();
     DTYPE n0, n1, nrm_A;
     int err, ok;
     char *uplo = flags & ARMAS_LOWER ? "L" : "U";
+    armas_wbuf_t wb = ARMAS_WBNULL;
     
     armas_x_init(&A, N, N);
     armas_x_init(&A0, N, N);
     armas_x_init(&V, N, N);
     armas_x_init(&I0, N, N);
     armas_x_init(&D, N, 1);
-    armas_x_init(&W, N*N, 1);
 
     armas_x_set_values(&A, unitrand, ARMAS_SYMM);
     armas_x_mcopy(&A0, &A);
     nrm_A = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf);
     
-    err = armas_x_eigen_sym(&D, &A, &W, flags|ARMAS_WANTV, &conf);
+    if (armas_x_eigen_sym_w(&D, &A, flags|ARMAS_WANTV, &wb, &conf) < 0) {
+        printf("eigen_sym: workspace calculation failure\n");
+        return 0;
+    }
+    armas_walloc(&wb, wb.bytes);
+    
+    err = armas_x_eigen_sym_w(&D, &A, flags|ARMAS_WANTV, &wb, &conf);
     if (err) {
         printf("err = %d, %d\n", err, conf.error);
         return 0;
@@ -47,7 +53,7 @@ int test_1(int N, int flags, int verbose)
     n0 = armas_x_mnorm(&I0, ARMAS_NORM_ONE, &conf);
 
     armas_x_mcopy(&V, &A);
-    armas_x_mult_diag(&V, &D, 1.0, ARMAS_RIGHT, &conf);
+    armas_x_mult_diag(&V, 1.0, &D, ARMAS_RIGHT, &conf);
     armas_x_mult(1.0, &A0, -1.0, &V, &A, ARMAS_TRANSB, &conf);
 
     if (N < 10 && verbose > 2) {
@@ -64,6 +70,12 @@ int test_1(int N, int flags, int verbose)
         printf("  ||A - V*D*V.T||_1: %e [%d]\n", n1, ndigits(n1));
         printf("  ||I - V.T*V||_1  : %e [%d]\n", n0, ndigits(n0));
     }
+    armas_x_release(&A);
+    armas_x_release(&A0);
+    armas_x_release(&V);
+    armas_x_release(&I0);
+    armas_x_release(&D);
+    armas_wrelease(&wb);
     return ok;
 }
 
