@@ -31,9 +31,9 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   armas_x_init(&B0, N, M);
   armas_x_init(&X0, N, M);
 
-  // set source data (A = A*A.T)
+  // set source data (A = A^T*A)
   armas_x_set_values(&A0, zeromean, ARMAS_ANY);
-  armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
+  armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
   armas_x_mcopy(&A0, &A1);
 
   armas_x_set_values(&B0, unitrand, ARMAS_ANY);
@@ -41,7 +41,7 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   armas_x_mcopy(&X0, &B0);
 
   conf.lb = lb;
-  armas_x_cholfactor(&A0, ARMAS_NULL, ARMAS_NOPIVOT, flags, &conf);
+  armas_x_cholfactor_w(&A0, ARMAS_NOPIVOT, flags, ARMAS_NOWORK, &conf);
 
   // solve
   armas_x_cholsolve(&X0, &A0, ARMAS_NOPIVOT, flags, &conf);
@@ -76,14 +76,14 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
 
   // set source data
   armas_x_set_values(&A0, unitrand, ARMAS_ANY);
-  // A = A*A.T; positive semi-definite
-  armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
+  // A = A^T*A; positive semi-definite
+  armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
   armas_x_mcopy(&A0, &A1);
 
   conf.lb = 0; 
-  armas_x_cholfactor(&A0, ARMAS_NULL, ARMAS_NOPIVOT, flags, &conf);
+  armas_x_cholfactor_w(&A0, ARMAS_NOPIVOT, flags, ARMAS_NOWORK, &conf);
   conf.lb = lb;
-  armas_x_cholfactor(&A1, ARMAS_NULL, ARMAS_NOPIVOT, flags,  &conf);
+  armas_x_cholfactor_w(&A1, ARMAS_NOPIVOT, flags,  ARMAS_NOWORK, &conf);
 
   nrm = rel_error((DTYPE *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, N);
@@ -107,6 +107,7 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     int e, ok, flags1, flags2, pflgs;
     char *fact = flags & ARMAS_LOWER ? "P^T*(LL^T)*P" : "P^T*(U^TU)*P";
     char *blk = lb == 0 ? "unblk" : "  blk";
+    armas_wbuf_t wb = ARMAS_WBNULL;
     pflgs = flags & ARMAS_LOWER ? ARMAS_PIVOT_LOWER : ARMAS_PIVOT_UPPER;
     
     armas_x_init(&A0, N, N);
@@ -118,7 +119,7 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     armas_pivot_init(&P, N);
     
     armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
     armas_x_make_trm(&A1, flags);
     armas_x_mcopy(&A0, &A1);
     if (N < 10) {
@@ -126,10 +127,14 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     }
 
     conf.lb = lb;
-    if ((e = armas_x_cholfactor(&A0, &W, &P, flags, &conf)) < 0) {
-        printf("..%s.factoring error %d [%d]\n", blk, conf.error, e);
+    if ((e = armas_x_cholfactor_w(&A0, &P, flags, &wb, &conf)) < 0) {
+        printf("..%s.workspace error %d [%d]\n", blk, conf.error, e);
     }
-
+    armas_walloc(&wb, wb.bytes);
+    if ((e = armas_x_cholfactor_w(&A0, &P, flags, &wb, &conf)) < 0) {
+        printf("..%s.factor error %d [%d]\n", blk, conf.error, e);
+    }
+    
     if (flags & ARMAS_LOWER) {
         flags1 = ARMAS_LOWER|ARMAS_RIGHT;
         flags2 = ARMAS_TRANS|ARMAS_LOWER|ARMAS_RIGHT;
@@ -161,6 +166,7 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     armas_x_release(&C);
     armas_x_release(&W);
     armas_pivot_release(&P);
+    armas_wrelease(&wb);
     return ok;
 }
 
@@ -173,6 +179,7 @@ int test_cholpv_solve(int M, int N, int lb, int flags, int verbose)
     int e, ok;
     char *fact = flags & ARMAS_LOWER ? "LL^T" : "U^TU";
     char *blk = lb == 0 ? "unblk" : "  blk";
+    armas_wbuf_t wb = ARMAS_WBNULL;
     
     armas_x_init(&A0, N, N);
     armas_x_init(&A1, N, N);
@@ -182,7 +189,7 @@ int test_cholpv_solve(int M, int N, int lb, int flags, int verbose)
     armas_pivot_init(&P0, N);
     
     armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
     armas_x_mcopy(&A0, &A1);
     armas_x_make_trm(&A0, flags);
 
@@ -191,7 +198,12 @@ int test_cholpv_solve(int M, int N, int lb, int flags, int verbose)
     armas_x_mult(0.0, &B, 1.0, &A1, &B0, 0, &conf);
 
     conf.lb = lb;
-    if ((e = armas_x_cholfactor(&A0, &W, &P0, flags, &conf)) < 0) 
+    if ((e = armas_x_cholfactor_w(&A0, &P0, flags, &wb, &conf)) < 0) {
+        printf("..%s.workspace error %d [%d]\n", blk, conf.error, e);
+    }
+    armas_walloc(&wb, wb.bytes);
+
+    if ((e = armas_x_cholfactor_w(&A0, &P0, flags, &wb, &conf)) < 0) 
         printf("Error: factoring error %d, [%d]\n", conf.error, e);
 
     if ((e = armas_x_cholsolve(&B, &A0, &P0, flags, &conf)) < 0)
