@@ -473,7 +473,7 @@ int __blk_cholpv_upper(armas_x_dense_t *A, armas_x_dense_t *W,
 }
 
 
-/**
+/*
  * \brief Compute pivoting Cholesky factorization of symmetric positive definite matrix
  *
  * \param A
@@ -495,7 +495,7 @@ int __blk_cholpv_upper(armas_x_dense_t *A, armas_x_dense_t *W,
 int __cholfactor_pv(armas_x_dense_t *A, armas_x_dense_t *W,
                     armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
-    int ws, lb, err = 0;
+    int ws, lb, nrank = 0;
     DTYPE xstop;
     armas_x_dense_t D;
 
@@ -518,25 +518,33 @@ int __cholfactor_pv(armas_x_dense_t *A, armas_x_dense_t *W,
         ws = 0;
 
     armas_x_diag(&D, A, 0);
-    xstop = armas_x_amax(&D, conf) * A->rows * __EPS;
+    if (conf->stop > __ZERO)
+        xstop = conf->stop;
+    else {
+        xstop = armas_x_amax(&D, conf);
+        if (conf->smult > __ZERO)
+            xstop *= conf->smult;
+        else
+            xstop *=  A->rows * __EPS;
+    }
 
     if (lb == 0 || ws == 0 || A->rows <= lb) {
         // unblocked code
         if (flags & ARMAS_UPPER) {
-            err = __unblk_cholpv_upper(A, P, xstop, conf);
+            nrank = __unblk_cholpv_upper(A, P, xstop, conf);
         } else {
-            err = __unblk_cholpv_lower(A, P, xstop, conf);
+            nrank = __unblk_cholpv_lower(A, P, xstop, conf);
         }
     } else {
         // blocked version
         if (flags & ARMAS_UPPER) {
-            err = __blk_cholpv_upper(A, W, P, xstop, lb, conf);
+            nrank = __blk_cholpv_upper(A, W, P, xstop, lb, conf);
         } else {
-            err = __blk_cholpv_lower(A, W, P, xstop, lb, conf);
+            nrank = __blk_cholpv_lower(A, W, P, xstop, lb, conf);
         }
     }
     // if full rank; 
-    return err == A->cols ? 0 : err;
+    return nrank == A->cols ? 0 : nrank;
 }
 
 
@@ -558,6 +566,7 @@ int __cholfactor_pv(armas_x_dense_t *A, armas_x_dense_t *W,
 int __cholsolve_pv(armas_x_dense_t *B, armas_x_dense_t *A, 
                    armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
+    armas_x_dense_t BT, BB, Ac;
     int pivot1_dir, pivot2_dir;
     if (!conf)
         conf = armas_conf_default();
@@ -570,26 +579,39 @@ int __cholsolve_pv(armas_x_dense_t *B, armas_x_dense_t *A,
         return -1;
     }
 
+#if 0
     if (B->rows != P->npivots) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-
+#endif
     pivot1_dir = ARMAS_PIVOT_FORWARD;
     pivot2_dir = ARMAS_PIVOT_BACKWARD;
 
     armas_x_pivot(B, P, ARMAS_PIVOT_ROWS|pivot1_dir, conf);
+
+    if (P->npivots < A->cols) {
+        // not full rank
+        armas_x_submatrix_unsafe(&Ac, A, 0, 0, P->npivots, P->npivots);
+        armas_x_submatrix_unsafe(&BT, B, 0, 0, P->npivots, B->cols);
+        armas_x_submatrix_unsafe(&BB, B, P->npivots, 0, B->rows-P->npivots, B->cols);
+        // clear BB
+        armas_x_mscale(&BB, __ZERO, 0);
+    } else {
+        armas_x_submatrix_unsafe(&Ac, A, 0, 0, A->rows, A->cols);
+        armas_x_submatrix_unsafe(&BT, B, 0, 0, B->rows, B->cols);      
+    }
 
     /*
      * A*X = (LL^T)*X = B -> X = L^-T*(L^-1*B)
      * A*X = (U^TU)*X = B -> X = U^-1*(U^-T*B)
      */
     if (flags & ARMAS_UPPER) {
-        armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANS, conf);
-        armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_UPPER, conf);
+        armas_x_solve_trm(&BT, __ONE, &Ac, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANS, conf);
+        armas_x_solve_trm(&BT, __ONE, &Ac, ARMAS_LEFT|ARMAS_UPPER, conf);
     } else {
-        armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_LOWER, conf);
-        armas_x_solve_trm(B, __ONE, A, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANS, conf);
+        armas_x_solve_trm(&BT, __ONE, &Ac, ARMAS_LEFT|ARMAS_LOWER, conf);
+        armas_x_solve_trm(&BT, __ONE, &Ac, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANS, conf);
     }
 
     armas_x_pivot(B, P, ARMAS_PIVOT_ROWS|pivot2_dir, conf);
