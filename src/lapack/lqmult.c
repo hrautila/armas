@@ -563,7 +563,7 @@ int armas_x_lqmult_w(armas_x_dense_t *C,
     conf->error = ARMAS_EINVAL;
     return -1;
   }
-  K = (flags & ARMAS_RIGHT) != 0 ? C->cols : C->rows;
+  K = (flags & ARMAS_RIGHT) != 0 ? C->rows : C->cols;
   if (wb && wb->bytes == 0) {
     if (conf->lb > 0 && K > conf->lb) 
       wb->bytes = ((conf->lb + K) * conf->lb) * sizeof(DTYPE);
