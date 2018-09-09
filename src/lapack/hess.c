@@ -31,6 +31,10 @@
 #include "partition.h"
 //! \endcond
 
+#ifndef ARMAS_NIL
+#define ARMAS_NIL (armas_x_dense_t *)0
+#endif
+
 static inline
 int __ws_hess_reduce(int M, int N, int lb)
 {
@@ -471,6 +475,76 @@ int armas_x_hessreduce_work(armas_x_dense_t *A, armas_conf_t *conf)
   return __ws_hess_reduce(A->rows, A->cols, conf->lb);
 }
 
+int armas_x_hessreduce_w(armas_x_dense_t *A,
+                         armas_x_dense_t *tau,
+                         armas_wbuf_t *wb,
+                         armas_conf_t *conf)
+{
+  armas_x_dense_t T, V;
+  size_t wsmin, wsz;
+  int lb;
+  DTYPE *buf;
+  
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (!A) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  if (wb && wb->bytes == 0) {
+    if (conf->lb > 0 && A->rows > conf->lb)
+      wb->bytes = (A->rows + conf->lb) * conf->lb * sizeof(DTYPE);
+    else
+      wb->bytes = A->rows * sizeof(DTYPE);
+    return 0;
+  }
+  
+  if (A->rows != A->cols) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
+  }
+  if (! armas_x_isvector(tau) || armas_x_size(tau) != A->rows-1) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+  
+  lb = conf->lb;
+  wsmin = A->rows * sizeof(DTYPE);
+  if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+
+  // adjust blocking factor for workspace
+  if (lb > 0 && A->rows > lb) {
+    wsz /= sizeof(DTYPE);
+    if (wsz < (A->rows + lb)*lb) {
+      // solve: lb^2 + m(A)*lb - wsz = 0
+      lb  = ((int)(__SQRT((DTYPE)(A->rows*A->rows + 4*wsz))) - A->rows) / 2;
+      lb &= ~0x3;
+    }
+  }
+  
+  wsz = armas_wpos(wb);
+  buf = (DTYPE *)armas_wptr(wb);
+  
+  
+  if (lb == 0 || A->cols <= lb) {
+    armas_x_make(&V, A->rows, 1, A->rows, buf);
+    __unblk_hess_gqvdg(A, tau, &V, 0, conf);
+  } else {
+    // block reflector; temporary space, [n(A), lb] matrix
+    armas_x_make(&T, lb, lb, lb, buf);
+    armas_x_make(&V, A->rows, lb, A->rows, &buf[armas_x_size(&T)]);
+    
+    __blk_hess_gqvdg(A, tau, &T, &V, lb, conf);
+  }
+  armas_wsetpos(wb, wsz);
+  return 0;
+}
+
 /**
  * \brief Multiply with the orthogonal matrix Q of Hessenberg reduction
  *
@@ -537,6 +611,37 @@ int armas_x_hessmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
 
   return armas_x_qrmult_work(A, flags, conf);
 }
+
+int armas_x_hessmult_w(armas_x_dense_t *C,
+                       const armas_x_dense_t *A,
+                       const armas_x_dense_t *tau,
+                       int flags,
+                       armas_wbuf_t *wb,
+                       armas_conf_t *conf)
+{
+  armas_x_dense_t Qh, Ch, tauh;
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (!C) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+  
+  armas_x_submatrix(&Qh, A, 1, 0, A->rows-1, A->cols-1);
+  armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
+  if (flags & ARMAS_RIGHT) {
+    armas_x_submatrix(&Ch, C, 0, 1, C->rows, C->cols-1);
+  } else {
+    armas_x_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
+  }
+
+  if (wb && wb->bytes == 0) {
+    return armas_x_qrmult_w(&Ch, ARMAS_NIL, ARMAS_NIL, flags, wb, conf);
+  }
+  return armas_x_qrmult_w(&Ch, &Qh, &tauh, flags, wb, conf);
+}
+
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
 // Local Variables:
