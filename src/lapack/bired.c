@@ -30,6 +30,10 @@
 #include "internal_lapack.h"
 #include "partition.h"
 
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
+
 static inline
 int __ws_bdreduce(int M, int N, int lb)
 {
@@ -861,6 +865,139 @@ int armas_x_bdreduce_work(armas_x_dense_t *A, armas_conf_t *conf)
   return __ws_bdreduce(A->rows, A->cols, conf->lb);
 }
 
+/**
+ * \brief Bidiagonal reduction of general matrix
+ *
+ * Reduce a general M-by-N matrix A to upper or lower bidiagonal form B
+ * by an ortogonal transformation \f$ A = QBP^T \f$,  \f$ B = Q^TAP \f$
+ *
+ *
+ * \param[in,out]  A
+ *     On entry, the real M-by-N matrix. On exit the upper/lower
+ *     bidiagonal matrix and ortogonal matrices Q and P.
+ *
+ * \param[out]  tauq  
+ *    Scalar factors for elementary reflector forming the
+ *    ortogonal matrix Q.
+ *
+ * \param[out]  taup  
+ *    Scalar factors for elementary reflector forming the
+ *    ortogonal matrix P.
+ *
+ * \param[out]  wb
+ *     Workspace needed for reduction.
+ *
+ * \param[in,out]  conf  
+ *     Current blocking configuration. Optional.
+ *
+ *
+ * #### Details
+ *
+ * Matrices Q and P are products of elementary reflectors \f$ H_k \f$ and \f$ G_k \f$
+ *
+ * If M > N:
+ *   \f$  Q = H_1 H_2 ... H_N \f$  and \f$ P = G_1 G_2 ... G_{N-1} \f$
+ *
+ * where \f$ H_k = 1 - tauq*u*u^T \f$ and \f$ G_k = 1 - taup*v*v^T \f$
+ *
+ * Elementary reflector \f$ H_k \f$ are stored on columns of A below the diagonal with
+ * implicit unit value on diagonal entry. Vector 'tauq` holds corresponding scalar
+ * factors. Reflector \f$ G_k \f$ are stored on rows of A right of first superdiagonal
+ * with implicit unit value on superdiagonal. Corresponding scalar factors are
+ * stored on vector `taup`.
+ * 
+ * If M < N:
+ *  \f$ Q = H_1 H_2 ...H_{N-1} \f$  and \f$ P = G_1 G_2 ... G_N \f$
+ *
+ * where \f$ H_k = 1 - tauq*u*u^T \f$ and \f$ G_k = 1 - taup*v*v^T \f$
+ *
+ * Elementary reflector \f$ H_k \f$ are stored on columns of A below the first sub diagonal 
+ * with implicit unit value on sub diagonal entry. Vector `tauq` holds corresponding 
+ * scalar factors. Reflector \f$ G_k \f$ are stored on rows of A right of diagonal with
+ * implicit unit value on superdiagonal. Corresponding scalar factors are stored
+ * on vector `taup`.
+ *
+ * Contents of matrix A after reductions are as follows.
+ *
+ *      M = 6 and N = 5:                  M = 5 and N = 6:
+ *
+ *      (  d   e   v1  v1  v1 )           (  d   v1  v1  v1  v1  v1 )
+ *      (  u1  d   e   v2  v2 )           (  e   d   v2  v2  v2  v2 )
+ *      (  u1  u2  d   e   v3 )           (  u1  e   d   v3  v3  v3 )
+ *      (  u1  u2  u3  d   e  )           (  u1  u2  e   d   v4  v4 )
+ *      (  u1  u2  u3  u4  d  )           (  u1  u2  u3  e   d   v5 )
+ *      (  u1  u2  u3  u4  u5 )
+ *
+ *  G.Van Zee, R. van de Geijn, 
+ *       Algorithms for Reducing a Matrix to Condensed Form
+ *       2010, Flame working note #53 
+ * \ingroup lapack
+ */
+int armas_x_bdreduce_w(armas_x_dense_t *A,
+                       armas_x_dense_t *tauq,
+                       armas_x_dense_t *taup,
+                       armas_wbuf_t *wb,
+                       armas_conf_t *conf)
+{
+  armas_x_dense_t W;
+  size_t wsmin, wsz = 0;
+  int lb;
+  DTYPE *buf;
+
+  if (!conf)
+    conf = armas_conf_default();
+  
+  if (!A) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  if (wb && wb->bytes == 0) {
+    if (conf->lb > 0 && A->cols > conf->lb && A->rows > conf->lb)
+      wb->bytes = (A->cols + A->rows) * conf->lb * sizeof(DTYPE);
+    else
+      wb->bytes = (A->cols + A->rows) * sizeof(DTYPE);
+    return 0;
+  }
+  
+  lb = conf->lb;
+  wsmin = (A->cols + A->rows) * sizeof(DTYPE);
+  if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+  // adjust blocking factor for workspace
+  if (lb > 0 && A->rows > lb && A->cols > lb) {
+    wsz /= sizeof(DTYPE);
+    if (wsz < (A->rows + A->cols)*lb) {
+      lb = (wsz / (A->rows + A->cols)) & ~0x3;
+      if (lb < ARMAS_BLOCKING_MIN)
+        lb = 0;
+    }
+  }
+
+  buf = (DTYPE *)armas_wptr(wb);
+  wsz = armas_wbytes(wb) / sizeof(DTYPE);
+  armas_x_make(&W, wsz, 1, wsz, buf);
+
+  wsz = armas_wpos(wb);
+  if (A->rows >= A->cols) {
+    if (lb > 0 && A->cols > lb) {
+      __blk_bdreduce_left(A, tauq, taup, &W, lb, conf);
+    } else {
+      __unblk_bdreduce_left(A, tauq, taup, &W, conf);
+    }
+  } else {
+    if (lb > 0 && A->cols > lb) {
+      __blk_bdreduce_right(A, tauq, taup, &W, lb, conf);
+    } else {
+      __unblk_bdreduce_right(A, tauq, taup, &W, conf);
+    }
+  }
+  armas_wsetpos(wb, wsz);
+  return 0;
+}
+
 /*
  * Multiply and replace C with product of C and Q or P where Q and P are real orthogonal
  * matrices defined as the product of k elementary reflectors.
@@ -887,20 +1024,19 @@ int armas_x_bdreduce_work(armas_x_dense_t *A, armas_conf_t *conf)
  *
  * Additional information
  *
- *   If M(A) >= N(A) then order N(Q) of orthogonal matrix Q is M(A) and the order N(P)
- *   of the orthogonal matrix P is N(A). If M(A) < N(A) then order N(Q) of Q is N(A) and
- *   order N(P) of P is M(A).
+ *   Order N(Q) of orthogonal matrix Q is M(A) if M >= N and M(A)-1 if M < N
+ *   The order N(P) of the orthogonal  matrix P is N(A)-1 if M >=N and N(A) if M < N. 
  *
  *        flags              result
  *        ------------------------------------------
- *        MULTQ,LEFT         C = Q*C     n(A) == m(C)
+ *        MULTQ,LEFT         C = Q*C     m(A) == m(C)
+ *        MULTQ,TRANS,LEFT   C = Q.T*C   m(A) == m(C)
  *        MULTQ,RIGHT        C = C*Q     n(C) == m(A)
- *        MULTQ,TRANS,LEFT   C = Q.T*C   n(A) == m(C)
  *        MULTQ,TRANS,RIGHT  C = C*Q.T   n(C) == m(A)
  *        MULTP,LEFT         C = P*C     n(A) == m(C)
- *        MULTP,RIGHT        C = C*P     n(C) == m(A)
  *        MULTP,TRANS,LEFT   C = P.T*C   n(A) == m(C)
- *        MULTP,TRANS,RIGHT  C = C*P.T   n(C) == m(A)
+ *        MULTP,RIGHT        C = C*P     n(C) == n(A)
+ *        MULTP,TRANS,RIGHT  C = C*P.T   n(C) == n(A)
  *
  * \ingroup lapack
  */
@@ -981,6 +1117,7 @@ int armas_x_bdmult(armas_x_dense_t *C, armas_x_dense_t *A,
   return err;
 }
 
+
 /*
  */
 int armas_x_bdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
@@ -989,6 +1126,98 @@ int armas_x_bdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
   nq = armas_x_qrmult_work(A, flags, conf);
   np = armas_x_lqmult_work(A, flags, conf);
   return np > nq ? np : nq;
+}
+
+
+int armas_x_bdmult_w(armas_x_dense_t *C,
+                     const armas_x_dense_t *A,
+                     const armas_x_dense_t *tau, 
+                     int flags,
+                     armas_wbuf_t *wb,
+                     armas_conf_t *conf)
+{
+  armas_x_dense_t Qh, Ch, Ph, tauh;
+  int err;
+  
+  if (!conf)
+    conf = armas_conf_default();
+
+  if (!C) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+
+  if (wb && wb->bytes == 0) {
+    // Depending on LEFT,RIGHT flags and m(C), n(C) the workspace
+    // size that is needed for unblocked computation is max(m(C), n(C))
+    // elements
+    armas_wbuf_t w0 = ARMAS_WBNULL;
+    if (armas_x_qrmult_w(C, A, tau, flags, &w0, conf) < 0)
+      return -1;
+    if (armas_x_lqmult_w(C, A, tau, flags, wb, conf) < 0)
+      return -1;
+    size_t wsmin = (C->rows > C->cols ? C->rows : C->cols)*sizeof(DTYPE);
+    if (w0.bytes > wb->bytes)
+      wb->bytes = w0.bytes;
+    if (wb->bytes < wsmin)
+      wb->bytes = wsmin;
+    return 0;
+  }
+
+  // default to multiplication from left
+  if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))
+    flags |= ARMAS_LEFT;
+
+  // NOTE: sizes are checked in QR/LQ functions.
+  
+  if (flags & ARMAS_MULTP) {
+    flags = flags & ARMAS_TRANS ? flags^ARMAS_TRANS : flags|ARMAS_TRANS;
+  } 
+
+  if (A->rows > A->cols || (A->rows == A->cols && !(flags & ARMAS_LOWER))) {
+    // M >= N
+    switch (flags & (ARMAS_MULTQ|ARMAS_MULTP)) {
+    case ARMAS_MULTQ:
+      armas_x_submatrix(&tauh, tau, 0, 0, A->cols, 1);
+      err = armas_x_qrmult_w(C, A, &tauh, flags, wb, conf);
+      break;
+    case ARMAS_MULTP:
+      armas_x_submatrix(&Ph, A, 0, 1, A->cols-1, A->cols-1);
+      armas_x_submatrix(&tauh, tau, 0, 0, A->cols-1, 1);
+      if (flags & ARMAS_RIGHT) {
+        armas_x_submatrix(&Ch, C, 0, 1, C->rows, C->cols-1);
+      } else {
+        armas_x_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
+      }
+      err = armas_x_lqmult_w(&Ch, &Ph, &tauh, flags, wb, conf);
+      break;
+    default:
+      conf->error = ARMAS_EINVAL;
+      return -1;
+    }
+  } else {
+    // M < N
+    switch (flags & (ARMAS_MULTQ|ARMAS_MULTP)) {
+    case ARMAS_MULTQ:
+      armas_x_submatrix(&Qh, A, 1, 0, A->rows-1, A->rows-1);
+      armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
+      if (flags & ARMAS_RIGHT) {
+        armas_x_submatrix(&Ch, C, 0, 1, C->rows, C->cols-1);
+      } else {
+        armas_x_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
+      }
+      err = armas_x_qrmult_w(&Ch, &Qh, &tauh, flags, wb, conf);
+      break;
+    case ARMAS_MULTP:
+      armas_x_submatrix(&tauh, tau, 0, 0, A->rows, 1);
+      err = armas_x_lqmult_w(C, A, &tauh, flags, wb, conf);
+      break;
+    default:
+      conf->error = ARMAS_EINVAL;
+      return -1;
+    }
+  }
+  return err;
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

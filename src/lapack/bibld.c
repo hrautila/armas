@@ -147,6 +147,112 @@ int armas_x_bdbuild_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
   return armas_x_qrbuild_work(A, conf);
 }
 
+int armas_x_bdbuild_w(armas_x_dense_t *A,
+                      const armas_x_dense_t *tau, 
+                      int K,
+                      int flags,
+                      armas_wbuf_t *wb,
+                      armas_conf_t *conf)
+{
+    armas_x_dense_t Qh, Ph, tauh, d, s;   
+    int j, err = 0;
+
+    if (!conf)
+        conf = armas_conf_default();
+
+    if (!A) {
+        conf->error = ARMAS_EINVAL;
+        return -1;       
+    }
+
+    if (wb && wb->bytes == 0) {
+        // if M >= N then size is f(N), if M < N then size is f(M)
+        if (A->rows >= A->cols) {
+            if (conf->lb > 0 && A->cols > conf->lb)
+                wb->bytes = (A->cols * conf->lb) * sizeof(DTYPE);
+            else
+                wb->bytes = A->cols * sizeof(DTYPE);
+        }
+        else {
+            if (conf->lb > 0 && A->rows > conf->lb)
+                wb->bytes = (A->rows * conf->lb) * sizeof(DTYPE);
+            else
+                wb->bytes = A->rows * sizeof(DTYPE);
+        }
+        return 0;
+    }
+
+    if (armas_x_size(A) == 0)
+        return 0;
+
+    if (A->rows > A->cols || (A->rows == A->cols && !(flags & ARMAS_LOWER))) {
+        switch (flags & (ARMAS_WANTQ|ARMAS_WANTP)) {
+        case ARMAS_WANTQ:
+            armas_x_submatrix(&tauh, tau, 0, 0, A->cols, 1);
+            err = armas_x_qrbuild_w(A, &tauh, K, wb, conf);
+            break;
+        case ARMAS_WANTP:
+            // shift P matrix embedded in A down and fill first column and
+            // row to unit vectors
+            for (j = A->cols-1; j > 0; j--) {
+                armas_x_submatrix(&s, A, j-1, j, 1, A->cols-j);
+                armas_x_submatrix(&d, A, j,   j, 1, A->cols-j);
+                armas_x_copy(&d, &s, conf);
+                armas_x_set(A, j, 0, __ZERO);
+            }
+            // zero first row
+            armas_x_row(&d, A, 0);
+            armas_x_scale(&d, __ZERO, conf);
+            armas_x_set(&d, 0, 0, __ONE);
+
+            armas_x_submatrix(&Ph, A, 1, 1, A->cols-1, A->cols-1);
+            armas_x_submatrix(&tauh, tau, 0, 0, A->cols-1, 1);
+            if (K > A->cols-1 || K < 0)
+                K = A->cols - 1;
+            err = armas_x_lqbuild_w(&Ph, &tauh, K, wb, conf);
+            break;
+        default:
+            conf->error = ARMAS_EINVAL;
+            err = -1;
+            break;
+        }
+    } else {
+        // here A->rows < A-cols || (A->rows == A->cols && flags&ARMAS_LOWER)
+
+        switch (flags & (ARMAS_WANTQ|ARMAS_WANTP)) {
+        case ARMAS_WANTQ:
+            // shift Q matrix embedded in A right and fill first column and
+            // row to unit vectors
+            for (j = A->rows-1; j > 0; j--) {
+                armas_x_submatrix(&s, A, j, j-1, A->rows-j, 1);
+                armas_x_submatrix(&d, A, j, j,   A->rows-j, 1);
+                armas_x_copy(&d, &s, conf);
+                armas_x_set(A, 0, j, __ZERO);
+            }
+            // zero first column
+            armas_x_column(&d, A, 0);
+            armas_x_scale(&d, __ZERO, conf);
+            armas_x_set(&d, 0, 0, __ONE);
+
+            armas_x_submatrix(&Qh, A, 1, 1, A->rows-1, A->rows-1);
+            armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
+            if (K > A->rows-1 || K < 0)
+                K = A->rows - 1;
+            err = armas_x_qrbuild_w(&Qh, &tauh, K, wb, conf);
+            break;
+        case ARMAS_WANTP:
+            armas_x_submatrix(&tauh, tau, 0, 0, A->rows, 1);
+            err = armas_x_lqbuild_w(A, &tauh, K, wb, conf);
+            break;
+        default:
+            conf->error = ARMAS_EINVAL;
+            err = -1;
+            break;
+        }
+    }
+    return err;
+}
+
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
 // Local Variables:
