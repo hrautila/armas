@@ -24,6 +24,10 @@
 #include "matrix.h"
 #include "internal_lapack.h"
 
+#ifndef ARMAS_MAX_ONSTACK_WSPACE
+#define ARMAS_MAX_ONSTACK_WSPACE 384
+#endif
+
 // References
 // (1) Parlett, Marquies
 //     An Implementation of the dqds Algorighm (Positive Case),
@@ -983,6 +987,32 @@ int armas_x_scale_to(armas_x_dense_t *A, DTYPE from, DTYPE to, int flags, armas_
     return 0;
 }
 
+int armas_x_dqds(armas_x_dense_t *D, armas_x_dense_t *E, armas_conf_t *conf)
+{
+    int err = 0;
+    armas_wbuf_t wb = ARMAS_WBNULL;
+    
+    if (!conf)
+        conf = armas_conf_default();
+    if (armas_x_dqds_w(D, E, &wb, conf) < 0)
+        return -1;
+    if (wb.bytes <= ARMAS_MAX_ONSTACK_WSPACE) {
+        char b[ARMAS_MAX_ONSTACK_WSPACE];
+        armas_wbuf_t wbs = (armas_wbuf_t){
+            .buf = b,
+            .offset = 0,
+            .bytes = ARMAS_MAX_ONSTACK_WSPACE
+        };
+        err = armas_x_dqds_w(D, E, &wbs, conf);
+    }
+    else {
+        armas_walloc(&wb, wb.bytes);
+        err = armas_x_dqds_w(D, E, &wb, conf);
+        armas_wrelease(&wb);
+    }
+    return err;
+}
+
 /*
  * \brief Compute singular values of bidiagonal matrix using the DQDS algorithm.
  *
@@ -1003,10 +1033,11 @@ int armas_x_scale_to(armas_x_dense_t *A, DTYPE from, DTYPE to, int flags, armas_
  *      An Implementation of the DQDS Algorithm (Positive Case),
  *      Lapack working notes #121
  */
-int armas_x_dqds(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t* W, armas_conf_t *conf)
+int armas_x_dqds_w(armas_x_dense_t *D, armas_x_dense_t *E, armas_wbuf_t *wb, armas_conf_t *conf)
 {
     armas_x_dense_t sq, se, Z;
     int k, N, err;
+    size_t wsz;
     DTYPE dmax, emax, di, ei;
 #if defined(__DQDS_SCALING)
     DTYPE qmax, scalemax;
@@ -1014,21 +1045,39 @@ int armas_x_dqds(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t* W, arm
 
     EMPTY(sq); EMPTY(se); EMPTY(Z);
 
-    N = armas_x_size(D);
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_size(W) < 4*N) {
+    if (!D) {
+        conf->error = ARMAS_EINVAL;
+        return -1;
+    }
+    N = armas_x_size(D);
+    if (wb && wb->bytes == 0) {
+        wb->bytes = 4 * N * sizeof(DTYPE);
+        return 0;
+    }
+    
+    if (!E) {
+        conf->error = ARMAS_EINVAL;
+        return -1;
+    }
+    if (armas_x_size(E) != N-1) {
+        conf->error = ARMAS_ESIZE;
+        return -1;
+    }
+    if (armas_wbytes(wb) < 4*N*sizeof(DTYPE)) {
         conf->error = ARMAS_EWORK;
         return -1;
     }
 
+    wsz = armas_wpos(wb);
     /*
      * Make a 4-by-N matrix where first row will hold q-values, 2nd qq-value
      * 3rd the e-values and 4th the ee-values as in (1) Z array. Each column
      * represents {q(k), qq(k), e(k), ee(k)} tuple.
      */
-    armas_x_make(&Z, 4, N, 4, armas_x_data(W));
+    armas_x_make(&Z, 4, N, 4, (DTYPE *)armas_wptr(wb));
     armas_x_scale(&Z, __ZERO, conf);
     armas_x_row(&sq, &Z, 0);
     armas_x_row(&se, &Z, 2);
@@ -1086,6 +1135,8 @@ int armas_x_dqds(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t* W, arm
         conf->error = ARMAS_ECONVERGE;
         err = -1;
     }
+
+    armas_wsetpos(wb, wsz);
     return err;
 }
 

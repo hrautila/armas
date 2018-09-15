@@ -98,8 +98,6 @@ void bdmake_upper(armas_x_dense_t *D, armas_x_dense_t *E,
  * \param[in,out] V
  *      On entry, initial orthogonal matrix of right singular vectors. On exit,
  *      updated right singular vectors.
- * \param[out] W
- *      Workspace of size 4*N.
  * \param[in] flags
  *      Indicators, *ARMAS_WANTU*, *ARMAS_WANTV*. Use *ARMAS_FORWARD* to force
  *      implicit QR-iteration only in forward direction from top to bottom.
@@ -115,80 +113,23 @@ void bdmake_upper(armas_x_dense_t *D, armas_x_dense_t *E,
  */
 int armas_x_bdsvd(armas_x_dense_t *D, armas_x_dense_t *E,
                   armas_x_dense_t *U, armas_x_dense_t *V,
-                  armas_x_dense_t *W, int flags, armas_conf_t *conf)
+                  int flags, armas_conf_t *conf)
 {
-    armas_x_dense_t CS, *uu, *vv;
-    int err, N = armas_x_size(D);
-    ABSTYPE tol = 8.0;
+    int err;
+    armas_wbuf_t wb = ARMAS_WBNULL;
 
     if (!conf)
         conf = armas_conf_default();
     
-    uu = (armas_x_dense_t *)0;
-    vv = (armas_x_dense_t *)0;
-    // check for sizes
-    if (! (armas_x_isvector(D) && armas_x_isvector(E))) {
-        conf->error = ARMAS_ENEED_VECTOR;
+    if (armas_x_bdsvd_w(D, E, U, V, flags, &wb, conf) < 0)
         return -1;
-    }
-    if (flags & ARMAS_WANTU) {
-        if (! U) {
-            conf->error = ARMAS_EINVAL;
-            return -1;
-        }
-        // U columns need to be at least N
-        if (U->cols < N) {
-            conf->error = ARMAS_ESIZE;
-            return -1;
-        }
-        uu = U;
-    }
-    if (flags & ARMAS_WANTV) {
-        if (! V) {
-            conf->error = ARMAS_EINVAL;
-            return -1;
-        }
-        // V rows need to be at least N
-        if (V->rows < N) {
-            conf->error = ARMAS_ESIZE;
-            return -1;
-        }
-        vv = V;
-    }
-    if (armas_x_size(E) != N-1) {
-        conf->error = ARMAS_ESIZE;
-        return -1;
-    }
-    if ((uu || vv) && armas_x_size(W) < 4*N) {
-        // if eigenvectors needed then must have workspace
-        conf->error = ARMAS_EWORK;
-        return -1;
-    }
 
-    if (uu || vv) {
-        armas_x_make(&CS, 4*N, 1, 4*N, armas_x_data(W));
-    } else {
-        armas_x_make(&CS, 0, 0, 1, (DTYPE *)0);
-    }
-    if (flags & ARMAS_LOWER) {
-        // rotate to UPPER bidiagonal
-        bdmake_upper(D, E, uu, __nil, &CS);
-    }
+    if (wb.bytes > 0)
+        armas_walloc(&wb, wb.bytes);
 
-    tol = tol*__EPS;
-    if (conf->tolmult != __ZERO) {
-        tol = ((ABSTYPE)conf->tolmult) * __EPS;
-    }
-    if (conf->optflags & ARMAS_OBSVD_GOLUB) {
-        err =__bdsvd_golub(D, E, uu, vv, &CS, tol,  conf);
-    } else {
-        err =__bdsvd_demmel(D, E, uu, vv, &CS, tol, flags, conf);
-    }
-    if (err == 0) {
-        __eigen_sort(D, uu, vv, __nil, conf);
-    } else {
-        conf->error = ARMAS_ECONVERGE;
-    }
+    err = armas_x_bdsvd_w(D, E, U, V, flags, &wb, conf);
+    armas_wrelease(&wb);
+
     return err;
 }
 

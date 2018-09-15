@@ -759,7 +759,7 @@ extern int armas_x_gvrot_vec(armas_x_dense_t *X, armas_x_dense_t *Y, DTYPE c, DT
 
 // Bidiagonal SVD
 extern int armas_x_bdsvd(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *U, armas_x_dense_t *V,
-                         armas_x_dense_t *W, int flags, armas_conf_t *conf);
+                         int flags, armas_conf_t *conf);
 extern int armas_x_bdsvd_w(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *U, armas_x_dense_t *V,
                            int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_bdsvd_work(armas_x_dense_t *D, armas_conf_t *conf);
@@ -782,7 +782,7 @@ extern int armas_x_eigen_sym_selected_w(armas_x_dense_t *D, armas_x_dense_t *A,
                                         int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 
 // DQDS
-extern int armas_x_dqds(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *W, armas_conf_t *conf);
+extern int armas_x_dqds(armas_x_dense_t *D, armas_x_dense_t *E, armas_conf_t *conf);
 extern int armas_x_dqds_w(armas_x_dense_t *D, armas_x_dense_t *E, armas_wbuf_t *wrk, armas_conf_t *conf);
 
 // Householder functions
