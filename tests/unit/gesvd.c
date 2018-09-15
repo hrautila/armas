@@ -18,10 +18,9 @@
 // test1: M > N and A, U are M-by-N, V = N-by-N
 int test1(int M, int N, int verbose)
 {
-    armas_x_dense_t A, D, U, V, V1, W, A0, sD;
+    armas_x_dense_t A, D, U, V, V1, A0, sD;
     armas_conf_t conf = *armas_conf_default();
     DTYPE n0, n1, n2, nrm_A;
-    long nwrk;
     int err, ok;
 
     if (M < N) {
@@ -39,10 +38,7 @@ int test1(int M, int N, int verbose)
     armas_x_mcopy(&A0, &A);
     nrm_A = armas_x_mnorm(&A, ARMAS_NORM_ONE, &conf);
 
-    nwrk = armas_x_svd_work(&A, ARMAS_WANTU|ARMAS_WANTV, &conf);
-    armas_x_init(&W, nwrk, 1);
-    
-    err = armas_x_svd(&D, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
+    err = armas_x_svd(&D, &U, &V, &A, ARMAS_WANTU|ARMAS_WANTV, &conf);
     if (err) {
         printf("%s [M=%d, N=%d, err=%d,%d]: A == U*S*V.T, U=[m,n], V=[n,n] \n",
                PASS(0), M, N, err, conf.error);
@@ -63,7 +59,7 @@ int test1(int M, int N, int verbose)
 
     // compute: A - U*S*V.T
     armas_x_diag(&sD, &A0, 0);
-    armas_x_mult_diag(&U, &D, 1.0, ARMAS_RIGHT, &conf);
+    armas_x_mult_diag(&U, 1.0, &D, ARMAS_RIGHT, &conf);
     armas_x_mult(1.0, &A0, -1.0, &U, &V, ARMAS_NONE, &conf);
     n2 = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
@@ -82,14 +78,13 @@ int test1(int M, int N, int verbose)
     armas_x_release(&V);
     armas_x_release(&V1);
     armas_x_release(&D);
-    armas_x_release(&W);
     return ok;
 }
 
 // test2: M > N and A, U are M-by-M, V = N-by-N
 int test2(int M, int N, int verbose)
 {
-    armas_x_dense_t A, S, Sg, U, U1, V, V1, W, A0, A1, sD;
+    armas_x_dense_t A, S, Sg, U, U1, V, V1, A0, A1, sD;
     armas_conf_t conf = *armas_conf_default();
     DTYPE n0, n1, n2, nrm_A;
     int err, ok;
@@ -113,9 +108,7 @@ int test2(int M, int N, int verbose)
     armas_x_mcopy(&A0, &A);
     nrm_A = armas_x_mnorm(&A, ARMAS_NORM_ONE, &conf);
 
-    armas_x_init(&W, (M*N < 100 ? 100 : M*N), 1);
-    
-    err = armas_x_svd(&S, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
+    err = armas_x_svd(&S, &U, &V, &A, ARMAS_WANTU|ARMAS_WANTV, &conf);
     if (err) {
         //printf("error[%d]: %d\n", err, conf.error);
         printf("%s [M=%d, N=%d, err=%d,%d]: A == U*S*V.T, U=[m,m], V=[n,n] \n",
@@ -160,7 +153,6 @@ int test2(int M, int N, int verbose)
     armas_x_release(&V1);
     armas_x_release(&S);
     armas_x_release(&Sg);
-    armas_x_release(&W);
     return ok;
 }
 
@@ -168,7 +160,7 @@ int test2(int M, int N, int verbose)
 // test3: M < N and A, U are M-by-M, V = M-by-N
 int test3(int M, int N, int verbose)
 {
-    armas_x_dense_t A, D, U, U1, V, V1, W, A0, sD;
+    armas_x_dense_t A, D, U, U1, V, V1, A0, sD;
     armas_conf_t conf = *armas_conf_default();
     DTYPE n0, n1, n2, nrm_A;
     int err, ok;
@@ -190,9 +182,7 @@ int test3(int M, int N, int verbose)
     armas_x_mcopy(&A0, &A);
     nrm_A = armas_x_mnorm(&A, ARMAS_NORM_ONE, &conf);
 
-    armas_x_init(&W, (M*N < 100 ? 100 : N*M), 1);
-    
-    err = armas_x_svd(&D, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
+    err = armas_x_svd(&D, &U, &V, &A, ARMAS_WANTU|ARMAS_WANTV, &conf);
     if (err) {
         printf("%s [M=%d, N=%d]: test3 err=%d,%d\n", PASS(0), M, N, err, conf.error);
         return 0;
@@ -212,7 +202,7 @@ int test3(int M, int N, int verbose)
 
     // compute: A - U*S*V.T
     armas_x_diag(&sD, &A0, 0);
-    armas_x_mult_diag(&V, &D, 1.0, ARMAS_LEFT, &conf);
+    armas_x_mult_diag(&V, 1.0, &D, ARMAS_LEFT, &conf);
     armas_x_mult(1.0, &A0, -1.0, &U, &V, ARMAS_NONE, &conf);
     n2 = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf) / nrm_A;
 
@@ -231,14 +221,13 @@ int test3(int M, int N, int verbose)
     armas_x_release(&V1);
     armas_x_release(&U1);
     armas_x_release(&D);
-    armas_x_release(&W);
     return ok;
 }
 
 // test4: M < N and A is M-by-N, U is M-by-M, V is N-by-N
 int test4(int M, int N, int verbose)
 {
-    armas_x_dense_t A, S, Sg, U, U1, V, V1, W, A0, A1, sD;
+    armas_x_dense_t A, S, Sg, U, U1, V, V1, A0, A1, sD;
     armas_conf_t conf = *armas_conf_default();
     DTYPE n0, n1, n2, nrm_A;
     int err, ok;
@@ -262,9 +251,8 @@ int test4(int M, int N, int verbose)
 
     armas_x_set_values(&Sg, zero, ARMAS_ANY);
     armas_x_mcopy(&A0, &A);
-    armas_x_init(&W, (M*N < 100 ? 100 : M*N), 1);
     
-    err = armas_x_svd(&S, &U, &V, &A, &W, ARMAS_WANTU|ARMAS_WANTV, &conf);
+    err = armas_x_svd(&S, &U, &V, &A, ARMAS_WANTU|ARMAS_WANTV, &conf);
     if (err) {
         printf("%s [M=%d, N=%d, err=%d,%d]: A == U*S*V.T, U=[m,m], V=[n,n] \n",
                PASS(0), M, N, err, conf.error);
@@ -308,7 +296,6 @@ int test4(int M, int N, int verbose)
     armas_x_release(&V1);
     armas_x_release(&S);
     armas_x_release(&Sg);
-    armas_x_release(&W);
     return ok;
 }
 
