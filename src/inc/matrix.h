@@ -809,10 +809,10 @@ extern void armas_x_gen_rbt(armas_x_dense_t *U);
 // Inverse
 extern int armas_x_inverse_trm(armas_x_dense_t *A, int flags, armas_conf_t *conf);
 extern int armas_x_inverse(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, armas_conf_t *conf);
-extern int armas_x_inverse_spd(armas_x_dense_t *A, armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_inverse_psd(armas_x_dense_t *A, int flags, armas_conf_t *conf);
 extern int armas_x_ldlinverse_sym(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, int flags, armas_conf_t *conf);
 extern int armas_x_inverse_w(armas_x_dense_t *A, armas_pivot_t *P, armas_wbuf_t *wrk, armas_conf_t *conf);
-extern int armas_x_inverse_spd_w(armas_x_dense_t *A, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_inverse_psd_w(armas_x_dense_t *A, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_ldlinverse_sym_w(armas_x_dense_t *A, armas_pivot_t *P, int flags,
                                     armas_wbuf_t *wrk, armas_conf_t *conf);
 

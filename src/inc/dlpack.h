@@ -224,7 +224,7 @@
 // inverse
 #define armas_x_inverse_trm     armas_s_inverse_trm
 #define armas_x_inverse         armas_s_inverse
-#define armas_x_inverse_spd     armas_s_inverse_spd
+#define armas_x_inverse_psd     armas_s_inverse_psd
 #define armas_x_ldlinverse_sym  armas_s_ldlinverse_sym
 
 // internal
@@ -477,8 +477,8 @@
 #define armas_x_inverse_trm     armas_d_inverse_trm
 #define armas_x_inverse         armas_d_inverse
 #define armas_x_inverse_w       armas_d_inverse_w
-#define armas_x_inverse_spd     armas_d_inverse_spd
-#define armas_x_inverse_spd_w   armas_d_inverse_spd_w
+#define armas_x_inverse_psd     armas_d_inverse_psd
+#define armas_x_inverse_psd_w   armas_d_inverse_psd_w
 #define armas_x_ldlinverse_sym  armas_d_ldlinverse_sym
 #define armas_x_ldlinverse_sym_w armas_d_ldlinverse_sym_w
 
