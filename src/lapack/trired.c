@@ -14,7 +14,7 @@
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(__householder) && defined(armas_x_blas)
+#if defined(__householder) && defined(armas_x_blas) && defined(armas_x_qrmult_w)
 #define __ARMAS_REQUIRES 1
 #endif
 
@@ -564,50 +564,26 @@ int __blk_trdreduce_upper(armas_x_dense_t *A, armas_x_dense_t *tauq,
  *     ( v1 v2 e  d  . )         ( .  .  .  d  e  )
  *     ( v1 v2 v3 e  d )         ( .  .  .  .  d  )
  */
-int armas_x_trdreduce(armas_x_dense_t *A, armas_x_dense_t *tauq,
-                      armas_x_dense_t *W, int flags, armas_conf_t *conf)
+int armas_x_trdreduce(armas_x_dense_t *A,
+                      armas_x_dense_t *tauq,
+                      armas_x_dense_t *W,
+                      int flags,
+                      armas_conf_t *conf)
 {
-  armas_x_dense_t Y;
-  int wsmin, wsneed, lb, err = 0;
   if (!conf)
     conf = armas_conf_default();
 
-  // default to lower triangular if uplo not defined
-  if (!(flags & (ARMAS_LOWER|ARMAS_UPPER)))
-    flags |= ARMAS_LOWER;
-
-  if (A->rows != A->cols) {
-    conf->error = ARMAS_ESIZE;
+  armas_wbuf_t wb = ARMAS_WBNULL;
+  if (armas_x_trdreduce_w(A, tauq, flags, &wb, conf) < 0)
     return -1;
-  }    
-  wsmin = __ws_trdreduce(A->rows, A->cols, 0);
-  if (armas_x_size(W) < wsmin) {
-    conf->error = ARMAS_EWORK;
+
+  if (!armas_walloc(&wb, wb.bytes)) {
+    conf->error = ARMAS_EMEMORY;
     return -1;
   }
-  // adjust blocking factor to workspace
-  lb = conf->lb;
-  wsneed = __ws_trdreduce(A->rows, A->cols, conf->lb);
-  if (armas_x_size(W) < wsneed) {
-    lb = compute_lb(A->rows, A->cols, armas_x_size(W), __ws_trdreduce);
-    lb = min(lb, conf->lb);
-  }
-
-  if (lb == 0 || A->cols <= lb) {
-    if (flags & ARMAS_LOWER) {
-      err = __unblk_trdreduce_lower(A, tauq, W, conf);
-    } else {
-      err = __unblk_trdreduce_upper(A, tauq, W, FALSE, conf);
-    }
-  } else {
-    armas_x_make(&Y, A->rows, lb, A->rows, armas_x_data(W));
-    if (flags & ARMAS_LOWER) {
-      err = __blk_trdreduce_lower(A, tauq, &Y, W, lb, conf);
-    } else {
-      err = __blk_trdreduce_upper(A, tauq, &Y, W, lb, conf);
-    }
-  }
-  return err;
+  int stat = armas_x_trdreduce_w(A, tauq, flags, &wb, conf);
+  armas_wrelease(&wb);
+  return stat;
 }
 
 //! \brief Workspace size for trdreduce().
@@ -768,42 +744,27 @@ int armas_x_trdreduce_w(armas_x_dense_t *A,
  * \retval 0 Sucess
  * \retval -1 Error
  */
-int armas_x_trdmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *tau,
-                    armas_x_dense_t *W, int flags, armas_conf_t *conf)
+int armas_x_trdmult(armas_x_dense_t *C,
+                    armas_x_dense_t *A,
+                    armas_x_dense_t *tau,
+                    armas_x_dense_t *W,
+                    int flags,
+                    armas_conf_t *conf)
 {
-  armas_x_dense_t Ch, Qh, tauh;
-  int err = 0;
-  
   if (!conf)
     conf = armas_conf_default();
-  
-  // default to multiplication from left is nothing defined
-  if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))
-    flags |= ARMAS_LEFT;
-  // default to lower triangular if uplo not defined
-  if (!(flags & (ARMAS_LOWER|ARMAS_UPPER)))
-    flags |= ARMAS_LOWER;
 
-  if (flags & ARMAS_LOWER) {
-    if (flags & ARMAS_LEFT) {
-      armas_x_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
-    } else {
-      armas_x_submatrix(&Ch, C, 0, 1, C->rows, C->cols-1);
-    }
-    armas_x_submatrix(&Qh, A, 1, 0, A->rows-1, A->rows-1);
-    armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
-    err = armas_x_qrmult(&Ch, &Qh, &tauh, W, flags, conf);
-  } else {
-    if (flags & ARMAS_LEFT) {
-      armas_x_submatrix(&Ch, C, 0, 0, C->rows-1, C->cols);
-    } else {
-      armas_x_submatrix(&Ch, C, 0, 0, C->rows, C->cols-1);
-    }
-    armas_x_submatrix(&Qh, A, 0, 1, A->rows-1, A->rows-1);
-    armas_x_submatrix(&tauh, tau, 0, 0,A->rows-1, 1);
-    err = armas_x_qlmult(&Ch, &Qh, &tauh, W, flags, conf);
+  armas_wbuf_t wb = ARMAS_WBNULL;
+  if (armas_x_trdmult_w(C, A, tau, flags, &wb, conf) < 0)
+    return -1;
+
+  if (!armas_walloc(&wb, wb.bytes)) {
+    conf->error = ARMAS_EMEMORY;
+    return -1;
   }
-  return err;
+  int stat = armas_x_trdmult_w(C, A, tau, flags, &wb, conf);
+  armas_wrelease(&wb);
+  return stat;
 }
 
 //! \brief Workspace size for trdmult().

@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_trdeigen) 
+#if defined(armas_x_trdeigen) && defined(armas_x_trdeigen_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -185,61 +185,33 @@ int __trdevd_qr(armas_x_dense_t *D, armas_x_dense_t *E,
  * \retval -1 Error, `conf.error` holds error code.
  * \ingroup lapack
  */
-int armas_x_trdeigen(armas_x_dense_t *D, armas_x_dense_t *E,
-                     armas_x_dense_t *V, armas_x_dense_t *W, int flags, armas_conf_t *conf)
+int armas_x_trdeigen(armas_x_dense_t *D,
+                     armas_x_dense_t *E,
+                     armas_x_dense_t *V,
+                     armas_x_dense_t *W,
+                     int flags,
+                     armas_conf_t *conf)
 {
-    armas_x_dense_t CS, *vv;
-    int err, N = armas_x_size(D);
-    ABSTYPE tol = 5.0;
-
     if (!conf)
         conf = armas_conf_default();
 
-    vv = (armas_x_dense_t *)0;
-    // check for sizes
-    if (! (armas_x_isvector(D) && armas_x_isvector(E))) {
-        conf->error = ARMAS_ENEED_VECTOR;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
+    if (armas_x_trdeigen_w(D, E, V, flags, &wb, conf) < 0)
         return -1;
-    }
-    if (flags & ARMAS_WANTV) {
-        if (! V) {
-            conf->error = ARMAS_EINVAL;
+
+    wbs = &wb;
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
             return -1;
         }
-        if (V->rows != N) {
-            conf->error = ARMAS_ESIZE;
-            return -1;
-        }
-        vv = V;
     }
-    if (armas_x_size(E) != N-1) {
-        conf->error = ARMAS_ESIZE;
-        return -1;
-    }
-    if (vv && armas_x_size(W) < 2*N) {
-        // if eigenvectors needed then must have workspace
-        conf->error = ARMAS_EWORK;
-        return -1;
-    }
-
-    if (vv) {
-        armas_x_make(&CS, 2*N, 1, 2*N, armas_x_data(W));
-    } else {
-        armas_x_make(&CS, 0, 0, 1, (DTYPE *)0);
-    }
-
-    tol = tol*__EPS;
-    if (conf->tolmult > 0) {
-        tol = ((ABSTYPE)conf->tolmult) * __EPS;
-    }
-    err =__trdevd_qr(D, E, vv, &CS, tol, flags, conf);
-
-    if (err == 0) {
-        __sort_eigenvec(D, vv, __nil, __nil, ARMAS_ASC);
-    } else {
-        conf->error = ARMAS_ECONVERGE;
-    }
-    return err;
+    else
+        wbs = ARMAS_NOWORK;
+    
+    int stat = armas_x_trdeigen_w(D, E, V, flags, wbs, conf);
+    armas_wrelease(&wb);
+    return stat;
 }
 
 
@@ -299,9 +271,10 @@ int armas_x_trdeigen_w(armas_x_dense_t *D,
         return -1;
     }
 
-    if ((flags & ARMAS_WANTV) != 0 && wb && wb->bytes == 0) {
+    if (wb && wb->bytes == 0) {
         // workspace only if eigenvector wanted
-        wb->bytes = 2*N*sizeof(DTYPE);
+        if ((flags & ARMAS_WANTV) != 0)
+            wb->bytes = 2*N*sizeof(DTYPE);
         return 0;
     }
 
