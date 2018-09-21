@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_qrbuild) 
+#if defined(armas_x_qrbuild) && defined(armas_x_qrbuild_w)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -218,37 +218,26 @@ int __blk_qrbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *T,
  * Compatible with lapackd.ORGQR.
  * \ingroup lapack
  */
-int armas_x_qrbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W, int K,
-                    armas_conf_t *conf)
+int armas_x_qrbuild(armas_x_dense_t *A,
+                    armas_x_dense_t *tau,
+                    armas_x_dense_t *W,
+                    int K,
+                    armas_conf_t *cf)
 {
-  int wsmin, wsneed, lb;
-  if (!conf)
-    conf = armas_conf_default();
+  if (!cf)
+    cf = armas_conf_default();
 
-  lb = conf->lb;
-  wsmin = __ws_qrbuild(A->rows, A->cols, 0);
-  if (! W || armas_x_size(W) < wsmin) {
-    conf->error = ARMAS_EWORK;
+  armas_wbuf_t wb = ARMAS_WBNULL;
+  if (armas_x_qrbuild_w(A, tau, K, &wb, cf) < 0)
+    return -1;
+
+  if (!armas_walloc(&wb, wb.bytes)) {
+    cf->error = ARMAS_EMEMORY;
     return -1;
   }
-  // adjust blocking factor for workspace
-  wsneed = __ws_qrbuild(A->rows, A->cols, lb);
-  if (lb > 0 && armas_x_size(W) < wsneed) {
-    lb = compute_lb(A->rows, A->cols, armas_x_size(W), __ws_qrbuild);
-    lb = min(lb, conf->lb);
-  }
-  if (lb == 0 || A->cols <= lb) {
-    __unblk_qrbuild(A, tau, W, A->rows-K, A->cols-K, TRUE, conf);
-  } else {
-    armas_x_dense_t T, Wrk;
-    // block reflector at start of workspace
-    armas_x_make(&T, lb, lb, lb, armas_x_data(W));
-    // temporary space after block reflector T, N(A)-lb-by-lb matrix
-    armas_x_make(&Wrk, A->cols-lb, lb, A->cols-lb, &armas_x_data(W)[armas_x_size(&T)]);
-
-    __blk_qrbuild(A, tau, &T, &Wrk, K, lb, conf);
-  }
-  return 0;
+  int stat = armas_x_qrbuild_w(A, tau, K, &wb, cf);
+  armas_wrelease(&wb);
+  return stat;
 }
 
 
@@ -259,11 +248,6 @@ int armas_x_qrbuild_work(armas_x_dense_t *A, armas_conf_t *conf)
   return __ws_qrbuild(A->rows, A->cols, conf->lb);
 }
 
-static inline
-size_t __qrbld_bytes(int N, int lb)
-{
-  return (lb > 0 ? lb*N : N) * sizeof(DTYPE);
-}
 
 /**
  * @brief Generate the orthogonal matrix Q

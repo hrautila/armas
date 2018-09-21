@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_qrsolve) 
+#if defined(armas_x_qrsolve) && defined(armas_x_qrsolve_w)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -63,9 +63,6 @@ int __ws_qrsolve(int M, int N, int lb)
  *   The vector of N scalar coefficients that together with trilu(A) define
  *   the ortogonal matrix Q as \f$ Q = H(1)H(2)...H(N) \f$
  *
- * \param[in] W
- *    Workspace, size required returned qrmult_work().
- *
  * \param[in] flags
  *    Indicator flags
  *
@@ -76,51 +73,27 @@ int __ws_qrsolve(int M, int N, int lb)
  * Compatible with lapack.GELS (the m >= n part)
  * \ingroup lapack
  */
-int armas_x_qrsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
-                    armas_x_dense_t *W, int flags, armas_conf_t *conf)
+int armas_x_qrsolve(armas_x_dense_t *B,
+		    armas_x_dense_t *A,
+		    armas_x_dense_t *tau,
+                    armas_x_dense_t *W,
+		    int flags,
+		    armas_conf_t *cf)
 {
-  armas_x_dense_t R, BT, BB;
-  int wsmin, ok;
+  if (!cf)
+    cf = armas_conf_default();
 
-  if (!conf)
-    conf = armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
+  if (armas_x_qrsolve_w(B, A, tau, flags, &wb, cf) < 0)
+    return -1;
 
-  ok = B->rows == A->rows;
-  if ( !ok ) {
-    conf->error = ARMAS_ESIZE;
+  if (!armas_walloc(&wb, wb.bytes)) {
+    cf->error = ARMAS_EMEMORY;
     return -1;
   }
-
-  wsmin = __ws_qrsolve(B->rows, B->cols, 0);
-  if (! W || armas_x_size(W) < wsmin) {
-    conf->error = ARMAS_EWORK;
-    return -1;
-  }
-  armas_x_submatrix(&R, A, 0, 0, A->cols, A->cols);
-  armas_x_submatrix(&BT, B, 0, 0, A->cols, B->cols);
-
-  if (flags & ARMAS_TRANS) {
-    // solve ovedetermined system A.T*X = B
-
-    // B' = R.-1*B
-    ONERROR(armas_x_solve_trm(&BT, __ONE, &R, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf));
-
-    // clear bottom part of B
-    armas_x_submatrix(&BB, B, A->cols, 0, -1, -1);
-    armas_x_mscale(&BB, 0.0, ARMAS_ANY);
-    
-    // X = Q*B
-    ONERROR(armas_x_qrmult(B, A, tau, W, ARMAS_LEFT, conf));
-  } else {
-    // solve least square problem min || A*X - B ||
-
-    // B' = Q.T*B
-    ONERROR(armas_x_qrmult(B, A, tau, W, ARMAS_LEFT|ARMAS_TRANS, conf));
-    
-    // X = R.-1*B'
-    ONERROR(armas_x_solve_trm(&BT, __ONE, &R, ARMAS_LEFT|ARMAS_UPPER, conf));
-  }
-  return 0;
+  int stat = armas_x_qrsolve_w(B, A, tau, flags, &wb, cf);
+  armas_wrelease(&wb);
+  return stat;
 }
 
 /**
@@ -213,7 +186,7 @@ int armas_x_qrsolve_w(armas_x_dense_t *B,
     return -1;
   }
 
-  wsmin = __qrsol_bytes(B->cols, 0);
+  wsmin = B->cols * sizeof(DTYPE);
   if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
