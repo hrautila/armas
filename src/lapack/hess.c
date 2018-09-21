@@ -420,9 +420,6 @@ int __blk_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *tau,
  * \param[out] tau  
  *    On exit, the scalar factors of the elementary reflectors.
  *
- * \param W
- *    Workspace, size as defined by hessreduce_work()
- *
  * \param[in,out] conf
  *    The blocking configration. 
  * 
@@ -432,38 +429,28 @@ int __blk_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *tau,
  * Compatible with lapack.DGEHRD.
  * \ingroup lapack
  */
-int armas_x_hessreduce(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
+int armas_x_hessreduce(armas_x_dense_t *A,
+                       armas_x_dense_t *tau,
+                       armas_x_dense_t *W,
                        armas_conf_t *conf)
 {
-  int wsmin, lb, wsneed;
+  int err;
+  armas_wbuf_t wb = ARMAS_WBNULL;
+
   if (!conf)
     conf = armas_conf_default();
 
-  lb = conf->lb;
-  wsmin = __ws_hess_reduce(A->rows, A->cols, 0);
-  if (! W || armas_x_size(W) < wsmin) {
-    conf->error = ARMAS_EWORK;
+  if (armas_x_hessreduce_w(A, tau, &wb, conf) < 0)
+    return -1;
+
+  if (!armas_walloc(&wb, wb.bytes)) {
+    conf->error = ARMAS_EMEMORY;
     return -1;
   }
-  // adjust blocking factor for workspace
-  wsneed = __ws_hess_reduce(A->rows, A->cols, lb);
-  if (lb > 0 && armas_x_size(W) < wsneed) {
-    lb = compute_lb(A->rows, A->cols, wsneed, __ws_hess_reduce);
-    lb = min(lb, conf->lb);
-  }
 
-  if (lb == 0 || A->cols <= lb) {
-    __unblk_hess_gqvdg(A, tau, W, 0, conf);
-  } else {
-    armas_x_dense_t T, V;
-    // block reflector at start of workspace
-    armas_x_make(&T, lb, lb, lb, armas_x_data(W));
-    // temporary space after block reflector T, N(A)-lb-by-lb matrix
-    armas_x_make(&V, A->rows, lb, A->rows, &armas_x_data(W)[armas_x_size(&T)]);
-    
-    __blk_hess_gqvdg(A, tau, &T, &V, lb, conf);
-  }
-  return 0;
+  err = armas_x_hessreduce_w(A, tau, &wb, conf);
+  armas_wrelease(&wb);
+  return err;
 }
 
 //! \brief Workspace size for Hessenberg reduction
@@ -475,6 +462,33 @@ int armas_x_hessreduce_work(armas_x_dense_t *A, armas_conf_t *conf)
   return __ws_hess_reduce(A->rows, A->cols, conf->lb);
 }
 
+/**
+ * \brief Hessenberg reduction of general matrix
+ *
+ * Reduce general matrix A to upper Hessenberg form H by similiarity
+ * transformation \f$ H = Q^T A Q \f$.
+ *
+ * \param[in,out] A
+ *    On entry, the general matrix A. On exit, the elements on and
+ *    above the first subdiagonal contain the reduced matrix H.
+ *    The elements below the first subdiagonal with the vector tau
+ *    represent the ortogonal matrix A as product of elementary reflectors.
+ *
+ * \param[out] tau  
+ *    On exit, the scalar factors of the elementary reflectors.
+ *
+ * \param wb
+ *    Work buffer.
+ *
+ * \param[in,out] conf
+ *    The blocking configration. 
+ * 
+ * \retval 0 Succes
+ * \retval -1 Failure, conf.error set to error code
+ *
+ * Compatible with lapack.DGEHRD.
+ * \ingroup lapack
+ */
 int armas_x_hessreduce_w(armas_x_dense_t *A,
                          armas_x_dense_t *tau,
                          armas_wbuf_t *wb,
@@ -589,19 +603,22 @@ int armas_x_hessreduce_w(armas_x_dense_t *A,
 int armas_x_hessmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *tau,
                       armas_x_dense_t *W, int flags, armas_conf_t *conf)
 {
-  armas_x_dense_t Qh, Ch, tauh;
+  int err;
+  armas_wbuf_t wb = ARMAS_WBNULL;
+
   if (!conf)
     conf = armas_conf_default();
 
-  armas_x_submatrix(&Qh, A, 1, 0, A->rows-1, A->cols-1);
-  armas_x_submatrix(&tauh, tau, 0, 0, armas_x_size(tau)-1, 1);
-  if (flags & ARMAS_RIGHT) {
-    armas_x_submatrix(&Ch, C, 0, 1, C->rows, C->cols-1);
-  } else {
-    armas_x_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
-  }
+  if (armas_x_hessmult_w(C, A, tau, flags, &wb, conf) < 0)
+    return -1;
 
-  return armas_x_qrmult(&Ch, &Qh, &tauh, W, flags, conf);
+  if (!armas_walloc(&wb, wb.bytes)) {
+    conf->error = ARMAS_EMEMORY;
+    return -1;
+  }
+  err = armas_x_hessmult_w(C, A, tau, flags, &wb, conf);
+  armas_wrelease(&wb);
+  return err;
 }
 
 int armas_x_hessmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)

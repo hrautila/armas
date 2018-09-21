@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_cholfactor) 
+#if defined(armas_x_cholfactor) && defined(armas_x_cholfactor_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -236,36 +236,33 @@ int __cholsolve_pv(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P,
  * Compatible with lapack.DPOTRF
  * \ingroup lapack
  */
-int armas_x_cholfactor(armas_x_dense_t *A, armas_x_dense_t *W,
-                       armas_pivot_t *P, int flags, armas_conf_t *conf)
+int armas_x_cholfactor(armas_x_dense_t *A,
+                       armas_x_dense_t *W,
+                       armas_pivot_t *P,
+                       int flags,
+                       armas_conf_t *conf)
 {
   int err = 0;
+  armas_wbuf_t wb = ARMAS_WBNULL;
+  
   if (!conf)
     conf = armas_conf_default();
 
+  if (!A) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
   if (P != ARMAS_NOPIVOT) {
-    return __cholfactor_pv(A, W, P, flags, conf);
+    if (!armas_walloc(&wb, A->cols*sizeof(DTYPE))) {
+      conf->error = ARMAS_EMEMORY;
+      return -1;
+    }
+    err = armas_x_cholfactor_w(A, P, flags, &wb, conf);
+    armas_wrelease(&wb);
+    return err;
   }
   
-  if (A->rows != A->cols) {
-    conf->error = ARMAS_ESIZE;
-    return -1;
-  }    
-
-  if (conf->lb == 0 || A->cols <= conf->lb) {
-    if (flags & ARMAS_LOWER) {
-      err = __unblk_cholfactor_lower(A, conf);
-    } else {
-      err = __unblk_cholfactor_upper(A, conf);
-    }
-  } else {
-    if (flags & ARMAS_LOWER) {
-      err = __blk_cholfactor_lower(A, conf->lb, conf);
-    } else {
-      err = __blk_cholfactor_upper(A, conf->lb, conf);
-    }
-  }
-  return err;
+  return armas_x_cholfactor_w(A, ARMAS_NOPIVOT, flags, ARMAS_NOWORK, conf); 
 }
 
 
