@@ -290,6 +290,7 @@
 #define __ldlbk 1
 
 // Cholesky 
+#define armas_x_cholesky         armas_d_cholesky
 #define armas_x_cholfactor       armas_d_cholfactor
 #define armas_x_cholfactor_w     armas_d_cholfactor_w
 #define armas_x_cholupdate       armas_d_cholupdate

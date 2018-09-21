@@ -574,10 +574,11 @@ extern int armas_x_bdmult_w(armas_x_dense_t *B, const armas_x_dense_t *A, const 
                             int flags, armas_wbuf_t *w, armas_conf_t *conf);
 
 // Cholesky
-extern int armas_x_cholfactor(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int armas_x_cholesky(armas_x_dense_t *A, int flags, armas_conf_t *conf);
+extern int armas_x_cholfactor(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf);
 extern int armas_x_cholfactor_w(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
-extern int armas_x_cholsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P, int flags,
-                             armas_conf_t *conf);
+extern int armas_x_cholsolve(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_pivot_t *P,
+                             int flags, armas_conf_t *conf);
 extern int armas_x_cholupdate(armas_x_dense_t *A, armas_x_dense_t *X, int flags, armas_conf_t *conf);
 
 // Hessenberg reduction
