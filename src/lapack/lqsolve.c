@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_lqsolve) 
+#if defined(armas_x_lqsolve) && defined(armas_x_lqsolve_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -64,9 +64,6 @@ int __ws_lqsolve(int M, int N, int lb)
  *   The vector of N scalar coefficients that together with triuu(A) define
  *   the ortogonal matrix Q as \f$ Q = H_1 H_2...H_{N-1} \f$
  *
- * \param[out] W
- *     Workspace, size required returned lqsolve_work().
- *
  * \param[in] flags 
  *    Indicator flags, *ARMAS_TRANS*
  *
@@ -77,50 +74,22 @@ int __ws_lqsolve(int M, int N, int lb)
  * Compatible with lapack.GELS (the m >= n part)
  */
 int armas_x_lqsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
-                    armas_x_dense_t *W, int flags, armas_conf_t *conf)
+                    armas_x_dense_t *W, int flags, armas_conf_t *cf)
 {
-  armas_x_dense_t L, BL, BB;
-  int wsmin, ok;
+  if (!cf)
+    cf = armas_conf_default();
 
-  if (!conf)
-    conf = armas_conf_default();
+  armas_wbuf_t wb = ARMAS_WBNULL;
+  if (armas_x_lqsolve_w(B, A, tau, flags, &wb, cf) < 0)
+    return -1;
 
-  ok = B->rows == A->cols;
-  if ( !ok ) {
-    conf->error = ARMAS_ESIZE;
+  if (!armas_walloc(&wb, wb.bytes)) {
+    cf->error = ARMAS_EMEMORY;
     return -1;
   }
-
-  wsmin = __ws_lqsolve(B->rows, B->cols, 0);
-  if (! W || armas_x_size(W) < wsmin) {
-    conf->error = ARMAS_EWORK;
-    return -1;
-  }
-  armas_x_submatrix(&L, A, 0, 0, A->rows, A->rows);
-  armas_x_submatrix(&BL, B, 0, 0, A->rows, B->cols);
-
-  if (flags & ARMAS_TRANS) {
-    // solve least square problem min || A.T*X - B ||
-
-    // B' = Q.T*B
-    ONERROR(armas_x_lqmult(B, A, tau, W, ARMAS_LEFT, conf));
-    
-    // X = L.-1*B'
-    ONERROR(armas_x_solve_trm(&BL, __ONE, &L, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf));
-
-  } else {
-    // solve underdetermined system A*X = B
-    // B' = L.-1*B
-    ONERROR(armas_x_solve_trm(&BL, __ONE, &L, ARMAS_LEFT|ARMAS_LOWER, conf));
-
-    // clear bottom part of B
-    armas_x_submatrix(&BB, B, A->rows, 0, -1, -1);
-    armas_x_mscale(&BB, 0.0, ARMAS_ANY);
-    
-    // X = Q.T*B'
-    ONERROR(armas_x_lqmult(B, A, tau, W, ARMAS_LEFT|ARMAS_TRANS, conf));
-  }
-  return 0;
+  int stat = armas_x_lqsolve_w(B, A, tau, flags, &wb, cf);
+  armas_wrelease(&wb);
+  return stat;
 }
 
 

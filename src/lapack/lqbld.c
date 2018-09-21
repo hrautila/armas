@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_lqbuild) 
+#if defined(armas_x_lqbuild) && defined(armas_x_lqbuild_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -32,12 +32,6 @@
 #ifndef ARMAS_BLOCKING_MIN
 #define ARMAS_BLOCKING_MIN 32
 #endif
-
-static inline
-int __ws_lqbuild(int M, int N, int lb)
-{
-  return lb > 0 ? lb*M : M;
-}
 
 /*
  * Unblocked code for generating M by N matrix Q with orthogonal columns which
@@ -208,40 +202,34 @@ int __blk_lqbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *T,
  * Compatible with lapackd.ORGLQ.
  * \ingroup lapack
  */
-int armas_x_lqbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W, int K,
-                    armas_conf_t *conf)
+int armas_x_lqbuild(armas_x_dense_t *A,
+                    armas_x_dense_t *tau,
+                    armas_x_dense_t *W,
+                    int K,
+                    armas_conf_t *cf)
 {
-  int wsmin, lb, wsneed;
-  if (!conf)
-    conf = armas_conf_default();
+  if (!cf)
+    cf = armas_conf_default();
 
-  lb = conf->lb;
-  wsmin = __ws_lqbuild(A->rows, A->cols, 0);
-  if (! W || armas_x_size(W) < wsmin) {
-    conf->error = ARMAS_EWORK;
+  armas_wbuf_t wb = ARMAS_WBNULL;
+  if (armas_x_lqbuild_w(A, tau, K, &wb, cf) < 0)
+    return -1;
+
+  if (!armas_walloc(&wb, wb.bytes)) {
+    cf->error = ARMAS_EMEMORY;
     return -1;
   }
-  // adjust blocking factor for workspace
-  wsneed = __ws_lqbuild(A->rows, A->cols, lb);
-  if (lb > 0 && armas_x_size(W) < wsneed) {
-    lb = compute_lb(A->rows, A->cols, armas_x_size(W), __ws_lqbuild);
-    lb = min(lb, conf->lb);
-  }
-
-  if (lb == 0 || A->cols <= lb) {
-    __unblk_lqbuild(A, tau, W, A->rows-K, A->cols-K, TRUE, conf);
-  } else {
-    armas_x_dense_t T, Wrk;
-    // block reflector at start of workspace
-    armas_x_make(&T, lb, lb, lb, armas_x_data(W));
-    // temporary space after block reflector T, M(A)-lb-by-lb matrix
-    armas_x_make(&Wrk, A->rows-lb, lb, A->rows-lb, &armas_x_data(W)[armas_x_size(&T)]);
-
-    __blk_lqbuild(A, tau, &T, &Wrk, K, lb, conf);
-  }
-  return 0;
+  int stat = armas_x_lqbuild_w(A, tau, K, &wb, cf);
+  armas_wrelease(&wb);
+  return stat;
 }
 
+
+static inline
+int __ws_lqbuild(int M, int N, int lb)
+{
+  return lb > 0 ? lb*M : M;
+}
 
 int armas_x_lqbuild_work(armas_x_dense_t *A, armas_conf_t *conf)
 {
@@ -249,13 +237,6 @@ int armas_x_lqbuild_work(armas_x_dense_t *A, armas_conf_t *conf)
     conf = armas_conf_default();
   return __ws_lqbuild(A->rows, A->cols, conf->lb);
 }
-
-static inline
-size_t __lqbld_bytes(int M, int lb)
-{
-  return (lb > 0 ? lb*M : M) * sizeof (DTYPE);
-}
-
 
 /**
  * @brief Generate orthogonal Q matrix of LQ factorization

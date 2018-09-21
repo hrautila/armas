@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_lqmult) 
+#if defined(armas_x_lqmult) && defined(armas_x_lqmult_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -408,69 +408,27 @@ __blk_lqmult_right(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *tau,
  * \endcond
  * \ingroup lapack
  */
-int armas_x_lqmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
-                   int flags, armas_conf_t *conf)
+int armas_x_lqmult(armas_x_dense_t *C,
+                   armas_x_dense_t *A,
+                   armas_x_dense_t *tau,
+                   armas_x_dense_t *W,
+                   int flags,
+                   armas_conf_t *cf)
 {
-  WSSIZE wsizer;
-  int wsmin, lb, ok, wsneed;
-  if (!conf)
-    conf = armas_conf_default();
+  if (!cf)
+    cf = armas_conf_default();
 
-  // default to multiplication from left is nothing defined
-  if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))
-    flags |= ARMAS_LEFT;
+  armas_wbuf_t wb = ARMAS_WBNULL;
+  if (armas_x_lqmult_w(C, A, tau, flags, &wb, cf) < 0)
+    return -1;
 
-  if (flags & ARMAS_RIGHT) {
-    ok = C->cols == A->cols;
-    wsizer = __ws_lqmult_right;
-  } else {
-    ok = C->rows == A->cols;
-    wsizer = __ws_lqmult_left;
-  }
-
-  if (! ok) {
-    conf->error = ARMAS_ESIZE;
+  if (!armas_walloc(&wb, wb.bytes)) {
+    cf->error = ARMAS_EMEMORY;
     return -1;
   }
-
-  lb = conf->lb;
-  wsmin = wsizer(C->rows, C->cols, 0);
-  if (! W || armas_x_size(W) < wsmin) {
-    conf->error = ARMAS_EWORK;
-    return -1;
-  }
-  // adjust blocking factor for workspace
-  wsneed = wsizer(C->rows, C->cols, lb);
-  if (lb > 0 && armas_x_size(W) < wsneed) {
-    lb = compute_lb(C->rows, C->cols, armas_x_size(W), wsizer);
-    lb = min(lb, conf->lb);
-  }
-
-  if (lb == 0 || A->rows <= lb) {
-    // unblocked 
-    if (flags & ARMAS_LEFT) {
-      __unblk_lqmult_left(C, A, tau, W, flags, conf);
-    } else {
-      __unblk_lqmult_right(C, A, tau, W, flags, conf);
-    }
-  } else {
-    // blocked code
-    armas_x_dense_t T, Wrk;
-
-    // space for block reflector
-    armas_x_make(&T, lb, lb, lb, armas_x_data(W));
-
-    if (flags & ARMAS_LEFT) {
-      // temporary space after block reflector T, 
-      armas_x_make(&Wrk, C->cols, lb, C->cols, &armas_x_data(W)[armas_x_size(&T)]);
-      __blk_lqmult_left(C, A, tau, &T, &Wrk, flags, lb, conf);
-    } else {
-      // temporary space after block reflector T, 
-      armas_x_make(&Wrk, C->rows, lb, C->rows, &armas_x_data(W)[armas_x_size(&T)]);
-      __blk_lqmult_right(C, A, tau, &T, &Wrk, flags, lb, conf);
-    }
-  }
-  return 0;
+  int stat = armas_x_lqmult_w(C, A, tau, flags, &wb, cf);
+  armas_wrelease(&wb);
+  return stat;
 }
 
 /*
