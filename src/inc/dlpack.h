@@ -89,9 +89,7 @@
 
 // Hessenberg functions
 #define armas_x_hessreduce       armas_s_hessreduce
-#define armas_x_hessreduce_work  armas_s_hessreduce_work
 #define armas_x_hessmult         armas_s_hessmult
-#define armas_x_hessmult_work    armas_s_hessmult_work
 
 // householder functions
 #define __compute_householder      __s_compute_householder
@@ -302,10 +300,8 @@
 // Hessenberg functions
 #define armas_x_hessreduce       armas_d_hessreduce
 #define armas_x_hessreduce_w     armas_d_hessreduce_w
-#define armas_x_hessreduce_work  armas_d_hessreduce_work
 #define armas_x_hessmult         armas_d_hessmult
 #define armas_x_hessmult_w       armas_d_hessmult_w
-#define armas_x_hessmult_work    armas_d_hessmult_work
 
 // householder functions
 #define __compute_householder      __d_compute_householder

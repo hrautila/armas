@@ -35,11 +35,6 @@
 #define ARMAS_NIL (armas_x_dense_t *)0
 #endif
 
-static inline
-int __ws_hess_reduce(int M, int N, int lb)
-{
-  return lb == 0 ? M : lb*(M + lb);
-}
 
 /*
  * (1) Quintana-Orti, van de Geijn:
@@ -431,11 +426,10 @@ int __blk_hess_gqvdg(armas_x_dense_t *A, armas_x_dense_t *tau,
  */
 int armas_x_hessreduce(armas_x_dense_t *A,
                        armas_x_dense_t *tau,
-                       armas_x_dense_t *W,
                        armas_conf_t *conf)
 {
   int err;
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
 
   if (!conf)
     conf = armas_conf_default();
@@ -443,23 +437,19 @@ int armas_x_hessreduce(armas_x_dense_t *A,
   if (armas_x_hessreduce_w(A, tau, &wb, conf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    conf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      conf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
+  else
+    wbs = ARMAS_NOWORK;
 
-  err = armas_x_hessreduce_w(A, tau, &wb, conf);
+  err = armas_x_hessreduce_w(A, tau, wbs, conf);
   armas_wrelease(&wb);
   return err;
-}
-
-//! \brief Workspace size for Hessenberg reduction
-//! \ingroup lapack
-int armas_x_hessreduce_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_hess_reduce(A->rows, A->cols, conf->lb);
 }
 
 /**
@@ -600,11 +590,14 @@ int armas_x_hessreduce_w(armas_x_dense_t *A,
  *
  * \ingroup lapack
  */
-int armas_x_hessmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *tau,
-                      armas_x_dense_t *W, int flags, armas_conf_t *conf)
+int armas_x_hessmult(armas_x_dense_t *C,
+                     const armas_x_dense_t *A,
+                     const armas_x_dense_t *tau,
+                     int flags,
+                     armas_conf_t *conf)
 {
   int err;
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
 
   if (!conf)
     conf = armas_conf_default();
@@ -612,21 +605,18 @@ int armas_x_hessmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *ta
   if (armas_x_hessmult_w(C, A, tau, flags, &wb, conf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    conf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      conf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  err = armas_x_hessmult_w(C, A, tau, flags, &wb, conf);
+  else
+    wbs = ARMAS_NOWORK;
+  err = armas_x_hessmult_w(C, A, tau, flags, wbs, conf);
   armas_wrelease(&wb);
   return err;
-}
-
-int armas_x_hessmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-
-  return armas_x_qrmult_work(A, flags, conf);
 }
 
 int armas_x_hessmult_w(armas_x_dense_t *C,
