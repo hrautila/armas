@@ -116,7 +116,7 @@ int armas_x_bdsvd(armas_x_dense_t *D, armas_x_dense_t *E,
                   int flags, armas_conf_t *conf)
 {
     int err;
-    armas_wbuf_t wb = ARMAS_WBNULL;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
 
     if (!conf)
         conf = armas_conf_default();
@@ -124,10 +124,18 @@ int armas_x_bdsvd(armas_x_dense_t *D, armas_x_dense_t *E,
     if (armas_x_bdsvd_w(D, E, U, V, flags, &wb, conf) < 0)
         return -1;
 
-    if (wb.bytes > 0)
-        armas_walloc(&wb, wb.bytes);
-
-    err = armas_x_bdsvd_w(D, E, U, V, flags, &wb, conf);
+    wbs = &wb;
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
+            return -1;
+        }
+    }
+    else {
+        wbs = ARMAS_NOWORK;
+    }
+    
+    err = armas_x_bdsvd_w(D, E, U, V, flags, wbs, conf);
     armas_wrelease(&wb);
 
     return err;
@@ -206,8 +214,9 @@ int armas_x_bdsvd_w(armas_x_dense_t *D,
     }
 
     uuvv = (flags & (ARMAS_WANTU|ARMAS_WANTV)) != 0;
-    if (uuvv && wb && wb->bytes == 0) {
-        wb->bytes = 4*N*sizeof(DTYPE);
+    if (wb && wb->bytes == 0) {
+        if (uuvv)
+            wb->bytes = 4*N*sizeof(DTYPE);
         return 0;
     }
 

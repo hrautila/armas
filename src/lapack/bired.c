@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_bdreduce) 
+#if defined(armas_x_bdreduce) && defined(armas_x_bdreduce_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -817,43 +817,31 @@ int __blk_bdreduce_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
  *       2010, Flame working note #53 
  * \ingroup lapack
  */
-int armas_x_bdreduce(armas_x_dense_t *A, armas_x_dense_t *tauq,
-                     armas_x_dense_t *taup, armas_x_dense_t *W,
+int armas_x_bdreduce(armas_x_dense_t *A,
+                     armas_x_dense_t *tauq,
+                     armas_x_dense_t *taup,
+                     armas_x_dense_t *W,
                      armas_conf_t *conf)
 {
-  int wsmin, wsneed, lb;
+  int err;
+  armas_wbuf_t wb = ARMAS_WBNULL;
 
   if (!conf)
     conf = armas_conf_default();
-  
-  lb = conf->lb;
-  wsmin = __ws_bdreduce(A->rows, A->cols, 0);
-  if (armas_x_size(W) < wsmin) {
-    conf->error = ARMAS_EWORK;
+
+  if (armas_x_bdreduce_w(A, tauq, taup, &wb, conf) < 0)
     return -1;
-  }
-  // adjust blocking factor for workspace
-  wsneed = __ws_bdreduce(A->rows, A->cols, lb);
-  if (lb > 0 && armas_x_size(W) < wsneed) {
-    lb = compute_lb(A->rows, A->cols, wsneed, __ws_bdreduce);
-    lb = min(lb, conf->lb);
-  }
 
-
-  if (A->rows >= A->cols) {
-    if (lb > 0 && A->cols > lb) {
-      __blk_bdreduce_left(A, tauq, taup, W, lb, conf);
-    } else {
-      __unblk_bdreduce_left(A, tauq, taup, W, conf);
-    }
-  } else {
-    if (lb > 0 && A->cols > lb) {
-      __blk_bdreduce_right(A, tauq, taup, W, lb, conf);
-    } else {
-      __unblk_bdreduce_right(A, tauq, taup, W, conf);
+  if (wb.bytes > 0){
+    if (!armas_walloc(&wb, wb.bytes)) {
+      conf->error = ARMAS_EMEMORY;
+      return -1;
     }
   }
-  return 0;
+
+  err = armas_x_bdreduce_w(A, tauq, taup, &wb, conf);
+  armas_wrelease(&wb);
+  return err;
 }
 
 /*
@@ -939,6 +927,7 @@ int armas_x_bdreduce_w(armas_x_dense_t *A,
                        armas_wbuf_t *wb,
                        armas_conf_t *conf)
 {
+
   armas_x_dense_t W;
   size_t wsmin, wsz = 0;
   int lb;
@@ -1044,76 +1033,22 @@ int armas_x_bdmult(armas_x_dense_t *C, armas_x_dense_t *A,
                    armas_x_dense_t *tau, armas_x_dense_t *W,
                    int flags, armas_conf_t *conf)
 {
-  armas_x_dense_t Qh, Ch, Ph, tauh;
   int err;
+  armas_wbuf_t wb = ARMAS_WBNULL;
 
-  // default to multiplication from left
-  if (!(flags & (ARMAS_LEFT|ARMAS_RIGHT)))
-    flags |= ARMAS_LEFT;
+  if (!conf)
+    conf = armas_conf_default();
 
-  // to be done!
-  switch (flags & (ARMAS_MULTQ|ARMAS_MULTP|ARMAS_LEFT|ARMAS_RIGHT)) {
-  case ARMAS_MULTQ|ARMAS_LEFT:
-  case ARMAS_MULTQ:
-    break;
-  case ARMAS_MULTQ|ARMAS_RIGHT:
-    break;
-  case ARMAS_MULTP|ARMAS_LEFT:
-  case ARMAS_MULTP:
-    break;
-  case ARMAS_MULTP|ARMAS_RIGHT:
-    break;
-  default:
-    break;
+  if (armas_x_bdmult_w(C, A, tau, flags, &wb, conf) < 0)
+    return -1;
+
+  if (!armas_walloc(&wb, wb.bytes)) {
+    conf->error = ARMAS_EMEMORY;
+    return -1;
   }
 
-  if (flags & ARMAS_MULTP) {
-    flags = flags & ARMAS_TRANS ? flags^ARMAS_TRANS : flags|ARMAS_TRANS;
-  } 
-
-  if (A->rows > A->cols || (A->rows == A->cols && !(flags & ARMAS_LOWER))) {
-    // M >= N
-    switch (flags & (ARMAS_MULTQ|ARMAS_MULTP)) {
-    case ARMAS_MULTQ:
-      armas_x_submatrix(&tauh, tau, 0, 0, A->cols, 1);
-      err = armas_x_qrmult(C, A, &tauh, W, flags, conf);
-      break;
-    case ARMAS_MULTP:
-      armas_x_submatrix(&Ph, A, 0, 1, A->cols-1, A->cols-1);
-      armas_x_submatrix(&tauh, tau, 0, 0, A->cols-1, 1);
-      if (flags & ARMAS_RIGHT) {
-        armas_x_submatrix(&Ch, C, 0, 1, C->rows, C->cols-1);
-      } else {
-        armas_x_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
-      }
-      err = armas_x_lqmult(&Ch, &Ph, &tauh, W, flags, conf);
-      break;
-    default:
-      conf->error = ARMAS_EINVAL;
-      return -1;
-    }
-  } else {
-    // M < N
-    switch (flags & (ARMAS_MULTQ|ARMAS_MULTP)) {
-    case ARMAS_MULTQ:
-      armas_x_submatrix(&Qh, A, 1, 0, A->rows-1, A->rows-1);
-      armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
-      if (flags & ARMAS_RIGHT) {
-        armas_x_submatrix(&Ch, C, 0, 1, C->rows, C->cols-1);
-      } else {
-        armas_x_submatrix(&Ch, C, 1, 0, C->rows-1, C->cols);
-      }
-      err = armas_x_qrmult(&Ch, &Qh, &tauh, W, flags, conf);
-      break;
-    case ARMAS_MULTP:
-      armas_x_submatrix(&tauh, tau, 0, 0, A->rows, 1);
-      err = armas_x_lqmult(C, A, &tauh, W, flags, conf);
-      break;
-    default:
-      conf->error = ARMAS_EINVAL;
-      return -1;
-    }
-  }
+  err = armas_x_bdmult_w(C, A, tau, flags, &wb, conf);
+  armas_wrelease(&wb);
   return err;
 }
 
