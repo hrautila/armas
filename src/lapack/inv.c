@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_inverse) 
+#if defined(armas_x_inverse) && defined(armas_x_inverse_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external functions
@@ -25,6 +25,11 @@
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
+
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
+
 
 extern int __unblk_inverse_upper(armas_x_dense_t *A, int flags, armas_conf_t *conf);
 
@@ -69,7 +74,8 @@ int __unblk_inverse_fused(armas_x_dense_t *A, armas_x_dense_t *W, armas_conf_t *
         armas_x_mvsolve_trm(&a01, -a11val, &A00, ARMAS_UPPER, conf);
 
         // inverse A; l21 := a21; a21 = 0, we can compute full column a1 of A^-1.
-        armas_x_submatrix(&l21, W, 0, 0, armas_x_size(&a21), 1);
+        //armas_x_submatrix(&l21, W, 0, 0, armas_x_size(&a21), 1);
+        armas_x_make(&l21, a21.rows, a21.cols, a21.rows, armas_x_data(W));
         armas_x_copy(&l21, &a21, conf);
         armas_x_scale(&a21, __ZERO, conf);
 
@@ -153,46 +159,93 @@ int __blk_inverse_fused(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_co
  */
 int armas_x_inverse(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, armas_conf_t *conf)
 {
-    int lb, ws, err = 0;
+    int err;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
+    if (!conf)
+        conf = armas_conf_default();
 
+    wbs = &wb;
+    if (armas_x_inverse_w(A, P, &wb, conf) < 0)
+        return -1;
+
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
+            return -1;
+        }
+    }
+    else
+        wbs = ARMAS_NOWORK;
+    
+    err = armas_x_inverse_w(A, P, wbs, conf);
+    armas_wrelease(&wb);
+    return err;
+}
+
+
+int armas_x_inverse_w(armas_x_dense_t *A,
+                      armas_pivot_t *P,
+                      armas_wbuf_t *wb, 
+                      armas_conf_t *conf)
+{
+    int lb, err = 0;
+    size_t wsmin, wsz;
+    armas_x_dense_t Wt;
+    
     if (!conf)
         conf = armas_conf_default();
     
-    if (A->rows != A->cols) {
+    if (!A) {
+        conf->error = ARMAS_EINVAL;
+        return -1;
+    }
+    if (wb && wb->bytes == 0) {
+        if (conf->lb > 0 && A->rows > conf->lb)
+            wb->bytes = A->rows * conf->lb * sizeof(DTYPE);
+        else
+            wb->bytes = A->rows * sizeof(DTYPE);
+        return 0;
+    }
+
+    if (A->rows != A->cols ||
+        (P != ARMAS_NOPIVOT && armas_pivot_size(P) != A->rows)) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
 
-    lb = conf->lb;
-    ws = armas_x_size(W);
-    if (ws < A->rows) {
+    wsmin = A->rows * sizeof(DTYPE);
+    wsz   = armas_wbytes(wb);
+    if (wsz < wsmin) {
         conf->error = ARMAS_EWORK;
         return -1;
     }
 
-    if (lb != 0 && lb > ws/A->rows) {
-        // adjust blocking factor to workspace
-        lb = ws/A->rows;
-        if (lb < 4) {
-            lb = 0;
-        }  else {        
-            lb &= ~0x3; // make multiple of 4
+    lb = conf->lb;
+    wsz /= sizeof(DTYPE);
+    if (A->rows > lb) {
+        if (wsz < lb * A->rows) {
+            lb = (wsz / A->rows) & ~0x3;
+            if (lb < ARMAS_BLOCKING_MIN)
+                lb = 0;
         }
     }
 
+    armas_x_make(&Wt, wsz, 1, wsz, (DTYPE *)armas_wptr(wb));
+    wsz = armas_wpos(wb);
+    
     if (lb == 0 || A->rows <= lb) {
-        err = __unblk_inverse_fused(A, W, conf);
+        err = __unblk_inverse_fused(A, &Wt, conf);
     } else {
-        err = __blk_inverse_fused(A, W, lb, conf);
+        err = __blk_inverse_fused(A, &Wt, lb, conf);
     }
 
     if (err == 0 && P) {
         // apply col pivots ie. compute A := A*P
         armas_x_pivot(A, P, ARMAS_PIVOT_COLS|ARMAS_PIVOT_BACKWARD, conf);
     }
+    armas_wsetpos(wb, wsz);
     return err;
 }
-
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 

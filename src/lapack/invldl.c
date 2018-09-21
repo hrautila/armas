@@ -26,6 +26,10 @@
 #include "matrix.h"
 #include "internal_lapack.h"
 
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
+
 #include "sym.h"
 
 
@@ -252,60 +256,80 @@ int __blk_invldl_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
  * \param[in,out] A
  *     On entry, the LDL^T (UDU^T) factorized symmetric matrix. On exit inverse of the
  *     matrix. 
- * \param[out]  W
- *     Workspace, miminum space needed is N elements.
  * \param[in] P
  *     Pivot vector
  * \param[in] flags
  *     Indicator flags, if ARMAS_LOWER (ARMAS_UPPER) is set then the elements of the 
  *     symmetric matrix are store in the lower (upper) triangular part of the matrix. 
  *     The strictly  upper (lower) part is not accessed.
+ * \param[out]  W
+ *     Workspace, miminum space needed is N elements.
  * \param[in,out] conf
  *     Blocking configuration, error status
  * 
  * \retval  0   OK
  * \retval -1   failure, conf.error holds actual error code
  */
-int armas_x_ldlinverse_sym(armas_x_dense_t *A, armas_x_dense_t *W, 
-                           armas_pivot_t *P, int flags, armas_conf_t *conf)
+int armas_x_ldlinverse_sym_w(armas_x_dense_t *A, 
+                             armas_pivot_t *P,
+                             int flags,
+                             armas_wbuf_t *wb,
+                             armas_conf_t *conf)
 {
-    int lb, ws, err = 0;
+    int lb, err = 0;
+    size_t wsmin, wsz;
+    armas_x_dense_t Wt;
 
     if (!conf)
         conf = armas_conf_default();
     
+    if (!A) {
+        conf->error = ARMAS_EINVAL;
+        return -1;
+    }
+    if (wb && wb->bytes == 0) {
+        if (conf->lb > 0 && A->rows > conf->lb)
+            wb->bytes = (conf->lb + 1) * A->rows * sizeof(DTYPE);
+        else
+            wb->bytes = A->rows * sizeof(DTYPE);
+        return 0;
+    }
+
     if (A->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
 
-    lb = conf->lb;
-    ws = armas_x_size(W);
-    if (ws < A->rows) {
+    wsmin = A->rows * sizeof(DTYPE);
+    wsz   = armas_wbytes(wb);
+    if (wsz < wsmin) {
         conf->error = ARMAS_EWORK;
         return -1;
     }
 
-    if (lb != 0 && lb > ws/A->rows) {
-        // adjust blocking factor to workspace
-        lb = ws/A->rows;
-        if (lb < 4) {
-            lb = 0;
-        }  else {        
-            lb &= ~0x3; // make multiple of 4
+    lb = conf->lb;
+    wsz /= sizeof(DTYPE);
+    if (A->rows > lb) {
+        if (wsz < (lb + 1) * A->rows) {
+            lb = (wsz / A->rows - 1) & ~0x3;
+            if (lb < ARMAS_BLOCKING_MIN)
+                lb = 0;
         }
     }
 
+    armas_x_make(&Wt, wsz, 1, wsz, (DTYPE *)armas_wptr(wb));
+    wsz = armas_wpos(wb);
+
     if (lb == 0 || A->rows <= lb) {
-        if (flags & ARMAS_LOWER)
-            err = __unblk_invldl_lower(A, W, conf);
+        if (flags & ARMAS_UPPER)
+            err = __unblk_invldl_upper(A, &Wt, conf);
         else 
-            err = __unblk_invldl_upper(A, W, conf);
+            err = __unblk_invldl_lower(A, &Wt, conf);
     } else {
-        if (flags & ARMAS_LOWER)
-            err = __blk_invldl_lower(A, W, lb, conf);
+        if (flags & ARMAS_UPPER)
+            err = __blk_invldl_upper(A, &Wt, lb, conf);
         else 
-            err = __blk_invldl_upper(A, W, lb, conf);
+            err = __blk_invldl_lower(A, &Wt, lb, conf);
     }
 
     if (P != ARMAS_NOPIVOT) {
@@ -315,9 +339,35 @@ int armas_x_ldlinverse_sym(armas_x_dense_t *A, armas_x_dense_t *W,
             armas_x_pivot(A, P, ARMAS_PIVOT_LOWER|ARMAS_PIVOT_BACKWARD, conf);
         }
     }
+    armas_wsetpos(wb, wsz);
     return err;
 }
 
+
+int armas_x_ldlinverse_sym(armas_x_dense_t *A,
+                           armas_x_dense_t *W,
+                           armas_pivot_t *P,
+                           int flags,
+                           armas_conf_t *conf)
+{
+    int err;
+    armas_wbuf_t wb = ARMAS_WBNULL;
+    if (!conf)
+        conf = armas_conf_default();
+
+    if (armas_x_ldlinverse_sym_w(A, P, flags, &wb, conf) < 0)
+        return -1;
+
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
+            return -1;
+        }
+    }
+    err = armas_x_ldlinverse_sym_w(A, P, flags, &wb, conf);
+    armas_wrelease(&wb);
+    return err;
+}
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 

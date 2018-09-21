@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_inverse_spd) 
+#if defined(armas_x_inverse_psd) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -26,7 +26,9 @@
 #include "matrix.h"
 #include "internal_lapack.h"
 
-
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
 
 // symmetric positive definite matrix inverse
 static
@@ -223,7 +225,7 @@ int __blk_invspd_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
 
 
 /**
- * \brief Computes the inverse of a general NxN matrix.
+ * \brief Computes the inverse of a positive semi-definite NxN matrix.
  *
  * \param[in,out] A
  *      On entry, the lower (or upper) Cholesky factorization of matrix A. On exit the inverse of A
@@ -239,47 +241,86 @@ int __blk_invspd_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
  * \retval -1 Error, error code set in conf.error
  *
  */
-int armas_x_inverse_spd(armas_x_dense_t *A, armas_x_dense_t *W, int flags, armas_conf_t *conf)
+int armas_x_inverse_psd_w(armas_x_dense_t *A,
+                          int flags,
+                          armas_wbuf_t *wb,
+                          armas_conf_t *conf)
 {
-    int lb, ws, err = 0;
+    int lb, err = 0;
+    size_t wsmin, wsz;
+    armas_x_dense_t Wt;
 
     if (!conf)
         conf = armas_conf_default();
+    
+    if (!A) {
+        conf->error = ARMAS_EINVAL;
+        return -1;
+    }
+    if (wb && wb->bytes == 0) {
+        if (conf->lb > 0 && A->rows > conf->lb)
+            wb->bytes = conf->lb * A->rows * sizeof(DTYPE);
+        else
+            wb->bytes = A->rows * sizeof(DTYPE);
+        return 0;
+    }
     
     if (A->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
 
-    lb = conf->lb;
-    ws = armas_x_size(W);
-    if (ws < A->rows) {
+    wsmin = A->rows * sizeof(DTYPE);
+    wsz   = armas_wbytes(wb);
+    if (wsz < wsmin) {
         conf->error = ARMAS_EWORK;
         return -1;
     }
 
-    if (lb != 0 && lb > ws/A->rows) {
-        // adjust blocking factor to workspace
-        lb = ws/A->rows;
-        if (lb < 4) {
-            lb = 0;
-        }  else {        
-            lb &= ~0x3; // make multiple of 4
+    lb = conf->lb;
+    wsz /= sizeof(DTYPE);
+    if (A->rows > lb) {
+        if (wsz < lb * A->rows) {
+            lb = (wsz / A->rows) & ~0x3;
+            if (lb < ARMAS_BLOCKING_MIN)
+                lb = 0;
         }
     }
 
+    armas_x_make(&Wt, wsz, 1, wsz, (DTYPE *)armas_wptr(wb));
+    wsz = armas_wpos(wb);
+
     if (lb == 0 || A->rows <= lb) {
         if (flags & ARMAS_LOWER)
-            err = __unblk_invspd_lower(A, W, conf);
+            err = __unblk_invspd_lower(A, &Wt, conf);
         else 
-            err = __unblk_invspd_upper(A, W, conf);
+            err = __unblk_invspd_upper(A, &Wt, conf);
     } else {
         if (flags & ARMAS_LOWER)
-            err = __blk_invspd_lower(A, W, lb, conf);
+            err = __blk_invspd_lower(A, &Wt, lb, conf);
         else 
-            err = __blk_invspd_upper(A, W, lb, conf);
+            err = __blk_invspd_upper(A, &Wt, lb, conf);
     }
     return err;
+}
+
+int armas_x_inverse_psd(armas_x_dense_t *A,
+                        int flags,
+                        armas_conf_t *conf)
+{
+    int err;
+    armas_wbuf_t wb = ARMAS_WBNULL;
+    if (!conf)
+        conf = armas_conf_default();
+
+    if (armas_x_inverse_psd_w(A, flags, &wb, conf) < 0)
+        return -1;
+    if (wb.bytes > 0)
+        armas_walloc(&wb, wb.bytes);
+    err = armas_x_inverse_psd_w(A, flags, &wb, conf);
+    armas_wrelease(&wb);
+    return err;
+
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
