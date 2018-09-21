@@ -15,7 +15,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_bkfactor) && defined(armas_x_bksolve)
+#if defined(armas_x_bkfactor) && defined(armas_x_bkfactor_w) && defined(armas_x_bksolve)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -32,6 +32,10 @@
 #include "matrix.h"
 #include "internal_lapack.h"
 //! \endcond
+
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
 
 // bytes needed
 static inline
@@ -84,57 +88,32 @@ size_t __ws_bytes(int M, int N, int lb)
  *  Compatible with lapack.SYTRF.
  * \ingroup lapack
  */
-int armas_x_bkfactor(armas_x_dense_t *A, armas_x_dense_t *W,
-                     armas_pivot_t *P, int flags, armas_conf_t *conf)
+int armas_x_bkfactor(armas_x_dense_t *A,
+                     armas_x_dense_t *W,
+                     armas_pivot_t *P,
+                     int flags,
+                     armas_conf_t *conf)
 {
-  armas_x_dense_t Wrk;
-  int lb, k, wsmin, wsneed;
+  int err;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (!conf)
     conf = armas_conf_default();
-
-  lb = conf->lb;
-  wsmin = __ws_ldlfactor(A->rows, A->cols, lb);
-  if (armas_x_size(W) < wsmin) {
-    conf->error = ARMAS_EWORK;
+  
+  wbs = &wb;
+  if (armas_x_bkfactor_w(A, P, flags, &wb, conf) < 0)
     return -1;
-  }
-  // adjust blocking factor for workspace
-  wsneed = __ws_ldlfactor(A->rows, A->cols, lb);
-  if (lb > 0 && armas_x_size(W) < wsneed) {
-    lb = compute_lb(A->rows, A->cols, wsneed, __ws_ldlfactor);
-    lb = min(lb, conf->lb);
-    if (lb < 5)
-      lb = 0;
-  }
-
-  if (A->rows != A->cols || A->cols != armas_pivot_size(P)) {
-    conf->error = ARMAS_ESIZE;
-    return -1;
-  }
-  // clear pivots
-  for (k = 0; k < armas_pivot_size(P); k++) {
-    armas_pivot_set(P, k, 0);
-  }
-
-  if (lb == 0 || A->cols <= lb) {
-    armas_x_make(&Wrk, A->rows, 2, A->rows, armas_x_data(W));
-    if (flags & ARMAS_UPPER) {
-      __unblk_bkfactor_upper(A, &Wrk, P, conf);
-    }
-    else {
-      __unblk_bkfactor_lower(A, &Wrk, P, conf);
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      conf->error = ARMAS_EMEMORY;
+      return -1;
     }
   }
-  else {
-    armas_x_make(&Wrk, A->rows, lb+1, A->rows, armas_x_data(W));
-    if (flags & ARMAS_UPPER) {
-      __blk_bkfactor_upper(A, &Wrk, P, lb, conf);
-    }
-    else {
-      __blk_bkfactor_lower(A, &Wrk, P, lb, conf);
-    }
-  }
-  return 0;
+  else
+    wbs = ARMAS_NOWORK;
+  
+  err = armas_x_bkfactor_w(A, P, flags, wbs, conf);
+  armas_wrelease(&wb);
+  return err;
 }
 
 /**
@@ -182,37 +161,49 @@ int armas_x_bkfactor_w(armas_x_dense_t *A,
 {
   armas_x_dense_t Wrk;
   int lb, k;
-  size_t wsmin, wsneed, wpos;
+  size_t wsmin, wsz, wpos;
 
   if (!conf)
     conf = armas_conf_default();
+
+  if (!A) {
+    conf->error = ARMAS_EINVAL;
+    return -1;
+  }
+  
+  if (wb && wb->bytes == 0) {
+    // compute workspace
+    if (conf->lb > 0 && A->rows > conf->lb) 
+      wb->bytes = A->cols  * (conf->lb + 1) * sizeof(DTYPE);
+    else
+      wb->bytes = 2 * A->cols * sizeof(DTYPE);
+    return 0;
+  }
 
   if (A->rows != A->cols || A->cols != armas_pivot_size(P)) {
     conf->error = ARMAS_ESIZE;
     return -1;
   }
-  lb = conf->lb;
-  if (wb && wb->bytes == 0) {
-    // compute workspace
-    wb->bytes = __ws_bytes(A->rows, A->cols, lb);
-    return 0;
-  }
-  wpos = armas_wpos(wb);
-  
+
   // get minumum bytes needed unblocked factorization
-  wsmin = __ws_bytes(A->rows, A->cols, 0);
-  if (armas_wbytes(wb) < wsmin) {
+  lb = conf->lb;
+  wsmin = 2 * A->cols * sizeof(DTYPE);
+  if ((wsz = armas_wbytes(wb)) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
   }
   // adjust blocking factor for workspace; 
-  wsneed = __ws_bytes(A->rows, A->cols, lb);
-  if (lb > 0 && armas_wbytes(wb) < wsneed) {   
-    lb = wsneed / (A->rows*sizeof(DTYPE)) - 1;
-    if (lb < 6)
-      lb = 0;
+  wsz /= sizeof(DTYPE);
+  if (lb > 0 && A->cols > lb) {
+    if (wsz < (lb + 1)*A->cols) {
+      lb = (wsz / A->cols - 1) & ~0x3;
+      if (lb < ARMAS_BLOCKING_MIN)
+        lb = 0;
+    }
   }
 
+  wpos = armas_wpos(wb);
+  
   // clear pivots
   for (k = 0; k < armas_pivot_size(P); k++) {
     armas_pivot_set(P, k, 0);
@@ -284,28 +275,25 @@ int armas_x_bkfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
 int armas_x_bksolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *W,
                     armas_pivot_t *P, int flags, armas_conf_t *conf)
 {
-  int err = 0;
+  int err;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (!conf)
     conf = armas_conf_default();
 
-  if (A->cols != B->rows) {
-    conf->error = ARMAS_ESIZE;
+  if (armas_x_bksolve_w(B, A, P, flags, &wb, conf) < 0)
     return -1;
-  }
-  if (flags & ARMAS_LOWER) {
-    // first part: Z = D.-1*(L.-1*B)
-    if ((err = __unblk_bksolve_lower(B, A, P, 1, conf)) < 0)
-      return err;
-    // second part: X = L.-T*Z
-    err = __unblk_bksolve_lower(B, A, P, 2, conf);
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      conf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
   else {
-    // first part: Z = D.-1*(U.-1*B)
-    if ((err = __unblk_bksolve_upper(B, A, P, 1, conf)) < 0)
-      return err;
-    // second part: X = U.-T*Z
-    err =__unblk_bksolve_upper(B, A, P, 2, conf);
+    wbs = ARMAS_NOWORK;
   }
+  err = armas_x_bksolve_w(B, A, P, flags, wbs, conf);
+  armas_wrelease(&wb);
   return err;
 }
 
@@ -320,13 +308,18 @@ int armas_x_bksolve_w(armas_x_dense_t *B,
   if (!conf)
     conf = armas_conf_default();
 
-  if (A->cols != B->rows) {
-    conf->error = ARMAS_ESIZE;
+  if (!A || !B) {
+    conf->error = ARMAS_EINVAL;
     return -1;
   }
   if (wb && wb->bytes == 0) {
     // no need for workspace for time being;
     return 0;
+  }
+
+  if (A->cols != B->rows) {
+    conf->error = ARMAS_ESIZE;
+    return -1;
   }
 
   // TODO: don't loose the const'ness of A and P for time being

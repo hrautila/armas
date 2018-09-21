@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_ldlfactor) 
+#if defined(armas_x_ldlfactor) && defined(armas_x_ldlfactor_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -28,6 +28,10 @@
 #include "pivot.h"
 
 #include "ldl.h"
+
+#ifndef ARMAS_BLOCKING_MIN
+#define ARMAS_BLOCKING_MIN 32
+#endif
 
 extern
 int __ldlfactor_np(armas_x_dense_t *A, armas_x_dense_t *W, int flags, armas_conf_t *conf);
@@ -452,30 +456,84 @@ int __blk_ldlpv_upper(armas_x_dense_t *A, armas_x_dense_t *W,
  * \retval 0  ok
  * \retval -1 error
  */
-int armas_x_ldlfactor(armas_x_dense_t *A, armas_x_dense_t *W,
-                      armas_pivot_t *P, int flags, armas_conf_t *conf)
+int armas_x_ldlfactor(armas_x_dense_t *A,
+                      armas_x_dense_t *W,
+                      armas_pivot_t *P,
+                      int flags,
+                      armas_conf_t *conf)
 {
-    int ws, ws_opt, lb, err = 0;
+    int err;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
+
     if (!conf)
         conf = armas_conf_default();
 
+    wbs = &wb;
+    if (armas_x_ldlfactor_w(A, P, flags, &wb, conf) < 0)
+        return -1;
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
+            return -1;
+        }
+    }
+    else
+        wbs = ARMAS_NOWORK;
+
+    err = armas_x_ldlfactor_w(A, P, flags, wbs, conf);
+    armas_wrelease(&wb);
+    return err;
+   
+}
+
+int armas_x_ldlfactor_w(armas_x_dense_t *A, 
+                        armas_pivot_t *P,
+                        int flags,
+                        armas_wbuf_t *wb,
+                        armas_conf_t *conf)
+{
+    int ws, ws_opt, lb, err = 0;  
+    size_t wsz;
+    armas_x_dense_t W;
+    
+    if (!conf)
+        conf = armas_conf_default();
+
+    if (!A) {
+        conf->error = ARMAS_EINVAL;
+        return -1;
+    }
+
+    if (wb && wb->bytes == 0) {
+        if (conf->lb > 0 && A->rows > conf->lb)
+            wb->bytes = A->rows * conf->lb * sizeof(DTYPE);
+        else
+            wb->bytes = 0;
+        return 0;
+    }
+    
     if (A->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
+
     if (P == ARMAS_NOPIVOT) {
-        return __ldlfactor_np(A, W, flags, conf);
+        wsz = armas_wbytes(wb) / sizeof(DTYPE);
+        armas_x_make(&W, wsz, 1, wsz, (DTYPE *)armas_wptr(wb));
+        return __ldlfactor_np(A, &W, flags, conf);
     }
 
     lb = conf->lb;
-    ws = armas_x_size(W);
-    ws_opt = __ws_opt(A->rows, lb);
-
-    if (ws > 0 && ws < ws_opt) {
-        lb = __new_lb(A->rows, lb, ws);
+    wsz = armas_wbytes(wb) / sizeof(DTYPE);
+    if (lb > 0 && A->rows > lb) {
+        if (wsz < A->rows * lb) {
+            lb = (wsz / A->rows) & ~0x3;
+            if (lb < ARMAS_BLOCKING_MIN)
+                lb = 0;
+        }
     }
 
-    if (lb == 0 || ws == 0 || A->rows <= lb) {
+    if (lb == 0 || wb == ARMAS_NOWORK || A->rows <= lb) {
         // unblocked code
         if (flags & ARMAS_UPPER) {
             err = __unblk_ldlpv_upper(A, P, conf);
@@ -484,10 +542,11 @@ int armas_x_ldlfactor(armas_x_dense_t *A, armas_x_dense_t *W,
         }
     } else {
         // blocked version
+        armas_x_make(&W, wsz, 1, wsz, (DTYPE *)armas_wptr(wb));
         if (flags & ARMAS_UPPER) {
-            err = __blk_ldlpv_upper(A, W, P, lb, conf);
+            err = __blk_ldlpv_upper(A, &W, P, lb, conf);
         } else {
-            err = __blk_ldlpv_lower(A, W, P, lb, conf);
+            err = __blk_ldlpv_lower(A, &W, P, lb, conf);
         }
     }
     return err;
