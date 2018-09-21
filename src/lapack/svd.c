@@ -519,7 +519,10 @@ int armas_x_svd(armas_x_dense_t *S, armas_x_dense_t *U, armas_x_dense_t *V,
         };
         err = armas_x_svd_w(S, U, V, A, flags, &wbs, conf);        
     } else {
-        armas_walloc(&wb, wb.bytes);
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
+            return -1;
+        }
         err = armas_x_svd_w(S, U, V, A, flags, &wb, conf);
         armas_wrelease(&wb);
     }

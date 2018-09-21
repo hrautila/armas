@@ -84,77 +84,63 @@ int __eigen_sym_small(armas_x_dense_t *D, armas_x_dense_t *A,
  *
  * \ingroup lapack
  */
-int armas_x_eigen_sym(armas_x_dense_t *D, armas_x_dense_t *A,
-                      armas_x_dense_t *W, int flags, armas_conf_t *conf)
+int armas_x_eigen_sym(armas_x_dense_t *D,
+                      armas_x_dense_t *A,
+                      armas_x_dense_t *W,
+                      int flags,
+                      armas_conf_t *conf)
 {
-    armas_x_dense_t sD, sE, E, tau, Wred, *vv;
-    int wrl, ioff, N = A->rows;
-    vv = __nil;
-
+    int err;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
+    
     if (!conf)
         conf = armas_conf_default();
 
-    if (A->rows != A->cols && armas_x_size(D) != A->rows) {
-        conf->error = ARMAS_ESIZE;
+    if (armas_x_size(A) == 0)
+        return 0;
+    
+    wbs = &wb;
+    if (armas_x_eigen_sym_w(D, A, flags, &wb, conf) < 0)
         return -1;
-    }
-    if (N == 1) {
-        armas_x_set_at_unsafe(D, 0, armas_x_get_unsafe(A, 0, 0));
-        if (flags & ARMAS_WANTV) {
-            armas_x_set_unsafe(A, 0, 0, __ONE);
+
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
+            return -1;
         }
-        return 0;
     }
-    if (N == 2) {
-        __eigen_sym_small(D, A, W, flags, conf);
-        return 0;
-    }
-
-    if ((flags & ARMAS_WANTV) && armas_x_size(W) < 3*N) {
-        conf->error = ARMAS_EWORK;
-        return -1;
-    }
-
-    // default to lower triangular storage
-    if (!(flags & (ARMAS_UPPER|ARMAS_LOWER)))
-        flags |= ARMAS_LOWER;
-
-    ioff = flags & ARMAS_LOWER ? -1 : 1;
-    armas_x_make(&E, N-1, 1, N-1, armas_x_data(W));
-    armas_x_make(&tau, N, 1, N, &armas_x_data(W)[N-1]);
-    wrl = armas_x_size(W) - 2*N - 1;
-    armas_x_make(&Wred, wrl, 1, wrl, &armas_x_data(W)[2*N-1]);
-
-    // reduce to tridiagonal form
-    if (armas_x_trdreduce(A, &tau, &Wred, flags, conf) != 0)
-        return -2;
-
-    // copy diagonals
-    armas_x_diag(&sD, A, 0);
-    armas_x_diag(&sE, A, ioff);
-    armas_x_copy(D, &sD, conf);
-    armas_x_copy(&E, &sE, conf);
-
-    // if vectors required, build in A
-    if (flags & ARMAS_WANTV) {
-        if (armas_x_trdbuild(A, &tau, &Wred, N, flags, conf) != 0)
-            return -3;
-        vv = A;
-    }
-
-    // reszie workspace
-    wrl = armas_x_size(W) - N - 1;
-    armas_x_make(&Wred, wrl, 1, wrl, &armas_x_data(W)[N-1]);
-
-    // compute eigenvalues/vectors of tridiagonal matrix
-    if (armas_x_trdeigen(D, &E, vv, &Wred, flags, conf) != 0)
-        return -4;
-
-    return 0;
+    else
+        wbs = ARMAS_NOWORK;
+    
+    err = armas_x_eigen_sym_w(D, A, flags, wbs, conf);
+    armas_wrelease(&wb);
+    return err;
 }
 
 
-
+/**
+ * \brief Compute eigenvalue decomposition of symmetric N-by-N matrix
+ *
+ * Compute eigenvalue decomposition of symmetric N-by-N matrix
+ *
+ * \param[out] D
+ *      On exit, eigenvalues of A in increasing order
+ * \param[in,out] A
+ *      On entry, symmetric matrix stored in lower or upper triangular part.
+ *      On exit, eigenvectors of A if requested, otherwise contents are destroyd.
+ * \param[in] flags
+ *      Flag bits, set ARMAS_UPPER (ARMAS_LOWER) if upper (lower) triangular storage
+ *      is used. If eigenvectors wanted, set ARMAS_WANTV.
+ * \param[in] wb
+ *      Workspace, size at least 3*N
+ * \param[in] conf
+ *      Optional configuration block, if NULL then default configuration used. 
+ *
+ * \retval  0 Success
+ * \retval -1 Error, `conf.error` holds error code.
+ *
+ * \ingroup lapack
+ */
 int armas_x_eigen_sym_w(armas_x_dense_t *D,
                         armas_x_dense_t *A,
                         int flags,
@@ -176,10 +162,12 @@ int armas_x_eigen_sym_w(armas_x_dense_t *D,
     }
     N = A->rows;
     
-    if (N > 2 && wb && wb->bytes == 0) {
-        if (armas_x_trdreduce_w(A, ARMAS_NIL, flags, wb, conf) < 0)
-            return -1;
-        wb->bytes += 2*N*sizeof(DTYPE);
+    if (wb && wb->bytes == 0) {
+        if (N > 2) {
+            if (armas_x_trdreduce_w(A, ARMAS_NIL, flags, wb, conf) < 0)
+                return -1;
+            wb->bytes += 2*N*sizeof(DTYPE);
+        }
         return 0;
     }
     
@@ -281,40 +269,26 @@ int armas_x_eigen_sym_w(armas_x_dense_t *D,
 int armas_x_eigen_sym_selected(armas_x_dense_t *D, armas_x_dense_t *A, armas_x_dense_t *W, 
                                armas_x_eigen_parameter_t *params, int flags, armas_conf_t *conf)
 {
-    armas_x_dense_t sD, sE, tau, Wred;
-    int wrl, ioff, N = A->rows;
+    int err;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
 
     if (!conf)
         conf = armas_conf_default();
 
-    if (A->rows != A->cols || armas_x_size(W) < 2*N) {
-        conf->error = ARMAS_ESIZE;
+    wbs = &wb;
+    if (armas_x_eigen_sym_selected_w(D, A, params, flags, &wb, conf) < 0)
         return -1;
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
+            return -1;
+        }
     }
-
-    // default to lower triangular storage
-    if (!(flags & (ARMAS_UPPER|ARMAS_LOWER)))
-        flags |= ARMAS_LOWER;
-
-    ioff = flags & ARMAS_LOWER ? -1 : 1;
-    if (N > 2) {
-        armas_x_make(&tau, N, 1, N, armas_x_data(W));
-        wrl = armas_x_size(W) - N;
-        armas_x_make(&Wred, wrl, 1, wrl, &armas_x_data(W)[N]);
-
-        // reduce to tridiagonal form
-        if (armas_x_trdreduce(A, &tau, &Wred, flags, conf) != 0)
-            return -2;
-
-    }
-    armas_x_diag(&sD, A, 0);
-    armas_x_diag(&sE, A, ioff);
-
-    // compute selected eigenvalues
-    if (armas_x_trdbisect(D, &sD, &sE, params, conf) < 0)
-        return -3;
-
-    return 0;
+    else
+        wbs = ARMAS_NOWORK;
+    err = armas_x_eigen_sym_selected_w(D, A, params, flags, wbs, conf);
+    armas_wrelease(&wb);
+    return err;
 }
 
 
