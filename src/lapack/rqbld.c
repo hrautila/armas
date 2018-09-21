@@ -208,8 +208,24 @@ int __blk_rqbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *T,
  * Compatible with lapackd.ORGRQ.
  */
 int armas_x_rqbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W, int K,
-                    armas_conf_t *conf)
+                    armas_conf_t *cf)
 {
+  if (!cf)
+    cf = armas_conf_default();
+
+  armas_wbuf_t wb = ARMAS_WBNULL;
+  if (armas_x_rqbuild_w(A, tau, K, &wb, cf) < 0)
+    return -1;
+
+  if (!armas_walloc(&wb, wb.bytes)) {
+    cf->error = ARMAS_EMEMORY;
+    return -1;
+  }
+  int stat = armas_x_rqbuild_w(A, tau, K, &wb, cf);
+  armas_wrelease(&wb);
+  return stat;
+
+#if 0
   int wsmin, lb, wsneed;
   if (!conf)
     conf = armas_conf_default();
@@ -240,6 +256,7 @@ int armas_x_rqbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W
     __blk_rqbuild(A, tau, &T, &Wrk, K, lb, conf);
   }
   return 0;
+#endif
 }
 
 
