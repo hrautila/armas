@@ -820,11 +820,10 @@ int __blk_bdreduce_right(armas_x_dense_t *A, armas_x_dense_t *tauq,
 int armas_x_bdreduce(armas_x_dense_t *A,
                      armas_x_dense_t *tauq,
                      armas_x_dense_t *taup,
-                     armas_x_dense_t *W,
                      armas_conf_t *conf)
 {
   int err;
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
 
   if (!conf)
     conf = armas_conf_default();
@@ -832,26 +831,21 @@ int armas_x_bdreduce(armas_x_dense_t *A,
   if (armas_x_bdreduce_w(A, tauq, taup, &wb, conf) < 0)
     return -1;
 
+  wbs = &wb;
   if (wb.bytes > 0){
     if (!armas_walloc(&wb, wb.bytes)) {
       conf->error = ARMAS_EMEMORY;
       return -1;
     }
   }
+  else
+    wbs = ARMAS_NOWORK;
 
-  err = armas_x_bdreduce_w(A, tauq, taup, &wb, conf);
+  err = armas_x_bdreduce_w(A, tauq, taup, wbs, conf);
   armas_wrelease(&wb);
   return err;
 }
 
-/*
- */
-int armas_x_bdreduce_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_bdreduce(A->rows, A->cols, conf->lb);
-}
 
 /**
  * \brief Bidiagonal reduction of general matrix
@@ -1029,12 +1023,14 @@ int armas_x_bdreduce_w(armas_x_dense_t *A,
  *
  * \ingroup lapack
  */
-int armas_x_bdmult(armas_x_dense_t *C, armas_x_dense_t *A,
-                   armas_x_dense_t *tau, armas_x_dense_t *W,
-                   int flags, armas_conf_t *conf)
+int armas_x_bdmult(armas_x_dense_t *C,
+                   const armas_x_dense_t *A,
+                   const armas_x_dense_t *tau, 
+                   int flags,
+                   armas_conf_t *conf)
 {
   int err;
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
 
   if (!conf)
     conf = armas_conf_default();
@@ -1042,26 +1038,21 @@ int armas_x_bdmult(armas_x_dense_t *C, armas_x_dense_t *A,
   if (armas_x_bdmult_w(C, A, tau, flags, &wb, conf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    conf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      conf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
+  else
+    wbs = ARMAS_NOWORK;
 
-  err = armas_x_bdmult_w(C, A, tau, flags, &wb, conf);
+  err = armas_x_bdmult_w(C, A, tau, flags, wbs, conf);
   armas_wrelease(&wb);
   return err;
 }
 
-
-/*
- */
-int armas_x_bdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
-{
-  int nq, np;
-  nq = armas_x_qrmult_work(A, flags, conf);
-  np = armas_x_lqmult_work(A, flags, conf);
-  return np > nq ? np : nq;
-}
 
 
 int armas_x_bdmult_w(armas_x_dense_t *C,

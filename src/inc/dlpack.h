@@ -50,11 +50,8 @@
 
 // Bidiagonal reduction
 #define armas_x_bdreduce         armas_s_bdreduce
-#define armas_x_bdreduce_work    armas_s_bdreduce_work
 #define armas_x_bdmult           armas_s_bdmult
-#define armas_x_bdmult_work      armas_s_bdmult_work
 #define armas_x_bdbuild          armas_s_bdbuild
-#define armas_x_bdbuild_work     armas_s_bdbuild_work
 
 // Symmetric LDL functions
 #define armas_x_bkfactor        armas_s_bkfactor
@@ -265,13 +262,10 @@
 // Bidiagonal reduction
 #define armas_x_bdreduce         armas_d_bdreduce
 #define armas_x_bdreduce_w       armas_d_bdreduce_w
-#define armas_x_bdreduce_work    armas_d_bdreduce_work
 #define armas_x_bdmult           armas_d_bdmult
 #define armas_x_bdmult_w         armas_d_bdmult_w
-#define armas_x_bdmult_work      armas_d_bdmult_work
 #define armas_x_bdbuild          armas_d_bdbuild
 #define armas_x_bdbuild_w        armas_d_bdbuild_w
-#define armas_x_bdbuild_work     armas_d_bdbuild_work
 
 // Symmetric LDL functions
 #define armas_x_bkfactor        armas_d_bkfactor

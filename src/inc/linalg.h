@@ -96,14 +96,11 @@ extern int     armas_x_add(const armas_x_dense_t *X, const DTYPE alpha, armas_co
 
 // Bidiagonal reduction
 extern int armas_x_bdreduce(armas_x_dense_t *A, armas_x_dense_t *tauq, armas_x_dense_t *taup,
-                            armas_x_dense_t *W, armas_conf_t *conf);
-extern int armas_x_bdbuild(armas_x_dense_t *A, armas_x_dense_t *tau,
-                           armas_x_dense_t *W, int K, int flags, armas_conf_t *conf);
-extern int armas_x_bdmult(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
-                          armas_x_dense_t *W, int flags, armas_conf_t *conf);
-extern int armas_x_bdreduce_work(armas_x_dense_t *A, armas_conf_t *conf);
-extern int armas_x_bdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf);
-extern int armas_x_bdbuild_work(armas_x_dense_t *A, int flags, armas_conf_t *conf);
+                            armas_conf_t *conf);
+extern int armas_x_bdbuild(armas_x_dense_t *A, const armas_x_dense_t *tau,
+                           int K, int flags, armas_conf_t *conf);
+extern int armas_x_bdmult(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                          int flags, armas_conf_t *conf);
 
 // Cholesky
 extern int armas_x_cholfactor(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, int flags, armas_conf_t *conf);

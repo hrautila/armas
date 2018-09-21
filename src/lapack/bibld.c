@@ -46,8 +46,6 @@
  *   orthogonal matrix defined as the product of K first elementary reflectors.
  * \param[in] tau
  *   Scalar coefficients of the elementary reflectors.
- * \param[out] W
- *   Workspace
  * \param[in] K
  *   Number elementary reflectors used to generate orthogonal matrix. \f$ 0 < K <= n(A) \f$
  * \param[in] flags
@@ -61,8 +59,7 @@
  * \ingroup lapack
  */
 int armas_x_bdbuild(armas_x_dense_t *A,
-                    armas_x_dense_t *tau,
-                    armas_x_dense_t *W,
+                    const armas_x_dense_t *tau,
                     int K,
                     int flags,
                     armas_conf_t *conf)
@@ -193,18 +190,6 @@ int armas_x_bdbuild_w(armas_x_dense_t *A,
     return err;
 }
 
-
-//! \brief Workspace size for bdbuild().
-//! \ingroup lapack
-int armas_x_bdbuild_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  if (flags & ARMAS_WANTP) {
-      return armas_x_lqbuild_work(A, conf);
-  }
-  return armas_x_qrbuild_work(A, conf);
-}
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 
