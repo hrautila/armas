@@ -137,20 +137,22 @@ extern int armas_x_ldlfactor_w(armas_x_dense_t *A, armas_pivot_t *P, int flags, 
 extern int armas_x_ldlsolve(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_pivot_t *P, int flags, armas_conf_t *conf);
 
 // LQ functions
-extern int armas_x_lqbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
-                           int K, armas_conf_t *conf);
-extern int armas_x_lqfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
-                            armas_conf_t *conf);
-extern int armas_x_lqmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *tau,
-                          armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_lqbuild(armas_x_dense_t *A, const armas_x_dense_t *tau, int K, armas_conf_t *conf);
+extern int armas_x_lqfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_conf_t *conf);
+extern int armas_x_lqmult(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                          int flags, armas_conf_t *conf);
 extern int armas_x_lqreflector(armas_x_dense_t *T, armas_x_dense_t *V, armas_x_dense_t *tau,
                                armas_conf_t *conf);
-extern int armas_x_lqsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
-                           armas_x_dense_t *W, int flags, armas_conf_t *conf);
-extern int armas_x_lqbuild_work(armas_x_dense_t *A, armas_conf_t *conf);
-extern int armas_x_lqfactor_work(armas_x_dense_t *A, armas_conf_t *conf);
-extern int armas_x_lqmult_work(armas_x_dense_t *C, int flags, armas_conf_t *conf);
-extern int armas_x_lqsolve_work(armas_x_dense_t *B, armas_conf_t *conf);
+extern int armas_x_lqsolve(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                           int flags, armas_conf_t *conf);
+extern int armas_x_lqbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau, int K,
+                             armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_lqfactor_w(armas_x_dense_t *A, armas_x_dense_t *tau, armas_wbuf_t *wrk,
+                            armas_conf_t *conf);
+extern int armas_x_lqmult_w(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                            int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_lqsolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                             int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 
 // QL functions
 extern int armas_x_qlbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,

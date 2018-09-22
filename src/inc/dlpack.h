@@ -318,17 +318,13 @@
 // LQ functions
 #define armas_x_lqbuild         armas_d_lqbuild
 #define armas_x_lqbuild_w       armas_d_lqbuild_w
-#define armas_x_lqbuild_work    armas_d_lqbuild_work
 #define armas_x_lqfactor        armas_d_lqfactor
 #define armas_x_lqfactor_w      armas_d_lqfactor_w
-#define armas_x_lqfactor_work   armas_d_lqfactor_work
 #define armas_x_lqmult          armas_d_lqmult
 #define armas_x_lqmult_w        armas_d_lqmult_w
-#define armas_x_lqmult_work     armas_d_lqmult_work
 #define armas_x_lqreflector     armas_d_lqreflector
 #define armas_x_lqsolve         armas_d_lqsolve
 #define armas_x_lqsolve_w       armas_d_lqsolve_w
-#define armas_x_lqsolve_work    armas_d_lqsolve_work
 // internal LQ related functions available for others
 #define __update_lq_left        __d_update_lq_left
 #define __update_lq_right       __d_update_lq_right

@@ -334,41 +334,30 @@ int armas_x_lqreflector(armas_x_dense_t *T, armas_x_dense_t *A, armas_x_dense_t 
  */
 int armas_x_lqfactor(armas_x_dense_t *A,
                      armas_x_dense_t *tau,
-                     armas_x_dense_t *W,
                      armas_conf_t *cf)
 {
   if (!cf)
     cf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_lqfactor_w(A, tau, &wb, cf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    cf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      cf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_lqfactor_w(A, tau, &wb, cf);
+  else
+    wbs = ARMAS_NOWORK;
+  
+  int stat = armas_x_lqfactor_w(A, tau, wbs, cf);
   armas_wrelease(&wb);
   return stat;
 }
 
-static inline
-int __ws_lqfactor(int M, int N, int lb)
-{
-  return lb > 0 ? lb*M : M;
-}
-
-/**
- * \brief Workspace size for LQ factorization
- * \ingroup lapack
- */
-int armas_x_lqfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_lqfactor(A->rows, A->cols, conf->lb);
-}
 
 /**
  * @brief Compute LQ factorization of a M-by-N matrix A

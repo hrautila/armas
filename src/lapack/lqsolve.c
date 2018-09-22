@@ -73,38 +73,31 @@ int __ws_lqsolve(int M, int N, int lb)
  *
  * Compatible with lapack.GELS (the m >= n part)
  */
-int armas_x_lqsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
-                    armas_x_dense_t *W, int flags, armas_conf_t *cf)
+int armas_x_lqsolve(armas_x_dense_t *B,
+		    const armas_x_dense_t *A,
+		    const armas_x_dense_t *tau,
+		    int flags,
+		    armas_conf_t *cf)
 {
   if (!cf)
     cf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_lqsolve_w(B, A, tau, flags, &wb, cf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    cf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      cf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_lqsolve_w(B, A, tau, flags, &wb, cf);
+  else
+    wbs = ARMAS_NOWORK;
+  int stat = armas_x_lqsolve_w(B, A, tau, flags, wbs, cf);
   armas_wrelease(&wb);
   return stat;
-}
-
-
-//! \brief Workspace size for lqsolve.
-int armas_x_lqsolve_work(armas_x_dense_t *B, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_lqsolve(B->rows, B->cols, conf->lb);
-}
-
-static inline
-size_t __lqsol_bytes(int M, int lb)
-{
-  return (lb > 0 ? lb*(M+lb) : M) * sizeof(DTYPE);
 }
 
 
@@ -177,7 +170,7 @@ int armas_x_lqsolve_w(armas_x_dense_t *B,
     return -1;
   }
 
-  wsmin = __lqsol_bytes(B->rows, 0);
+  wsmin = B->rows * sizeof(DTYPE);
   if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
     conf->error = ARMAS_EWORK;
     return -1;
