@@ -227,18 +227,6 @@ int armas_x_lqbuild(armas_x_dense_t *A,
 }
 
 
-static inline
-int __ws_lqbuild(int M, int N, int lb)
-{
-  return lb > 0 ? lb*M : M;
-}
-
-int armas_x_lqbuild_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_lqbuild(A->rows, A->cols, conf->lb);
-}
 
 /**
  * @brief Generate orthogonal Q matrix of LQ factorization
