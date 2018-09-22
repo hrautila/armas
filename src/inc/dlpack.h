@@ -337,13 +337,10 @@
 // QL functions
 #define armas_x_qlbuild         armas_d_qlbuild
 #define armas_x_qlbuild_w       armas_d_qlbuild_w
-#define armas_x_qlbuild_work    armas_d_qlbuild_work
 #define armas_x_qlfactor        armas_d_qlfactor
 #define armas_x_qlfactor_w      armas_d_qlfactor_w
-#define armas_x_qlfactor_work   armas_d_qlfactor_work
 #define armas_x_qlmult          armas_d_qlmult
 #define armas_x_qlmult_w        armas_d_qlmult_w
-#define armas_x_qlmult_work     armas_d_qlmult_work
 #define armas_x_qlreflector     armas_d_qlreflector
 #define armas_x_qlsolve         armas_d_qlsolve
 #define armas_x_qlsolve_w       armas_d_qlsolve_w

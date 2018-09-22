@@ -69,11 +69,6 @@
  *             ( a1 - tau*w   )
  */
 
-static inline
-int __ws_qlfactor(int M, int N, int lb)
-{
-  return lb > 0 ? lb*N : N;
-}
 
 /*
  * Unblocked factorization.
@@ -381,29 +376,28 @@ int armas_x_qlreflector(armas_x_dense_t *T, armas_x_dense_t *A, armas_x_dense_t 
  */
 int armas_x_qlfactor(armas_x_dense_t *A,
                      armas_x_dense_t *tau,
-                     armas_x_dense_t *W,
                      armas_conf_t *cf)
 {
   if (!cf)
     cf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_qlfactor_w(A, tau, &wb, cf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    cf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      cf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_qlfactor_w(A, tau, &wb, cf);
+  else
+    wbs = ARMAS_NOWORK;
+  
+  int stat = armas_x_qlfactor_w(A, tau, wbs, cf);
   armas_wrelease(&wb);
   return stat;
-}
-
-static inline
-size_t __qlf_bytes(int N, int lb)
-{
-  return (lb > 0 ? lb*N : N) * sizeof(DTYPE);
 }
 
 
@@ -527,19 +521,6 @@ int armas_x_qlfactor_w(armas_x_dense_t *A,
   return 0;
 }
 
-/**
- * \brief Calculate work space for QL factorization
- *
- * Calculate required workspace to decompose matrix A with current blocking
- * configuration. If blocking configuration is not provided then default
- * configuation will be used.
- */
-int armas_x_qlfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_qlfactor(A->rows, A->cols, conf->lb);
-}
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 

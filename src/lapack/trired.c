@@ -767,6 +767,7 @@ int armas_x_trdmult(armas_x_dense_t *C,
   return stat;
 }
 
+#if 0
 //! \brief Workspace size for trdmult().
 int armas_x_trdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
 {
@@ -774,6 +775,7 @@ int armas_x_trdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
     return armas_x_qlmult_work(A, flags, conf);
   return armas_x_qrmult_work(A, flags, conf);
 }
+#endif
 
 
 /**

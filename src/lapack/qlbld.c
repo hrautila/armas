@@ -36,12 +36,6 @@
 #define ARMAS_BLOCKING_MIN 32
 #endif
 
-static inline
-int __ws_qlbuild(int M, int N, int lb)
-{
-  return lb > 0 ? lb*N : N;
-}
-
 
 /*
  * Unblocked code for generating M by N matrix Q with orthogonal columns which
@@ -216,34 +210,33 @@ int __blk_qlbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *T,
  * Compatible with lapackd.ORGQL.
  */
 int armas_x_qlbuild(armas_x_dense_t *A,
-                    armas_x_dense_t *tau,
-                    armas_x_dense_t *W,
+                    const armas_x_dense_t *tau,
                     int K,
                     armas_conf_t *cf)
 {
   if (!cf)
     cf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_qlbuild_w(A, tau, K, &wb, cf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    cf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      cf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_qlbuild_w(A, tau, K, &wb, cf);
+  else
+    wbs = ARMAS_NOWORK;
+  
+  int stat = armas_x_qlbuild_w(A, tau, K, wbs, cf);
   armas_wrelease(&wb);
   return stat;
 }
 
 
-int armas_x_qlbuild_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_qlbuild(A->rows, A->cols, conf->lb);
-}
 
 static inline
 size_t __qlbld_bytes(int N, int lb)
