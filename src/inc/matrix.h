@@ -643,16 +643,14 @@ extern int armas_x_qlsolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const
                              int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 
 // QR functions
-extern int armas_x_qrbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
-                           int K, armas_conf_t *conf);
-extern int armas_x_qrfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
-                            armas_conf_t *conf);
-extern int armas_x_qrmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *tau,
-                          armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_qrbuild(armas_x_dense_t *A, const armas_x_dense_t *tau, int K, armas_conf_t *conf);
+extern int armas_x_qrfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_conf_t *conf);
+extern int armas_x_qrmult(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                          int flags, armas_conf_t *conf);
 extern int armas_x_qrreflector(armas_x_dense_t *T, armas_x_dense_t *V, armas_x_dense_t *tau,
                                armas_conf_t *conf);
-extern int armas_x_qrsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
-                           armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_qrsolve(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                           int flags, armas_conf_t *conf);
 
 extern int armas_x_qrbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau, int K,
                              armas_wbuf_t *wrk, armas_conf_t *conf);
@@ -662,11 +660,6 @@ extern int armas_x_qrmult_w(armas_x_dense_t *C, const armas_x_dense_t *A, const 
                             int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_qrsolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
                              int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
-
-extern int armas_x_qrbuild_work(armas_x_dense_t *A, armas_conf_t *conf);
-extern int armas_x_qrfactor_work(armas_x_dense_t *A, armas_conf_t *conf);
-extern int armas_x_qrmult_work(armas_x_dense_t *C, int flags, armas_conf_t *conf);
-extern int armas_x_qrsolve_work(armas_x_dense_t *B, armas_conf_t *conf);
 
 extern int armas_x_qrtfactor(armas_x_dense_t *A, armas_x_dense_t *T, armas_x_dense_t *W, armas_conf_t *conf);
 extern int armas_x_qrtmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *T,

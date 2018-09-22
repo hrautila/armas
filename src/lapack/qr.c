@@ -310,8 +310,6 @@ int armas_x_qrreflector(armas_x_dense_t *T, armas_x_dense_t *A, armas_x_dense_t 
  *      and the orthogonal matrix Q as product of elementary reflectors.
  * \param[out] tau
  *      On exit, the scalar factors of the elementary reflectors.
- * \param[in] W 
- *      Workspace, N-by-lb matrix used for work space in blocked invocations. 
  * \param[in,out] conf 
  *      The blocking configuration. If nil then default blocking configuration
  *      is used. Member conf.lb defines blocking size of blocked algorithms.
@@ -343,21 +341,25 @@ int armas_x_qrreflector(armas_x_dense_t *T, armas_x_dense_t *A, armas_x_dense_t 
  */
 int armas_x_qrfactor(armas_x_dense_t *A,
                      armas_x_dense_t *tau,
-                     armas_x_dense_t *W,
                      armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_qrfactor_w(A, tau, &wb, conf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    conf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      conf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_qrfactor_w(A, tau, &wb, conf);
+  else
+    wbs = ARMAS_NOWORK;
+  int stat = armas_x_qrfactor_w(A, tau, wbs, conf);
   armas_wrelease(&wb);
   return stat;
 }
@@ -485,30 +487,6 @@ int armas_x_qrfactor_w(armas_x_dense_t *A,
   }
   armas_wsetpos(wb, wsz);
   return 0;
-}
-
-static inline
-int __ws_qrfactor(int M, int N, int lb)
-{
-  return lb > 0 ? lb*N : N;
-}
-
-/**
- * \brief Workspace size for factorization
- *
- * Calculate required workspace to factorize matrix A with provided blocking configuration.
- *
- * \param[in] A Input matrix
- * \param[in] conf Blocking configuration, if null pointer then default configuration used.
- *
- * \returns Number of elements needed 
- * \ingroup lapack
- */
-int armas_x_qrfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_qrfactor(A->rows, A->cols, conf->lb);
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

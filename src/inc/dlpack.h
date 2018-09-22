@@ -352,17 +352,13 @@
 // QR functions
 #define armas_x_qrfactor        armas_d_qrfactor
 #define armas_x_qrfactor_w      armas_d_qrfactor_w
-#define armas_x_qrfactor_work   armas_d_qrfactor_work
 #define armas_x_qrmult          armas_d_qrmult
 #define armas_x_qrmult_w        armas_d_qrmult_w
-#define armas_x_qrmult_work     armas_d_qrmult_work
 #define armas_x_qrbuild         armas_d_qrbuild
 #define armas_x_qrbuild_w       armas_d_qrbuild_w
-#define armas_x_qrbuild_work    armas_d_qrbuild_work
 #define armas_x_qrreflector     armas_d_qrreflector
 #define armas_x_qrsolve         armas_d_qrsolve
 #define armas_x_qrsolve_w       armas_d_qrsolve_w
-#define armas_x_qrsolve_work    armas_d_qrsolve_work
 // internal QR related function available for others
 #define __update_qr_left        __d_update_qr_left
 #define __update_qr_right       __d_update_qr_right

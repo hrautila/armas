@@ -31,11 +31,6 @@
 #include "internal_lapack.h"
 //! \endcond
 
-static inline
-int __ws_qrsolve(int M, int N, int lb)
-{
-  return lb == 0 ? N : lb*(N+lb);
-}
 
 /**
  * \brief Solve a system of linear equations \f$ AX = B \f$
@@ -74,50 +69,32 @@ int __ws_qrsolve(int M, int N, int lb)
  * \ingroup lapack
  */
 int armas_x_qrsolve(armas_x_dense_t *B,
-		    armas_x_dense_t *A,
-		    armas_x_dense_t *tau,
-                    armas_x_dense_t *W,
+		    const armas_x_dense_t *A,
+		    const armas_x_dense_t *tau,
 		    int flags,
 		    armas_conf_t *cf)
 {
   if (!cf)
     cf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_qrsolve_w(B, A, tau, flags, &wb, cf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    cf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      cf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_qrsolve_w(B, A, tau, flags, &wb, cf);
+  else
+    wbs = ARMAS_NOWORK;
+  
+  int stat = armas_x_qrsolve_w(B, A, tau, flags, wbs, cf);
   armas_wrelease(&wb);
   return stat;
 }
-
-/**
- * \brief Calculate size of work space for qrsolve().
- *
- * \param B
- *   Matrix to solve.
- * \param conf
- *   Blocking configuration.
- * \ingroup lapack
- */
-int armas_x_qrsolve_work(armas_x_dense_t *B, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_qrsolve(B->rows, B->cols, conf->lb);
-}
-
-static inline
-size_t __qrsol_bytes(int N, int lb)
-{
-  return (lb > 0 ? lb*(N+lb) : N) * sizeof(DTYPE);
-}
-
 
 
 /**

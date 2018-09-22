@@ -38,21 +38,6 @@
 #define ARMAS_BLOCKING_MIN 32
 #endif
 
-/*
- * Internal worksize calculation functions.
- */
-static inline
-int __ws_qrmult_left(int M, int N, int lb)
-{
-  return lb == 0 ? N : lb*(N+lb);
-}
-
-static inline
-int __ws_qrmult_right(int M, int N, int lb)
-{
-  return lb == 0 ? M : lb*(M+lb);
-}
-
 
 /*
  * Unblocked algorith for computing C = Q.T*C and C = Q*C.
@@ -416,24 +401,28 @@ __blk_qrmult_right(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *tau,
  * \ingroup lapack
  */
 int armas_x_qrmult(armas_x_dense_t *C,
-                   armas_x_dense_t *A,
-                   armas_x_dense_t *tau,
-                   armas_x_dense_t *W,
+                   const armas_x_dense_t *A,
+                   const armas_x_dense_t *tau,
                    int flags,
                    armas_conf_t *cf)
 {
   if (!cf)
     cf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_qrmult_w(C, A, tau, flags, &wb, cf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    cf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      cf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_qrmult_w(C, A, tau, flags, &wb, cf);
+  else
+    wbs = ARMAS_NOWORK;
+  int stat = armas_x_qrmult_w(C, A, tau, flags, wbs, cf);
   armas_wrelease(&wb);
   return stat;
 }
@@ -572,31 +561,6 @@ int armas_x_qrmult_w(armas_x_dense_t *C,
   }
   armas_wsetpos(wb, wsz);
   return 0;
-}
-
-/**
- * \brief Calculate workspace for qrmult().
- *
- * Calculate required workspace with current blocking
- * configuration. If blocking configuration is not provided then default
- * configuation will be used.
- *
- * \param[in] A
- *    Matrix holding the elementary reflectors.
- * \param[in] flags
- *    Indicator flags
- * \param[in] conf
- *    Blocking configuration
- * \ingroup lapack
- */
-int armas_x_qrmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  if (flags & ARMAS_RIGHT) {
-    return __ws_qrmult_right(A->rows, A->cols, conf->lb);
-  }
-  return __ws_qrmult_left(A->rows, A->cols, conf->lb);
 }
 
 
