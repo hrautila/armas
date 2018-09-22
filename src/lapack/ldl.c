@@ -275,7 +275,7 @@ int __ldlfactor_np(armas_x_dense_t *A, armas_x_dense_t *W, int flags, armas_conf
  * \retval  0 ok
  * \retval -1 error
  */
-int __ldlsolve_np(armas_x_dense_t *B, armas_x_dense_t *A, int flags, armas_conf_t *conf)
+int __ldlsolve_np(armas_x_dense_t *B, const armas_x_dense_t *A, int flags, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();

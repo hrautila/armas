@@ -36,7 +36,7 @@
 extern
 int __ldlfactor_np(armas_x_dense_t *A, armas_x_dense_t *W, int flags, armas_conf_t *conf);
 extern
-int __ldlsolve_np(armas_x_dense_t *A, armas_x_dense_t *W, int flags, armas_conf_t *conf);
+int __ldlsolve_np(armas_x_dense_t *B, const armas_x_dense_t *A, int flags, armas_conf_t *conf);
 
 
 /*
@@ -457,7 +457,6 @@ int __blk_ldlpv_upper(armas_x_dense_t *A, armas_x_dense_t *W,
  * \retval -1 error
  */
 int armas_x_ldlfactor(armas_x_dense_t *A,
-                      armas_x_dense_t *W,
                       armas_pivot_t *P,
                       int flags,
                       armas_conf_t *conf)
@@ -492,7 +491,7 @@ int armas_x_ldlfactor_w(armas_x_dense_t *A,
                         armas_wbuf_t *wb,
                         armas_conf_t *conf)
 {
-    int ws, ws_opt, lb, err = 0;  
+    int lb, err = 0;  
     size_t wsz;
     armas_x_dense_t W;
     
@@ -570,7 +569,11 @@ int armas_x_ldlfactor_w(armas_x_dense_t *A,
  * \retval  0 ok
  * \retval -1 error
  */
-int armas_x_ldlsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf)
+int armas_x_ldlsolve(armas_x_dense_t *B,
+                     const armas_x_dense_t *A,
+                     const armas_pivot_t *P,
+                     int flags,
+                     armas_conf_t *conf)
 {
     int pivot1_dir, pivot2_dir;
     if (!conf)
@@ -580,7 +583,7 @@ int armas_x_ldlsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P, i
         return 0;
 
     if (P == ARMAS_NOPIVOT) 
-        return __ldlsolve_np(B, A, flags, conf);
+        return __ldlsolve_np(B, (armas_x_dense_t *)A, flags, conf);
     
     if (A->rows != A->cols || A->cols != B->rows) {
         conf->error = ARMAS_ESIZE;
@@ -595,7 +598,7 @@ int armas_x_ldlsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P, i
     pivot1_dir = flags & ARMAS_UPPER ? ARMAS_PIVOT_BACKWARD : ARMAS_PIVOT_FORWARD;
     pivot2_dir = flags & ARMAS_UPPER ? ARMAS_PIVOT_FORWARD : ARMAS_PIVOT_BACKWARD;
 
-    armas_x_pivot(B, P, ARMAS_PIVOT_ROWS|pivot1_dir, conf);
+    armas_x_pivot(B, (armas_pivot_t *)P, ARMAS_PIVOT_ROWS|pivot1_dir, conf);
 
     if (flags & ARMAS_TRANS) {
         // X = L.-1*(D.-1*(L.-T*B))
@@ -609,22 +612,13 @@ int armas_x_ldlsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P, i
         armas_x_solve_trm(B, __ONE, A, flags|ARMAS_UNIT|ARMAS_TRANS, conf);
     }
 
-    armas_x_pivot(B, P, ARMAS_PIVOT_ROWS|pivot2_dir, conf);
+    armas_x_pivot(B, (armas_pivot_t *)P, ARMAS_PIVOT_ROWS|pivot2_dir, conf);
 
     return 0;
 }
 
 #endif
 
-#if defined(armas_x_ldlfactor_ws)
-/**
- * \brief Compute worksize for blocked factorization.
- */
-int armas_x_ldlfactor_ws(armas_x_dense_t *A, int flags, armas_conf_t *conf)
-{
-    return __ws_opt(A->rows, conf->lb);
-}
-#endif
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 

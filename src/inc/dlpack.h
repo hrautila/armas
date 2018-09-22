@@ -55,9 +55,7 @@
 
 // Symmetric LDL functions
 #define armas_x_bkfactor        armas_s_bkfactor
-#define armas_x_bkfactor_work   armas_s_bkfactor_work
 #define armas_x_bksolve         armas_s_bksolve
-#define armas_x_bksolve_work    armas_s_bksolve_work
 #define armas_x_ldlfactor       armas_s_ldlfactor
 #define armas_x_ldlupdate       armas_s_ldlupdate
 #define armas_x_ldlsolve        armas_s_ldlsolve
@@ -268,10 +266,8 @@
 // Symmetric LDL functions
 #define armas_x_bkfactor        armas_d_bkfactor
 #define armas_x_bkfactor_w      armas_d_bkfactor_w
-#define armas_x_bkfactor_work   armas_d_bkfactor_work
 #define armas_x_bksolve         armas_d_bksolve
 #define armas_x_bksolve_w       armas_d_bksolve_w
-#define armas_x_bksolve_work    armas_d_bksolve_work
 #define armas_x_ldlfactor       armas_d_ldlfactor
 #define armas_x_ldlfactor_w     armas_d_ldlfactor_w
 #define armas_x_ldlupdate       armas_d_ldlupdate

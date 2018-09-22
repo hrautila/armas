@@ -596,16 +596,17 @@ extern int armas_x_lusolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t
                            int flags, armas_conf_t *conf);
 
 // Symmetric LDL; Bunch-Kauffman
-extern int armas_x_bkfactor(armas_x_dense_t *A, armas_x_dense_t *W,
-                            armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int armas_x_bkfactor(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf);
 extern int armas_x_bkfactor_w(armas_x_dense_t *A,  armas_pivot_t *P, int flags,
                               armas_wbuf_t *wrk, armas_conf_t *conf);
-extern int armas_x_bksolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *W,
-                           armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int armas_x_bksolve(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_pivot_t *P,
+                           int flags, armas_conf_t *conf);
 extern int armas_x_bksolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_pivot_t *P,
                              int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
-extern int armas_x_bkfactor_work(armas_x_dense_t *A, armas_conf_t *conf);
-extern int armas_x_bksolve_work(armas_x_dense_t *A, armas_conf_t *conf);
+// LDL.T symmetric
+extern int armas_x_ldlfactor(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf);
+extern int armas_x_ldlfactor_w(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_ldlsolve(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_pivot_t *P, int flags, armas_conf_t *conf);
 
 // LQ functions
 extern int armas_x_lqbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
@@ -811,10 +812,6 @@ extern int armas_x_inverse_psd_w(armas_x_dense_t *A, int flags, armas_wbuf_t *wr
 extern int armas_x_ldlinverse_sym_w(armas_x_dense_t *A, armas_pivot_t *P, int flags,
                                     armas_wbuf_t *wrk, armas_conf_t *conf);
 
-// LDL.T symmetric
-extern int armas_x_ldlfactor(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, int flags, armas_conf_t *conf);
-extern int armas_x_ldlfactor_w(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
-extern int armas_x_ldlsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *conf);
   
 // additional
 extern int armas_x_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c);

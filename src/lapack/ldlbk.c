@@ -89,7 +89,6 @@ size_t __ws_bytes(int M, int N, int lb)
  * \ingroup lapack
  */
 int armas_x_bkfactor(armas_x_dense_t *A,
-                     armas_x_dense_t *W,
                      armas_pivot_t *P,
                      int flags,
                      armas_conf_t *conf)
@@ -231,23 +230,6 @@ int armas_x_bkfactor_w(armas_x_dense_t *A,
   return 0;
 }
 
-/**
- * \brief Compute workspace size for `bkfactor()`
- *
- * \param[in] A
- *    The input matrix
- * \param[in] conf
- *    Blocking configuration
- *
- * \return Workspace size as number of elements.
- * \ingroup lapack
- */
-int armas_x_bkfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_ldlfactor(A->rows, A->cols, conf->lb);
-}
 
 /**
  * \brief Solve \f$ AX = B \f$ with symmetric real matrix A.
@@ -272,8 +254,11 @@ int armas_x_bkfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
  * Currently only unblocked algorightm implemented. Compatible with lapack.SYTRS.
  * \ingroup lapack
  */
-int armas_x_bksolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *W,
-                    armas_pivot_t *P, int flags, armas_conf_t *conf)
+int armas_x_bksolve(armas_x_dense_t *B,
+                    const armas_x_dense_t *A,
+                    const armas_pivot_t *P,
+                    int flags,
+                    armas_conf_t *conf)
 {
   int err;
   armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
