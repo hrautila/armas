@@ -376,13 +376,10 @@
 // RQ functions
 #define armas_x_rqbuild         armas_d_rqbuild
 #define armas_x_rqbuild_w       armas_d_rqbuild_w
-#define armas_x_rqbuild_work    armas_d_rqbuild_work
 #define armas_x_rqfactor        armas_d_rqfactor
 #define armas_x_rqfactor_w      armas_d_rqfactor_w
-#define armas_x_rqfactor_work   armas_d_rqfactor_work
 #define armas_x_rqmult          armas_d_rqmult
 #define armas_x_rqmult_w        armas_d_rqmult_w
-#define armas_x_rqmult_work     armas_d_rqmult_work
 #define armas_x_rqreflector     armas_d_rqreflector
 #define armas_x_rqsolve         armas_d_rqsolve
 #define armas_x_rqsolve_w       armas_d_rqsolve_w

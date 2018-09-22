@@ -35,12 +35,6 @@
 #define ARMAS_BLOCKING_MIN 32
 #endif
 
-static inline
-int __ws_rqbuild(int M, int N, int lb)
-{
-  return lb > 0 ? lb*M : M;
-}
-
 /*
  * Unblocked code for generating M by N matrix Q with orthogonal columns which
  * are defined as the last N columns of the product of K first elementary
@@ -207,65 +201,33 @@ int __blk_rqbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *T,
  *
  * Compatible with lapackd.ORGRQ.
  */
-int armas_x_rqbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W, int K,
+int armas_x_rqbuild(armas_x_dense_t *A,
+                    const armas_x_dense_t *tau,
+                    int K,
                     armas_conf_t *cf)
 {
   if (!cf)
     cf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_rqbuild_w(A, tau, K, &wb, cf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    cf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      cf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_rqbuild_w(A, tau, K, &wb, cf);
+  else
+    wbs = ARMAS_NOWORK;
+  
+  int stat = armas_x_rqbuild_w(A, tau, K, wbs, cf);
   armas_wrelease(&wb);
   return stat;
-
-#if 0
-  int wsmin, lb, wsneed;
-  if (!conf)
-    conf = armas_conf_default();
-
-  lb = conf->lb;
-  wsmin = __ws_rqbuild(A->rows, A->cols, 0);
-  if (! W || armas_x_size(W) < wsmin) {
-    conf->error = ARMAS_EWORK;
-    return -1;
-  }
-  // adjust blocking factor for workspace
-  wsneed = __ws_rqbuild(A->rows, A->cols, lb);
-  if (lb > 0 && armas_x_size(W) < wsneed) {
-    lb = compute_lb(A->rows, A->cols, armas_x_size(W), __ws_rqbuild);
-    lb = min(lb, conf->lb);
-  }
-
-  if (lb == 0 || A->cols <= lb) {
-    // start row: A->rows - K, column: A.cols - K
-    __unblk_rqbuild(A, tau, W, A->rows-K, A->cols-K, TRUE, conf);
-  } else {
-    armas_x_dense_t T, Wrk;
-    // block reflector at start of workspace
-    armas_x_make(&T, lb, lb, lb, armas_x_data(W));
-    // temporary space after block reflector T, M(A)-lb-by-lb matrix
-    armas_x_make(&Wrk, A->rows-lb, lb, A->rows-lb, &armas_x_data(W)[armas_x_size(&T)]);
-
-    __blk_rqbuild(A, tau, &T, &Wrk, K, lb, conf);
-  }
-  return 0;
-#endif
 }
 
-
-int armas_x_rqbuild_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_rqbuild(A->rows, A->cols, conf->lb);
-}
 
 int armas_x_rqbuild_w(armas_x_dense_t *A,
                       const armas_x_dense_t *tau,

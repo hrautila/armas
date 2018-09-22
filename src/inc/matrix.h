@@ -666,16 +666,14 @@ extern int armas_x_qrtmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense
 			   armas_x_dense_t *W, int flags, armas_conf_t *conf);
 
 // RQ functions
-extern int armas_x_rqbuild(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
-                           int K, armas_conf_t *conf);
-extern int armas_x_rqfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
-                            armas_conf_t *conf);
-extern int armas_x_rqmult(armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *tau,
-                          armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_rqbuild(armas_x_dense_t *A, const armas_x_dense_t *tau, int K, armas_conf_t *conf);
+extern int armas_x_rqfactor(armas_x_dense_t *A, armas_x_dense_t *tau, armas_conf_t *conf);
+extern int armas_x_rqmult(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                          int flags, armas_conf_t *conf);
 extern int armas_x_rqreflector(armas_x_dense_t *T, armas_x_dense_t *V, armas_x_dense_t *tau,
                                armas_conf_t *conf);
-extern int armas_x_rqsolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
-                           armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_rqsolve(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                           int flags, armas_conf_t *conf);
 extern int armas_x_rqbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau, int K, 
                              armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_rqfactor_w(armas_x_dense_t *A, armas_x_dense_t *tau, armas_wbuf_t *wrk,
@@ -684,11 +682,6 @@ extern int armas_x_rqmult_w(armas_x_dense_t *C, const armas_x_dense_t *A, const 
                             int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_rqsolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
                              int flags, armas_wbuf_t *W, armas_conf_t *conf);
-
-extern int armas_x_rqbuild_work(armas_x_dense_t *A, armas_conf_t *conf);
-extern int armas_x_rqfactor_work(armas_x_dense_t *A, armas_conf_t *conf);
-extern int armas_x_rqmult_work(armas_x_dense_t *C, int flags, armas_conf_t *conf);
-extern int armas_x_rqsolve_work(armas_x_dense_t *B, armas_conf_t *conf);
 
 // Tridiagonal reduction
 extern int armas_x_trdreduce(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,

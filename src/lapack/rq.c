@@ -380,21 +380,26 @@ int armas_x_rqreflector(armas_x_dense_t *T, armas_x_dense_t *A, armas_x_dense_t 
  */
 int armas_x_rqfactor(armas_x_dense_t *A,
                      armas_x_dense_t *tau,
-                     armas_x_dense_t *W,
                      armas_conf_t *cf)
 {
   if (!cf)
     cf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_rqfactor_w(A, tau, &wb, cf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    cf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      cf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_rqfactor_w(A, tau, &wb, cf);
+  else
+    wbs = ARMAS_NOWORK;
+  
+  int stat = armas_x_rqfactor_w(A, tau, wbs, cf);
   armas_wrelease(&wb);
   return stat;
 }
@@ -463,16 +468,6 @@ int armas_x_rqfactor_w(armas_x_dense_t *A,
   }
   armas_wsetpos(wb, wsz);
   return 0;
-}
-
-/**
- * \brief Calculate worksize for RQ factorization
- */
-int armas_x_rqfactor_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_rqfactor(A->rows, A->cols, conf->lb);
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
