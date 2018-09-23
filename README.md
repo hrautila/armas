@@ -308,95 +308,95 @@ Solving of LU factorized linear system  (lapack.DGETRS)
 ```
 Bunch-Kauffman LDL.T factorization of symmetric real matrix (lapack.DSYTRF)
 ```c
-   armas_d_bkfactor(A, W, pivots, flags, conf)
+   armas_d_bkfactor(A, pivots, flags, conf)
 ```
 Solving of BK factorized linear system (lapackd.DSYTRS)
 ```c
-   armas_d_bksolve(B, A, W, pivots, flags, conf)
+   armas_d_bksolve(B, A, pivots, flags, conf)
 ```
 QR factorization of general M-by-N matrix A = Q*R (lapack.DGEQRF)
 ```c
-   armas_d_qrfactor(A, tau, W, conf)
+   armas_d_qrfactor(A, tau, conf)
 ```
 Building the orthogonal matrix Q from QR factorization (lapack.DORGQR)
 ```c
-   armas_d_qrbuild(A, tau, W, conf)
+   armas_d_qrbuild(A, tau, conf)
 ```
 Multiplying general matrix with orthogonal matrix Q from QR factorization (lapack.DORMQR)
 ```c
-   armas_d_qrmult(C, A, tau, W, flags, conf)
+   armas_d_qrmult(C, A, tau, flags, conf)
 ```
 Solving of QR factorized linear system
 ```c
-   armas_d_qrsolve(B, A, tau, W, flags, conf)
+   armas_d_qrsolve(B, A, tau, flags, conf)
 ```
 LQ factorization of general M-by-N matrix A = L*Q (lapack.DGELQF)
 ```c
-   armas_d_lqfactor(A, tau, W, conf)
+   armas_d_lqfactor(A, tau, conf)
 ```
 Building the orthogonal matrix Q from LQ factorization (lapack.DORGLQ)
 ```c
-   armas_d_lqbuild(A, tau, W, conf)
+   armas_d_lqbuild(A, tau, conf)
 ```
 Multiplying general matrix with orthogonal matrix Q from LQ factorization (lapack.DORMLQ)
 ```c
-   armas_d_lqmult(C, A, tau, W, flags, conf)
+   armas_d_lqmult(C, A, tau, flags, conf)
 ```
 Solving of LQ factorized linear system
 ```c
-   armas_d_lqsolve(B, A, tau, W, flags, conf)
+   armas_d_lqsolve(B, A, tau, flags, conf)
 ```
 QL factorization of general M-by-N matrix A = Q*L (lapack.DGEQLF)
 ```c
-   armas_d_qlfactor(A, tau, W, conf)
+   armas_d_qlfactor(A, tau, conf)
 ```
 Building the orthogonal matrix Q from QL factorization (lapack.DORGQL)
 ```c
-   armas_d_qlbuild(A, tau, W, conf)
+   armas_d_qlbuild(A, tau, conf)
 ```
 Multiplying general matrix with orthogonal matrix Q from QL factorization (lapack.DORMQL)
 ```c
-   armas_d_qlmult(C, A, tau, W, flags, conf)
+   armas_d_qlmult(C, A, tau, flags, conf)
 ```
 Hessenberg reduction of general N-by-N matrix A = H*B*H.T (lapackd.DGEHRD)
 ```c
-  armas_d_hessreduce(A, tau, W, conf)
+  armas_d_hessreduce(A, tau, conf)
 ```
 Multiplying general matrix with orthogonal matrix Q from Hessenberg reduction (lapack.DORMHR)
 ```c
-   armas_d_hessmult(C, A, tau, W, flags, conf)
+   armas_d_hessmult(C, A, tau, flags, conf)
 ```
 Bidiagonalization of general M-by-N matrix A = Q*B*P.T (lapackd.DGEBRD)
 ```c
-  armas_d_bdreduce(A, tauq, taup, W, conf)
+  armas_d_bdreduce(A, tauq, taup, conf)
 ```
 Multiplying general matrix with orthogonal matrix Q or P from Bidiagonal reduction (lapack.DORMBR)
 ```c
-   armas_d_bdmult(C, A, tau, W, flags, conf)
+   armas_d_bdmult(C, A, tau, flags, conf)
 ```
 Tridiagonalization of symmetric N-by-N matrix A = Q*T*Q.T (lapackd.DSYTRD)
 ```c
-  armas_d_trdreduce(A, tau, W, flags, conf)
+  armas_d_trdreduce(A, tau, flags, conf)
 ```
 Multiplying general matrix with orthogonal matrix Q from tridiagonal reduction (lapack.DORMTR)
 ```c
-   armas_d_trdmult(C, A, tau, W, flags, conf)
+   armas_d_trdmult(C, A, tau, flags, conf)
 ```
 Eigenvalues and eigenvectors of tridiagonal symmetric matrix (lapack.DSTEQR)
 ```c
-   armas_d_trdeigen(D, E, V, A, W, flags, conf)
+   armas_d_trdeigen(D, E, V, A, flags, conf)
 ```
 Eigenvalues and eigenvectors of symmetric matrix (lapack.DSYEV)
 ```c
-   armas_d_eigen_sym(D, A, W, flags, conf)
+   armas_d_eigen_sym(D, A, flags, conf)
 ```
 Singular values of bidiagonal matrix (lapack.DBDSQR)
 ```c
-   armas_d_bdsvd(D, E, U, V, A, W, flags, conf)
+   armas_d_bdsvd(D, E, U, V, A, flags, conf)
 ```
 Singular values and singular vectors of general matrix (lapack.GESVD)
 ```c
-   armas_d_svd(S, U, V, A, W, flags, conf)
+   armas_d_svd(S, U, V, A, flags, conf)
 ```
 Functions for computing and applying Givens rotations
 ```c
