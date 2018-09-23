@@ -9,6 +9,7 @@ ABSTYPE=$TYPE
 
 case "$TYPE" in
     double)
+	CODE=d
 	ZERO=0.0
 	ABSZERO=0.0
 	ONE=1.0
@@ -20,6 +21,7 @@ case "$TYPE" in
 	SPARSE_DEF=__ARMAS_DSPARSE_H
 	;;
     float)
+	CODE=s
 	ZERO=0.0
 	ABSZERO=0.0
 	ONE=1.0
@@ -31,6 +33,7 @@ case "$TYPE" in
 	SPARSE_DEF=__ARMAS_SSPARSE_H
 	;;
     complex)
+	CODE=c
 	ZERO=0.0+0.0i
 	ABSZERO=0.0
 	ONE=1.0+0.0i
@@ -44,6 +47,7 @@ case "$TYPE" in
 	SPARSE_DEF=__ARMAS_CSPARSE_H
 	;;
     zcomplex)
+	CODE=z
 	ZERO=0.0+0.0i
 	ABSZERO=0.0
 	ONE=1.0+0.0i
@@ -60,19 +64,21 @@ case "$TYPE" in
 	;;   
 esac
 
+MATRIXH="armas/${CODE}matrix.h"
+
 SUBST="\
-s/armas_x_/$PREFIX/g;\
-s/armassp_x_/$PREFIX_SP/g;\
-s/__ARMAS_MATRIX_H/$MATRIX_DEF/;\
-s/__ARMAS_LINALG_H/$LINALG_DEF/;\
-s/__ARMAS_SPARSE_H/$SPARSE_DEF/;\
-s/DTYPE/$DTYPE/g;\
-s/ABSTYPE/$ABSTYPE/g;\
-s/__ZERO/$ZERO/;\
-s/__ABSZERO/$ABSZERO/;\
-s/__ONE/$ONE/;\
-s:\"matrix.h\":<$DST>:;\
-s:/\* COMPLEX_H \*/:$COMPLEX_H:;"
+s/armas_x_/${PREFIX}/g;\
+s/armassp_x_/${PREFIX_SP}/g;\
+s/__ARMAS_MATRIX_H/${MATRIX_DEF}/;\
+s/__ARMAS_LINALG_H/${LINALG_DEF}/;\
+s/__ARMAS_SPARSE_H/${SPARSE_DEF}/;\
+s/DTYPE/${DTYPE}/g;\
+s/ABSTYPE/${ABSTYPE}/g;\
+s/__ZERO/${ZERO}/;\
+s/__ABSZERO/${ABSZERO}/;\
+s/__ONE/${ONE}/;\
+s:\"matrix.h\":<${MATRIXH}>:;\
+s:/\* COMPLEX_H \*/:${COMPLEX_H}:;"
 
 echo sed-command "$SUBST"
 
