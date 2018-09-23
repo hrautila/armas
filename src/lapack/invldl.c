@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_ldlinverse_sym) 
+#if defined(armas_x_ldlinverse) && defined(armas_x_ldlinverse_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -270,11 +270,11 @@ int __blk_invldl_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
  * \retval  0   OK
  * \retval -1   failure, conf.error holds actual error code
  */
-int armas_x_ldlinverse_sym_w(armas_x_dense_t *A, 
-                             armas_pivot_t *P,
-                             int flags,
-                             armas_wbuf_t *wb,
-                             armas_conf_t *conf)
+int armas_x_ldlinverse_w(armas_x_dense_t *A, 
+                         const armas_pivot_t *P,
+                         int flags,
+                         armas_wbuf_t *wb,
+                         armas_conf_t *conf)
 {
     int lb, err = 0;
     size_t wsmin, wsz;
@@ -334,9 +334,9 @@ int armas_x_ldlinverse_sym_w(armas_x_dense_t *A,
 
     if (P != ARMAS_NOPIVOT) {
         if (flags & ARMAS_UPPER) {
-            armas_x_pivot(A, P, ARMAS_PIVOT_UPPER|ARMAS_PIVOT_FORWARD, conf);
+            armas_x_pivot(A, (armas_pivot_t *)P, ARMAS_PIVOT_UPPER|ARMAS_PIVOT_FORWARD, conf);
         } else {
-            armas_x_pivot(A, P, ARMAS_PIVOT_LOWER|ARMAS_PIVOT_BACKWARD, conf);
+            armas_x_pivot(A, (armas_pivot_t *)P, ARMAS_PIVOT_LOWER|ARMAS_PIVOT_BACKWARD, conf);
         }
     }
     armas_wsetpos(wb, wsz);
@@ -344,27 +344,30 @@ int armas_x_ldlinverse_sym_w(armas_x_dense_t *A,
 }
 
 
-int armas_x_ldlinverse_sym(armas_x_dense_t *A,
-                           armas_x_dense_t *W,
-                           armas_pivot_t *P,
-                           int flags,
-                           armas_conf_t *conf)
+int armas_x_ldlinverse(armas_x_dense_t *A,
+                       const armas_pivot_t *P,
+                       int flags,
+                       armas_conf_t *conf)
 {
     int err;
-    armas_wbuf_t wb = ARMAS_WBNULL;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_ldlinverse_sym_w(A, P, flags, &wb, conf) < 0)
+    if (armas_x_ldlinverse_w(A, P, flags, &wb, conf) < 0)
         return -1;
 
+    wbs = &wb;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             conf->error = ARMAS_EMEMORY;
             return -1;
         }
     }
-    err = armas_x_ldlinverse_sym_w(A, P, flags, &wb, conf);
+    else
+        wbs = ARMAS_NOWORK;
+    
+    err = armas_x_ldlinverse_w(A, P, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }

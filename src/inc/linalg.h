@@ -268,6 +268,17 @@ extern int armas_x_mult_rbt(armas_x_dense_t *A, armas_x_dense_t *U, int flags, a
 extern int armas_x_update2_rbt(armas_x_dense_t *A, armas_x_dense_t *U, armas_x_dense_t *V, armas_conf_t *conf);
 extern void armas_x_gen_rbt(armas_x_dense_t *U);
 
+// Inverse
+extern int armas_x_inverse_trm(armas_x_dense_t *A, int flags, armas_conf_t *conf);
+extern int armas_x_luinverse(armas_x_dense_t *A, const armas_pivot_t *P, armas_conf_t *conf);
+extern int armas_x_cholinverse(armas_x_dense_t *A, int flags, armas_conf_t *conf);
+extern int armas_x_ldlinverse(armas_x_dense_t *A, const armas_pivot_t *P, int flags, armas_conf_t *conf);
+
+extern int armas_x_luinverse_w(armas_x_dense_t *A, const armas_pivot_t *P, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_cholinverse_w(armas_x_dense_t *A, int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
+extern int armas_x_ldlinverse_w(armas_x_dense_t *A, const armas_pivot_t *P, int flags,
+                                    armas_wbuf_t *wrk, armas_conf_t *conf);
+
 // additional
 extern int armas_x_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c);
 extern void armas_x_discriminant(DTYPE *d, DTYPE a, DTYPE b, DTYPE c);

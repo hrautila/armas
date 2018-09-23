@@ -443,12 +443,12 @@
 
 // inverse
 #define armas_x_inverse_trm     armas_d_inverse_trm
-#define armas_x_inverse         armas_d_inverse
-#define armas_x_inverse_w       armas_d_inverse_w
-#define armas_x_inverse_psd     armas_d_inverse_psd
-#define armas_x_inverse_psd_w   armas_d_inverse_psd_w
-#define armas_x_ldlinverse_sym  armas_d_ldlinverse_sym
-#define armas_x_ldlinverse_sym_w armas_d_ldlinverse_sym_w
+#define armas_x_luinverse       armas_d_luinverse
+#define armas_x_luinverse_w     armas_d_luinverse_w
+#define armas_x_cholinverse     armas_d_cholinverse
+#define armas_x_cholinverse_w   armas_d_cholinverse_w
+#define armas_x_ldlinverse      armas_d_ldlinverse
+#define armas_x_ldlinverse_w    armas_d_ldlinverse_w
 
 // internal
 #define __sym_eigen2x2          __d_sym_eigen2x2

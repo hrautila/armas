@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_inverse) && defined(armas_x_inverse_w) 
+#if defined(armas_x_luinverse) && defined(armas_x_luinverse_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external functions
@@ -157,17 +157,19 @@ int __blk_inverse_fused(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_co
  * \retval -1 Error, error code set in conf.error
  *
  */
-int armas_x_inverse(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, armas_conf_t *conf)
+int armas_x_luinverse(armas_x_dense_t *A,
+                      const armas_pivot_t *P,
+                      armas_conf_t *conf)
 {
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
     if (!conf)
         conf = armas_conf_default();
 
-    wbs = &wb;
-    if (armas_x_inverse_w(A, P, &wb, conf) < 0)
+    if (armas_x_luinverse_w(A, P, &wb, conf) < 0)
         return -1;
 
+    wbs = &wb;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             conf->error = ARMAS_EMEMORY;
@@ -177,16 +179,16 @@ int armas_x_inverse(armas_x_dense_t *A, armas_x_dense_t *W, armas_pivot_t *P, ar
     else
         wbs = ARMAS_NOWORK;
     
-    err = armas_x_inverse_w(A, P, wbs, conf);
+    err = armas_x_luinverse_w(A, P, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }
 
 
-int armas_x_inverse_w(armas_x_dense_t *A,
-                      armas_pivot_t *P,
-                      armas_wbuf_t *wb, 
-                      armas_conf_t *conf)
+int armas_x_luinverse_w(armas_x_dense_t *A,
+                        const armas_pivot_t *P,
+                        armas_wbuf_t *wb, 
+                        armas_conf_t *conf)
 {
     int lb, err = 0;
     size_t wsmin, wsz;

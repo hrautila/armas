@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_inverse_psd) 
+#if defined(armas_x_cholinverse) && defined(armas_x_cholinverse_w) 
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -225,15 +225,15 @@ int __blk_invspd_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
 
 
 /**
- * \brief Computes the inverse of a positive semi-definite NxN matrix.
+ * \brief Computes the inverse of a positive definite symmetric NxN matrix.
  *
  * \param[in,out] A
  *      On entry, the lower (or upper) Cholesky factorization of matrix A. On exit the inverse of A
  *      stored on lower (or upper) part of matrix A.
- * \param[out] W
- *      Workspace 
  * \param[in]  flags
  *      Indicator flags ARMAS_UPPER or ARMAS_LOWER.
+ * \param[out] wb
+ *      Workspace 
  * \param[in]  conf
  *      Configuration block
  *
@@ -241,7 +241,7 @@ int __blk_invspd_upper(armas_x_dense_t *A, armas_x_dense_t *W, int lb, armas_con
  * \retval -1 Error, error code set in conf.error
  *
  */
-int armas_x_inverse_psd_w(armas_x_dense_t *A,
+int armas_x_cholinverse_w(armas_x_dense_t *A,
                           int flags,
                           armas_wbuf_t *wb,
                           armas_conf_t *conf)
@@ -304,20 +304,29 @@ int armas_x_inverse_psd_w(armas_x_dense_t *A,
     return err;
 }
 
-int armas_x_inverse_psd(armas_x_dense_t *A,
+int armas_x_cholinverse(armas_x_dense_t *A,
                         int flags,
                         armas_conf_t *conf)
 {
     int err;
-    armas_wbuf_t wb = ARMAS_WBNULL;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_inverse_psd_w(A, flags, &wb, conf) < 0)
+    if (armas_x_cholinverse_w(A, flags, &wb, conf) < 0)
         return -1;
-    if (wb.bytes > 0)
-        armas_walloc(&wb, wb.bytes);
-    err = armas_x_inverse_psd_w(A, flags, &wb, conf);
+    
+    wbs = &wb;
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
+            return -1;
+        }
+    }
+    else
+        wbs = ARMAS_NOWORK;
+                
+    err = armas_x_cholinverse_w(A, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 
