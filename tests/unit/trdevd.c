@@ -113,7 +113,7 @@ int test_eigen(int N, int type, DTYPE coeff, int verbose)
     armas_x_init(&C, N, N);
     armas_walloc(&wb, 4*N*sizeof(DTYPE));
 
-    armas_x_trdeigen_w(&D, &E, &V, ARMAS_WANTV, &wb, &conf);
+    armas_x_trdeigen(&D, &E, &V, ARMAS_WANTV, &conf);
     // compute: V.T*A*V
     armas_x_mult(0.0, &C, 1.0, &V, &A0, ARMAS_TRANSA, &conf);
     armas_x_mult(0.0, &A0, 1.0, &C, &V, ARMAS_NOTRANS, &conf);

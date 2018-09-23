@@ -42,7 +42,6 @@ int test1(int M, int N, int verbose)
     if (err) {
         printf("%s [M=%d, N=%d, err=%d,%d]: A == U*S*V.T, U=[m,n], V=[n,n] \n",
                PASS(0), M, N, err, conf.error);
-        printf("Work needed: %d\n", armas_x_svd_work(&A, ARMAS_WANTU|ARMAS_WANTV, &conf));
         return 0;
     }
 

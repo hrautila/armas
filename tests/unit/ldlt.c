@@ -21,7 +21,7 @@
 
 int test_ldl(int N, int lb, int flags, int verbose)
 {
-    armas_x_dense_t A0, A1, C, D, D0, W;
+    armas_x_dense_t A0, A1, C, D, D0;
     armas_conf_t conf = *armas_conf_default();
     DTYPE n0, n1;
     int ok, flags1, flags2;
@@ -31,7 +31,6 @@ int test_ldl(int N, int lb, int flags, int verbose)
     armas_x_init(&A0, N, N);
     armas_x_init(&A1, N, N);
     armas_x_init(&C, N, N);
-    armas_x_init(&W, lb == 0 ? N : lb*N, 1);
     armas_x_diag(&D, &C, 0);
     armas_x_madd(&D, 1.0, 0);
 
@@ -39,7 +38,7 @@ int test_ldl(int N, int lb, int flags, int verbose)
     armas_x_mcopy(&A1, &A0);
 
     conf.lb = lb;
-    armas_x_ldlfactor(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_ldlfactor(&A0, ARMAS_NOPIVOT, flags, &conf);
     armas_x_diag(&D0, &A0, 0);
 
     flags1 = flags|ARMAS_UNIT|ARMAS_RIGHT;
@@ -47,7 +46,7 @@ int test_ldl(int N, int lb, int flags, int verbose)
 
     // C = I*A; C = C*D; C = C*L^T
     armas_x_mult_trm(&C, 1.0, &A0, flags1, &conf);
-    armas_x_mult_diag(&C, &D0, 1.0, flags|ARMAS_RIGHT, &conf);
+    armas_x_mult_diag(&C, 1.0, &D0, flags|ARMAS_RIGHT, &conf);
     armas_x_mult_trm(&C, 1.0, &A0, flags2, &conf);
     armas_x_make_trm(&C, flags);
 
@@ -59,13 +58,12 @@ int test_ldl(int N, int lb, int flags, int verbose)
     armas_x_release(&A0);
     armas_x_release(&A1);
     armas_x_release(&C);
-    armas_x_release(&W);
     return 1 - ok;
 }
 
 int test_ldl_solve(int N, int lb, int flags, int verbose)
 {
-    armas_x_dense_t A0, A1, B, B0, W;
+    armas_x_dense_t A0, A1, B, B0;
     armas_conf_t conf = *armas_conf_default();
     DTYPE n0, n1;
     int ok;
@@ -76,7 +74,6 @@ int test_ldl_solve(int N, int lb, int flags, int verbose)
     armas_x_init(&A1, N, N);
     armas_x_init(&B0, N, N);
     armas_x_init(&B, N, N);
-    armas_x_init(&W, lb == 0 ? N : lb*N, 1);
 
     armas_x_set_values(&A0, unitrand, flags);
     armas_x_mcopy(&A1, &A0);
@@ -86,7 +83,7 @@ int test_ldl_solve(int N, int lb, int flags, int verbose)
     armas_x_mult_sym(0.0, &B, 1.0, &A0, &B0, flags|ARMAS_LEFT, &conf);
 
     conf.lb = lb;
-    armas_x_ldlfactor(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_ldlfactor(&A0, ARMAS_NOPIVOT, flags, &conf);
     armas_x_ldlsolve(&B, &A0, ARMAS_NOPIVOT, flags, &conf);
 
     n0 = rel_error(&n1, &B, &B0, ARMAS_NORM_INF, 0, &conf);
@@ -98,14 +95,13 @@ int test_ldl_solve(int N, int lb, int flags, int verbose)
     armas_x_release(&A1);
     armas_x_release(&B);
     armas_x_release(&B0);
-    armas_x_release(&W);
     return 1 - ok;
 }
 
 // with pivoting; verify A = L*D*L.T or A = U*D*U.T
 int test_ldlpv(int N, int lb, int flags, int verbose)
 {
-    armas_x_dense_t A0, A1, C, D, D0, W;
+    armas_x_dense_t A0, A1, C, D, D0;
     armas_conf_t conf = *armas_conf_default();
     armas_pivot_t P;
     DTYPE n0, n1;
@@ -116,7 +112,6 @@ int test_ldlpv(int N, int lb, int flags, int verbose)
     armas_x_init(&A0, N, N);
     armas_x_init(&A1, N, N);
     armas_x_init(&C, N, N);
-    armas_x_init(&W, lb == 0 ? N : lb*N, 1);
     armas_x_diag(&D, &C, 0);
     armas_x_madd(&D, 1.0, 0);
     armas_pivot_init(&P, N);
@@ -128,7 +123,7 @@ int test_ldlpv(int N, int lb, int flags, int verbose)
     }
 
     conf.lb = lb;
-    armas_x_ldlfactor(&A0, &W, &P, flags, &conf);
+    armas_x_ldlfactor(&A0, &P, flags, &conf);
     armas_x_diag(&D0, &A0, 0);
 
     flags1 = flags|ARMAS_UNIT|ARMAS_RIGHT;
@@ -136,7 +131,7 @@ int test_ldlpv(int N, int lb, int flags, int verbose)
 
     // C = ((I*L)*D)*L^T
     armas_x_mult_trm(&C, 1.0, &A0, flags1, &conf);
-    armas_x_mult_diag(&C, &D0, 1.0, flags|ARMAS_RIGHT, &conf);
+    armas_x_mult_diag(&C,1.0, &D0, flags|ARMAS_RIGHT, &conf);
     armas_x_mult_trm(&C, 1.0, &A0, flags2, &conf);
     armas_x_make_trm(&C, flags);
     if (flags & ARMAS_LOWER) {
@@ -157,7 +152,6 @@ int test_ldlpv(int N, int lb, int flags, int verbose)
     armas_x_release(&A0);
     armas_x_release(&A1);
     armas_x_release(&C);
-    armas_x_release(&W);
     armas_pivot_release(&P);
     return 1 - ok;
 }
@@ -165,7 +159,7 @@ int test_ldlpv(int N, int lb, int flags, int verbose)
 // with pivoting; verify (L*D*L.T).T = U*D*U.T
 int test_ldlpv_transpose(int N, int lb, int flags, int verbose)
 {
-    armas_x_dense_t A0, A1, A2, C0, C1, D1, D0, W;
+    armas_x_dense_t A0, A1, A2, C0, C1, D1, D0;
     armas_conf_t conf = *armas_conf_default();
     armas_pivot_t P0, P1;
     DTYPE n0, n1;
@@ -177,7 +171,6 @@ int test_ldlpv_transpose(int N, int lb, int flags, int verbose)
     armas_x_init(&A2, N, N);
     armas_x_init(&C0, N, N);
     armas_x_init(&C1, N, N);
-    armas_x_init(&W, lb == 0 ? N : lb*N, 1);
     armas_x_diag(&D0, &C0, 0);
     armas_x_madd(&D0, 1.0, 0);
     armas_x_mcopy(&C1, &C0);
@@ -195,14 +188,14 @@ int test_ldlpv_transpose(int N, int lb, int flags, int verbose)
     }
 
     conf.lb = lb;
-    armas_x_ldlfactor(&A0, &W, &P0, ARMAS_LOWER, &conf);
+    armas_x_ldlfactor(&A0, &P0, ARMAS_LOWER, &conf);
     armas_x_diag(&D0, &A0, 0);
-    armas_x_ldlfactor(&A1, &W, &P1, ARMAS_UPPER, &conf);
+    armas_x_ldlfactor(&A1, &P1, ARMAS_UPPER, &conf);
     armas_x_diag(&D1, &A1, 0);
 
     // C = ((I*L)*D)*L.T
     armas_x_mult_trm(&C0, 1.0, &A0, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, &conf);
-    armas_x_mult_diag(&C0, &D0, 1.0, ARMAS_LOWER|ARMAS_RIGHT, &conf);
+    armas_x_mult_diag(&C0,1.0, &D0, ARMAS_LOWER|ARMAS_RIGHT, &conf);
     armas_x_mult_trm(&C0, 1.0, &A0, ARMAS_LOWER|ARMAS_TRANS|ARMAS_UNIT|ARMAS_RIGHT, &conf);
     armas_x_make_trm(&C0, ARMAS_LOWER);
     armas_x_pivot(&C0, &P0, ARMAS_PIVOT_LOWER|ARMAS_PIVOT_BACKWARD, &conf);
@@ -213,7 +206,7 @@ int test_ldlpv_transpose(int N, int lb, int flags, int verbose)
     }
     // C = ((I*U)*D)*U.T
     armas_x_mult_trm(&C1, 1.0, &A1, ARMAS_UPPER|ARMAS_UNIT|ARMAS_RIGHT, &conf);
-    armas_x_mult_diag(&C1, &D1, 1.0, ARMAS_UPPER|ARMAS_RIGHT, &conf);
+    armas_x_mult_diag(&C1,1.0, &D1, ARMAS_UPPER|ARMAS_RIGHT, &conf);
     armas_x_mult_trm(&C1, 1.0, &A1, ARMAS_UPPER|ARMAS_TRANS|ARMAS_UNIT|ARMAS_RIGHT, &conf);
     armas_x_make_trm(&C1, ARMAS_UPPER);
     armas_x_pivot(&C1, &P1, ARMAS_PIVOT_UPPER|ARMAS_PIVOT_FORWARD, &conf);
@@ -233,7 +226,6 @@ int test_ldlpv_transpose(int N, int lb, int flags, int verbose)
     armas_x_release(&A2);
     armas_x_release(&C0);
     armas_x_release(&C1);
-    armas_x_release(&W);
     armas_pivot_release(&P0);
     armas_pivot_release(&P1);
     return 1 - ok;
@@ -241,7 +233,7 @@ int test_ldlpv_transpose(int N, int lb, int flags, int verbose)
 
 int test_ldlpv_solve(int N, int lb, int flags, int verbose)
 {
-    armas_x_dense_t A0, A1, B, B0, W;
+    armas_x_dense_t A0, A1, B, B0;
     armas_conf_t conf = *armas_conf_default();
     armas_pivot_t P0;
     DTYPE n0, n1;
@@ -253,7 +245,6 @@ int test_ldlpv_solve(int N, int lb, int flags, int verbose)
     armas_x_init(&A1, N, N);
     armas_x_init(&B0, N, N);
     armas_x_init(&B, N, N);
-    armas_x_init(&W, lb == 0 ? N : lb*N, 1);
     armas_pivot_init(&P0, N);
     
     armas_x_set_values(&A0, unitrand, flags);
@@ -263,17 +254,10 @@ int test_ldlpv_solve(int N, int lb, int flags, int verbose)
     // B = A*B0
     armas_x_mult_sym(0.0, &B, 1.0, &A0, &B0, flags|ARMAS_LEFT, &conf);
 
-    if (N < 10) {
-        printf("B0:\n"); armas_x_printf(stdout, "%6.3f", &B0);
-    }
-
     conf.lb = lb;
-    armas_x_ldlfactor(&A0, &W, &P0, flags, &conf);
+    armas_x_ldlfactor(&A0, &P0, flags, &conf);
     armas_x_ldlsolve(&B, &A0, &P0, flags, &conf);
 
-    if (N < 10) {
-        printf("(%s)^-1*B:\n", fact); armas_x_printf(stdout, "%6.3f", &B);
-    }
     n0 = rel_error(&n1, &B, &B0, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
     printf("%s : %s.(%s)^-1*B = X\n", PASS(ok), blk, fact);
@@ -283,7 +267,6 @@ int test_ldlpv_solve(int N, int lb, int flags, int verbose)
     armas_x_release(&A1);
     armas_x_release(&B);
     armas_x_release(&B0);
-    armas_x_release(&W);
     armas_pivot_release(&P0);
     return 1 - ok;
 }

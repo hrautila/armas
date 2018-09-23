@@ -41,7 +41,7 @@ int test_1(int N, int flags, int verbose)
     }
     armas_walloc(&wb, wb.bytes);
     
-    err = armas_x_eigen_sym_w(&D, &A, flags|ARMAS_WANTV, &wb, &conf);
+    err = armas_x_eigen_sym(&D, &A, ARMAS_NULL, flags|ARMAS_WANTV, /*&wb,*/ &conf);
     if (err) {
         printf("err = %d, %d\n", err, conf.error);
         return 0;

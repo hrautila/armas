@@ -21,7 +21,6 @@ int test_build(int M, int N, int K, int lb, int verbose)
   int ok;
   DTYPE n0, n1;
   armas_conf_t conf = *armas_conf_default();
-  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&A1, M, N);
@@ -30,24 +29,16 @@ int test_build(int M, int N, int K, int lb, int verbose)
   // set source data
   armas_x_set_values(&A0, unitrand, ARMAS_ANY);
 
-  // allocate workspace according the blocked multiplication
-  conf.lb = lb;
-  if (armas_x_qlbuild_w(&A0, &tau0, 0, &wb, &conf) != 0) {
-    printf("build: workspace calculation failure!!\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-
   // factorize
   conf.lb = lb;
-  armas_x_qlfactor_w(&A0, &tau0, &wb, &conf);
+  armas_x_qlfactor(&A0, &tau0, &conf);
   armas_x_mcopy(&A1, &A0);
     
   // compute Q = buildQ(qr(A))
   conf.lb = 0;
-  armas_x_qlbuild_w(&A0, &tau0, K, &wb, &conf);
+  armas_x_qlbuild(&A0, &tau0, K, &conf);
   conf.lb = lb;
-  armas_x_qlbuild_w(&A1, &tau0, K, &wb, &conf);
+  armas_x_qlbuild(&A1, &tau0, K, &conf);
 
   n0 = rel_error(&n1, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(n0, N);
@@ -60,7 +51,6 @@ int test_build(int M, int N, int K, int lb, int verbose)
   armas_x_release(&A0);
   armas_x_release(&A1);
   armas_x_release(&tau0);
-  armas_wrelease(&wb);
 
   return isOK(n0, N);
 }
@@ -77,7 +67,6 @@ int test_build_identity(int M, int N, int K, int lb, int verbose)
   int ok;
   DTYPE n0;
   armas_conf_t conf = *armas_conf_default();
-  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&C0, N, N);
@@ -86,21 +75,13 @@ int test_build_identity(int M, int N, int K, int lb, int verbose)
   // set source data
   armas_x_set_values(&A0, unitrand, ARMAS_ANY);
 
-  // allocate workspace according the blocked factorization
-  conf.lb = lb;
-  if (armas_x_qlbuild_w(&A0, &tau0, 0, &wb, &conf) != 0) {
-    printf("build: workspace calculation failure!!\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-
   // factorize
   conf.lb = lb;
-  armas_x_qlfactor_w(&A0, &tau0, &wb, &conf);
+  armas_x_qlfactor(&A0, &tau0, &conf);
 
   // compute Q = buildQ(qr(A)), K first columns
   conf.lb = lb;
-  armas_x_qlbuild_w(&A0, &tau0, K, &wb, &conf);
+  armas_x_qlbuild(&A0, &tau0, K, &conf);
 
   // C0 = Q.T*Q - I
   armas_x_mult(0.0, &C0, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
@@ -117,7 +98,6 @@ int test_build_identity(int M, int N, int K, int lb, int verbose)
   armas_x_release(&A0);
   armas_x_release(&C0);
   armas_x_release(&tau0);
-  armas_wrelease(&wb);
   return ok;
 }
 

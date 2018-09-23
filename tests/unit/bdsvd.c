@@ -109,7 +109,8 @@ int test_tall(int M, int N, int flags, int type, int verbose)
     armas_x_init(&C, N, N);
     armas_walloc(&wb, 4*N*sizeof(DTYPE));
 
-    armas_x_bdsvd_w(&D, &E, &U, &V, flags|ARMAS_WANTU|ARMAS_WANTV, &wb, &conf);
+    //armas_x_bdsvd_w(&D, &E, &U, &V, flags|ARMAS_WANTU|ARMAS_WANTV, &wb, &conf);
+    armas_x_bdsvd(&D, &E, &U, &V, flags|ARMAS_WANTU|ARMAS_WANTV, &conf);
 
     // compute: U.T*A*V
     armas_x_mult(0.0, &C, 1.0, &U, &A0, ARMAS_TRANSA, &conf);

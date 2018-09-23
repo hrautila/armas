@@ -21,7 +21,6 @@ int test_lss(int M, int N, int K, int lb, int verbose)
   armas_conf_t conf = *armas_conf_default();
   int ok;
   DTYPE nrm, nrm0;
-  armas_wbuf_t wb = ARMAS_WBNULL;
 
   armas_x_init(&A0, M, N);
   armas_x_init(&B0, M, K);
@@ -36,18 +35,11 @@ int test_lss(int M, int N, int K, int lb, int verbose)
   // compute: B0 = A0*X0
   armas_x_mult(0.0, &B0, 1.0, &A0, &X0, ARMAS_NONE, &conf);
 
-  conf.lb = lb;
-  if (armas_x_qrsolve_w(&B0, &A0, &tau0, ARMAS_NONE, &wb, &conf) != 0) {
-    printf("solve: workspace calculation failure!!\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-
   // factor
-  armas_x_qrfactor_w(&A0, &tau0, &wb, &conf);
+  armas_x_qrfactor(&A0, &tau0, &conf);
 
   // solve B0 = A.-1*B0
-  armas_x_qrsolve_w(&B0, &A0, &tau0, ARMAS_NONE, &wb, &conf);
+  armas_x_qrsolve(&B0, &A0, &tau0, ARMAS_NONE, &conf);
 
   // X0 = X0 - A.-1*B0
   armas_x_submatrix(&X, &B0, 0, 0, N, K);
@@ -62,7 +54,6 @@ int test_lss(int M, int N, int K, int lb, int verbose)
   armas_x_release(&B0);
   armas_x_release(&X0);
   armas_x_release(&tau0);
-  armas_wrelease(&wb);
   return ok;
 }
 
@@ -75,7 +66,6 @@ int test_min(int M, int N, int K, int lb, int verbose)
   armas_conf_t conf = *armas_conf_default();
   int ok;
   DTYPE nrm, nrm0;
-  armas_wbuf_t wb = ARMAS_WBNULL;
 
   armas_x_init(&A0, M, N);
   armas_x_init(&A1, M, N);
@@ -90,19 +80,12 @@ int test_min(int M, int N, int K, int lb, int verbose)
   // set B0
   armas_x_set_values(&B0, unitrand, ARMAS_ANY);
 
-  conf.lb = lb;
-  if (armas_x_qrsolve_w(&B0, &A0, &tau0, ARMAS_TRANS, &wb, &conf) != 0) {
-    printf("solve: workspace calculation failure!!\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-
   // factor
-  armas_x_qrfactor_w(&A0, &tau0, &wb, &conf);
+  armas_x_qrfactor(&A0, &tau0, &conf);
 
   // X0 = A.-T*B0
   armas_x_mcopy(&X0, &B0);
-  armas_x_qrsolve_w(&X0, &A0, &tau0, ARMAS_TRANS, &wb, &conf);
+  armas_x_qrsolve(&X0, &A0, &tau0, ARMAS_TRANS, &conf);
 
   // B = B - A.T*X
   armas_x_submatrix(&B, &B0, 0, 0, N, K);
@@ -120,7 +103,6 @@ int test_min(int M, int N, int K, int lb, int verbose)
   armas_x_release(&B0);
   armas_x_release(&X0);
   armas_x_release(&tau0);
-  armas_wrelease(&wb);
   return ok;
 }
 

@@ -19,7 +19,6 @@ int test_factor(int M, int N, int lb, int verbose)
   armas_x_dense_t A0, A1, tau0, tau1, row;
   DTYPE n0, n1;
   armas_conf_t conf = *armas_conf_default();
-  armas_wbuf_t wb = ARMAS_WBNULL;
   
   if (lb == 0)
     lb = 4;
@@ -30,23 +29,15 @@ int test_factor(int M, int N, int lb, int verbose)
   armas_x_init(&tau1, imin(M, N), 1);
 
   // set source data
-  armas_x_set_values(&A0, unitrand, ARMAS_NULL);
+  armas_x_set_values(&A0, unitrand, ARMAS_ANY);
   armas_x_mcopy(&A1, &A0);
 
-  // allocate workspace according the blocked invocation
-  conf.lb = lb;
-  if (armas_x_qrfactor_w(&A0, &tau0, &wb, &conf) != 0) {
-    printf("factor: workspace calculation failure!!\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-  
   // factorize
   conf.lb = 0;
-  armas_x_qrfactor_w(&A0, &tau0, &wb, &conf);
+  armas_x_qrfactor(&A0, &tau0, &conf);
 
   conf.lb = lb;
-  armas_x_qrfactor_w(&A1, &tau1, &wb, &conf);
+  armas_x_qrfactor(&A1, &tau1, &conf);
 
   if (verbose > 1 && N < 10) {
     printf("unblk.QR(A):\n"); armas_x_printf(stdout, "%9.2e", &A0);

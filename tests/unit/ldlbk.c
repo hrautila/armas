@@ -15,39 +15,33 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
 {
   armas_x_dense_t A0, A1;
   armas_pivot_t P0, P1;
-  armas_wbuf_t wb;
   armas_conf_t conf = *armas_conf_default();
   int ok;
   char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
   DTYPE nrm;
 
-  wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, N, N);
   armas_x_init(&A1, N, N);
   armas_pivot_init(&P0, N);
   armas_pivot_init(&P1, N);
 
-  conf.lb = lb;
-  if (armas_x_bkfactor_w(&A0, &P1, flags, &wb, &conf) != 0) {
-    printf("factor: workspace calculation failure!!\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-  
+
   // set source data
   armas_x_set_values(&A0, unitrand, flags);
   armas_x_mcopy(&A1, &A0);
 
   conf.error = 0;
   conf.lb = 0; 
-  armas_x_bkfactor_w(&A0, &P0, flags, &wb, &conf);
+  armas_x_bkfactor(&A0, &P0, flags, &conf);
+  //armas_x_bkfactor_w(&A0, &P0, flags, &wb, &conf);
   if (verbose > 1 && conf.error != 0)
     printf("1. error=%d\n", conf.error);
 
   conf.error = 0;
   conf.lb = lb;
-  armas_x_bkfactor_w(&A1, &P1, flags,  &wb, &conf);
+  armas_x_bkfactor(&A1, &P1, flags, &conf);
+  //armas_x_bkfactor_w(&A1, &P1, flags, &wb, &conf);
   if (verbose > 1 && conf.error != 0)
     printf("1. error=%d\n", conf.error);
 
@@ -74,7 +68,6 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   armas_x_dense_t A0, A1;
   armas_x_dense_t B0, X0;
   armas_pivot_t P0;
-  armas_wbuf_t wb;
   armas_conf_t conf = *armas_conf_default();
   char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
   int ok;
@@ -95,18 +88,10 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   nrm_A = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &conf);
 
   conf.lb = lb;
-
-  wb = ARMAS_WBNULL;
-  if (armas_x_bkfactor_w(&A0, &P0, flags, &wb, &conf) != 0) {
-    printf("solve: workspace calculation failure!!\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-
-  armas_x_bkfactor_w(&A0, &P0, flags, &wb, &conf);
+  armas_x_bkfactor(&A0, &P0, flags, &conf);
 
   // solve
-  armas_x_bksolve_w(&X0, &A0, &P0, flags, &wb, &conf);
+  armas_x_bksolve(&X0, &A0, &P0, flags, &conf);
   
   // B0 = B0 - A*X0
   armas_x_mult_sym(1.0, &B0, -1.0, &A1, &X0, ARMAS_LEFT|flags, &conf);

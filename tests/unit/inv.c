@@ -37,10 +37,20 @@ int test_equal(int N, int lb, int verbose)
 
     conf.lb = lb;
     armas_x_lufactor(&A1, &P, &conf);
-    armas_x_inverse(&A1, &W, &P, &conf);
+    if (lb == 0 && N < 10) {
+        printf("LU(A)\n");
+        armas_x_printf(stdout, "%9.2e", &A1);
+    }
+    if (armas_x_luinverse(&A1, &P, &conf) < 0)
+        printf("inverse.1 error: %d\n", conf.error);
+    if (lb == 0 && N < 10) {
+        printf("A.-1\n");
+        armas_x_printf(stdout, "%9.2e", &A1);
+    }
 
     armas_x_lufactor(&A1, &P, &conf);
-    armas_x_inverse(&A1, &W, &P, &conf);
+    if (armas_x_luinverse(&A1, &P, &conf) < 0)
+        printf("inverse.2 error: %d\n", conf.error);
 
     n0 = rel_error(&n1, &A1, &A0, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
@@ -77,7 +87,7 @@ int test_ident(int N, int lb, int verbose)
 
     conf.lb = lb;
     armas_x_lufactor(&A1, &P, &conf);
-    armas_x_inverse(&A1, &W, &P, &conf);
+    armas_x_luinverse(&A1, &P, &conf);
 
     armas_x_mult(0.0, &C, 1.0, &A1, &A0, 0, &conf);
     armas_x_madd(&D, -1.0, 0);

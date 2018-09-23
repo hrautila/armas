@@ -28,6 +28,10 @@
 // helper functions
 #include "helper.h"
 
+#ifndef ARMAS_NULL
+#define ARMAS_NULL (armas_x_dense_t *)0
+#endif
+
 #endif //_UNIT_TESTING_H
 
 // Local Variables:

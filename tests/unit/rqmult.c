@@ -26,7 +26,6 @@ int test_mult_identity(int M, int N, int lb, int verbose)
   int ok;
   DTYPE n0;
   armas_conf_t conf = *armas_conf_default();
-  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&C, N, M);
@@ -40,22 +39,13 @@ int test_mult_identity(int M, int N, int lb, int verbose)
   armas_x_diag(&D, &C, 0);
   armas_x_add(&D, 1.0, &conf);
 
-  // allocate workspace according the blocked multiplication
-  conf.lb = lb;
-  if (armas_x_rqmult_w(&C, ARMAS_NIL, ARMAS_NIL, ARMAS_LEFT, &wb, &conf) != 0) {
-    printf("mult: workspace calculation failure!!\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-
   // factorize
   conf.lb = lb;
-  armas_x_rqfactor_w(&A0, &tau0, &wb, &conf);
+  armas_x_rqfactor(&A0, &tau0, &conf);
 
   conf.error = 0;
-  if (armas_x_rqmult_w(&C, &A0, &tau0, ARMAS_LEFT, &wb, &conf) < 0)
-    printf("rqmult error: %d\n", conf.error);
-  armas_x_rqmult_w(&C, &A0, &tau0, ARMAS_LEFT|ARMAS_TRANS, &wb, &conf);
+  armas_x_rqmult(&C, &A0, &tau0, ARMAS_LEFT, &conf);
+  armas_x_rqmult(&C, &A0, &tau0, ARMAS_LEFT|ARMAS_TRANS, &conf);
 
   // subtract 1.0 on diagonal
   armas_x_add(&D, -1.0, &conf);
@@ -69,7 +59,6 @@ int test_mult_identity(int M, int N, int lb, int verbose)
   armas_x_release(&A0);
   armas_x_release(&C);
   armas_x_release(&tau0);
-  armas_wrelease(&wb);
   return ok;
 }
 
@@ -84,7 +73,6 @@ int test_mult_left(int M, int N, int lb, int verbose)
   int ok;
   DTYPE n0;
   armas_conf_t conf = *armas_conf_default();
-  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&C0, N, M);
@@ -98,22 +86,14 @@ int test_mult_left(int M, int N, int lb, int verbose)
   armas_x_set_values(&C0, unitrand, ARMAS_ANY);
   armas_x_mcopy(&C1, &C0);
 
-  // allocate workspace according the blocked multiplication
-  conf.lb = lb;
-  if (armas_x_rqmult_w(&C0, ARMAS_NIL, ARMAS_NIL, ARMAS_LEFT, &wb, &conf) != 0) {
-    printf("mult: workspace calculation failure!!\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-
   // factorize
   conf.lb = lb;
-  armas_x_rqfactor_w(&A0, &tau0, &wb, &conf);
+  armas_x_rqfactor(&A0, &tau0, &conf);
 
   conf.error = 0;
   // compute C0 = Q.T*Q*C0
-  armas_x_rqmult_w(&C0, &A0, &tau0, ARMAS_LEFT, &wb, &conf);
-  armas_x_rqmult_w(&C0, &A0, &tau0, ARMAS_LEFT|ARMAS_TRANS, &wb, &conf);
+  armas_x_rqmult(&C0, &A0, &tau0, ARMAS_LEFT, &conf);
+  armas_x_rqmult(&C0, &A0, &tau0, ARMAS_LEFT|ARMAS_TRANS, &conf);
 
   n0 = rel_error((DTYPE *)0, &C1, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(n0, N);
@@ -126,7 +106,6 @@ int test_mult_left(int M, int N, int lb, int verbose)
   armas_x_release(&C0);
   armas_x_release(&C1);
   armas_x_release(&tau0);
-  armas_wrelease(&wb);
   return ok;
 }
 
@@ -142,7 +121,6 @@ int test_mult_right(int M, int N, int lb, int verbose)
   int ok;
   DTYPE n0;
   armas_conf_t conf = *armas_conf_default();
-  armas_wbuf_t wb = ARMAS_WBNULL;
   
   armas_x_init(&A0, M, N);
   armas_x_init(&C0, M, N);
@@ -156,22 +134,14 @@ int test_mult_right(int M, int N, int lb, int verbose)
   armas_x_set_values(&C0, unitrand, ARMAS_ANY);
   armas_x_mcopy(&C1, &C0);
 
-  // allocate workspace according the blocked multiplication
-  conf.lb = lb;
-  if (armas_x_rqmult_w(&C0, ARMAS_NIL, ARMAS_NIL, ARMAS_RIGHT, &wb, &conf) != 0) {
-    printf("mult: workspace calculation failure!!\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-
   // factorize
   conf.lb = lb;
-  armas_x_rqfactor_w(&A0, &tau0, &wb, &conf);
+  armas_x_rqfactor(&A0, &tau0, &conf);
 
   // compute C0 = C0*Q.T*Q
   conf.error = 0;
-  armas_x_rqmult_w(&C0, &A0, &tau0, ARMAS_RIGHT|ARMAS_TRANS, &wb, &conf);
-  armas_x_rqmult_w(&C0, &A0, &tau0, ARMAS_RIGHT, &wb, &conf);
+  armas_x_rqmult(&C0, &A0, &tau0, ARMAS_RIGHT|ARMAS_TRANS, &conf);
+  armas_x_rqmult(&C0, &A0, &tau0, ARMAS_RIGHT, &conf);
 
   n0 = rel_error((DTYPE *)0, &C1, &C0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(n0, N);
@@ -183,7 +153,6 @@ int test_mult_right(int M, int N, int lb, int verbose)
   armas_x_release(&C0);
   armas_x_release(&C1);
   armas_x_release(&tau0);
-  armas_wrelease(&wb);
   return ok;
 }
 

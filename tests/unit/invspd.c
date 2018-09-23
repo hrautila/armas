@@ -31,9 +31,9 @@ int test_ident(int N, int lb, int flags, int verbose)
     armas_x_init(&C, N, N);
     armas_x_init(&W, N, lb == 0 ? 1 : lb);
 
-    // symmetric positive definite matrix A*A.T
+    // symmetric positive definite matrix A^T*A
     armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
     armas_x_make_trm(&A1, flags);
     armas_x_mcopy(&A0, &A1);
 
@@ -42,8 +42,8 @@ int test_ident(int N, int lb, int flags, int verbose)
     armas_x_set_values(&D, one, 0);
 
     conf.lb = lb;
-    armas_x_cholfactor(&A1, (armas_x_dense_t *)0, ARMAS_NOPIVOT, flags, &conf);
-    armas_x_inverse_spd(&A1, &W, flags, &conf);
+    armas_x_cholfactor(&A1, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_cholinverse(&A1, flags, &conf);
 
     // A2 = A1*I
     armas_x_mult_sym(0.0, &A2, 1.0, &A1, &C, flags|ARMAS_LEFT, &conf);
@@ -78,18 +78,18 @@ int test_equal(int N, int lb, int flags, int verbose)
     armas_x_init(&A1, N, N);
     armas_x_init(&W, N, lb == 0 ? 1 : lb);
 
-    // symmetric positive definite matrix A*A.T
+    // symmetric positive definite matrix A^T*A
     armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSB, &conf);
+    armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
     armas_x_make_trm(&A1, flags);
     armas_x_mcopy(&A0, &A1);
 
     conf.lb = lb;
-    armas_x_cholfactor(&A1, (armas_x_dense_t *)0, ARMAS_NOPIVOT, flags, &conf);
-    armas_x_inverse_spd(&A1, &W, flags, &conf);
+    armas_x_cholfactor(&A1, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_cholinverse(&A1, flags, &conf);
 
-    armas_x_cholfactor(&A1, (armas_x_dense_t *)0, ARMAS_NOPIVOT, flags, &conf);
-    armas_x_inverse_spd(&A1, &W, flags, &conf);
+    armas_x_cholfactor(&A1, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_cholinverse(&A1, flags, &conf);
     
     n0 = rel_error(&n0, &A1, &A0, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);

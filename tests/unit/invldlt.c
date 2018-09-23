@@ -21,7 +21,7 @@
 
 int test_ldlnp_inv(int N, int lb, int flags, int verbose)
 {
-    armas_x_dense_t A0, A1, C, C1, D, W;
+    armas_x_dense_t A0, A1, C, C1, D;
     armas_conf_t conf = *armas_conf_default();
     DTYPE n0, n1;
     int ok;
@@ -32,7 +32,6 @@ int test_ldlnp_inv(int N, int lb, int flags, int verbose)
     armas_x_init(&A1, N, N);
     armas_x_init(&C, N, N);
     armas_x_init(&C1, N, N);
-    armas_x_init(&W, lb == 0 ? N : lb*N, 1);
     armas_x_diag(&D, &C1, 0);
     armas_x_madd(&D, 1.0, 0);
 
@@ -45,8 +44,8 @@ int test_ldlnp_inv(int N, int lb, int flags, int verbose)
     }
 
     conf.lb = lb;
-    armas_x_ldlfactor(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
-    armas_x_ldlinverse_sym(&A0, &W, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_ldlfactor(&A0, ARMAS_NOPIVOT, flags, &conf);
+    armas_x_ldlinverse(&A0, ARMAS_NOPIVOT, flags, &conf);
 
     armas_x_mult_sym(0.0, &C, 1.0, &A0, &A1, flags|ARMAS_LEFT, &conf);
 
@@ -63,13 +62,12 @@ int test_ldlnp_inv(int N, int lb, int flags, int verbose)
     armas_x_release(&A1);
     armas_x_release(&C);
     armas_x_release(&C1);
-    armas_x_release(&W);
     return 1 - ok;
 }
 
 int test_ldl_inv(int N, int lb, int flags, int verbose)
 {
-    armas_x_dense_t A0, A1, C, C1, D, W;
+    armas_x_dense_t A0, A1, C, C1, D;
     armas_pivot_t P0;
     armas_conf_t conf = *armas_conf_default();
     DTYPE n0, n1;
@@ -81,7 +79,6 @@ int test_ldl_inv(int N, int lb, int flags, int verbose)
     armas_x_init(&A1, N, N);
     armas_x_init(&C, N, N);
     armas_x_init(&C1, N, N);
-    armas_x_init(&W, lb == 0 ? N : lb*N, 1);
     armas_x_diag(&D, &C1, 0);
     armas_x_madd(&D, 1.0, 0);
     armas_pivot_init(&P0, N);
@@ -95,8 +92,8 @@ int test_ldl_inv(int N, int lb, int flags, int verbose)
     }
 
     conf.lb = lb;
-    armas_x_ldlfactor(&A0, &W, &P0, flags, &conf);
-    armas_x_ldlinverse_sym(&A0, &W, &P0, flags, &conf);
+    armas_x_ldlfactor(&A0, &P0, flags, &conf);
+    armas_x_ldlinverse(&A0, &P0, flags, &conf);
 
     armas_x_mult_sym(0.0, &C, 1.0, &A0, &A1, flags|ARMAS_LEFT, &conf);
 
@@ -114,7 +111,6 @@ int test_ldl_inv(int N, int lb, int flags, int verbose)
     armas_x_release(&A1);
     armas_x_release(&C);
     armas_x_release(&C1);
-    armas_x_release(&W);
     armas_pivot_release(&P0);
     return 1 - ok;
 }
@@ -123,7 +119,7 @@ int main(int argc, char **argv)
 {
     int opt;
     int N = 151;
-    int LB = 16;
+    int LB = 48;
     int verbose = 0;
 
     while ((opt = getopt(argc, argv, "v")) != -1) {

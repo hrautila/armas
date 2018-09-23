@@ -22,7 +22,6 @@ int test_reduce(int M, int N, int lb, int verbose)
   int ok;
   DTYPE nrm;
   char *mbyn = M >= N ? "M >= N" : "M < N";
-  armas_wbuf_t wb = ARMAS_WBNULL;
 
   armas_x_init(&A0, M, N);
   armas_x_init(&A1, M, N);
@@ -32,23 +31,17 @@ int test_reduce(int M, int N, int lb, int verbose)
   armas_x_init(&taup1, imin(M, N), 1);
 
   conf.lb = lb;
-  if (armas_x_bdreduce_w(&A0, &tauq0, &taup0, &wb, &conf) < 0) {
-    printf("bdreduce: workspace calculation failded\n");
-    return 0;
-  }
-  armas_walloc(&wb, wb.bytes);
-
   // set source data
   armas_x_set_values(&A0, unitrand, ARMAS_ANY);
   armas_x_mcopy(&A1, &A0);
 
   // unblocked reduction
   conf.lb = 0;
-  armas_x_bdreduce_w(&A0, &tauq0, &taup0, &wb, &conf);
+  armas_x_bdreduce(&A0, &tauq0, &taup0, &conf);
 
   // blocked reduction
   conf.lb = lb;
-  armas_x_bdreduce_w(&A1, &tauq1, &taup1, &wb, &conf);
+  armas_x_bdreduce(&A1, &tauq1, &taup1, &conf);
 
   nrm = rel_error((DTYPE *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isFINE(nrm, N*__ERROR);
@@ -67,8 +60,6 @@ int test_reduce(int M, int N, int lb, int verbose)
   armas_x_release(&tauq1);
   armas_x_release(&taup0);
   armas_x_release(&taup1);
-  armas_walloc(&wb, wb.bytes);
-
   return ok;
 }
 
@@ -101,7 +92,7 @@ int test_mult_qpt(int M, int N, int lb, int verbose)
 
   // reduce to bidiagonal matrix
   conf.lb = lb;
-  if (armas_x_bdreduce_w(&A0, &tauq0, &taup0, &wb, &conf) < 0)
+  if (armas_x_bdreduce(&A0, &tauq0, &taup0, &conf) < 0)
     printf("reduce error %d\n", conf.error);
   armas_x_mcopy(&A2, &A0);
 
@@ -124,10 +115,8 @@ int test_mult_qpt(int M, int N, int lb, int verbose)
   }
 
   // A = Q*B*P.T; 
-  if (armas_x_bdmult_w(&B, &A0, &tauq0, ARMAS_LEFT|ARMAS_MULTQ, &wb, &conf) < 0)
-    printf("bdmult left error %d\n", conf.error);
-  if (armas_x_bdmult_w(&B, &A0, &taup0, ARMAS_RIGHT|ARMAS_TRANS|ARMAS_MULTP, &wb, &conf) < 0)
-    printf("bdmult right error %d\n", conf.error);
+  armas_x_bdmult(&B, &A0, &tauq0, ARMAS_LEFT|ARMAS_MULTQ, &conf);
+  armas_x_bdmult(&B, &A0, &taup0, ARMAS_RIGHT|ARMAS_TRANS|ARMAS_MULTP, &conf);
 
   nrm = rel_error((DTYPE *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isFINE(nrm, N*__ERROR);
@@ -175,7 +164,7 @@ int test_mult_qtp(int M, int N, int lb, int verbose)
 
   // reduce to bidiagonal matrix
   conf.lb = lb;
-  armas_x_bdreduce_w(&A0, &tauq0, &taup0, &wb, &conf);
+  armas_x_bdreduce(&A0, &tauq0, &taup0, &conf);
 
   // extract B from A
   armas_x_mcopy(&B, &A0);
@@ -196,8 +185,8 @@ int test_mult_qtp(int M, int N, int lb, int verbose)
   }
 
   // B = Q.T*B*P; 
-  armas_x_bdmult_w(&A1, &A0, &tauq0, ARMAS_LEFT|ARMAS_MULTQ|ARMAS_TRANS, &wb, &conf);
-  armas_x_bdmult_w(&A1, &A0, &taup0, ARMAS_RIGHT|ARMAS_MULTP, &wb,&conf);
+  armas_x_bdmult(&A1, &A0, &tauq0, ARMAS_LEFT|ARMAS_MULTQ|ARMAS_TRANS, &conf);
+  armas_x_bdmult(&A1, &A0, &taup0, ARMAS_RIGHT|ARMAS_MULTP, &conf);
 
   nrm = rel_error((DTYPE *)0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isFINE(nrm, N*__ERROR);
@@ -240,11 +229,11 @@ int test_build_qp(int M, int N, int lb, int K, int flags, int verbose)
 
   // reduce to bidiagonal matrix
   conf.lb = lb;
-  armas_x_bdreduce_w(&A0, &tauq0, &taup0, &wb, &conf);
+  armas_x_bdreduce(&A0, &tauq0, &taup0, &conf);
 
   conf.error = 0;
   if (flags & ARMAS_WANTQ) {
-    armas_x_bdbuild_w(&A0, &tauq0, K, flags, &wb, &conf);
+    armas_x_bdbuild(&A0, &tauq0, K, flags, &conf);
 
     if (M < N) {
       armas_x_init(&QQt, M, M);
@@ -266,7 +255,7 @@ int test_build_qp(int M, int N, int lb, int K, int flags, int verbose)
     }
   } else {
     // P matrix
-    armas_x_bdbuild_w(&A0, &taup0, K, flags, &wb, &conf);
+    armas_x_bdbuild(&A0, &taup0, K, flags, &conf);
 
     if (N < M) {
       armas_x_init(&QQt, N, N);

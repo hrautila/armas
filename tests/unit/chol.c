@@ -41,7 +41,7 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
   armas_x_mcopy(&X0, &B0);
 
   conf.lb = lb;
-  armas_x_cholfactor_w(&A0, ARMAS_NOPIVOT, flags, ARMAS_NOWORK, &conf);
+  armas_x_cholfactor(&A0, ARMAS_NOPIVOT, flags, &conf);
 
   // solve
   armas_x_cholsolve(&X0, &A0, ARMAS_NOPIVOT, flags, &conf);
@@ -81,9 +81,9 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
   armas_x_mcopy(&A0, &A1);
 
   conf.lb = 0; 
-  armas_x_cholfactor_w(&A0, ARMAS_NOPIVOT, flags, ARMAS_NOWORK, &conf);
+  armas_x_cholfactor(&A0, ARMAS_NOPIVOT, flags, &conf);
   conf.lb = lb;
-  armas_x_cholfactor_w(&A1, ARMAS_NOPIVOT, flags,  ARMAS_NOWORK, &conf);
+  armas_x_cholfactor(&A1, ARMAS_NOPIVOT, flags, &conf);
 
   nrm = rel_error((DTYPE *)0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
   ok = isOK(nrm, N);
@@ -104,10 +104,9 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     armas_conf_t conf = *armas_conf_default();
     armas_pivot_t P;
     DTYPE n0, n1;
-    int e, ok, flags1, flags2, pflgs;
+    int ok, flags1, flags2, pflgs;
     char *fact = flags & ARMAS_LOWER ? "P^T*(LL^T)*P" : "P^T*(U^TU)*P";
     char *blk = lb == 0 ? "unblk" : "  blk";
-    armas_wbuf_t wb = ARMAS_WBNULL;
     pflgs = flags & ARMAS_LOWER ? ARMAS_PIVOT_LOWER : ARMAS_PIVOT_UPPER;
     
     armas_x_init(&A0, N, N);
@@ -122,18 +121,9 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     armas_x_mult(0.0, &A1, 1.0, &A0, &A0, ARMAS_TRANSA, &conf);
     armas_x_make_trm(&A1, flags);
     armas_x_mcopy(&A0, &A1);
-    if (N < 10) {
-        printf("A:\n"); armas_x_printf(stdout, "%6.3f", &A0);
-    }
 
     conf.lb = lb;
-    if ((e = armas_x_cholfactor_w(&A0, &P, flags, &wb, &conf)) < 0) {
-        printf("..%s.workspace error %d [%d]\n", blk, conf.error, e);
-    }
-    armas_walloc(&wb, wb.bytes);
-    if ((e = armas_x_cholfactor_w(&A0, &P, flags, &wb, &conf)) < 0) {
-        printf("..%s.factor error %d [%d]\n", blk, conf.error, e);
-    }
+    armas_x_cholfactor(&A0, &P, flags, &conf);
     
     if (flags & ARMAS_LOWER) {
         flags1 = ARMAS_LOWER|ARMAS_RIGHT;
@@ -147,14 +137,9 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     armas_x_mult_trm(&C, 1.0, &A0, flags1, &conf);
     armas_x_mult_trm(&C, 1.0, &A0, flags2, &conf);
     armas_x_make_trm(&C, flags);
-    if (N < 10 && verbose > 1) {
-        printf("(1) LL.T or U.TU:\n"); armas_x_printf(stdout, "%6.3f", &C);
-        printf("P:\n"); armas_pivot_printf(stdout, "%d", &P);
-    }
+
     armas_x_pivot(&C, &P, pflgs|ARMAS_PIVOT_BACKWARD, &conf);
-    if (N < 10 && verbose > 1) {
-        printf("(2) pivoted: \n"); armas_x_printf(stdout, "%6.3f", &C);
-    }
+
     n0 = rel_error(&n1, &C, &A1, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
     printf("%s : %s.%s = A\n", PASS(ok), blk, fact);
@@ -166,7 +151,6 @@ int test_cholpv(int N, int lb, int flags, int verbose)
     armas_x_release(&C);
     armas_x_release(&W);
     armas_pivot_release(&P);
-    armas_wrelease(&wb);
     return ok;
 }
 
@@ -179,7 +163,6 @@ int test_cholpv_solve(int M, int N, int lb, int flags, int verbose)
     int e, ok;
     char *fact = flags & ARMAS_LOWER ? "LL^T" : "U^TU";
     char *blk = lb == 0 ? "unblk" : "  blk";
-    armas_wbuf_t wb = ARMAS_WBNULL;
     
     armas_x_init(&A0, N, N);
     armas_x_init(&A1, N, N);
@@ -198,19 +181,10 @@ int test_cholpv_solve(int M, int N, int lb, int flags, int verbose)
     armas_x_mult(0.0, &B, 1.0, &A1, &B0, 0, &conf);
 
     conf.lb = lb;
-    if ((e = armas_x_cholfactor_w(&A0, &P0, flags, &wb, &conf)) < 0) {
-        printf("..%s.workspace error %d [%d]\n", blk, conf.error, e);
-    }
-    armas_walloc(&wb, wb.bytes);
-
-    if ((e = armas_x_cholfactor_w(&A0, &P0, flags, &wb, &conf)) < 0) 
-        printf("Error: factoring error %d, [%d]\n", conf.error, e);
+    armas_x_cholfactor(&A0, &P0, flags, &conf);
 
     if ((e = armas_x_cholsolve(&B, &A0, &P0, flags, &conf)) < 0)
         printf("Error: solver error %d, [%d]\n", conf.error, e);
-    if (N < 10) {
-        printf("(%s)^-1*B:\n", fact); armas_x_printf(stdout, "%6.3f", &B);
-    }
     
     n0 = rel_error(&n1, &B, &B0, ARMAS_NORM_INF, 0, &conf);
     ok = isFINE(n0, N*__ERROR);
@@ -222,7 +196,6 @@ int test_cholpv_solve(int M, int N, int lb, int flags, int verbose)
     armas_x_release(&A1);
     armas_x_release(&B);
     armas_x_release(&B0);
-    armas_x_release(&W);
     armas_pivot_release(&P0);
     return ok;
 }
