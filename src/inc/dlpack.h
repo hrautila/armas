@@ -420,7 +420,6 @@
 // Bidiagonal SVD
 #define armas_x_bdsvd           armas_d_bdsvd
 #define armas_x_bdsvd_w         armas_d_bdsvd_w
-#define armas_x_bdsvd_work      armas_d_bdsvd_work
 #define armas_x_dqds            armas_d_dqds
 #define armas_x_dqds_w          armas_d_dqds_w
 
@@ -433,7 +432,6 @@
 // SVD
 #define armas_x_svd		armas_d_svd
 #define armas_x_svd_w           armas_d_svd_w
-#define armas_x_svd_work	armas_d_svd_work
 
 // Butterfly
 #define armas_x_gen_rbt         armas_d_gen_rbt

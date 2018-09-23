@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_svd) && defined(armas_x_svd_work)
+#if defined(armas_x_svd) && defined(armas_x_svd_w)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires at least following external public functions
@@ -510,20 +510,26 @@ int armas_x_svd(armas_x_dense_t *S, armas_x_dense_t *U, armas_x_dense_t *V,
         conf->error = ARMAS_EWORK;
         return -1;
     }
-    if (wb.bytes <= ARMAS_MAX_ONSTACK_WSPACE) {
+    if (wb.bytes > 0 && wb.bytes <= ARMAS_MAX_ONSTACK_WSPACE) {
         char b[ARMAS_MAX_ONSTACK_WSPACE];
-        armas_wbuf_t wbs = (armas_wbuf_t){
+        armas_wbuf_t wbt = (armas_wbuf_t){
             .buf = b,
             .offset = 0,
             .bytes = ARMAS_MAX_ONSTACK_WSPACE
         };
-        err = armas_x_svd_w(S, U, V, A, flags, &wbs, conf);        
+        err = armas_x_svd_w(S, U, V, A, flags, &wbt, conf);        
     } else {
-        if (!armas_walloc(&wb, wb.bytes)) {
-            conf->error = ARMAS_EMEMORY;
-            return -1;
+        armas_wbuf_t *wbs = &wb;
+        if (wb.bytes > 0) {
+            if (!armas_walloc(&wb, wb.bytes)) {
+                conf->error = ARMAS_EMEMORY;
+                return -1;
+            }
         }
-        err = armas_x_svd_w(S, U, V, A, flags, &wb, conf);
+        else
+            wbs = ARMAS_NOWORK;
+
+        err = armas_x_svd_w(S, U, V, A, flags, wbs, conf);
         armas_wrelease(&wb);
     }
 
@@ -584,6 +590,8 @@ int armas_x_svd_w(armas_x_dense_t *S,
         return -1;
     }
 
+    tall = A->rows >= A->cols;
+
     if (wb && wb->bytes == 0) {
         int P = A->rows >= A->cols ? A->cols : A->rows;
         int K = A->rows >= A->cols ? A->rows : A->cols;
@@ -593,13 +601,17 @@ int armas_x_svd_w(armas_x_dense_t *S,
             wb->bytes = (K + conf->lb) * conf->lb * sizeof(DTYPE);
         return 0;
     }
-    tall = A->rows >= A->cols;
 
     if (tall && armas_x_size(S) < A->cols) {
         conf->error = ARMAS_ESIZE;
         return -1;
     } else if (!tall && armas_x_size(S) < A->rows) {
         conf->error = ARMAS_ESIZE;
+        return -1;
+    }
+
+    if (!wb) {
+        conf->error = ARMAS_EWORK;
         return -1;
     }
 
@@ -669,47 +681,6 @@ int armas_x_svd_w(armas_x_dense_t *S,
     }
     return err;
 }
-
-#if 0
-int armas_x_svd_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
-{
-    armas_x_dense_t Tmp;
-    int ws, s0;
-    ws = armas_x_bdreduce_work(A, conf);
-    if (!(flags & (ARMAS_WANTU|ARMAS_WANTV)))
-        return ws;
-    
-    // singular vectors wanted
-    s0 = armas_x_bdsvd_work(A, conf);
-    if (s0 > ws)
-        ws = s0;
-
-    // tall matrix
-    if (A->rows >= A->cols) {
-        if (flags & ARMAS_WANTU) {
-            ws = __IMAX(ws, armas_x_qrfactor_work(A, conf));
-            armas_x_make(&Tmp, A->rows, A->rows, A->rows, (DTYPE *)0);
-            ws = __IMAX(ws, armas_x_qrmult_work(&Tmp, ARMAS_LEFT, conf));
-        }
-        if (flags & ARMAS_WANTV) {
-            armas_x_make(&Tmp, A->cols, A->cols, A->cols, (DTYPE *)0);
-            ws = __IMAX(ws, armas_x_qrbuild_work(A, conf));
-        }
-        return ws;
-    }
-    // wide matrix
-    if (flags & ARMAS_WANTV) {
-        ws = __IMAX(ws, armas_x_lqfactor_work(A, conf));
-        armas_x_make(&Tmp, A->rows, A->rows, A->rows, (DTYPE *)0);
-        ws = __IMAX(ws, armas_x_lqmult_work(&Tmp, ARMAS_LEFT, conf));
-    }
-    if (flags & ARMAS_WANTU) {
-        armas_x_make(&Tmp, A->cols, A->cols, A->cols, (DTYPE *)0);
-        ws = __IMAX(ws, armas_x_lqbuild_work(A, conf));
-    }
-    return ws;
-}
-#endif
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
 

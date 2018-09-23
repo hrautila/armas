@@ -987,40 +987,58 @@ int armas_x_scale_to(armas_x_dense_t *A, DTYPE from, DTYPE to, int flags, armas_
     return 0;
 }
 
-int armas_x_dqds(armas_x_dense_t *D, armas_x_dense_t *E, armas_conf_t *conf)
-{
-    int err = 0;
-    armas_wbuf_t wb = ARMAS_WBNULL;
-    
-    if (!conf)
-        conf = armas_conf_default();
-    if (armas_x_dqds_w(D, E, &wb, conf) < 0)
-        return -1;
-    if (wb.bytes <= ARMAS_MAX_ONSTACK_WSPACE) {
-        char b[ARMAS_MAX_ONSTACK_WSPACE];
-        armas_wbuf_t wbs = (armas_wbuf_t){
-            .buf = b,
-            .offset = 0,
-            .bytes = ARMAS_MAX_ONSTACK_WSPACE
-        };
-        err = armas_x_dqds_w(D, E, &wbs, conf);
-    }
-    else {
-        armas_walloc(&wb, wb.bytes);
-        err = armas_x_dqds_w(D, E, &wb, conf);
-        armas_wrelease(&wb);
-    }
-    return err;
-}
-
-/*
+/**
  * \brief Compute singular values of bidiagonal matrix using the DQDS algorithm.
  *
  * \param[in,out] D
  *      On entry, the diagonal elements. On exit singular values in descending order
  * \param[in,out] E
  *      On entry off-diagonal elements
- * \param[in]  W
+ * \param[in]  conf
+ *      Configuration block
+ */
+int armas_x_dqds(armas_x_dense_t *D, armas_x_dense_t *E, armas_conf_t *conf)
+{
+    int err = 0;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
+    
+    if (!conf)
+        conf = armas_conf_default();
+    if (armas_x_dqds_w(D, E, &wb, conf) < 0)
+        return -1;
+    if (wb.bytes > 0 && wb.bytes <= ARMAS_MAX_ONSTACK_WSPACE) {
+        char b[ARMAS_MAX_ONSTACK_WSPACE];
+        armas_wbuf_t wbt = (armas_wbuf_t){
+            .buf = b,
+            .offset = 0,
+            .bytes = ARMAS_MAX_ONSTACK_WSPACE
+        };
+        err = armas_x_dqds_w(D, E, &wbt, conf);
+    }
+    else {
+        wbs = &wb;
+        if (wb.bytes > 0) {
+            if (!armas_walloc(&wb, wb.bytes)) {
+                conf->error = ARMAS_EWORK;
+                return -1;
+            }
+        }
+        else
+            wbs = ARMAS_NOWORK;
+        err = armas_x_dqds_w(D, E, wbs, conf);
+        armas_wrelease(&wb);
+    }
+    return err;
+}
+
+/**
+ * \brief Compute singular values of bidiagonal matrix using the DQDS algorithm.
+ *
+ * \param[in,out] D
+ *      On entry, the diagonal elements. On exit singular values in descending order
+ * \param[in,out] E
+ *      On entry off-diagonal elements
+ * \param[in]  wb
  *      Workspace, required size is 4*N
  * \param[in]  conf
  *      Configuration block

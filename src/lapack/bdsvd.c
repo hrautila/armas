@@ -13,7 +13,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_bdsvd) 
+#if defined(armas_x_bdsvd) && defined(armas_x_bdsvd_w)
 #define __ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
