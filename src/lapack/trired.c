@@ -33,12 +33,6 @@
 #define ARMAS_BLOCKING_MIN 32
 #endif
 
-static inline
-int __ws_trdreduce(int M, int N, int lb)
-{
-  return lb == 0 ? M : lb*M;
-}
-
 /*
  * (1) G.Van Zee, R. van de Geijn
  *       Algorithms for Reducing a Matrix to Condensed Form
@@ -538,9 +532,6 @@ int __blk_trdreduce_upper(armas_x_dense_t *A, armas_x_dense_t *tauq,
  * \param[out] tauq
  *      Scalar coefficients of elementary reflectors.
  *
- * \param[in] W
- *      Workspace
- *
  * \param[in] flags
  *      ARMAS_LOWER or ARMAS_UPPER
  *
@@ -566,32 +557,29 @@ int __blk_trdreduce_upper(armas_x_dense_t *A, armas_x_dense_t *tauq,
  */
 int armas_x_trdreduce(armas_x_dense_t *A,
                       armas_x_dense_t *tauq,
-                      armas_x_dense_t *W,
                       int flags,
                       armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_trdreduce_w(A, tauq, flags, &wb, conf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    conf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      conf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_trdreduce_w(A, tauq, flags, &wb, conf);
+  else
+    wbs = ARMAS_NOWORK;
+  
+  int stat = armas_x_trdreduce_w(A, tauq, flags, wbs, conf);
   armas_wrelease(&wb);
   return stat;
-}
-
-//! \brief Workspace size for trdreduce().
-int armas_x_trdreduce_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-  if (!conf)
-    conf = armas_conf_default();
-  return __ws_trdreduce(A->rows, A->cols, conf->lb);
 }
 
 /**
@@ -729,12 +717,10 @@ int armas_x_trdreduce_w(armas_x_dense_t *A,
  * \param[in,out] C
  *    On entry matrix C. On exit product of C and orthogonal matrix Q.
  * \param[in] A
- *    Orthogonal matrix C as elementary reflectors saved in upper (lower) triangular
+ *    Orthogonal matrix A as elementary reflectors saved in upper (lower) triangular
  *    part of A. See trdreduce().
  * \param[in] tau
  *    Scalar coeffients of elementary reflectors.
- * \param[out] W
- *    Workspace
  * \param[in] flags
  *    Indicator flags, combination of *ARMAS_LOWER*, *ARMAS_UPPER*, *ARMAS_LEFT*,
  *    *ARMAS_RIGHT* and *ARMAS_TRANS*.
@@ -745,38 +731,32 @@ int armas_x_trdreduce_w(armas_x_dense_t *A,
  * \retval -1 Error
  */
 int armas_x_trdmult(armas_x_dense_t *C,
-                    armas_x_dense_t *A,
-                    armas_x_dense_t *tau,
-                    armas_x_dense_t *W,
+                    const armas_x_dense_t *A,
+                    const armas_x_dense_t *tau,
                     int flags,
                     armas_conf_t *conf)
 {
   if (!conf)
     conf = armas_conf_default();
 
-  armas_wbuf_t wb = ARMAS_WBNULL;
+  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
   if (armas_x_trdmult_w(C, A, tau, flags, &wb, conf) < 0)
     return -1;
 
-  if (!armas_walloc(&wb, wb.bytes)) {
-    conf->error = ARMAS_EMEMORY;
-    return -1;
+  wbs = &wb;
+  if (wb.bytes > 0) {
+    if (!armas_walloc(&wb, wb.bytes)) {
+      conf->error = ARMAS_EMEMORY;
+      return -1;
+    }
   }
-  int stat = armas_x_trdmult_w(C, A, tau, flags, &wb, conf);
+  else
+    wbs = ARMAS_NOWORK;
+  
+  int stat = armas_x_trdmult_w(C, A, tau, flags, wbs, conf);
   armas_wrelease(&wb);
   return stat;
 }
-
-#if 0
-//! \brief Workspace size for trdmult().
-int armas_x_trdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
-{
-  if (flags & ARMAS_UPPER)
-    return armas_x_qlmult_work(A, flags, conf);
-  return armas_x_qrmult_work(A, flags, conf);
-}
-#endif
-
 
 /**
  * @brief Multiply matrix C with orthogonal matrix Q.
@@ -791,7 +771,7 @@ int armas_x_trdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf)
  * @param[in] flags
  *    Indicator flags, combination of *ARMAS_LOWER*, *ARMAS_UPPER*, *ARMAS_LEFT*,
  *    *ARMAS_RIGHT* and *ARMAS_TRANS*.
- * @param[out] W
+ * @param[out] wb
  *    Workspace
  * @param[in] conf
  *    Blocking configuration
@@ -836,6 +816,11 @@ int armas_x_trdmult_w(armas_x_dense_t *C,
     return -1;
   }
 
+  if (!wb) {
+    conf->error = ARMAS_EWORK;
+    return -1;
+  }
+  
   if (flags & ARMAS_UPPER) {
     if (flags & ARMAS_RIGHT) {
       armas_x_submatrix(&Ch, C, 0, 0, C->rows, C->cols-1);

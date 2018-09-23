@@ -175,8 +175,6 @@ int __trdevd_qr(armas_x_dense_t *D, armas_x_dense_t *E,
  * \param[in,out] V
  *      On entry, initial orthogonal matrix of eigenvectors. On exit,
  *      updated eigenvectors.
- * \param[out] W
- *      Workspace of size 2*N.
  * \param[in] flags
  *      Indicators *ARMAS_WANTV*
  * \param[in,out] conf
@@ -188,7 +186,6 @@ int __trdevd_qr(armas_x_dense_t *D, armas_x_dense_t *E,
 int armas_x_trdeigen(armas_x_dense_t *D,
                      armas_x_dense_t *E,
                      armas_x_dense_t *V,
-                     armas_x_dense_t *W,
                      int flags,
                      armas_conf_t *conf)
 {

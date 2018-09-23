@@ -40,8 +40,6 @@
  *    the orthogonal matrix Q.
  * @param tau [in]
  *    Scalar coefficients of the elementary reflectors.
- * @param W   [in]
- *    Workspace
  * @param K  [in]
  *    Number of elementary reflector that define the Q matrix, n(A) > K > 0
  * @param flags [in]
@@ -53,8 +51,7 @@
  *    0 on success, -1 on failure and sets conf.error value.
  */
 int armas_x_trdbuild(armas_x_dense_t *A,
-                     armas_x_dense_t *tau,
-                     armas_x_dense_t *W,
+                     const armas_x_dense_t *tau,
                      int K,
                      int flags,
                      armas_conf_t *conf)
@@ -62,27 +59,24 @@ int armas_x_trdbuild(armas_x_dense_t *A,
     if (!conf)
         conf = armas_conf_default();
 
-    armas_wbuf_t wb = ARMAS_WBNULL;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
     if (armas_x_trdbuild_w(A, tau, K, flags, &wb, conf) < 0)
         return -1;
     
-    if (!armas_walloc(&wb, wb.bytes)) {
-        conf->error = ARMAS_EMEMORY;
-        return -1;
+    wbs = &wb;
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
+            return -1;
+        }
     }
-    int stat = armas_x_trdbuild_w(A, tau, K, flags, &wb, conf);
+    else
+        wbs = ARMAS_NOWORK;
+    
+    int stat = armas_x_trdbuild_w(A, tau, K, flags, wbs, conf);
     armas_wrelease(&wb);
     return stat;
 }
-
-int armas_x_trdbuild_work(armas_x_dense_t *A, armas_conf_t *conf)
-{
-    if (!conf)
-        conf = armas_conf_default();
-    // QR, QL workspace requirements same
-    return armas_x_qrbuild_work(A, conf);
-}
-
 
 /**
  * @brief Generate orthogonal matrix Q for tridiagonally reduced matrix.

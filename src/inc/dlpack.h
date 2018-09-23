@@ -391,13 +391,10 @@
 // Tridiagonalization functions
 #define armas_x_trdreduce       armas_d_trdreduce
 #define armas_x_trdreduce_w     armas_d_trdreduce_w
-#define armas_x_trdreduce_work  armas_d_trdreduce_work
 #define armas_x_trdbuild        armas_d_trdbuild
 #define armas_x_trdbuild_w      armas_d_trdbuild_w
-#define armas_x_trdbuild_work   armas_d_trdbuild_work
 #define armas_x_trdmult         armas_d_trdmult
 #define armas_x_trdmult_w       armas_d_trdmult_w
-#define armas_x_trdmult_work    armas_d_trdmult_work
 // Tridiagonal EVD
 #define armas_x_trdeigen        armas_d_trdeigen
 #define armas_x_trdeigen_w      armas_d_trdeigen_w

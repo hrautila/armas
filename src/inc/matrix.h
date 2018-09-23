@@ -684,12 +684,11 @@ extern int armas_x_rqsolve_w(armas_x_dense_t *B, const armas_x_dense_t *A, const
                              int flags, armas_wbuf_t *W, armas_conf_t *conf);
 
 // Tridiagonal reduction
-extern int armas_x_trdreduce(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *W,
-                             int flags, armas_conf_t *conf);
-extern int armas_x_trdbuild(armas_x_dense_t *A, armas_x_dense_t *tau,
-                            armas_x_dense_t *W, int K, int flags, armas_conf_t *conf);
-extern int armas_x_trdmult(armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *tau,
-                           armas_x_dense_t *W, int flags, armas_conf_t *conf);
+extern int armas_x_trdreduce(armas_x_dense_t *A, armas_x_dense_t *tau, int flags, armas_conf_t *conf);
+extern int armas_x_trdbuild(armas_x_dense_t *A, const armas_x_dense_t *tau,
+                            int K, int flags, armas_conf_t *conf);
+extern int armas_x_trdmult(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
+                           int flags, armas_conf_t *conf);
 extern int armas_x_trdreduce_w(armas_x_dense_t *A, armas_x_dense_t *tau, int flags,
                                armas_wbuf_t *wrk, armas_conf_t *conf);
 extern int armas_x_trdbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau,
@@ -697,12 +696,8 @@ extern int armas_x_trdbuild_w(armas_x_dense_t *A, const armas_x_dense_t *tau,
 extern int armas_x_trdmult_w(armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau,
                              int flags, armas_wbuf_t *wrk, armas_conf_t *conf);
 
-extern int armas_x_trdreduce_work(armas_x_dense_t *A, armas_conf_t *conf);
-extern int armas_x_trdmult_work(armas_x_dense_t *A, int flags, armas_conf_t *conf);
-extern int armas_x_trdbuild_work(armas_x_dense_t *A, armas_conf_t *conf);
-
 extern int armas_x_trdeigen(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *V,
-                            armas_x_dense_t *W, int flags, armas_conf_t *conf);
+                            int flags, armas_conf_t *conf);
 extern int armas_x_trdeigen_w(armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *V,
                               int flags, armas_wbuf_t *wb, armas_conf_t *conf);
 extern int armas_x_trdbisect(armas_x_dense_t *Y, armas_x_dense_t *D, armas_x_dense_t *E,
