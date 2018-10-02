@@ -258,7 +258,7 @@ int armas_x_mmload(armas_x_dense_t *A, int *flags,  FILE *f)
 {
     int typecode;
     int m, n, nc, nnz, r, c, nelem, nread, k;
-    char *iobuf, *endptr;
+    char *iobuf;
     size_t ioblen;
     double v;
     
