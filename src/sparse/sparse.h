@@ -35,6 +35,7 @@ extern "C" {
         ARMASSP_COO = 2
     } armassp_type_enum;
     
+#if 0
     enum armas_mmbits {
         ARMAS_MM_HEADER       = 0x1,
         ARMAS_MM_MATRIX       = 0x2,
@@ -47,6 +48,7 @@ extern "C" {
         ARMAS_MM_HERMITIAN    = 0x100,
         ARMAS_MM_GENERAL      = 0x200
     };
+#endif
     
     typedef struct coo_elem {
         DTYPE val;
