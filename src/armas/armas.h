@@ -139,6 +139,22 @@ enum armas_norms {
   ARMAS_NORM_FRB = 4
 };
 
+/**
+ * @brief Matrix I/O bits
+ */
+enum armas_mmbits {
+  ARMAS_MM_HEADER       = 0x1,
+  ARMAS_MM_MATRIX       = 0x2,
+  ARMAS_MM_REAL         = 0x4,
+  ARMAS_MM_COMPLEX      = 0x8,
+  ARMAS_MM_INTEGER      = 0x10,
+  ARMAS_MM_ARRAY        = 0x20,
+  ARMAS_MM_COORDINATE   = 0x40,
+  ARMAS_MM_SYMMETRIC    = 0x80,
+  ARMAS_MM_HERMITIAN    = 0x100,
+  ARMAS_MM_GENERAL      = 0x200
+};
+
 #ifndef MAX_CPU
 #define MAX_CPU 128
 #endif

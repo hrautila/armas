@@ -115,6 +115,8 @@ extern int armas_x_sub_elems(armas_x_dense_t *A, const armas_x_dense_t *B, int f
 extern int armas_x_apply(armas_x_dense_t *A, armas_x_operator_t func, int flags);
 extern int armas_x_apply2(armas_x_dense_t *A, armas_x_operator2_t func, DTYPE val, int flags);
   
+extern int armas_x_mmload(armas_x_dense_t *A, int *flags, FILE *f);
+extern int armas_x_mmdump(FILE *f, const armas_x_dense_t *A, int flags);
 
 // -------------------------------------------------------------------------------------------
 // inline functions
@@ -460,6 +462,12 @@ int armas_x_index(const armas_x_dense_t *m, int row, int col)
   if (col < 0)
     col += m->cols;
   return col*m->step + row;
+}
+
+__ARMAS_INLINE
+int armas_x_index_unsafe(const armas_x_dense_t *m, int row, int col)
+{
+  return m ? col*m->step + row : 0;
 }
 
 //! \brief Get data buffer

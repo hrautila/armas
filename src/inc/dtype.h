@@ -522,6 +522,9 @@ typedef double ABSTYPE;
 #define armas_x_div_elems     armas_d_div_elems
 #define armas_x_apply         armas_d_apply
 #define armas_x_apply2        armas_d_apply2
+// I/O functions
+#define armas_x_mmload	      armas_d_mmload
+#define armas_x_mmdump	      armas_d_mmdump
 
 #define armas_x_submatrix_unsafe  armas_d_submatrix_unsafe
 #define armas_x_subvector_unsafe  armas_d_subvector_unsafe

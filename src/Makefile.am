@@ -73,7 +73,8 @@ CORE = \
 	core/msub.c \
 	core/mmul.c \
 	core/mdiv.c \
-	core/mapply.c 
+	core/mapply.c \
+	core/iomm.c
 
 
 
