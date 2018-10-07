@@ -59,7 +59,9 @@ COMMON = \
 	core/support.c \
 	core/sched.c \
 	core/cache.c \
-	core/pivot_ext.c
+	core/pivot_ext.c \
+	core/json_reader.c \
+	core/json_writer.c
 
 CORE = \
 	core/matrix.c \
@@ -74,7 +76,9 @@ CORE = \
 	core/mmul.c \
 	core/mdiv.c \
 	core/mapply.c \
-	core/iomm.c
+	core/iomm.c \
+	core/json_base.c \
+	core/json_file.c
 
 
 

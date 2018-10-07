@@ -155,6 +155,21 @@ enum armas_mmbits {
   ARMAS_MM_GENERAL      = 0x200
 };
 
+  /** 
+   * @brief JSON parser tokens excluding simple tokens '{', '}', '[', ']', ':', ','
+   */
+  enum armas_json_tokens {
+    ARMAS_JSON_STRING = 0x7fffff,
+    ARMAS_JSON_INT,
+    ARMAS_JSON_NUMBER,
+    ARMAS_JSON_TRUE,
+    ARMAS_JSON_FALSE,
+    ARMAS_JSON_NULL,
+    ARMAS_JSON_EINVAL,
+    ARMAS_JSON_E2BIG,
+    ARMAS_JSON_EOF
+  };
+  
 #ifndef MAX_CPU
 #define MAX_CPU 128
 #endif
@@ -211,6 +226,72 @@ extern armas_cbuf_t *armas_cbuf_get(armas_conf_t *conf);
 extern armas_cbuf_t *armas_cbuf_init(armas_cbuf_t *cbuf, size_t cmem, size_t l1mem);
 extern armas_cbuf_t *armas_cbuf_make(armas_cbuf_t *cbuf, void *buf, size_t cmem, size_t l1mem);
 extern void armas_cbuf_release(armas_cbuf_t *cbuf);
+
+/**
+ * @brief I/O stream functions
+ */
+typedef struct armas_iostream_vtable {
+    int (*get_char)(void *stream);
+    void (*unget_char)(void *stream, int c);
+    int (*put_char)(void *stream, int c);
+} armas_iostream_vtable_t;
+
+/**
+ * @brief Very simple I/O stream
+ */
+typedef struct armas_iostream {
+    void *uptr;
+    armas_iostream_vtable_t *vt;
+} armas_iostream_t;
+
+/**
+ * @brief Initialize I/O stream
+ */
+__ARMAS_INLINE
+void armas_iostream_init(armas_iostream_t *iostream, armas_iostream_vtable_t *vt, void *ptr)
+{
+  if (iostream) {
+    iostream->uptr = ptr;
+    iostream->vt = vt;
+  }
+}
+
+/**
+ * @brief Get character from input stream
+ */
+__ARMAS_INLINE
+int armas_getchar(armas_iostream_t *stream)
+{
+  if (!stream)
+    return -1;
+  return stream->vt->get_char(stream->uptr);
+}
+
+/**
+ * @brief Put character back to input stream
+ */
+__ARMAS_INLINE
+void armas_ungetchar(armas_iostream_t *stream, int c)
+{
+  if (!stream)
+    return;
+  stream->vt->unget_char(stream->uptr, c);
+}
+
+/**
+ * @brief Put character to output stream
+ */
+__ARMAS_INLINE
+int armas_putchar(armas_iostream_t *stream, int c)
+{
+  if (!stream)
+    return -1;
+  return stream->vt->put_char(stream->uptr, c);
+}
+
+extern int armas_json_read_token(char *iobuf, size_t len, armas_iostream_t *ios);
+extern int armas_json_write_token(int tok, const void *ptr, size_t len, armas_iostream_t *ios);
+extern int armas_json_write_simple_token(int tok, armas_iostream_t *ios);
 
 
 // pivot vectors

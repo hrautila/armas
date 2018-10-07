@@ -525,6 +525,10 @@ typedef double ABSTYPE;
 // I/O functions
 #define armas_x_mmload	      armas_d_mmload
 #define armas_x_mmdump	      armas_d_mmdump
+#define armas_x_json_dump     armas_d_json_dump
+#define armas_x_json_load     armas_d_json_load
+#define armas_x_json_read     armas_d_json_read
+#define armas_x_json_write    armas_d_json_write
 
 #define armas_x_submatrix_unsafe  armas_d_submatrix_unsafe
 #define armas_x_subvector_unsafe  armas_d_subvector_unsafe
