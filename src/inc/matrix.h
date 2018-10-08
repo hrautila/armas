@@ -117,9 +117,9 @@ extern int armas_x_apply2(armas_x_dense_t *A, armas_x_operator2_t func, DTYPE va
   
 extern int armas_x_mmload(armas_x_dense_t *A, int *flags, FILE *f);
 extern int armas_x_mmdump(FILE *f, const armas_x_dense_t *A, int flags);
-extern int armas_x_json_read(armas_x_dense_t *A, armas_iostream_t *ios);
+extern int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios);
 extern int armas_x_json_write(armas_iostream_t *ios, const armas_x_dense_t *A, int flags);
-extern int armas_x_json_load(armas_x_dense_t *A, FILE *fp);
+extern int armas_x_json_load(armas_x_dense_t **A, FILE *fp);
 extern int armas_x_json_dump(FILE *fp, const armas_x_dense_t *A, int flags);
   
 // -------------------------------------------------------------------------------------------

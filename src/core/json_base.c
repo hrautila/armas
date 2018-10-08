@@ -48,8 +48,13 @@
  */
 int armas_x_json_write(armas_iostream_t *ios, const armas_x_dense_t *A, int flags)
 {
-    if (!A || !ios)
+    if (!ios)
         return -1;
+
+    if (!A) {
+        JSON_ONERROR(armas_json_write_simple_token(ARMAS_JSON_NULL, ios));
+        return 0;
+    }
 
     JSON_ONERROR(armas_json_write_simple_token('{', ios));
     JSON_ONERROR(armas_json_write_token(ARMAS_JSON_STRING, "rows", 4, ios));
@@ -123,31 +128,49 @@ enum {
  *    Simple JSON stream.
  * 
  *  Reads JSON serialization of matrix from defined stream starting from
- *  current position. On exit stream is positioned at first character of JSON 
+ *  current position. On exit stream is positioned at first character after the JSON 
  *  serialization of matrix.
  *
+ * TODO: null matrix? is it: null | "{}"? Is it same as {"rows":0, "cols":0,...}
+ * Should we return pointer to new matrix? Maybe A is armas_x_dense_t ** and
+ * if *A == null we allocate, otherwise we deserialize into provided space.
  */
-int armas_x_json_read(armas_x_dense_t *A, armas_iostream_t *ios)
+int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
 {
     char iob[64];
     int tok;
     int member_bits = 0;
     int state = MEMBER_KEY;
-    int rows, cols, nnz, flags;
+    int rows, cols, nnz, flags, ntok;
+    armas_x_dense_t *aa;
 
     rows = cols = nnz = flags = 0;
     
+    aa = *A;
     tok = armas_json_read_token(iob, sizeof(iob), ios);
+    if (tok == ARMAS_JSON_NULL) {
+        // if pointer to matrix provided set it to null.
+        if (aa)
+            *A = (armas_x_dense_t *)0;
+        return 0;
+    }
     if (tok != '{') {
         return -1;
     }
     // expect: rows|cols|flags|nnz ':' val
-    for (; state != MEMBER_DTA_VAL ;) {
+    for (ntok = 0; state != MEMBER_DTA_VAL ; ntok++) {
         tok = armas_json_read_token(iob, sizeof(iob), ios);
         switch (state) {
         case MEMBER_KEY:
-            if (tok != ARMAS_JSON_STRING)
+            if (tok != ARMAS_JSON_STRING) {
+                if (ntok == 0 && tok == '}') {
+                    // we have null matrix
+                    if (aa)
+                        *A = (armas_x_dense_t *)0;
+                    return 0;
+                }
                 return -1;
+            }
             if (strncmp(iob, "rows", 4) == 0) {
                 if ((member_bits & HAVE_ROWS) != 0)
                     return -4;
@@ -256,18 +279,24 @@ int armas_x_json_read(armas_x_dense_t *A, armas_iostream_t *ios)
         return -1;
     }
 
-    armas_x_init(A, rows, cols);
+    int have_new = 0;
+    if (aa) {
+        armas_x_init(aa, rows, cols);
+    } else {
+        aa = armas_x_alloc(rows, cols);
+        have_new = 1;
+    }
     int n = 0;
     double dval;
     for (int j = 0; j < cols; j++) {
         for (int i = 0; i < rows; i++, n++) {
             if (n > 0) {
                 if ((tok = armas_json_read_token(iob, sizeof(iob), ios)) != ',') 
-                    return -1;
+                    goto error_exit;
             }
             tok = armas_json_read_token(iob, sizeof(iob), ios);
             if (tok != ARMAS_JSON_NUMBER && tok != ARMAS_JSON_INT)
-                return -1;
+                goto error_exit;
             switch (tok) {
             case ARMAS_JSON_INT:
                 dval = (double)atoi(iob);
@@ -276,16 +305,28 @@ int armas_x_json_read(armas_x_dense_t *A, armas_iostream_t *ios)
                 dval = strtod(iob, (char **)0);
                 break;
             }
-            armas_x_set_unsafe(A, i, j, dval);
+            armas_x_set_unsafe(aa, i, j, dval);
         }
     }
     // end of array
     if (armas_json_read_token(iob, sizeof(iob), ios) != ']')
-        return -1;
+        goto error_exit;
+
     // end of object
-    if (armas_json_read_token(iob, sizeof(iob), ios) != '}')
-        return -1;
-    return 0;
+    if (armas_json_read_token(iob, sizeof(iob), ios) == '}') {
+        // return the new matrix to caller
+        if (have_new)
+            *A = aa;
+        return 0;
+    }
+    
+ error_exit:
+    // release reserved space
+    if (have_new)
+        armas_x_free(aa);
+    else
+        armas_x_release(aa);
+    return -1;
 }
 
 

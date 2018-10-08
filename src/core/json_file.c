@@ -72,7 +72,7 @@ armas_iostream_vtable_t file_vtable = (armas_iostream_vtable_t){
  *  serialization of matrix.
  *
  */
-int armas_x_json_load(armas_x_dense_t *A, FILE *fp)
+int armas_x_json_load(armas_x_dense_t **A, FILE *fp)
 {
     armas_iostream_t reader;
 
