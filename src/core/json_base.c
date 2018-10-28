@@ -212,7 +212,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
             state = MEMBER_ROW_VAL;
             break;
         case MEMBER_ROW_VAL:
-            if (tok != ARMAS_JSON_INT)
+            if (tok != ARMAS_JSON_NUMBER)
                 return -1;
             rows = atoi(iob);
             member_bits |= HAVE_ROWS;
@@ -225,7 +225,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
             state = MEMBER_COL_VAL;
             break;
         case MEMBER_COL_VAL:
-            if (tok != ARMAS_JSON_INT)
+            if (tok != ARMAS_JSON_NUMBER)
                 return -1;
             cols = atoi(iob);
             member_bits |= HAVE_COLS;
@@ -238,7 +238,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
             state = MEMBER_NNZ_VAL;
             break;
         case MEMBER_NNZ_VAL:
-            if (tok != ARMAS_JSON_INT)
+            if (tok != ARMAS_JSON_NUMBER)
                 return -1;
             nnz = atoi(iob);
             member_bits |= HAVE_NNZ;
@@ -251,7 +251,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
             state = MEMBER_FLG_VAL;
             break;
         case MEMBER_FLG_VAL:
-            if (tok != ARMAS_JSON_INT)
+            if (tok != ARMAS_JSON_NUMBER)
                 return -1;
             flags = atoi(iob);
             member_bits |= HAVE_FLAGS;
@@ -279,13 +279,14 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
         return -1;
     }
 
-    int have_new = 0;
-    if (aa) {
-        armas_x_init(aa, rows, cols);
-    } else {
-        aa = armas_x_alloc(rows, cols);
-        have_new = 1;
+    int have_new = aa ? 0 : 1;
+    if (have_new) {
+        aa = (armas_x_dense_t *)calloc(1, sizeof(armas_x_dense_t));
+        if (!aa)
+            return -1;
     }
+    armas_x_init(aa, rows, cols);
+
     int n = 0;
     double dval;
     for (int j = 0; j < cols; j++) {
