@@ -747,11 +747,11 @@ extern int armas_x_svd_w(armas_x_dense_t *S, armas_x_dense_t *U, armas_x_dense_t
 
 // Eigen
 extern int armas_x_eigen_sym(armas_x_dense_t *D, armas_x_dense_t *A,
-                             armas_x_dense_t *W, int flags, armas_conf_t *conf); 
+                             int flags, armas_conf_t *conf); 
 extern int armas_x_eigen_sym_w(armas_x_dense_t *D, armas_x_dense_t *A,
                                int flags, armas_wbuf_t *wrk, armas_conf_t *conf); 
-extern int armas_x_eigen_sym_selected(armas_x_dense_t *D, armas_x_dense_t *A, armas_x_dense_t *W, 
-                                      armas_x_eigen_parameter_t *params, int flags, armas_conf_t *conf);
+extern int armas_x_eigen_sym_selected(armas_x_dense_t *D, armas_x_dense_t *A, 
+                                      const armas_x_eigen_parameter_t *params, int flags, armas_conf_t *conf);
 extern int armas_x_eigen_sym_selected_w(armas_x_dense_t *D, armas_x_dense_t *A,
                                         const armas_x_eigen_parameter_t *params,
                                         int flags, armas_wbuf_t *wrk, armas_conf_t *conf);

@@ -72,8 +72,6 @@ int __eigen_sym_small(armas_x_dense_t *D, armas_x_dense_t *A,
  * \param[in,out] A
  *      On entry, symmetric matrix stored in lower or upper triangular part.
  *      On exit, eigenvector if requested, otherwise contents are destroyd.
- * \param[in] W
- *      Workspace, size at least 3*N
  * \param[in] flags
  *      Flag bits, set ARMAS_UPPER (ARMAS_LOWER) if upper (lower) triangular storage
  *      is used. If eigenvectors wanted, set ARMAS_WANTV.
@@ -86,7 +84,6 @@ int __eigen_sym_small(armas_x_dense_t *D, armas_x_dense_t *A,
  */
 int armas_x_eigen_sym(armas_x_dense_t *D,
                       armas_x_dense_t *A,
-                      armas_x_dense_t *W,
                       int flags,
                       armas_conf_t *conf)
 {
@@ -249,8 +246,6 @@ int armas_x_eigen_sym_w(armas_x_dense_t *D,
  * \param[in,out] A
  *      On entry, symmetric matrix stored in lower or upper triangular part.
  *      On exit, matrix reduced to tridiagonal form.
- * \param[in] W
- *      Workspace, size at least 2*N
  * \param[in] flags
  *      Flag bits, set ARMAS_UPPER (ARMAS_LOWER) if upper (lower) triangular storage
  *      is used. If eigenvectors wanted, set ARMAS_WANTV.
@@ -266,8 +261,11 @@ int armas_x_eigen_sym_w(armas_x_dense_t *D,
  *
  * \ingroup lapack
  */
-int armas_x_eigen_sym_selected(armas_x_dense_t *D, armas_x_dense_t *A, armas_x_dense_t *W, 
-                               armas_x_eigen_parameter_t *params, int flags, armas_conf_t *conf)
+int armas_x_eigen_sym_selected(armas_x_dense_t *D,
+                               armas_x_dense_t *A, 
+                               const armas_x_eigen_parameter_t *params,
+                               int flags,
+                               armas_conf_t *conf)
 {
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
