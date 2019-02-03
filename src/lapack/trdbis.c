@@ -26,6 +26,7 @@
 // ------------------------------------------------------------------------------
 
 //! \cond
+#include <math.h>
 #include "internal.h"
 #include "matrix.h"
 #include "internal_lapack.h"
@@ -130,11 +131,10 @@ void __compute_gerschgorin(DTYPE *glow, DTYPE *gup, armas_x_dense_t *D, armas_x_
 
 }
 
+
 /*
  * \brief Compute eigenvalues by serial bisection as described in (1)
  *
- * \param Y
- *      Computed eigenvalues
  * \param D
  *      Diagonal of tridiagonal matrix T
  * \param E
@@ -149,69 +149,51 @@ void __compute_gerschgorin(DTYPE *glow, DTYPE *gup, armas_x_dense_t *D, armas_x_
  *      value of count(right)
  * \param tau
  *      requested precision; must be < max|T_i|*eps
- * \param index
- *      Start index of  current subvector in original
- * \param istart
- *      Index of first requested eigenvalue
  *
- * \retval 0   OK
- * \retval -1  Target vector Y too small
+ * \retval eigenvalue or NaN
  */
 static
-int __trd_bisect(armas_x_dense_t *Y, armas_x_dense_t *D, armas_x_dense_t *E,
-                  DTYPE left, DTYPE right, int nleft, int nright, 
-                  DTYPE tau, int index, int istart)
+DTYPE __trd_bisect_one(armas_x_dense_t *D,
+                       armas_x_dense_t *E,
+                       DTYPE left,
+                       DTYPE right,
+                       int nleft,
+                       int nright,
+                       DTYPE tau)
 {
-    int nl, nr, nmid;
+    int nl, nr, nmid, working = 1;
     DTYPE mid, eigen;
-    armas_x_dense_t sD, sE;
 
     if (nleft >= nright || left > right) {
-        return 0;
+        return NAN;
     }
 
     nl = __float_count_ieee(D, E, left);
     nr = __float_count_ieee(D, E, right);
     if ( nl > nleft || nr < nright) {
-        return 0;
+        return NAN;
     }
-
-    mid = (left + right) / 2.0;
-    if (right - left < tau) {
-        eigen = __MIN(__MAX(mid, left), right);
-        //printf("eigen: %e [%d times] @ %d %d\n", eigen, nright-nleft, index, istart);
-        if (index-istart >= armas_x_size(Y))
-            return -1;
-        // store to result vector
-        armas_x_set_at_unsafe(Y, index-istart, eigen);
-        return 0;
-    }
-
-    nmid = __float_count_ieee(D, E, mid);
-    nmid = __IMIN(__IMAX(nmid, nleft), nright);
-    if (nmid > nleft) {
-        if (armas_x_size(D) == 1) {
-            if (__trd_bisect(Y, D, E, left, mid, nleft, nmid, tau, index+nleft, istart) < 0)
-                return -1;
-        } else {
-            armas_x_subvector_unsafe(&sD, D, nleft, nmid-nleft);
-            armas_x_subvector_unsafe(&sE, E, nleft, nmid-nleft);
-            if (__trd_bisect(Y, &sD, &sE, left, mid, 0, nmid-nleft, tau, index+nleft, istart) < 0)
-                return -1;
+    
+    for (int count = 0; working; count++) {
+        // inside(l, r) (see Assumption 3 in (1))
+        mid = (right + left)/2.0;
+        if (right - left < tau) {
+            eigen = __MIN(__MAX(mid, left), right);
+            printf("  eigen: %e [%d iterations]\n", eigen, count);
+            working = 0;
+        }
+        else {
+            nmid = __float_count_ieee(D, E, mid);
+            nmid = __IMIN(__IMAX(nmid, nleft), nright);
+            if (nmid > nleft) {
+                right = mid; nright = nmid;
+            }
+            if (nmid < nright) {
+                left = mid; nleft = nmid; 
+            }                      
         }
     }
-    if (nmid < nright) {
-        if (armas_x_size(D) == 1) {
-            if (__trd_bisect(Y, D, E, mid, right, nmid, nright, tau, index+nmid, istart) < 0)
-                return -1;
-        } else {
-            armas_x_subvector_unsafe(&sD, D, nmid, nright-nmid);
-            armas_x_subvector_unsafe(&sE, E, nmid, nright-nmid);
-            if (__trd_bisect(Y, &sD, &sE, mid, right, 0, nright-nmid, tau, index+nmid, istart) < 0)
-                return -1;
-        }
-    }
-    return 0;
+    return eigen;
 }
 
 
@@ -244,9 +226,9 @@ int armas_x_trdbisect(armas_x_dense_t *Y,
                       armas_conf_t *conf)
 {
     //armas_x_dense_t Xrow;
-    DTYPE gleft, gright, bnorm, tau;
+    DTYPE gleft, gright, bnorm, tau, eigen;
     int nleft, nright;
-    int err;
+    int first, last;
 
     if (!conf)
         conf = armas_conf_default();
@@ -272,15 +254,23 @@ int armas_x_trdbisect(armas_x_dense_t *Y,
             nleft = __IMAX(0, params->ileft);
             nright = __IMIN(params->iright, armas_x_size(D));
         }
-        err = __trd_bisect(Y, D, E, gleft, gright, nleft, nright, tau, 0, nleft);
+        first = nleft;
+        last = nright;
     } else {
         // all eigenvalues
-        err = __trd_bisect(Y, D, E, gleft, gright, 0, armas_x_size(D), tau, 0, 0);
+        first = 0;
+        last = armas_x_size(D);
     }
         
-    if (err < 0)
-        conf->error = ARMAS_ESIZE;  // target vector could not hold all eigenvalues
-    return err < 0 ? err : 0;
+    for (int k = first; k < last; k++) {
+        eigen = __trd_bisect_one(D, E, gleft, gright, k, k+1, tau);
+        if (isnan(eigen)) {
+            return -1;
+        }
+        armas_x_set_unsafe(Y, k, 0, eigen);
+        gleft = (eigen > __ZERO ? (__ONE - __EPS) : (__ONE + __EPS)) * gleft;
+    }
+    return 0;
 }
 
 
