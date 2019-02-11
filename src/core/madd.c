@@ -33,7 +33,7 @@
 //! \endcond
 
 static inline
-void __madd_lower(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
+void __madd_lower(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
 {
   register int i, j, k, lda, ldb;
   DTYPE *a, *b;
@@ -46,28 +46,28 @@ void __madd_lower(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
     // top triangle
     for (k = j; k < j+3; k++) {
       for (i = k; i < j+3 && i < nR; i++) {
-        a[i+k*lda] = a[i+k*lda] + b[i+k*ldb];
+        a[i+k*lda] = alpha*a[i+k*lda] + beta*b[i+k*ldb];
       }
     }
     // rest of the column block
     for (i = j+3; i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] + b[i+(j+0)*ldb];
-      a[i+(j+1)*lda] = a[i+(j+1)*lda] + b[i+(j+1)*ldb];
-      a[i+(j+2)*lda] = a[i+(j+2)*lda] + b[i+(j+2)*ldb];
-      a[i+(j+3)*lda] = a[i+(j+3)*lda] + b[i+(j+3)*ldb];
+      a[i+(j+0)*lda] = alpha*a[i+(j+0)*lda] + beta*b[i+(j+0)*ldb];
+      a[i+(j+1)*lda] = alpha*a[i+(j+1)*lda] + beta*b[i+(j+1)*ldb];
+      a[i+(j+2)*lda] = alpha*a[i+(j+2)*lda] + beta*b[i+(j+2)*ldb];
+      a[i+(j+3)*lda] = alpha*a[i+(j+3)*lda] + beta*b[i+(j+3)*ldb];
     }
   }
   if (j == nC)
     return;
   for (; j < nC; j++) {
     for (i = j; i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] + b[i+(j+0)*ldb];
+      a[i+(j+0)*lda] = alpha*a[i+(j+0)*lda] + beta*b[i+(j+0)*ldb];
     }
   }
 }
 
 static inline
-void __madd_lower_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
+void __madd_lower_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
 {
   register int i, j, k, lda, ldb;
   DTYPE *a, *b;
@@ -80,28 +80,28 @@ void __madd_lower_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int 
     // top triangle
     for (k = j; k < j+3; k++) {
       for (i = k; i < j+3 && i < nR; i++) {
-        a[i+k*lda] = __ABS(a[i+k*lda]) + __ABS(b[i+k*ldb]);
+        a[i+k*lda] = alpha*__ABS(a[i+k*lda]) + beta*__ABS(b[i+k*ldb]);
       }
     }
     // rest of the column block
     for (i = j+3; i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) + __ABS(b[i+(j+0)*ldb]);
-      a[i+(j+1)*lda] = __ABS(a[i+(j+1)*lda]) + __ABS(b[i+(j+1)*ldb]);
-      a[i+(j+2)*lda] = __ABS(a[i+(j+2)*lda]) + __ABS(b[i+(j+2)*ldb]);
-      a[i+(j+3)*lda] = __ABS(a[i+(j+3)*lda]) + __ABS(b[i+(j+3)*ldb]);
+      a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
+      a[i+(j+1)*lda] = alpha*__ABS(a[i+(j+1)*lda]) + beta*__ABS(b[i+(j+1)*ldb]);
+      a[i+(j+2)*lda] = alpha*__ABS(a[i+(j+2)*lda]) + beta*__ABS(b[i+(j+2)*ldb]);
+      a[i+(j+3)*lda] = alpha*__ABS(a[i+(j+3)*lda]) + beta*__ABS(b[i+(j+3)*ldb]);
     }
   }
   if (j == nC)
     return;
   for (; j < nC; j++) {
     for (i = j; i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) + __ABS(b[i+(j+0)*ldb]);
+      a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
     }
   }
 }
 
 static inline
-void __madd_upper(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
+void __madd_upper(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
 {
   register int i, j, k, lda, ldb;
   DTYPE *a, *b;
@@ -113,15 +113,15 @@ void __madd_upper(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
   for (j = 0; j < nC-3; j += 4) {
     // top column block
     for (i = 0; i <= j && i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] + b[i+(j+0)*ldb];
-      a[i+(j+1)*lda] = a[i+(j+1)*lda] + b[i+(j+1)*ldb];
-      a[i+(j+2)*lda] = a[i+(j+2)*lda] + b[i+(j+2)*ldb];
-      a[i+(j+3)*lda] = a[i+(j+3)*lda] + b[i+(j+3)*ldb];
+      a[i+(j+0)*lda] = alpha*a[i+(j+0)*lda] + beta*b[i+(j+0)*ldb];
+      a[i+(j+1)*lda] = alpha*a[i+(j+1)*lda] + beta*b[i+(j+1)*ldb];
+      a[i+(j+2)*lda] = alpha*a[i+(j+2)*lda] + beta*b[i+(j+2)*ldb];
+      a[i+(j+3)*lda] = alpha*a[i+(j+3)*lda] + beta*b[i+(j+3)*ldb];
     }
     // bottom triangle
     for (i = j+1; i < j+4 && i < nR; i++) {
       for (k = i; k < j+4; k++) {
-        a[i+k*lda] = a[i+k*lda] + b[i+k*ldb];
+        a[i+k*lda] = alpha*a[i+k*lda] + beta*b[i+k*ldb];
       }
     }
   }
@@ -129,13 +129,13 @@ void __madd_upper(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
     return;
   for (; j < nC; j++) {
     for (i = 0; i <= j && i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] + b[i+(j+0)*ldb];
+      a[i+(j+0)*lda] = alpha*a[i+(j+0)*lda] + beta*b[i+(j+0)*ldb];
     }
   }
 }
 
 static inline
-void __madd_upper_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
+void __madd_upper_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
 {
   register int i, j, k, lda, ldb;
   DTYPE *a, *b;
@@ -147,15 +147,15 @@ void __madd_upper_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int 
   for (j = 0; j < nC-3; j += 4) {
     // top column block
     for (i = 0; i <= j && i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) + __ABS(b[i+(j+0)*ldb]);
-      a[i+(j+1)*lda] = __ABS(a[i+(j+1)*lda]) + __ABS(b[i+(j+1)*ldb]);
-      a[i+(j+2)*lda] = __ABS(a[i+(j+2)*lda]) + __ABS(b[i+(j+2)*ldb]);
-      a[i+(j+3)*lda] = __ABS(a[i+(j+3)*lda]) + __ABS(b[i+(j+3)*ldb]);
+      a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
+      a[i+(j+1)*lda] = alpha*__ABS(a[i+(j+1)*lda]) + beta*__ABS(b[i+(j+1)*ldb]);
+      a[i+(j+2)*lda] = alpha*__ABS(a[i+(j+2)*lda]) + beta*__ABS(b[i+(j+2)*ldb]);
+      a[i+(j+3)*lda] = alpha*__ABS(a[i+(j+3)*lda]) + beta*__ABS(b[i+(j+3)*ldb]);
     }
     // bottom triangle
     for (i = j+1; i < j+4 && i < nR; i++) {
       for (k = i; k < j+4; k++) {
-        a[i+k*lda] = __ABS(a[i+k*lda]) + __ABS(b[i+k*ldb]);
+        a[i+k*lda] = alpha*__ABS(a[i+k*lda]) + beta*__ABS(b[i+k*ldb]);
       }
     }
   }
@@ -163,14 +163,14 @@ void __madd_upper_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int 
     return;
   for (; j < nC; j++) {
     for (i = 0; i <= j && i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) + __ABS(b[i+(j+0)*ldb]);
+      a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
     }
   }
 }
 
 
 static inline
-void __madd(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, int flags)
+void __madd(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC, int flags)
 {
   register int i, j, lda, ldb;
   DTYPE *a, *b;
@@ -183,17 +183,17 @@ void __madd(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, int fl
     for (j = 0; j < nC-3; j += 4) {
       // top column block
       for (i = 0; i < nR; i++) {
-        a[i+(j+0)*lda] = a[i+(j+0)*lda] + b[(j+0)+i*ldb];
-        a[i+(j+1)*lda] = a[i+(j+1)*lda] + b[(j+1)+i*ldb];
-        a[i+(j+2)*lda] = a[i+(j+2)*lda] + b[(j+2)+i*ldb];
-        a[i+(j+3)*lda] = a[i+(j+3)*lda] + b[(j+3)+i*ldb];
+        a[i+(j+0)*lda] = alpha*a[i+(j+0)*lda] + beta*b[(j+0)+i*ldb];
+        a[i+(j+1)*lda] = alpha*a[i+(j+1)*lda] + beta*b[(j+1)+i*ldb];
+        a[i+(j+2)*lda] = alpha*a[i+(j+2)*lda] + beta*b[(j+2)+i*ldb];
+        a[i+(j+3)*lda] = alpha*a[i+(j+3)*lda] + beta*b[(j+3)+i*ldb];
       }
     }
     if (j == nC)
       return;
     for (; j < nC; j++) {
       for (i = 0; i < nR; i++) {
-        a[i+(j+0)*lda] = a[i+(j+0)*lda] + b[(j+0)+i*ldb];
+        a[i+(j+0)*lda] = alpha*a[i+(j+0)*lda] + beta*b[(j+0)+i*ldb];
       }
     }
     return;
@@ -202,23 +202,23 @@ void __madd(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, int fl
   for (j = 0; j < nC-3; j += 4) {
     // top column block
     for (i = 0; i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] + b[i+(j+0)*ldb];
-      a[i+(j+1)*lda] = a[i+(j+1)*lda] + b[i+(j+1)*ldb];
-      a[i+(j+2)*lda] = a[i+(j+2)*lda] + b[i+(j+2)*ldb];
-      a[i+(j+3)*lda] = a[i+(j+3)*lda] + b[i+(j+3)*ldb];
+      a[i+(j+0)*lda] = alpha*a[i+(j+0)*lda] + beta*b[i+(j+0)*ldb];
+      a[i+(j+1)*lda] = alpha*a[i+(j+1)*lda] + beta*b[i+(j+1)*ldb];
+      a[i+(j+2)*lda] = alpha*a[i+(j+2)*lda] + beta*b[i+(j+2)*ldb];
+      a[i+(j+3)*lda] = alpha*a[i+(j+3)*lda] + beta*b[i+(j+3)*ldb];
     }
   }
   if (j == nC)
     return;
   for (; j < nC; j++) {
     for (i = 0; i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] + b[i+(j+0)*ldb];
+      a[i+(j+0)*lda] = alpha*a[i+(j+0)*lda] + beta*b[i+(j+0)*ldb];
     }
   }
 }
 
 static inline
-void __madd_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, int flags)
+void __madd_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC, int flags)
 {
   register int i, j, lda, ldb;
   DTYPE *a, *b;
@@ -231,17 +231,17 @@ void __madd_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, in
     for (j = 0; j < nC-3; j += 4) {
       // top column block
       for (i = 0; i < nR; i++) {
-        a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) + __ABS(b[(j+0)+i*ldb]);
-        a[i+(j+1)*lda] = __ABS(a[i+(j+1)*lda]) + __ABS(b[(j+1)+i*ldb]);
-        a[i+(j+2)*lda] = __ABS(a[i+(j+2)*lda]) + __ABS(b[(j+2)+i*ldb]);
-        a[i+(j+3)*lda] = __ABS(a[i+(j+3)*lda]) + __ABS(b[(j+3)+i*ldb]);
+        a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[(j+0)+i*ldb]);
+        a[i+(j+1)*lda] = alpha*__ABS(a[i+(j+1)*lda]) + beta*__ABS(b[(j+1)+i*ldb]);
+        a[i+(j+2)*lda] = alpha*__ABS(a[i+(j+2)*lda]) + beta*__ABS(b[(j+2)+i*ldb]);
+        a[i+(j+3)*lda] = alpha*__ABS(a[i+(j+3)*lda]) + beta*__ABS(b[(j+3)+i*ldb]);
       }
     }
     if (j == nC)
       return;
     for (; j < nC; j++) {
       for (i = 0; i < nR; i++) {
-        a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) + __ABS(b[(j+0)+i*ldb]);
+        a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[(j+0)+i*ldb]);
       }
     }
     return;
@@ -250,27 +250,31 @@ void __madd_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, in
   for (j = 0; j < nC-3; j += 4) {
     // top column block
     for (i = 0; i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) + __ABS(b[i+(j+0)*ldb]);
-      a[i+(j+1)*lda] = __ABS(a[i+(j+1)*lda]) + __ABS(b[i+(j+1)*ldb]);
-      a[i+(j+2)*lda] = __ABS(a[i+(j+2)*lda]) + __ABS(b[i+(j+2)*ldb]);
-      a[i+(j+3)*lda] = __ABS(a[i+(j+3)*lda]) + __ABS(b[i+(j+3)*ldb]);
+      a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
+      a[i+(j+1)*lda] = alpha*__ABS(a[i+(j+1)*lda]) + beta*__ABS(b[i+(j+1)*ldb]);
+      a[i+(j+2)*lda] = alpha*__ABS(a[i+(j+2)*lda]) + beta*__ABS(b[i+(j+2)*ldb]);
+      a[i+(j+3)*lda] = alpha*__ABS(a[i+(j+3)*lda]) + beta*__ABS(b[i+(j+3)*ldb]);
     }
   }
   if (j == nC)
     return;
   for (; j < nC; j++) {
     for (i = 0; i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) + __ABS(b[i+(j+0)*ldb]);
+      a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
     }
   }
 }
 
 
 /**
- * @brief Element wise addition of \f$A = A + B\f$
+ * @brief Element wise addition of \f$A = alpha*A + beta*B\f$
  *
+ * @param[in] alpha
+ *    Scalar
  * @param[in,out] A
  *    On entry, first input matrix. On exit result matrix.
+ * @param[in] beta
+ *    Scalar
  * @param[in] B
  *    Second input matrix. If B is 1x1 then operation equals to adding constant
  *    to first matrix.
@@ -279,45 +283,47 @@ void __madd_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, in
  *
  * \ingroup matrix
  */
-int armas_x_add_elems(armas_x_dense_t *A, const armas_x_dense_t *B, int flags)
+int armas_x_add_elems(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int flags)
 {
-  if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
+    if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
+        return 0;
+    if (armas_x_size(B) == 1)
+        return armas_x_madd(A, armas_x_get_unsafe(B, 0, 0), flags);
+    if (armas_x_isvector(A) && armas_x_isvector(B))
+        return armas_x_axpby(alpha, A, beta, B, armas_conf_default());
+      
+    if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
+        if (A->rows != B->cols || A->cols != B->rows)
+            return -1;
+    } else {
+        if (A->rows != B->rows || A->cols != B->cols)
+            return -1;
+    }
+
+    switch (flags & (ARMAS_LOWER|ARMAS_UPPER)) {
+    case ARMAS_LOWER:
+        if (flags & ARMAS_ABS) {
+            __madd_lower_abs(alpha, A, beta, B, A->rows, A->cols);
+        } else {
+            __madd_lower(alpha, A, beta, B, A->rows, A->cols);
+        }
+        break;
+    case ARMAS_UPPER:
+        if (flags & ARMAS_ABS) {
+            __madd_upper_abs(alpha, A, beta, B, A->rows, A->cols);
+        } else {
+            __madd_upper(alpha, A, beta, B, A->rows, A->cols);
+        }
+        break;
+    default:
+        if (flags & ARMAS_ABS) {
+            __madd_abs(alpha, A, beta, B, A->rows, A->cols, flags);
+        } else {
+            __madd(alpha, A, beta, B, A->rows, A->cols, flags);
+        }
+        break;
+    }
     return 0;
-  if (armas_x_size(B) == 1)
-    return armas_x_madd(A, armas_x_get_unsafe(B, 0, 0), flags);
-
-  if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
-    if (A->rows != B->cols || A->cols != B->rows)
-      return -1;
-  } else {
-    if (A->rows != B->rows || A->cols != B->cols)
-      return -1;
-  }
-
-  switch (flags & (ARMAS_LOWER|ARMAS_UPPER)) {
-  case ARMAS_LOWER:
-    if (flags & ARMAS_ABS) {
-      __madd_lower_abs(A, B, A->rows, A->cols);
-    } else {
-      __madd_lower(A, B, A->rows, A->cols);
-    }
-    break;
-  case ARMAS_UPPER:
-    if (flags & ARMAS_ABS) {
-      __madd_upper_abs(A, B, A->rows, A->cols);
-    } else {
-      __madd_upper(A, B, A->rows, A->cols);
-    }
-    break;
-  default:
-    if (flags & ARMAS_ABS) {
-      __madd_abs(A, B, A->rows, A->cols, flags);
-    } else {
-      __madd(A, B, A->rows, A->cols, flags);
-    }
-    break;
-  }
-  return 0;
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */

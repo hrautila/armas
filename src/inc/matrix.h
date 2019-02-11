@@ -108,9 +108,9 @@ extern void armas_x_make_trm(armas_x_dense_t *m, int flags);
 extern int armas_x_mscale(armas_x_dense_t *d, DTYPE alpha, int flags);
 extern int armas_x_madd(armas_x_dense_t *d, DTYPE alpha, int flags);
   // element wise operators
-extern int armas_x_mul_elems(armas_x_dense_t *A, const armas_x_dense_t *B, int flags);
-extern int armas_x_add_elems(armas_x_dense_t *A, const armas_x_dense_t *B, int flags);
-extern int armas_x_div_elems(armas_x_dense_t *A, const armas_x_dense_t *B, int flags);
+extern int armas_x_mul_elems(armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int flags);
+extern int armas_x_add_elems(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int flags);
+extern int armas_x_div_elems(armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int flags);
 extern int armas_x_sub_elems(armas_x_dense_t *A, const armas_x_dense_t *B, int flags);
 extern int armas_x_apply(armas_x_dense_t *A, armas_x_operator_t func, int flags);
 extern int armas_x_apply2(armas_x_dense_t *A, armas_x_operator2_t func, DTYPE val, int flags);

@@ -10,7 +10,6 @@
 
 //! \cond
 #include <stdio.h>
-
 #include "dtype.h"
 //! \endcond
 // ------------------------------------------------------------------------------
@@ -32,242 +31,243 @@
 #include "internal.h"
 //! \endcond
 
-
 static inline
-void __mdiv_lower(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
+void __mdiv_lower(armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
 {
-  register int i, j, k, lda, ldb;
-  DTYPE *a, *b;
+    register int i, j, k, lda, ldb;
+    DTYPE *a, *b;
 
-  a = armas_x_data(A);
-  b = armas_x_data(B);
-  lda = A->step; ldb = B->step;
+    a = armas_x_data(A);
+    b = armas_x_data(B);
+    lda = A->step; ldb = B->step;
 
-  for (j = 0; j < nC-3; j += 4) {
-    // top triangle
-    for (k = j; k < j+3; k++) {
-      for (i = k; i < j+3 && i < nR; i++) {
-        a[i+k*lda] = a[i+k*lda] / b[i+k*ldb];
-      }
-    }
-    // rest of the column block
-    for (i = j+3; i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] / b[i+(j+0)*ldb];
-      a[i+(j+1)*lda] = a[i+(j+1)*lda] / b[i+(j+1)*ldb];
-      a[i+(j+2)*lda] = a[i+(j+2)*lda] / b[i+(j+2)*ldb];
-      a[i+(j+3)*lda] = a[i+(j+3)*lda] / b[i+(j+3)*ldb];
-    }
-  }
-  if (j == nC)
-    return;
-  for (; j < nC; j++) {
-    for (i = j; i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] / b[i+(j+0)*ldb];
-    }
-  }
-}
-
-static inline
-void __mdiv_lower_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
-{
-  register int i, j, k, lda, ldb;
-  DTYPE *a, *b;
-
-  a = armas_x_data(A);
-  b = armas_x_data(B);
-  lda = A->step; ldb = B->step;
-
-  for (j = 0; j < nC-3; j += 4) {
-    // top triangle
-    for (k = j; k < j+3; k++) {
-      for (i = k; i < j+3 && i < nR; i++) {
-        a[i+k*lda] = __ABS(a[i+k*lda]) / __ABS(b[i+k*ldb]);
-      }
-    }
-    // rest of the column block
-    for (i = j+3; i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]);
-      a[i+(j+1)*lda] = __ABS(a[i+(j+1)*lda]) / __ABS(b[i+(j+1)*ldb]);
-      a[i+(j+2)*lda] = __ABS(a[i+(j+2)*lda]) / __ABS(b[i+(j+2)*ldb]);
-      a[i+(j+3)*lda] = __ABS(a[i+(j+3)*lda]) / __ABS(b[i+(j+3)*ldb]);
-    }
-  }
-  if (j == nC)
-    return;
-  for (; j < nC; j++) {
-    for (i = j; i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]);
-    }
-  }
-}
-
-static inline
-void __mdiv_upper(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
-{
-  register int i, j, k, lda, ldb;
-  DTYPE *a, *b;
-
-  a = armas_x_data(A);
-  b = armas_x_data(B);
-  lda = A->step; ldb = B->step;
-
-  for (j = 0; j < nC-3; j += 4) {
-    // top column block
-    for (i = 0; i <= j && i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] / b[i+(j+0)*ldb];
-      a[i+(j+1)*lda] = a[i+(j+1)*lda] / b[i+(j+1)*ldb];
-      a[i+(j+2)*lda] = a[i+(j+2)*lda] / b[i+(j+2)*ldb];
-      a[i+(j+3)*lda] = a[i+(j+3)*lda] / b[i+(j+3)*ldb];
-    }
-    // bottom triangle
-    for (i = j+1; i < j+4 && i < nR; i++) {
-      for (k = i; k < j+4; k++) {
-        a[i+k*lda] = a[i+k*lda] / b[i+k*ldb];
-      }
-    }
-  }
-  if (j == nC)
-    return;
-  for (; j < nC; j++) {
-    for (i = 0; i <= j && i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda]+b[i+(j+0)*ldb];
-    }
-  }
-}
-
-static inline
-void __mdiv_upper_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC)
-{
-  register int i, j, k, lda, ldb;
-  DTYPE *a, *b;
-
-  a = armas_x_data(A);
-  b = armas_x_data(B);
-  lda = A->step; ldb = B->step;
-
-  for (j = 0; j < nC-3; j += 4) {
-    // top column block
-    for (i = 0; i <= j && i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]);
-      a[i+(j+1)*lda] = __ABS(a[i+(j+1)*lda]) / __ABS(b[i+(j+1)*ldb]);
-      a[i+(j+2)*lda] = __ABS(a[i+(j+2)*lda]) / __ABS(b[i+(j+2)*ldb]);
-      a[i+(j+3)*lda] = __ABS(a[i+(j+3)*lda]) / __ABS(b[i+(j+3)*ldb]);
-    }
-    // bottom triangle
-    for (i = j+1; i < j+4 && i < nR; i++) {
-      for (k = i; k < j+4; k++) {
-        a[i+k*lda] = __ABS(a[i+k*lda]) / __ABS(b[i+k*ldb]);
-      }
-    }
-  }
-  if (j == nC)
-    return;
-  for (; j < nC; j++) {
-    for (i = 0; i <= j && i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]);
-    }
-  }
-}
-
-
-static inline
-void __mdiv(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, int flags)
-{
-  register int i, j, lda, ldb;
-  DTYPE *a, *b;
-
-  a = armas_x_data(A);
-  b = armas_x_data(B);
-  lda = A->step; ldb = B->step;
-
-  if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
     for (j = 0; j < nC-3; j += 4) {
-      // top column block
-      for (i = 0; i < nR; i++) {
-        a[i+(j+0)*lda] = a[i+(j+0)*lda] / b[(j+0)+i*ldb];
-        a[i+(j+1)*lda] = a[i+(j+1)*lda] / b[(j+1)+i*ldb];
-        a[i+(j+2)*lda] = a[i+(j+2)*lda] / b[(j+2)+i*ldb];
-        a[i+(j+3)*lda] = a[i+(j+3)*lda] / b[(j+3)+i*ldb];
-      }
+        // top triangle
+        for (k = j; k < j+3; k++) {
+            for (i = k; i < j+3 && i < nR; i++) {
+                a[i+k*lda] = beta * (a[i+k*lda] / b[i+k*ldb]);
+            }
+        }
+        // rest of the column block
+        for (i = j+3; i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (a[i+(j+0)*lda] / b[i+(j+0)*ldb]);
+            a[i+(j+1)*lda] = beta * (a[i+(j+1)*lda] / b[i+(j+1)*ldb]);
+            a[i+(j+2)*lda] = beta * (a[i+(j+2)*lda] / b[i+(j+2)*ldb]);
+            a[i+(j+3)*lda] = beta * (a[i+(j+3)*lda] / b[i+(j+3)*ldb]);
+        }
     }
     if (j == nC)
-      return;
+        return;
     for (; j < nC; j++) {
-      for (i = 0; i < nR; i++) {
-        a[i+(j+0)*lda] = a[i+(j+0)*lda] / b[(j+0)+i*ldb];
-      }
+        for (i = j; i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (a[i+(j+0)*lda] / b[i+(j+0)*ldb]);
+        }
     }
-    return;
-  }
-
-  for (j = 0; j < nC-3; j += 4) {
-    // top column block
-    for (i = 0; i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] / b[i+(j+0)*ldb];
-      a[i+(j+1)*lda] = a[i+(j+1)*lda] / b[i+(j+1)*ldb];
-      a[i+(j+2)*lda] = a[i+(j+2)*lda] / b[i+(j+2)*ldb];
-      a[i+(j+3)*lda] = a[i+(j+3)*lda] / b[i+(j+3)*ldb];
-    }
-  }
-  if (j == nC)
-    return;
-  for (; j < nC; j++) {
-    for (i = 0; i < nR; i++) {
-      a[i+(j+0)*lda] = a[i+(j+0)*lda] / b[i+(j+0)*ldb];
-    }
-  }
 }
 
 static inline
-void __mdiv_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, int flags)
+void __mdiv_lower_abs(armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
 {
-  register int i, j, lda, ldb;
-  DTYPE *a, *b;
+    register int i, j, k, lda, ldb;
+    DTYPE *a, *b;
 
-  a = armas_x_data(A);
-  b = armas_x_data(B);
-  lda = A->step; ldb = B->step;
+    a = armas_x_data(A);
+    b = armas_x_data(B);
+    lda = A->step; ldb = B->step;
 
-  if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
     for (j = 0; j < nC-3; j += 4) {
-      // top column block
-      for (i = 0; i < nR; i++) {
-        a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) / __ABS(b[(j+0)+i*ldb]);
-        a[i+(j+1)*lda] = __ABS(a[i+(j+1)*lda]) / __ABS(b[(j+1)+i*ldb]);
-        a[i+(j+2)*lda] = __ABS(a[i+(j+2)*lda]) / __ABS(b[(j+2)+i*ldb]);
-        a[i+(j+3)*lda] = __ABS(a[i+(j+3)*lda]) / __ABS(b[(j+3)+i*ldb]);
-      }
+        // top triangle
+        for (k = j; k < j+3; k++) {
+            for (i = k; i < j+3 && i < nR; i++) {
+                a[i+k*lda] = beta * (__ABS(a[i+k*lda]) / __ABS(b[i+k*ldb]));
+            }
+        }
+        // rest of the column block
+        for (i = j+3; i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (__ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]));
+            a[i+(j+1)*lda] = beta * (__ABS(a[i+(j+1)*lda]) / __ABS(b[i+(j+1)*ldb]));
+            a[i+(j+2)*lda] = beta * (__ABS(a[i+(j+2)*lda]) / __ABS(b[i+(j+2)*ldb]));
+            a[i+(j+3)*lda] = beta * (__ABS(a[i+(j+3)*lda]) / __ABS(b[i+(j+3)*ldb]));
+        }
     }
     if (j == nC)
-      return;
+        return;
     for (; j < nC; j++) {
-      for (i = 0; i < nR; i++) {
-        a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) / __ABS(b[(j+0)+i*ldb]);
-      }
+        for (i = j; i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (__ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]));
+        }
     }
-    return;
-  }
-
-  for (j = 0; j < nC-3; j += 4) {
-    // top column block
-    for (i = 0; i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]);
-      a[i+(j+1)*lda] = __ABS(a[i+(j+1)*lda]) / __ABS(b[i+(j+1)*ldb]);
-      a[i+(j+2)*lda] = __ABS(a[i+(j+2)*lda]) / __ABS(b[i+(j+2)*ldb]);
-      a[i+(j+3)*lda] = __ABS(a[i+(j+3)*lda]) / __ABS(b[i+(j+3)*ldb]);
-    }
-  }
-  if (j == nC)
-    return;
-  for (; j < nC; j++) {
-    for (i = 0; i < nR; i++) {
-      a[i+(j+0)*lda] = __ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]);
-    }
-  }
 }
+
+static inline
+void __mdiv_upper(armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
+{
+    register int i, j, k, lda, ldb;
+    DTYPE *a, *b;
+
+    a = armas_x_data(A);
+    b = armas_x_data(B);
+    lda = A->step; ldb = B->step;
+
+    for (j = 0; j < nC-3; j += 4) {
+        // top column block
+        for (i = 0; i <= j && i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (a[i+(j+0)*lda] / b[i+(j+0)*ldb]);
+            a[i+(j+1)*lda] = beta * (a[i+(j+1)*lda] / b[i+(j+1)*ldb]);
+            a[i+(j+2)*lda] = beta * (a[i+(j+2)*lda] / b[i+(j+2)*ldb]);
+            a[i+(j+3)*lda] = beta * (a[i+(j+3)*lda] / b[i+(j+3)*ldb]);
+        }
+        // bottom triangle
+        for (i = j+1; i < j+4 && i < nR; i++) {
+            for (k = i; k < j+4; k++) {
+                a[i+k*lda] = beta * (a[i+k*lda] / b[i+k*ldb]);
+            }
+        }
+    }
+    if (j == nC)
+        return;
+    for (; j < nC; j++) {
+        for (i = 0; i <= j && i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (a[i+(j+0)*lda] / b[i+(j+0)*ldb]);
+        }
+    }
+}
+
+static inline
+void __mdiv_upper_abs(armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
+{
+    register int i, j, k, lda, ldb;
+    DTYPE *a, *b;
+
+    a = armas_x_data(A);
+    b = armas_x_data(B);
+    lda = A->step; ldb = B->step;
+
+    for (j = 0; j < nC-3; j += 4) {
+        // top column block
+        for (i = 0; i <= j && i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (__ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]));
+            a[i+(j+1)*lda] = beta * (__ABS(a[i+(j+1)*lda]) / __ABS(b[i+(j+1)*ldb]));
+            a[i+(j+2)*lda] = beta * (__ABS(a[i+(j+2)*lda]) / __ABS(b[i+(j+2)*ldb]));
+            a[i+(j+3)*lda] = beta * (__ABS(a[i+(j+3)*lda]) / __ABS(b[i+(j+3)*ldb]));
+        }
+        // bottom triangle
+        for (i = j+1; i < j+4 && i < nR; i++) {
+            for (k = i; k < j+4; k++) {
+                a[i+k*lda] = beta * (__ABS(a[i+k*lda]) / __ABS(b[i+k*ldb]));
+            }
+        }
+    }
+    if (j == nC)
+        return;
+    for (; j < nC; j++) {
+        for (i = 0; i <= j && i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (__ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]));
+        }
+    }
+}
+
+
+static inline
+void __mdiv(armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC, int flags)
+{
+    register int i, j, lda, ldb;
+    DTYPE *a, *b;
+
+    a = armas_x_data(A);
+    b = armas_x_data(B);
+    lda = A->step; ldb = B->step;
+
+    if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
+        for (j = 0; j < nC-3; j += 4) {
+            // top column block
+            for (i = 0; i < nR; i++) {
+                a[i+(j+0)*lda] = beta * (a[i+(j+0)*lda] / b[(j+0)+i*ldb]);
+                a[i+(j+1)*lda] = beta * (a[i+(j+1)*lda] / b[(j+1)+i*ldb]);
+                a[i+(j+2)*lda] = beta * (a[i+(j+2)*lda] / b[(j+2)+i*ldb]);
+                a[i+(j+3)*lda] = beta * (a[i+(j+3)*lda] / b[(j+3)+i*ldb]);
+            }
+        }
+        if (j == nC)
+            return;
+        for (; j < nC; j++) {
+            for (i = 0; i < nR; i++) {
+                a[i+(j+0)*lda] = beta * (a[i+(j+0)*lda] / b[(j+0)+i*ldb]);
+            }
+        }
+        return;
+    }
+
+    for (j = 0; j < nC-3; j += 4) {
+        // top column block
+        for (i = 0; i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (a[i+(j+0)*lda] / b[i+(j+0)*ldb]);
+            a[i+(j+1)*lda] = beta * (a[i+(j+1)*lda] / b[i+(j+1)*ldb]);
+            a[i+(j+2)*lda] = beta * (a[i+(j+2)*lda] / b[i+(j+2)*ldb]);
+            a[i+(j+3)*lda] = beta * (a[i+(j+3)*lda] / b[i+(j+3)*ldb]);
+        }
+    }
+    if (j == nC)
+        return;
+    for (; j < nC; j++) {
+        for (i = 0; i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (a[i+(j+0)*lda] / b[i+(j+0)*ldb]);
+        }
+    }
+}
+
+static inline
+void __mdiv_abs(armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC, int flags)
+{
+    register int i, j, lda, ldb;
+    DTYPE *a, *b;
+
+    a = armas_x_data(A);
+    b = armas_x_data(B);
+    lda = A->step; ldb = B->step;
+
+    if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
+        for (j = 0; j < nC-3; j += 4) {
+            // top column block
+            for (i = 0; i < nR; i++) {
+                a[i+(j+0)*lda] = beta * (__ABS(a[i+(j+0)*lda]) / __ABS(b[(j+0)+i*ldb]));
+                a[i+(j+1)*lda] = beta * (__ABS(a[i+(j+1)*lda]) / __ABS(b[(j+1)+i*ldb]));
+                a[i+(j+2)*lda] = beta * (__ABS(a[i+(j+2)*lda]) / __ABS(b[(j+2)+i*ldb]));
+                a[i+(j+3)*lda] = beta * (__ABS(a[i+(j+3)*lda]) / __ABS(b[(j+3)+i*ldb]));
+            }
+        }
+        if (j == nC)
+            return;
+        for (; j < nC; j++) {
+            for (i = 0; i < nR; i++) {
+                a[i+(j+0)*lda] = beta * (__ABS(a[i+(j+0)*lda]) / __ABS(b[(j+0)+i*ldb]));
+            }
+        }
+        return;
+    }
+
+    for (j = 0; j < nC-3; j += 4) {
+        // top column block
+        for (i = 0; i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (__ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]));
+            a[i+(j+1)*lda] = beta * (__ABS(a[i+(j+1)*lda]) / __ABS(b[i+(j+1)*ldb]));
+            a[i+(j+2)*lda] = beta * (__ABS(a[i+(j+2)*lda]) / __ABS(b[i+(j+2)*ldb]));
+            a[i+(j+3)*lda] = beta * (__ABS(a[i+(j+3)*lda]) / __ABS(b[i+(j+3)*ldb]));
+        }
+    }
+    if (j == nC)
+        return;
+    for (; j < nC; j++) {
+        for (i = 0; i < nR; i++) {
+            a[i+(j+0)*lda] = beta * (__ABS(a[i+(j+0)*lda]) / __ABS(b[i+(j+0)*ldb]));
+        }
+    }
+}
+
+
 
 /**
- * @brief Element wise division of \f$A_{i,j} = A_{i,j} / B_{i,j}\f$
+ * @brief Element wise division of \f$A_{i,j} = beta * (A_{i,j} / B_{i,j})\f$
  *
  * @param[in,out] A
  *    On entry, first input matrix. On exit result matrix.
@@ -279,48 +279,48 @@ void __mdiv_abs(armas_x_dense_t *A, const armas_x_dense_t *B, int nR, int nC, in
  *
  * @return 
  *    0 for success, -1 for error
- * \ingroup matrix
+ * @ingroup matrix
  */
-int armas_x_div_elems(armas_x_dense_t *A, const armas_x_dense_t *B, int flags)
+int armas_x_div_elems(armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int flags)
 {
 
-  if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
+    if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
+        return 0;
+    if (armas_x_size(B) == 1)
+        return armas_x_mscale(A, beta*__ONE/armas_x_get_unsafe(B, 0, 0), flags);
+
+    if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
+        if (A->rows != B->cols || A->cols != B->rows)
+            return -1;
+    } else {
+        if (A->rows != B->rows || A->cols != B->cols)
+            return -1;
+    }
+
+    switch (flags & (ARMAS_LOWER|ARMAS_UPPER)) {
+    case ARMAS_LOWER:
+        if (flags & ARMAS_ABS) {
+            __mdiv_lower_abs(A, beta, B, A->rows, A->cols);
+        } else {
+            __mdiv_lower(A, beta, B, A->rows, A->cols);
+        }
+        break;
+    case ARMAS_UPPER:
+        if (flags & ARMAS_ABS) {
+            __mdiv_upper_abs(A, beta, B, A->rows, A->cols);
+        } else {
+            __mdiv_upper(A, beta, B, A->rows, A->cols);
+        }
+        break;
+    default:
+        if (flags & ARMAS_ABS) {
+            __mdiv_abs(A, beta, B, A->rows, A->cols, flags);
+        } else {
+            __mdiv(A, beta, B, A->rows, A->cols, flags);
+        }
+        break;
+    }
     return 0;
-  if (armas_x_size(B) == 1)
-    return armas_x_mscale(A, __ONE/armas_x_get_unsafe(B, 0, 0), flags);
-
-  if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
-    if (A->rows != B->cols || A->cols != B->rows)
-      return -1;
-  } else {
-    if (A->rows != B->rows || A->cols != B->cols)
-      return -1;
-  }
-
-  switch (flags & (ARMAS_LOWER|ARMAS_UPPER)) {
-  case ARMAS_LOWER:
-    if (flags & ARMAS_ABS) {
-      __mdiv_lower_abs(A, B, A->rows, A->cols);
-    } else {
-      __mdiv_lower(A, B, A->rows, A->cols);
-    }
-    break;
-  case ARMAS_UPPER:
-    if (flags & ARMAS_ABS) {
-      __mdiv_upper_abs(A, B, A->rows, A->cols);
-    } else {
-      __mdiv_upper(A, B, A->rows, A->cols);
-    }
-    break;
-  default:
-    if (flags & ARMAS_ABS) {
-      __mdiv_abs(A, B, A->rows, A->cols, flags);
-    } else {
-      __mdiv(A, B, A->rows, A->cols, flags);
-    }
-    break;
-  }
-  return 0;
 }
 
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
