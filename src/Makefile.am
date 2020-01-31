@@ -3,14 +3,91 @@
 DEBUG =
 AUTOMAKE_OPTIONS = subdir-objects
 
-if ENABLE_THREADS
+if CONFIG_ACCELERATORS
 USE_PTHREAD=-pthread
 else
 USE_PTHREAD=
 endif
 
-AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall $(USE_PTHREAD) -Iinc $(DEBUG)
+AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall $(USE_PTHREAD) -I$(top_srcdir)/src/include $(DEBUG)
 
+COMMON = \
+	base/armas.c \
+	base/cache.c \
+	base/env.c \
+	base/system.c
+	base/matrix.c \
+	base/matrix_ext.c
+
+BLAS = \
+	blas/asum.c \
+	blas/axpy.c \
+	blas/dot.c \
+	blas/gemm.c \
+	blas/gemv.c \
+	blas/ger.c \
+	blas/iamax.c \
+	blas/kernel.c \
+	blas/madd.c \
+	blas/mcopy.c \
+	blas/mnorm.c \
+	blas/mplus.c \
+	blas/mscale.c \
+	blas/mset.c \
+	blas/nrm2.c \
+	blas/symm.c \
+	blas/syr.c \
+	blas/syr2.c \
+	blas/trmm.c \
+	blas/trmm_blk.c \
+	blas/trmm_rec.c \
+	blas/trmm_unb.c \
+	blas/trmv.c \
+	blas/trsm.c \
+	blas/trsm_blk.c \
+	blas/trsm_rec.c \
+	blas/trsm_unb.c \
+	blas/trsv.c \
+	blas/updtrmv.c \
+	blas/updtrmm.c \
+	blas/syrk.c \
+	blas/syr2k.c
+
+EBLAS =
+if CONFIG_EXT_PRECISION
+EBLAS += \
+	eblas/kernel_ext.c \
+	eblas/gemm_ext.c \
+	eblas/scale.c \
+	eblas/dot_ext.c \
+	eblas/asum_ext.c \
+	eblas/axpy_ext.c \
+	eblas/gemv_ext.c \
+	eblas/trmm_ext.c \
+	eblas/trsm_ext.c \
+	eblas/trmv_ext.c \
+	eblas/trsv_ext.c \
+	eblas/symv_ext.c \
+	eblas/syr2_ext.c \
+	eblas/syr_ext.c \
+	eblas/ger_ext.c
+endif
+
+ACCEL =
+if CONFIG_ACCELERATORS
+ACCEL += \
+	threaded/entry.c \
+	threaded/gemm.c \
+	threaded/symm.c \
+	threaded/trmm.c \
+	threaded/trsm.c
+endif
+
+COMPAT =
+if CONFIG_COMPAT
+endif
+
+if OLD
 noinst_HEADERS = \
 	inc/cond.h \
 	inc/dtype.h \
@@ -54,7 +131,7 @@ noinst_HEADERS = \
 	inc/mult_ext_nosimd.h
 
 
-COMMON = \
+OLD_COMMON = \
 	core/armas.c \
 	core/support.c \
 	core/sched.c \
@@ -63,7 +140,7 @@ COMMON = \
 	core/json_reader.c \
 	core/json_writer.c
 
-CORE = \
+OLD_CORE = \
 	core/matrix.c \
 	core/matrix_ext.c \
 	core/mnorm.c \
@@ -80,9 +157,7 @@ CORE = \
 	core/json_base.c \
 	core/json_file.c
 
-
-
-BLAS1 = \
+OLD_BLAS1 = \
 	blas1/asum.c \
 	blas1/axpy.c \
 	blas1/copy.c \
@@ -92,12 +167,12 @@ BLAS1 = \
 	blas1/scal.c \
 	blas1/swap.c
 
-XBLAS1 = \
+OLD_XBLAS1 = \
 	blas1/asum_ext.c \
 	blas1/dot_ext.c \
 	blas1/axpy_ext.c
 
-BLAS2 = \
+OLD_BLAS2 = \
 	blas2/gemv.c \
 	blas2/symv.c \
 	blas2/ger.c \
@@ -107,14 +182,14 @@ BLAS2 = \
 	blas2/trsv.c \
 	blas2/updtrmv.c 
 
-XBLAS2 = \
+OLD_XBLAS2 = \
 	blas2/gemv_ext.c \
 	blas2/symv_ext.c \
 	blas2/trsv_ext.c \
 	blas2/trmv_ext.c \
 	blas2/update_ext.c
 
-BLAS3 = \
+OLD_BLAS3 = \
 	blas3/kernel.c \
 	blas3/gemm.c \
 	blas3/symm.c \
@@ -130,7 +205,7 @@ BLAS3 = \
 	blas3/trsm_unb.c \
 	blas3/updtrmm.c
 
-XBLAS3 = \
+OLD_XBLAS3 = \
 	blas3/kernel_ext.c \
 	blas3/symm_ext.c \
 	blas3/trmm_ext.c \
@@ -191,7 +266,7 @@ LAPACK = \
 	lapack/evd.c \
 	lapack/svd.c \
 	lapack/qrt.c \
-	lapack/dqds.c 
+	lapack/dqds.c
 
 SPARSE = \
 	sparse/iluz.c \
@@ -215,9 +290,9 @@ SPARSE = \
 	sparse/symv.c \
 	sparse/trmv.c \
 	sparse/trsv.c \
-	sparse/util.c 
+	sparse/util.c
 
-COMPAT = \
+OLD_COMPAT = \
 	compat/asum.c \
 	compat/axpy.c \
 	compat/copy.c \
@@ -240,13 +315,14 @@ COMPAT = \
 	compat/trsm.c \
 	compat/syrk.c \
 	compat/syr2k.c \
-	compat/potrf.c 
+	compat/potrf.c
+endif
 
 ##noinst_LTLIBRARIES = libd.la libz.la libx.la libdext.la libdcompat.la
-noinst_LTLIBRARIES = 
+noinst_LTLIBRARIES =
 
-# common to all 
-lib_LTLIBRARIES = 
+# common to all
+lib_LTLIBRARIES =
 
 libx_la_SOURCES = $(COMMON)
 BUILT_SOURCES =
@@ -255,36 +331,36 @@ BUILT_SOURCES =
 if ENABLE_FLOAT64
 
 lib_LTLIBRARIES += libarmasd.la
-noinst_LTLIBRARIES += libd.la libspd.la
-libarmasd_la_SOURCES = 
-libarmasd_la_LIBADD = libx.la libd.la libspd.la
+noinst_LTLIBRARIES += libd.la
+libarmasd_la_SOURCES =
+libarmasd_la_LIBADD = libd.la
 
 
 # double precision
-libd_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
+libd_la_SOURCES = $(COMMON) $(BLAS) $(EBLAS) $(ACCEL) $(COMPAT)
 libd_la_CPPFLAGS = -DFLOAT64 
 
-# sparse double precision
-libspd_la_SOURCES = $(SPARSE)
-libspd_la_CPPFLAGS = -DFLOAT64
+# # sparse double precision
+# libspd_la_SOURCES = $(SPARSE)
+# libspd_la_CPPFLAGS = -DFLOAT64
 
-if ENABLE_EXT_PRECISION
-# extended precision
-libdext_la_SOURCES = $(XBLAS1) $(XBLAS2) $(XBLAS3)
-libdext_la_CPPFLAGS = -DFLOAT64 
-noinst_LTLIBRARIES += libdext.la
-libarmasd_la_LIBADD += libdext.la
-endif
+# if CONFIG_EXT_PRECISION
+# # extended precision
+# libdext_la_SOURCES = $(EBLAS)
+# libdext_la_CPPFLAGS = -DFLOAT64 
+# noinst_LTLIBRARIES += libdext.la
+# libarmasd_la_LIBADD += libdext.la
+# endif
 
-if ENABLE_COMPAT
-# double precision compability
-libdcompat_la_SOURCES = $(COMPAT)
-libdcompat_la_CPPFLAGS = -DFLOAT64 -DCOMPAT
-noinst_LTLIBRARIES += libdcompat.la
-libarmasd_la_LIBADD += libdcompat.la
-endif
+# if CONFIG_COMPAT
+# # double precision compability
+# libdcompat_la_SOURCES = $(COMPAT)
+# libdcompat_la_CPPFLAGS = -DFLOAT64 -DCOMPAT
+# noinst_LTLIBRARIES += libdcompat.la
+# libarmasd_la_LIBADD += libdcompat.la
+# endif
 
-BUILT_SOURCES += armas/dmatrix.h armas/linalgd.h armas/dsparse.h
+#BUILT_SOURCES += armas/dmatrix.h armas/linalgd.h armas/dsparse.h
 
 endif
 
@@ -299,7 +375,7 @@ libarmass_la_LIBADD = libx.la libs.la
 libs_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
 libs_la_CPPFLAGS = -DFLOAT32 
 
-if ENABLE_EXT_PRECISION
+if CONFIG_EXT_PRECISION
 # extended precision
 libsext_la_SOURCES = $(XBLAS1) $(XBLAS2) $(XBLAS3)
 libsext_la_CPPFLAGS = -DFLOAT32
@@ -307,7 +383,7 @@ noinst_LTLIBRARIES += libsext.la
 libarmass_la_LIBADD += libsext.la
 endif
 
-if ENABLE_COMPAT
+if CONFIG_COMPAT
 # single precision compability
 libscompat_la_SOURCES = $(COMPAT)
 libscompat_la_CPPFLAGS = -DFLOAT32 -DCOMPAT
@@ -315,7 +391,7 @@ noinst_LTLIBRARIES += libscompat.la
 libarmass_la_LIBADD += libscompat.la
 endif
 
-BUILT_SOURCES += armas/smatrix.h armas/linalgs.h
+#BUILT_SOURCES += armas/smatrix.h armas/linalgs.h
 
 endif
 
@@ -327,14 +403,14 @@ noinst_LTLIBRARIES += libx.la libz.la
 lib_LTLIBRARIES += libarmasz.la
 
 # complex support
-libz_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2)
+libz_la_SOURCES = $(COMMON) $(BLAS) $(EBLAS)
 libz_la_CPPFLAGS = -DCOMPLEX128
 
 libarmasz_la_SOURCES = 
 libarmasz_la_LIBADD = libx.la libz.la
 
 
-BUILT_SOURCES += armas/zmatrix.h armas/libalgz.h
+#BUILT_SOURCES += armas/zmatrix.h armas/libalgz.h
 
 endif
 
@@ -342,25 +418,25 @@ nobase_include_HEADERS = armas/armas.h $(BUILT_SOURCES)
 
 CLEANFILES = $(BUILT_SOURCES)
 
-armas/smatrix.h: inc/matrix.h
-	./make-header.sh $< $@ float
+# armas/smatrix.h: inc/matrix.h
+# 	./make-header.sh $< $@ float
 
-armas/linalgs.h: inc/linalg.h
-	./make-header.sh $< $@ float
+# armas/linalgs.h: inc/linalg.h
+# 	./make-header.sh $< $@ float
 
-armas/dmatrix.h: inc/matrix.h
-	./make-header.sh $< $@ double
+# armas/dmatrix.h: inc/matrix.h
+# 	./make-header.sh $< $@ double
 
-armas/linalgd.h: inc/linalg.h
-	./make-header.sh $< $@ double
+# armas/linalgd.h: inc/linalg.h
+# 	./make-header.sh $< $@ double
 
-armas/dsparse.h: sparse/sparse.h
-	./make-header.sh $< $@ double
+# armas/dsparse.h: sparse/sparse.h
+# 	./make-header.sh $< $@ double
 
-# comples types
+# # comples types
 
-armas/zmatrix.h: inc/matrix.h
-	./make-header.sh $< $@ zcomplex
+# armas/zmatrix.h: inc/matrix.h
+# 	./make-header.sh $< $@ zcomplex
 
 
 ###	sed 's/armas_x_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@
