@@ -12,6 +12,18 @@
 .deps
 .dirstamp
 
+# Autotools files
+aclocal.m4
+autom4te.cache
+config.guess
+config.sub
+configure
+depcomp
+ltmain.sh
+*.in
+
+# build tree
+build
 # Object files
 *.o
 *.ko
