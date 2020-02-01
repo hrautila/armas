@@ -11,8 +11,8 @@
 #include <stdint.h>
 
 #include "dtype.h"
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 
 // undefined __ARMAS_INLINE macro 
 #ifdef __ARMAS_INLINE

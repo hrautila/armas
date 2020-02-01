@@ -6,7 +6,7 @@
 // any later version. See the COPYING file included in this archive.
 
 //! \cond
-#include <armas/armas.h>
+#include "armas.h"
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -47,7 +47,7 @@
  *         (AR)
  */
 static
-void __apply_pivot_lower(armas_x_dense_t *A, int srcix, int dstix, armas_conf_t *conf)
+void apply_pivot_lower(armas_x_dense_t *A, int srcix, int dstix, armas_conf_t *conf)
 {
     armas_x_dense_t s, d;
     DTYPE p1, p3;
@@ -86,18 +86,18 @@ void __apply_pivot_lower(armas_x_dense_t *A, int srcix, int dstix, armas_conf_t 
  *
  * UPPER triangular; moving from bottom-right to top-left
  *
- *    srcix > dstix:                     
- *    d x D3 x  x  x  S3 x               
- *      d D3 x  x  x  S3 x               
- *        P3 D2 D2 D2 P2 D1   -- dstinx  
- *           d  x  x  S2 x               
- *              d  x  S2 x               
- *                 d  S2 x               
- *                    P1 S1   -- srcinx  
- *                       d               
+ *    srcix > dstix:
+ *    d x D3 x  x  x  S3 x
+ *      d D3 x  x  x  S3 x
+ *        P3 D2 D2 D2 P2 D1   -- dstinx
+ *           d  x  x  S2 x
+ *              d  x  S2 x
+ *                 d  S2 x
+ *                    P1 S1   -- srcinx
+ *                       d
  */
 static
-void __apply_pivot_upper(armas_x_dense_t *A, int srcix, int dstix, armas_conf_t *conf)
+void apply_pivot_upper(armas_x_dense_t *A, int srcix, int dstix, armas_conf_t *conf)
 {
     armas_x_dense_t s, d;
     DTYPE p1, p3;
@@ -109,7 +109,7 @@ void __apply_pivot_upper(armas_x_dense_t *A, int srcix, int dstix, armas_conf_t 
         srcix = dstix;
         dstix = t;
     }
-  
+
     // S1 -- D1
     armas_x_submatrix_unsafe(&s, A, srcix, srcix+1, 1, A->cols-srcix-1);
     armas_x_submatrix_unsafe(&d, A, dstix, srcix+1, 1, A->cols-srcix-1);
@@ -135,7 +135,7 @@ void __apply_pivot_upper(armas_x_dense_t *A, int srcix, int dstix, armas_conf_t 
  * Swap rows of matrix
  */
 static
-void __swap_rows(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
+void swap_rows(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
 {
     armas_x_dense_t r0, r1;
     if (src == dst || A->cols <= 0)
@@ -148,7 +148,7 @@ void __swap_rows(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
     armas_x_swap(&r0, &r1, (armas_conf_t *)0);
 }
 
-void __swap_rows2(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
+void swap_rows2(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
 {
     armas_x_dense_t r0, r1;
     if (src == dst || A->cols <= 0)
@@ -165,14 +165,14 @@ void __swap_rows2(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
  * Swap columns of matrix
  */
 static
-void __swap_cols(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
+void swap_cols(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
 {
     armas_x_dense_t r0, r1;
     if (src == dst || A->rows <= 0)
         return;
     if (src >= A->cols || dst >= A->cols)
         return;
-    
+
     armas_x_submatrix(&r0, A, 0, src, A->rows, 1);
     armas_x_submatrix(&r1, A, 0, dst, A->rows, 1);
     armas_x_swap(&r0, &r1, (armas_conf_t *)0);
@@ -181,7 +181,7 @@ void __swap_cols(armas_x_dense_t *A, int src, int dst, armas_conf_t *conf)
 
 #if 0
 static
-void __apply_pivots(armas_x_dense_t *A, armas_pivot_t *P, armas_conf_t *conf)
+void apply_pivots(armas_x_dense_t *A, armas_pivot_t *P, armas_conf_t *conf)
 {
     int k, n;
 
@@ -191,7 +191,7 @@ void __apply_pivots(armas_x_dense_t *A, armas_pivot_t *P, armas_conf_t *conf)
     for (k = 0; k < P->npivots; k++) {
         n = P->indexes[k];
         if (n > 0 && n-1 != k) {
-            __swap_rows(A, n-1, k, conf);
+            swap_rows(A, n-1, k, conf);
         }
     }
 }
@@ -201,7 +201,7 @@ void __apply_pivots(armas_x_dense_t *A, armas_pivot_t *P, armas_conf_t *conf)
  * Apply row pivots forward or backward.
  */
 static
-void __apply_row_pivots(armas_x_dense_t *A, armas_pivot_t *P,
+void apply_row_pivots(armas_x_dense_t *A, armas_pivot_t *P,
                         int dir, armas_conf_t *conf)
 {
     int k, n, nk;
@@ -213,7 +213,7 @@ void __apply_row_pivots(armas_x_dense_t *A, armas_pivot_t *P,
         for (k = 0; k < P->npivots; k++) {
             n = P->indexes[k];
             if (n > 0 && n-1 != k) {
-                __swap_rows(A, n-1, k, conf);
+                swap_rows(A, n-1, k, conf);
             }
         }
     } else {
@@ -221,7 +221,7 @@ void __apply_row_pivots(armas_x_dense_t *A, armas_pivot_t *P,
         for (nk = A->rows-1, k = P->npivots-1; k >= 0; k--, nk--) {
             n = P->indexes[k];
             if (n > 0 && n-1 != nk) {
-                __swap_rows(A, n-1, nk, conf);
+                swap_rows(A, n-1, nk, conf);
             }
         }
     }
@@ -231,7 +231,7 @@ void __apply_row_pivots(armas_x_dense_t *A, armas_pivot_t *P,
  * \brief Apply column pivots forward or backward.
  */
 static
-void __apply_col_pivots(armas_x_dense_t *A, armas_pivot_t *P,
+void apply_col_pivots(armas_x_dense_t *A, armas_pivot_t *P,
                         int dir, armas_conf_t *conf)
 {
     int k, n, nk;
@@ -243,7 +243,7 @@ void __apply_col_pivots(armas_x_dense_t *A, armas_pivot_t *P,
         for (k = 0; k < P->npivots; k++) {
             n = P->indexes[k];
             if (n > 0 && n-1 != k) {
-                __swap_cols(A, n-1, k, conf);
+                swap_cols(A, n-1, k, conf);
             }
         }
     } else {
@@ -251,7 +251,7 @@ void __apply_col_pivots(armas_x_dense_t *A, armas_pivot_t *P,
         for (nk = A->cols-1, k = P->npivots-1; k >= 0; k--, nk--) {
             n = P->indexes[k];
             if (n > 0 && n-1 != nk) {
-                __swap_cols(A, n-1, nk, conf);
+                swap_cols(A, n-1, nk, conf);
             }
         }
     }
@@ -269,7 +269,7 @@ int armas_x_pivot_rows(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_co
     if (!conf)
         conf = armas_conf_default();
 
-    __apply_row_pivots(A, P, flags, conf);
+    apply_row_pivots(A, P, flags, conf);
     return 0;
 }
 
@@ -284,8 +284,8 @@ int armas_x_pivot_cols(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_co
         return -1;
     if (!conf)
         conf = armas_conf_default();
-    
-    __apply_col_pivots(A, P, flags, conf);
+
+    apply_col_pivots(A, P, flags, conf);
     return 0;
 }
 
@@ -323,12 +323,12 @@ int armas_x_pivot(armas_x_dense_t *A, armas_pivot_t *P, unsigned int flags, arma
 {
     if (!conf)
         conf = armas_conf_default();
-    
+
     // get direction
     int k, kp, nk, dir = flags & 0x1;
     // mask out direction bit
     flags &= ~0x1;
-    
+
     switch (flags) {
     case ARMAS_PIVOT_UPPER:
         if (A->rows < P->npivots) {
@@ -340,15 +340,15 @@ int armas_x_pivot(armas_x_dense_t *A, armas_pivot_t *P, unsigned int flags, arma
                 kp = armas_pivot_get(P, k);
                 if (kp-1 == k)
                     continue;
-                __apply_pivot_upper(A, k, kp-1, conf);
+                apply_pivot_upper(A, k, kp-1, conf);
             }
-        } else { 
+        } else {
             // row/col index and pivot index may not coincide (npivots < n(A))
             for (nk = A->rows-1, k = P->npivots-1; k >= 0; k--, nk--) {
                 kp = armas_pivot_get(P, k);
                 if (kp-1 == nk)
                     continue;
-                __apply_pivot_upper(A, kp-1, nk, conf);
+                apply_pivot_upper(A, kp-1, nk, conf);
             }
         }
         break;
@@ -364,16 +364,16 @@ int armas_x_pivot(armas_x_dense_t *A, armas_pivot_t *P, unsigned int flags, arma
                 kp = armas_pivot_get(P, k);
                 if (kp-1 == k)
                     continue;
-                __apply_pivot_lower(A, k, kp-1, conf);
+                apply_pivot_lower(A, k, kp-1, conf);
             }
-        } else { 
-            // looping backwards from row count; pivot index need to compared 
+        } else {
+            // looping backwards from row count; pivot index need to compared
             // to current row number nk or pivot index k
             for (nk = A->rows-1, k = P->npivots-1; k >= 0; k--, nk--) {
                 kp = armas_pivot_get(P, k);
                 if (kp-1 == nk)
                     continue;
-                __apply_pivot_lower(A, kp-1, nk, conf);
+                apply_pivot_lower(A, kp-1, nk, conf);
             }
         }
         break;
@@ -383,7 +383,7 @@ int armas_x_pivot(armas_x_dense_t *A, armas_pivot_t *P, unsigned int flags, arma
             conf->error = ARMAS_ESIZE;
             return -1;
         }
-        __apply_col_pivots(A, P, dir, conf);
+        apply_col_pivots(A, P, dir, conf);
         break;
 
     case ARMAS_PIVOT_ROWS:
@@ -392,7 +392,7 @@ int armas_x_pivot(armas_x_dense_t *A, armas_pivot_t *P, unsigned int flags, arma
             conf->error = ARMAS_ESIZE;
             return -1;
         }
-        __apply_row_pivots(A, P, dir, conf);
+        apply_row_pivots(A, P, dir, conf);
         break;
     }
     return 0;
@@ -406,7 +406,7 @@ int armas_x_pivot(armas_x_dense_t *A, armas_pivot_t *P, unsigned int flags, arma
  *
  * \ingroup lapackaux internal
  */
-int __pivot_index(armas_x_dense_t *A, armas_conf_t *conf)
+int armas_x_pivot_index(armas_x_dense_t *A, armas_conf_t *conf)
 {
   return armas_x_iamax(A, conf) + 1;
 }
@@ -427,7 +427,7 @@ int __pivot_index(armas_x_dense_t *A, armas_conf_t *conf)
  *
  * (This is maybe not so usefull at all, tricky to order based on this.)
  */
-int __pivot_sort(armas_x_dense_t *D, armas_pivot_t *P, int direction)
+int armas_x_pivot_sort(armas_x_dense_t *D, armas_pivot_t *P, int direction)
 {
     int k, j, pk, pj;
     DTYPE cval, tmpval;
