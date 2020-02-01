@@ -15,9 +15,17 @@ COMMON = \
 	base/armas.c \
 	base/cache.c \
 	base/env.c \
-	base/system.c
+	base/system.c \
 	base/matrix.c \
-	base/matrix_ext.c
+	base/matrix_ext.c \
+	base/partition.c \
+	base/pivot.c \
+	base/pivot_ext.c \
+	io/iomm.c \
+	io/json_base.c \
+	io/json_file.c \
+	io/json_reader.c \
+	io/json_writer.c
 
 BLAS = \
 	blas/asum.c \
