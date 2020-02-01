@@ -6,8 +6,8 @@
 // any later version. See the COPYING file included in this archive.
 
 #ifndef __DOXYGEN
-#ifndef ARMAS_DTYPE_H
-#define ARMAS_DTYPE_H 1
+#ifndef ARMAS_DLPACK_H
+#define ARMAS_DLPACK_H 1
 
 #if HAVE_CONFIG_H
   #include "config.h"
@@ -15,19 +15,29 @@
 
 #include <math.h>
 
-#ifdef COMPLEX128
+#ifdef COMPLEX64
 /*
  *
  */
-#elif COMPLEX64
+#include "complex64/names_base.h"
+#include "complex64/names_blas.h"
+#include "complex64/names_lapack.h"
+
+#elif COMPLEX32
 /*
  *
  */
+#include "complex32/names_base.h"
+#include "complex32/names_blas.h"
+#include "complex32/names_lapack.h"
 
 #elif FLOAT32
 /*
  *
  */
+#include "float32/names_base.h"
+#include "float32/names_blas.h"
+#include "float32/names_lapack.h"
 
 #else
 /*
@@ -35,8 +45,9 @@
  */
 #include "float64/names_base.h"
 #include "float64/names_blas.h"
+#include "float64/names_lapack.h"
 
 #endif
 
-#endif /* ARMAS_DTYPE_H */
+#endif /* ARMAS_DLPACK_H */
 #endif /* __DOXYGEN */
