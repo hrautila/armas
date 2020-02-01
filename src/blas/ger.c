@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012-2019
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -33,7 +33,6 @@
 //! \cond
 #include "matrix.h"
 #include "internal.h"
-//#include "nosimd/mvec.h"
 //! \endcond
 
 

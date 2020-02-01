@@ -107,7 +107,7 @@ int armas_x_mult_trm(
 
     if (CONFIG_ACCELERATORS) {
         struct armas_ac_blas3 args;
-        armas_ac_set_blas3_args(&args, __ZERO, __nil, alpha, A, B, flags);
+        armas_ac_set_blas3_args(&args, ZERO, __nil, alpha, A, B, flags);
         int rc = armas_ac_dispatch(conf->accel, ARMAS_AC_TRMM, &args, conf);
         if (rc != -ARMAS_EIMP)
             return rc;

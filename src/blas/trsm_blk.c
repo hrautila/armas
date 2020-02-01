@@ -29,7 +29,6 @@
 
 #include "matrix.h"
 #include "internal.h"
-//#include "nosimd/mvec.h"
 
 
 /*
@@ -82,8 +81,8 @@ void solve_blk_lu_llt(
         armas_x_submatrix_unsafe(&A1, A, cI, cI, nI, nI);
 
         // update and solve
-        armas_x_mult_kernel(alpha, &B1, -__ONE, &A0, &B0, flags, cache);
-        armas_x_solve_recursive(&B1, __ONE, &A1, flags|ARMAS_LEFT, cache);
+        armas_x_mult_kernel(alpha, &B1, -ONE, &A0, &B0, flags, cache);
+        armas_x_solve_recursive(&B1, ONE, &A1, flags|ARMAS_LEFT, cache);
     }
 }
 
@@ -136,8 +135,8 @@ void solve_blk_lut_ll(
         armas_x_submatrix_unsafe(&A1, A, i, i, nI, nI);
 
         // update and solve
-        armas_x_mult_kernel(alpha, &B1, -__ONE, &A0, &B0, flags, cache);
-        armas_x_solve_recursive(&B1, __ONE, &A1, flags|ARMAS_LEFT, cache);
+        armas_x_mult_kernel(alpha, &B1, -ONE, &A0, &B0, flags, cache);
+        armas_x_solve_recursive(&B1, ONE, &A1, flags|ARMAS_LEFT, cache);
     }
 }
 
@@ -191,8 +190,8 @@ void solve_blk_ru_rlt(
         armas_x_submatrix_unsafe(&A1, A, i, i, nI, nI);
 
         // update block and solve;
-        armas_x_mult_kernel(alpha, &B1, -__ONE, &B0, &A0, transB, cache);
-        armas_x_solve_recursive(&B1, __ONE, &A1, flags|ARMAS_RIGHT, cache);
+        armas_x_mult_kernel(alpha, &B1, -ONE, &B0, &A0, transB, cache);
+        armas_x_solve_recursive(&B1, ONE, &A1, flags|ARMAS_RIGHT, cache);
     }
 }
 
@@ -249,7 +248,7 @@ void solve_blk_rut_rl(
 
         // update and solve
         armas_x_mult_kernel(alpha, &B1, -1.0, &B0, &A0, transB, cache);
-        armas_x_solve_recursive(&B1, __ONE, &A1, flags|ARMAS_RIGHT, cache);
+        armas_x_solve_recursive(&B1, ONE, &A1, flags|ARMAS_RIGHT, cache);
     }
 }
 

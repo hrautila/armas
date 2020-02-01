@@ -57,7 +57,7 @@ void trmm_unb_lu(armas_x_dense_t *B, const armas_x_dense_t *A, DTYPE alpha, int 
         armas_x_mvmult_unsafe(scale, &b0, alpha, &B1, &a0, ARMAS_TRANS);
     }
     scale = unit ? alpha : alpha *armas_x_get_unsafe(A, i, i);
-    if (scale == __ONE)
+    if (scale == ONE)
         return;
     armas_x_submatrix_unsafe(&b0, B, i, 0, 1, B->cols);
     armas_x_scale_unsafe(&b0, scale);
@@ -90,7 +90,7 @@ void trmm_unb_lut(armas_x_dense_t *B, const armas_x_dense_t *A, DTYPE alpha, int
         armas_x_mvmult_unsafe(scale, &b0, alpha, &B1, &a0, ARMAS_TRANS);
     }
     scale = unit ? alpha : alpha *armas_x_get_unsafe(A, i, i);
-    if (scale == __ONE)
+    if (scale == ONE)
         return;
     armas_x_submatrix_unsafe(&b0, B, 0, 0, 1, B->cols);
     armas_x_scale_unsafe(&b0, scale);
@@ -123,7 +123,7 @@ void trmm_unb_ll(armas_x_dense_t *B, const armas_x_dense_t *A, DTYPE alpha, int 
         armas_x_mvmult_unsafe(scale, &b0, alpha, &B1, &a0, ARMAS_TRANS);
     }
     scale = unit ? alpha : alpha *armas_x_get_unsafe(A, i, i);
-    if (scale == __ONE)
+    if (scale == ONE)
         return;
     armas_x_submatrix_unsafe(&b0, B, 0, 0, 1, B->cols);
     armas_x_scale_unsafe(&b0, scale);
@@ -156,7 +156,7 @@ void trmm_unb_llt(armas_x_dense_t *B, const armas_x_dense_t *A, DTYPE alpha, int
         armas_x_mvmult_unsafe(scale, &b0, alpha, &B1, &a0, ARMAS_TRANS);
     }
     scale = unit ? alpha : alpha *armas_x_get_unsafe(A, i, i);
-    if (scale == __ONE)
+    if (scale == ONE)
         return;
     armas_x_submatrix_unsafe(&b0, B, i, 0, 1, B->cols);
     armas_x_scale_unsafe(&b0, scale);
@@ -189,7 +189,7 @@ void trmm_unb_ru(armas_x_dense_t *B, const armas_x_dense_t *A, DTYPE alpha, int 
         armas_x_mvmult_unsafe(scale, &b0, alpha, &B1, &a0, 0);
     }
     scale = unit ? alpha : alpha *armas_x_get_unsafe(A, i, i);
-    if (scale == __ONE)
+    if (scale == ONE)
         return;
     armas_x_submatrix_unsafe(&b0, B, 0, i, B->rows, 1);
     armas_x_scale_unsafe(&b0, scale);
@@ -221,7 +221,7 @@ void trmm_unb_rl(armas_x_dense_t *B, const armas_x_dense_t *A, DTYPE alpha, int 
         armas_x_mvmult_unsafe(scale, &b0, alpha, &B1, &a0, 0);
     }
     scale = unit ? alpha : alpha *armas_x_get_unsafe(A, i, i);
-    if (scale == __ONE)
+    if (scale == ONE)
         return;
     armas_x_submatrix_unsafe(&b0, B, 0, i, B->rows, 1);
     armas_x_scale_unsafe(&b0, scale);
@@ -253,7 +253,7 @@ void trmm_unb_rut(armas_x_dense_t *B, const armas_x_dense_t *A, DTYPE alpha, int
         armas_x_mvmult_unsafe(scale, &b0, alpha, &B1, &a0, 0);
     }
     scale = unit ? alpha : alpha *armas_x_get_unsafe(A, i, i);
-    if (scale == __ONE)
+    if (scale == ONE)
         return;
     armas_x_submatrix_unsafe(&b0, B, 0, i, B->rows, 1);
     armas_x_scale_unsafe(&b0, scale);
@@ -285,7 +285,7 @@ void trmm_unb_rlt(armas_x_dense_t *B, const armas_x_dense_t *A, DTYPE alpha, int
         armas_x_mvmult_unsafe(scale, &b0, alpha, &B1, &a0, 0);
     }
     scale = unit ? alpha : alpha *armas_x_get_unsafe(A, i, i);
-    if (scale == __ONE)
+    if (scale == ONE)
         return;
     armas_x_submatrix_unsafe(&b0, B, 0, i, B->rows, 1);
     armas_x_scale_unsafe(&b0, scale);

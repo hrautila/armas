@@ -69,7 +69,7 @@ void __trsv_ext_unb_ll(
 
         xk = armas_x_get_at_unsafe(X, i);
         twoprod(&s0, &u0, xk, alpha);
-        armas_x_ext_adot_dx_unsafe(&s0, &u0, -__ONE, &x0, &dx0, &a0);
+        armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
 
         if (unit) {
             armas_x_set_at_unsafe(X,  i, s0);
@@ -127,7 +127,7 @@ void __trsv_ext_unb_llt(
 
         xk = armas_x_get_at_unsafe(X, i);
         twoprod(&s0, &u0, xk, alpha);
-        armas_x_ext_adot_dx_unsafe(&s0, &u0, -__ONE, &x0, &dx0, &a0);
+        armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
 
         if (unit) {
             armas_x_set_at_unsafe(dX, i, u0);
@@ -178,14 +178,14 @@ void __trsv_ext_unb_lu(
     armas_x_set_at_unsafe(dX, Ac->cols-1, u0);
 
     for (i = Ac->cols-2; i >= 0; --i) {
-        p0 = r0 = __ZERO;
+        p0 = r0 = ZERO;
         armas_x_subvector_unsafe(&x0, X, i+1, Ac->cols-1-i);
         armas_x_subvector_unsafe(&dx0, dX, i+1, Ac->cols-1-i);
         armas_x_submatrix_unsafe(&a0, Ac, i, i+1, 1, Ac->cols-1-i);
 
         xk = armas_x_get_at_unsafe(X, i);
         twoprod(&s0, &u0, xk, alpha);
-        armas_x_ext_adot_dx_unsafe(&s0, &u0, -__ONE, &x0, &dx0, &a0);
+        armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
 
         if (unit) {
             fastsum(&s0, &c0, s0, u0);
@@ -243,7 +243,7 @@ void __trsv_ext_unb_lut(
 
         xk = armas_x_get_at_unsafe(X, i);
         twoprod(&s0, &u0, xk, alpha);
-        armas_x_ext_adot_dx_unsafe(&s0, &u0, -__ONE, &x0, &dx0, &a0);
+        armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
 
         if (unit) {
             armas_x_set_at_unsafe(X,  i, s0);

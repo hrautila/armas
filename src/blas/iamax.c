@@ -41,8 +41,8 @@ int vec_iamax(const armas_x_dense_t *X,  int N)
     max = 0.0;
     ix = 0;
     for (i = 0; i < N-1; i += 2) {
-        c0 = __ABS(X->elems[(i+0)*xinc]);
-        c1 = __ABS(X->elems[(i+1)*xinc]);
+        c0 = ABS(X->elems[(i+0)*xinc]);
+        c1 = ABS(X->elems[(i+1)*xinc]);
         if (c1 > c0) {
             n = 1;
             c0 = c1;
@@ -54,7 +54,7 @@ int vec_iamax(const armas_x_dense_t *X,  int N)
         n = 0;
     }
     if (i < N) {
-        c0 = __ABS(X->elems[i*xinc]);
+        c0 = ABS(X->elems[i*xinc]);
         ix = c0 > max ? N-1 : ix;
     }
     return ix;
@@ -70,11 +70,11 @@ int vec_iamin(const armas_x_dense_t *X,  int N)
         return 0;
 
     xinc = X->rows == 1 ? X->step : 1;
-    min = __ABS(X->elems[0]);
+    min = ABS(X->elems[0]);
     ix = 0;
     for (i = 0; i < N-1; i += 2) {
-        c0 = __ABS(X->elems[(i+0)*xinc]);
-        c1 = __ABS(X->elems[(i+1)*xinc]);
+        c0 = ABS(X->elems[(i+0)*xinc]);
+        c1 = ABS(X->elems[(i+1)*xinc]);
         if (c1 < c0) {
             n = 1;
             c0 = c1;
@@ -86,7 +86,7 @@ int vec_iamin(const armas_x_dense_t *X,  int N)
         n = 0;
     }
     if (i < N) {
-        c0 = __ABS(X->elems[i*xinc]);
+        c0 = ABS(X->elems[i*xinc]);
         ix = c0 < min ? N-1 : ix;
     }
     return ix;
@@ -107,7 +107,7 @@ int vec_iamax2(const armas_x_dense_t *X,  int N)
     max = 0.0;
     ix = 0;
     for (i = 0, ep = X->elems; i < N; ++i, ep += xinc) {
-        c0 = __ABS(*ep);
+        c0 = ABS(*ep);
         if (c0 > max) {
             ix = i;
             max = c0;
@@ -128,10 +128,10 @@ int vec_iamin2(const armas_x_dense_t *X,  int N)
 
     xinc = X->rows == 1 ? X->step : 1;
     ep = X->elems;
-    min = __ABS(*ep++);
+    min = ABS(*ep++);
     ix = 0;
     for (i = 1; i < N; ++i, ep += xinc) {
-        c0 = __ABS(*ep);
+        c0 = ABS(*ep);
         if (c0 < min) {
             ix = i;
             min = c0;
@@ -178,9 +178,9 @@ ABSTYPE armas_x_amax(const armas_x_dense_t *x, armas_conf_t *conf)
 
     int imax = armas_x_iamax(x, conf); //vec_iamax2(x, armas_x_size(x));
     if (imax != -1) {
-        return __ABS(armas_x_get_at_unsafe(x, imax));
+        return ABS(armas_x_get_at_unsafe(x, imax));
     }
-    return __ZERO;
+    return ZERO;
 }
 
 

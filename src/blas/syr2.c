@@ -32,7 +32,7 @@
 //! \cond
 #include "matrix.h"
 #include "internal.h"
-#include "nosimd/mvec.h"
+//#include "nosimd/mvec.h"
 
 //! \endcond
 
@@ -51,7 +51,7 @@ void update_syr2_recursive(
 
     if (N < min_mvec_size) {
         armas_x_mvupdate_trm_unb(beta, A, alpha, X, Y, flags);
-        armas_x_mvupdate_trm_unb(__ONE, A, alpha, Y, X, flags);
+        armas_x_mvupdate_trm_unb(ONE, A, alpha, Y, X, flags);
         return;
     }
 
@@ -60,7 +60,7 @@ void update_syr2_recursive(
     armas_x_submatrix_unsafe(&A0, A, 0, 0, N/2, N/2);
     if (N/2 < min_mvec_size) {
         armas_x_mvupdate_trm_unb(beta, &A0, alpha, &x0, &y0, flags);
-        armas_x_mvupdate_trm_unb(__ONE, &A0, alpha, &y0, &x0, flags);
+        armas_x_mvupdate_trm_unb(ONE, &A0, alpha, &y0, &x0, flags);
     } else {
         update_syr2_recursive(beta, &A0, alpha, &x0, &y0, flags, N/2, min_mvec_size);
     }
@@ -73,7 +73,7 @@ void update_syr2_recursive(
 
         armas_x_subvector_unsafe(&x0, X, N/2, N-N/2);
         armas_x_subvector_unsafe(&y0, Y, 0, N/2);
-        armas_x_mvupdate_rec(__ONE, &A0, alpha, &y0, &x0, flags);
+        armas_x_mvupdate_rec(ONE, &A0, alpha, &y0, &x0, flags);
     } else {
         armas_x_subvector_unsafe(&y0, Y, 0, N/2);
         armas_x_subvector_unsafe(&x0, X, N/2, N-N/2);
@@ -82,7 +82,7 @@ void update_syr2_recursive(
 
         armas_x_subvector_unsafe(&y0, Y, N/2, N-N/2);
         armas_x_subvector_unsafe(&x0, X, 0, N/2);
-        armas_x_mvupdate_rec(__ONE, &A0, alpha, &y0, &x0, flags);
+        armas_x_mvupdate_rec(ONE, &A0, alpha, &y0, &x0, flags);
     }
 
     armas_x_subvector_unsafe(&y0, Y, N/2, N-N/2);
@@ -90,7 +90,7 @@ void update_syr2_recursive(
     armas_x_submatrix_unsafe(&A0, A, N/2, N/2, N-N/2, N-N/2);
     if (N-N/2 < min_mvec_size) {
         armas_x_mvupdate_trm_unb(beta, &A0, alpha, &x0, &y0, flags);
-        armas_x_mvupdate_trm_unb(__ONE, &A0, alpha, &y0, &x0, flags);
+        armas_x_mvupdate_trm_unb(ONE, &A0, alpha, &y0, &x0, flags);
     } else {
         update_syr2_recursive(beta, &A0, alpha, &x0, &y0, flags, N-N/2, min_mvec_size);
     }
@@ -162,7 +162,7 @@ int armas_x_mvupdate2_sym(
     case ARMAS_ONAIVE:
     default:
         armas_x_mvupdate_trm_unb(beta, A, alpha, x, y, flags);
-        armas_x_mvupdate_trm_unb(__ONE, A, alpha, y, x, flags);
+        armas_x_mvupdate_trm_unb(ONE, A, alpha, y, x, flags);
         break;
 
     }

@@ -55,7 +55,7 @@ void trmm_ext_unb_upper(
             armas_x_submatrix_unsafe(&a0, A, i, i+unit, 1, A->cols-i-unit);
             armas_x_submatrix_unsafe(&b0, B, i+unit, k, A->cols-i-unit, 1);
 
-            s0 = unit ? xk : __ZERO; u0 = __ZERO;
+            s0 = unit ? xk : ZERO; u0 = ZERO;
             twoprod(&s0, &u0, s0, alpha);
             armas_x_ext_adot_unsafe(&s0, &u0, alpha, &a0, &b0);
 
@@ -94,7 +94,7 @@ void trmm_ext_blk_upper(
             armas_x_submatrix_unsafe(&B0, B, i+nI, j, B->rows-i-nI, nJ);
             armas_x_submatrix_unsafe(&B1, B, i, j, nI, nJ);
             armas_x_make(&dB, nI, nJ, cache->ab_step, cache->dC);
-            armas_x_scale_unsafe(&dB, __ZERO);
+            armas_x_scale_unsafe(&dB, ZERO);
 
             trmm_ext_unb_upper(&B1, &dB, alpha, &A1, unit);
             armas_x_ext_panel_unsafe(&B1, &dB, alpha, &A0, &B0, flags, cache);
@@ -128,7 +128,7 @@ trmm_ext_unb_u_trans(
             armas_x_submatrix_unsafe(&a0, A, 0, i, i+1-unit, 1);
             armas_x_submatrix_unsafe(&b0, B, 0, j, i+1-unit, 1);
 
-            s0 = unit ? xk : __ZERO; u0 = __ZERO;
+            s0 = unit ? xk : ZERO; u0 = ZERO;
             twoprod(&s0, &u0, s0, alpha);
             armas_x_ext_adot_unsafe(&s0, &u0, alpha, &a0, &b0);
 
@@ -167,7 +167,7 @@ void trmm_ext_blk_u_trans(
             armas_x_submatrix_unsafe(&B0, B, 0,    j, i-nI, nJ);
             armas_x_submatrix_unsafe(&B1, B, i-nI, j, nI, nJ);
             armas_x_make(&dB, nI, nJ, cache->ab_step, cache->dC);
-            armas_x_scale_unsafe(&dB, __ZERO);
+            armas_x_scale_unsafe(&dB, ZERO);
 
             trmm_ext_unb_u_trans(&B1, &dB, alpha, &A1, unit);
             armas_x_ext_panel_unsafe(&B1, &dB, alpha, &A0, &B0, ARMAS_TRANSA, cache);
@@ -202,7 +202,7 @@ void trmm_ext_unb_lower(
             armas_x_submatrix_unsafe(&a0, A, i, 0, 1, i+1-unit);
             armas_x_submatrix_unsafe(&b0, B, 0, j, i+1-unit, 1);
 
-            s0 = unit ? xk : __ZERO; u0 = __ZERO;
+            s0 = unit ? xk : ZERO; u0 = ZERO;
             twoprod(&s0, &u0, s0, alpha);
             armas_x_ext_adot_unsafe(&s0, &u0, alpha, &a0, &b0);
 
@@ -241,7 +241,7 @@ void trmm_ext_blk_lower(
             armas_x_submatrix_unsafe(&B0, B, 0,    j, i-nI, nJ);
             armas_x_submatrix_unsafe(&B1, B, i-nI, j, nI, nJ);
             armas_x_make(&dB, nI, nJ, cache->ab_step, cache->dC);
-            armas_x_scale_unsafe(&dB, __ZERO);
+            armas_x_scale_unsafe(&dB, ZERO);
 
             trmm_ext_unb_lower(&B1, &dB, alpha, &A1, unit);
             armas_x_ext_panel_unsafe(&B1, &dB, alpha, &A0, &B0, 0, cache);
@@ -276,7 +276,7 @@ void trmm_ext_unb_l_trans(
             armas_x_submatrix_unsafe(&a0, A, i+unit, i, A->cols-i-unit, 1);
             armas_x_submatrix_unsafe(&b0, B, i+unit, j, A->cols-i-unit, 1);
 
-            s0 = unit ? xk : __ZERO; u0 = __ZERO;
+            s0 = unit ? xk : ZERO; u0 = ZERO;
             twoprod(&s0, &u0, s0, alpha);
             armas_x_ext_adot_unsafe(&s0, &u0, alpha, &a0, &b0);
 
@@ -316,7 +316,7 @@ void trmm_ext_blk_l_trans(
             armas_x_submatrix_unsafe(&B0, B, i+nI, j, A->rows-i-nI, nJ);
             armas_x_submatrix_unsafe(&B1, B, i, j, nI, nJ);
             armas_x_make(&dB, nI, nJ, cache->ab_step, cache->dC);
-            armas_x_scale_unsafe(&dB, __ZERO);
+            armas_x_scale_unsafe(&dB, ZERO);
 
             trmm_ext_unb_l_trans(&B1, &dB, alpha, &A1, unit);
             armas_x_ext_panel_unsafe(&B1, &dB, alpha, &A0, &B0, ARMAS_TRANSA, cache);
@@ -351,7 +351,7 @@ void trmm_ext_unb_r_upper(
             armas_x_submatrix_unsafe(&a0, A, 0, j, j+1-unit, 1);
             armas_x_submatrix_unsafe(&b0, B, i, 0, 1, j+1-unit);
 
-            s0 = unit ? xk : __ZERO; u0 = __ZERO;
+            s0 = unit ? xk : ZERO; u0 = ZERO;
             twoprod(&s0, &u0, s0, alpha);
             armas_x_ext_adot_unsafe(&s0, &u0, alpha, &a0, &b0);
 
@@ -392,7 +392,7 @@ void trmm_ext_blk_r_upper(
             armas_x_submatrix_unsafe(&B0, B, j, 0, nJ, i-nI);
             armas_x_submatrix_unsafe(&B1, B, j, i-nI, nJ, nI);
             armas_x_make(&dB, nJ, nI, cache->ab_step, cache->dC);
-            armas_x_scale_unsafe(&dB, __ZERO);
+            armas_x_scale_unsafe(&dB, ZERO);
 
             trmm_ext_unb_r_upper(&B1, &dB, alpha, &A1, unit);
             armas_x_ext_panel_unsafe(&B1, &dB, alpha, &B0, &A0, 0, cache);
@@ -426,7 +426,7 @@ void trmm_ext_unb_r_lower(
             armas_x_submatrix_unsafe(&a0, A, j+unit, j, A->cols-j-unit, 1);
             armas_x_submatrix_unsafe(&b0, B, i, j+unit, 1, A->cols-j-unit);
 
-            s0 = unit ? xk : __ZERO; u0 = __ZERO;
+            s0 = unit ? xk : ZERO; u0 = ZERO;
             twoprod(&s0, &u0, s0, alpha);
             armas_x_ext_adot_unsafe(&s0, &u0, alpha, &a0, &b0);
 
@@ -466,7 +466,7 @@ void trmm_ext_blk_r_lower(
             armas_x_submatrix_unsafe(&B0, B, j, i+nI, nJ, A->cols-i-nI);
             armas_x_submatrix_unsafe(&B1, B, j, i, nJ, nI);
             armas_x_make(&dB, nJ, nI, cache->ab_step, cache->dC);
-            armas_x_scale_unsafe(&dB, __ZERO);
+            armas_x_scale_unsafe(&dB, ZERO);
 
             trmm_ext_unb_r_lower(&B1, &dB, alpha, &A1, unit);
             armas_x_ext_panel_unsafe(&B1, &dB, alpha, &B0, &A0, 0, cache);
@@ -500,7 +500,7 @@ void trmm_ext_unb_ru_trans(
             armas_x_submatrix_unsafe(&a0, A, j, j+unit, 1, A->cols-j-unit);
             armas_x_submatrix_unsafe(&b0, B, i, j+unit, 1, A->cols-j-unit);
 
-            s0 = unit ? xk : __ZERO; u0 = __ZERO;
+            s0 = unit ? xk : ZERO; u0 = ZERO;
             twoprod(&s0, &u0, s0, alpha);
             armas_x_ext_adot_unsafe(&s0, &u0, alpha, &a0, &b0);
 
@@ -540,7 +540,7 @@ void trmm_ext_blk_ru_trans(
             armas_x_submatrix_unsafe(&B0, B, j, i+nI, nJ, A->cols-i-nI);
             armas_x_submatrix_unsafe(&B1, B, j, i, nJ, nI);
             armas_x_make(&dB, nJ, nI, cache->ab_step, cache->dC);
-            armas_x_scale_unsafe(&dB, __ZERO);
+            armas_x_scale_unsafe(&dB, ZERO);
 
             trmm_ext_unb_ru_trans(&B1, &dB, alpha, &A1, unit);
             armas_x_ext_panel_unsafe(&B1, &dB, alpha, &B0, &A0, ARMAS_TRANSB, cache);
@@ -574,7 +574,7 @@ void trmm_ext_unb_rl_trans(
             armas_x_submatrix_unsafe(&a0, A, j, 0, 1, j+1-unit);
             armas_x_submatrix_unsafe(&b0, B, i, 0, 1, j+1-unit);
 
-            s0 = unit ? xk : __ZERO; u0 = __ZERO;
+            s0 = unit ? xk : ZERO; u0 = ZERO;
             twoprod(&s0, &u0, s0, alpha);
             armas_x_ext_adot_unsafe(&s0, &u0, alpha, &a0, &b0);
 
@@ -614,7 +614,7 @@ void trmm_ext_blk_rl_trans(
             armas_x_submatrix_unsafe(&B0, B, j, 0, nJ, i-nI);
             armas_x_submatrix_unsafe(&B1, B, j, i-nI, nJ, nI);
             armas_x_make(&dB, nJ, nI, cache->ab_step, cache->dC);
-            armas_x_scale_unsafe(&dB, __ZERO);
+            armas_x_scale_unsafe(&dB, ZERO);
 
             // update current part with diagonal
             trmm_ext_unb_rl_trans(&B1, &dB, alpha, &A1, unit);
@@ -642,7 +642,7 @@ void trmm_ext_unb_unsafe(
             nJ = B->rows - i < NB ? B->rows - i : NB;
             armas_x_submatrix_unsafe(&B0, B, i, 0, nJ, B->cols);
             armas_x_make(&dB, nJ, B->cols, mcache->ab_step, mcache->dC);
-            armas_x_scale_unsafe(&dB, __ZERO);
+            armas_x_scale_unsafe(&dB, ZERO);
             switch (flags & (ARMAS_UPPER|ARMAS_TRANSA)) {
             case ARMAS_UPPER|ARMAS_TRANSA:
                 trmm_ext_unb_ru_trans(&B0, &dB, alpha, A, unit);
@@ -664,7 +664,7 @@ void trmm_ext_unb_unsafe(
             nJ = B->cols - i < NB ? B->cols - i : NB;
             armas_x_submatrix_unsafe(&B0, B, 0, i, B->rows, nJ);
             armas_x_make(&dB, B->rows, nJ, mcache->ab_step, mcache->dC);
-            armas_x_scale_unsafe(&dB, __ZERO);
+            armas_x_scale_unsafe(&dB, ZERO);
             switch (flags & (ARMAS_UPPER|ARMAS_TRANSA)) {
             case ARMAS_UPPER|ARMAS_TRANSA:
                 trmm_ext_unb_u_trans(&B0, &dB, alpha, A, unit);

@@ -37,8 +37,8 @@
  *  b1 = a10*b'0 + a11*b'1
  *  b2 = a20*b'0 + a21*b'1 + a22*b'2
  */
-static inline
-void __trmv_ex_unb_ll(
+static
+void trmv_ex_unb_ll(
     armas_x_dense_t *X,
     const armas_x_dense_t *A,
     DTYPE alpha,
@@ -78,8 +78,8 @@ void __trmv_ex_unb_ll(
  *  b1 =           a11*b'1 + a21*b'2
  *  b2 =                     a22*b'2
  */
-static inline
-void __trmv_ex_unb_llt(
+static
+void trmv_ex_unb_llt(
     armas_x_dense_t *X,
     const armas_x_dense_t *A,
     DTYPE alpha,
@@ -118,8 +118,8 @@ void __trmv_ex_unb_llt(
  *    b1 =           a11*b'1 + a12*b'2
  *    b2 =                     a22*b'2
  */
-static inline
-void __trmv_ex_unb_lu(
+static
+void trmv_ex_unb_lu(
     armas_x_dense_t *X,
     const armas_x_dense_t *A,
     DTYPE alpha,
@@ -158,8 +158,8 @@ void __trmv_ex_unb_lu(
  *  b1 = a01*b'0 + a11*b'1
  *  b2 = a02*b'0 + a12*b'1 + a22*b'2
  */
-static inline
-void __trmv_ex_unb_lut(
+static
+void trmv_ex_unb_lut(
     armas_x_dense_t *X,
     const armas_x_dense_t *A,
     DTYPE alpha,
@@ -198,17 +198,17 @@ int armas_x_ext_mvmult_trm_unsafe(
 
     switch (flags & (ARMAS_TRANS|ARMAS_UPPER|ARMAS_LOWER)){
     case ARMAS_UPPER|ARMAS_TRANS:
-        __trmv_ex_unb_lut(X, A, alpha, unit, xinc);
+        trmv_ex_unb_lut(X, A, alpha, unit, xinc);
         break;
     case ARMAS_LOWER|ARMAS_TRANS:
-        __trmv_ex_unb_llt(X, A, alpha, unit, xinc);
+        trmv_ex_unb_llt(X, A, alpha, unit, xinc);
         break;
     case ARMAS_UPPER:
-        __trmv_ex_unb_lu(X, A, alpha, unit, xinc);
+        trmv_ex_unb_lu(X, A, alpha, unit, xinc);
         break;
     case ARMAS_LOWER:
     default:
-        __trmv_ex_unb_ll(X, A, alpha, unit, xinc);
+        trmv_ex_unb_ll(X, A, alpha, unit, xinc);
         break;
     }
     return 0;
@@ -243,4 +243,4 @@ int armas_x_ext_mvmult_trm(
 
 #else
 #warning "Missing defines. No code!"
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

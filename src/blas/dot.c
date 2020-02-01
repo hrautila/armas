@@ -118,8 +118,8 @@ void armas_x_adot_unsafe(DTYPE *value, DTYPE alpha, const armas_x_dense_t *x, co
 
 DTYPE armas_x_dot_unsafe(const armas_x_dense_t *x, const armas_x_dense_t *y)
 {
-    DTYPE dval = __ZERO;
-    armas_x_adot_unsafe(&dval, __ONE, x, y);
+    DTYPE dval = ZERO;
+    armas_x_adot_unsafe(&dval, ONE, x, y);
     return dval;
 }
 
@@ -184,9 +184,9 @@ int armas_x_adot(DTYPE *value, DTYPE alpha, const armas_x_dense_t *x, const arma
  */
 DTYPE armas_x_dot(const armas_x_dense_t *x, const armas_x_dense_t *y, armas_conf_t *conf)
 {
-    DTYPE dval = __ZERO;
-    if (armas_x_adot(&dval, __ONE, x, y, conf) < 0) {
-        return __ZERO;
+    DTYPE dval = ZERO;
+    if (armas_x_adot(&dval, ONE, x, y, conf) < 0) {
+        return ZERO;
     }
     return dval;
 }

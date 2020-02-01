@@ -62,7 +62,7 @@ void solve_unblk_lu(
 
     armas_x_row_unsafe(&b1, B, A->cols-1);
     scal = unit ? alpha : alpha/armas_x_get_unsafe(A, A->cols-1, A->cols-1);
-    if (scal != __ONE)
+    if (scal != ONE)
         armas_x_scale_unsafe(&b1, scal);
 
     for (j = A->cols-2; j >= 0; j--) {
@@ -70,9 +70,9 @@ void solve_unblk_lu(
         armas_x_row_unsafe(&b1, B, j);
         armas_x_submatrix_unsafe(&a1, A, j, j+1, 1, A->cols-1-j);
         // b1 = (alpha*b1 - B2.T*a1) / a11
-        armas_x_mvmult_unsafe(alpha, &b1, -__ONE, &B2, &a1, ARMAS_TRANS);
+        armas_x_mvmult_unsafe(alpha, &b1, -ONE, &B2, &a1, ARMAS_TRANS);
         if (!unit)
-            armas_x_scale_unsafe(&b1, __ONE/armas_x_get_unsafe(A, j, j));
+            armas_x_scale_unsafe(&b1, ONE/armas_x_get_unsafe(A, j, j));
     }
 }
 
@@ -104,7 +104,7 @@ void solve_unblk_lut(
 
     armas_x_row_unsafe(&b1, B, 0);
     scal = unit ? alpha : alpha/armas_x_get_unsafe(A, 0, 0);
-    if (scal != __ONE)
+    if (scal != ONE)
         armas_x_scale_unsafe(&b1, scal);
 
     for (j = 1; j < A->cols; j++) {
@@ -113,9 +113,9 @@ void solve_unblk_lut(
         armas_x_row_unsafe(&b1, B, j);
         armas_x_submatrix_unsafe(&a1, A, 0, j, j, 1);
         // b1 = (alpha*b1 - B0*a1) / a11
-        armas_x_mvmult_unsafe(alpha, &b1, -__ONE, &B0, &a1, ARMAS_TRANS);
+        armas_x_mvmult_unsafe(alpha, &b1, -ONE, &B0, &a1, ARMAS_TRANS);
         if (!unit)
-            armas_x_scale_unsafe(&b1, __ONE/armas_x_get_unsafe(A, j, j));
+            armas_x_scale_unsafe(&b1, ONE/armas_x_get_unsafe(A, j, j));
     }
 }
 /*
@@ -145,7 +145,7 @@ void solve_unblk_ll(
 
     armas_x_row_unsafe(&b1, B, 0);
     scal = unit ? alpha : alpha/armas_x_get_unsafe(A, 0, 0);
-    if (scal != __ONE)
+    if (scal != ONE)
         armas_x_scale_unsafe(&b1, scal);
 
     for (j = 1; j < A->cols; j++) {
@@ -154,9 +154,9 @@ void solve_unblk_ll(
         armas_x_row_unsafe(&b1, B, j);
         armas_x_submatrix_unsafe(&a1, A, j, 0, 1, j);
         // b1 = (alpha*b1 - B0*a1) / a11
-        armas_x_mvmult_unsafe(alpha, &b1, -__ONE, &B0, &a1, ARMAS_TRANS);
+        armas_x_mvmult_unsafe(alpha, &b1, -ONE, &B0, &a1, ARMAS_TRANS);
         if (!unit)
-            armas_x_scale_unsafe(&b1, __ONE/armas_x_get_unsafe(A, j, j));
+            armas_x_scale_unsafe(&b1, ONE/armas_x_get_unsafe(A, j, j));
     }
 }
 /*
@@ -186,7 +186,7 @@ void solve_unblk_llt(
 
     armas_x_row_unsafe(&b1, B, A->cols-1);
     scal = unit ? alpha : alpha/armas_x_get_unsafe(A, A->cols-1, A->cols-1);
-    if (scal != __ONE)
+    if (scal != ONE)
         armas_x_scale_unsafe(&b1, scal);
 
     for (j = A->cols-2; j >= 0; j--) {
@@ -194,9 +194,9 @@ void solve_unblk_llt(
         armas_x_row_unsafe(&b1, B, j);
         armas_x_submatrix_unsafe(&a1, A, j+1, j, A->cols-1-j, 1);
         // b1 = (alpha*b1 - B2.T*a1) / a11
-        armas_x_mvmult_unsafe(alpha, &b1, -__ONE, &B2, &a1, ARMAS_TRANS);
+        armas_x_mvmult_unsafe(alpha, &b1, -ONE, &B2, &a1, ARMAS_TRANS);
         if (!unit)
-            armas_x_scale_unsafe(&b1, __ONE/armas_x_get_unsafe(A, j, j));
+            armas_x_scale_unsafe(&b1, ONE/armas_x_get_unsafe(A, j, j));
     }
 }
 /*
@@ -227,7 +227,7 @@ void solve_unblk_ru(
 
     armas_x_column_unsafe(&b1, B, 0);
     scal = unit ? alpha : alpha/armas_x_get_unsafe(A, 0, 0);
-    if (scal != __ONE)
+    if (scal != ONE)
         armas_x_scale_unsafe(&b1, scal);
 
     for (j = 1; j < A->cols; j++) {
@@ -236,9 +236,9 @@ void solve_unblk_ru(
         armas_x_column_unsafe(&b1, B, j);
         armas_x_submatrix_unsafe(&a1, A, 0, j, j, 1);
         // b1 = (alpha*b1 - B0*a1) / a11
-        armas_x_mvmult_unsafe(alpha, &b1, -__ONE, &B0, &a1, 0);
+        armas_x_mvmult_unsafe(alpha, &b1, -ONE, &B0, &a1, 0);
         if (!unit)
-            armas_x_scale_unsafe(&b1, __ONE/armas_x_get_unsafe(A, j, j));
+            armas_x_scale_unsafe(&b1, ONE/armas_x_get_unsafe(A, j, j));
     }
 }
 
@@ -270,7 +270,7 @@ void solve_unblk_rut(
 
     armas_x_column_unsafe(&b1, B, A->cols-1);
     scal = unit ? alpha : alpha/armas_x_get_unsafe(A, A->cols-1, A->cols-1);
-    if (scal != __ONE)
+    if (scal != ONE)
         armas_x_scale_unsafe(&b1, scal);
 
     for (j = A->cols-2; j >= 0; j--) {
@@ -279,9 +279,9 @@ void solve_unblk_rut(
         armas_x_column_unsafe(&b1, B, j);
         armas_x_submatrix_unsafe(&a1, A, j, j+1, 1, A->cols-1-j);
         // b1 = (alpha*b1 - B0*a1) / a11
-        armas_x_mvmult_unsafe(alpha, &b1, -__ONE, &B2, &a1, 0);
+        armas_x_mvmult_unsafe(alpha, &b1, -ONE, &B2, &a1, 0);
         if (!unit)
-            armas_x_scale_unsafe(&b1, __ONE/armas_x_get_unsafe(A, j, j));
+            armas_x_scale_unsafe(&b1, ONE/armas_x_get_unsafe(A, j, j));
     }
 }
 /*
@@ -310,7 +310,7 @@ void solve_unblk_rl(
 
     armas_x_column_unsafe(&b1, B, A->cols-1);
     scal = unit ? alpha : alpha/armas_x_get_unsafe(A, A->cols-1, A->cols-1);
-    if (scal != __ONE)
+    if (scal != ONE)
         armas_x_scale_unsafe(&b1, scal);
 
     for (j = A->cols-2; j >= 0; j--) {
@@ -319,9 +319,9 @@ void solve_unblk_rl(
         armas_x_column_unsafe(&b1, B, j);
         armas_x_submatrix_unsafe(&a1, A, j+1, j, A->cols-1-j, 1);
         // b1 = (b1 - B2*a1) / a11
-        armas_x_mvmult_unsafe(alpha, &b1, -__ONE, &B2, &a1, 0);
+        armas_x_mvmult_unsafe(alpha, &b1, -ONE, &B2, &a1, 0);
         if (!unit)
-            armas_x_scale_unsafe(&b1, __ONE/armas_x_get_unsafe(A, j, j));
+            armas_x_scale_unsafe(&b1, ONE/armas_x_get_unsafe(A, j, j));
     }
 }
 
@@ -351,7 +351,7 @@ void solve_unblk_rlt(
 
     armas_x_column_unsafe(&b1, B, 0);
     scal = unit ? alpha : alpha/armas_x_get_unsafe(A, 0, 0);
-    if (scal != __ONE)
+    if (scal != ONE)
         armas_x_scale_unsafe(&b1, scal);
 
     for (j = 1; j < A->cols; j++) {
@@ -360,9 +360,9 @@ void solve_unblk_rlt(
         armas_x_column_unsafe(&b1, B, j);
         armas_x_submatrix_unsafe(&a1, A, j, 0, 1, j);
         // b1 = (alpha*b1 - B0*a1) / a11
-        armas_x_mvmult_unsafe(alpha, &b1, -__ONE, &B0, &a1, 0);
+        armas_x_mvmult_unsafe(alpha, &b1, -ONE, &B0, &a1, 0);
         if (!unit)
-            armas_x_scale_unsafe(&b1, __ONE/armas_x_get_unsafe(A, j, j));
+            armas_x_scale_unsafe(&b1, ONE/armas_x_get_unsafe(A, j, j));
     }
 }
 

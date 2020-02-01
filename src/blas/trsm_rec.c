@@ -86,7 +86,7 @@ void solve_left_forward(
         armas_x_submatrix_unsafe(&a0, A, N/2, 0, N-N/2, N/2);
     }
     armas_x_submatrix_unsafe(&b1, B, N/2, 0, N-N/2, B->cols);
-    armas_x_mult_kernel_nc(&b1, -__ONE, &a0, &b0, flags, cache);
+    armas_x_mult_kernel_nc(&b1, -ONE, &a0, &b0, flags, cache);
 
     armas_x_submatrix_unsafe(&a1, A, N/2, N/2, N-N/2, N-N/2);
     solve_left_forward(&b1, &a1, alpha, flags, min_mblock_size, cache);
@@ -136,7 +136,7 @@ void solve_left_backward(
         armas_x_submatrix_unsafe(&a1, A, N/2, 0, N-N/2, N/2);
     }
     armas_x_submatrix_unsafe(&b0, B, 0, 0, N/2, B->cols);
-    armas_x_mult_kernel_nc(&b0, -__ONE, &a1, &b1, flags, cache);
+    armas_x_mult_kernel_nc(&b0, -ONE, &a1, &b1, flags, cache);
 
     armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);
     solve_left_backward(&b0, &a0, alpha, flags, min_mblock_size, cache);
@@ -175,7 +175,7 @@ void solve_right_forward(
     armas_x_submatrix_unsafe(&b1, B, 0, N/2, B->rows, N-N/2);
 
     ops = flags & ARMAS_TRANSA ? ARMAS_TRANSB : ARMAS_NULL;
-    armas_x_mult_kernel_nc(&b1, -__ONE, &b0, &a0, ops, cache);
+    armas_x_mult_kernel_nc(&b1, -ONE, &b0, &a0, ops, cache);
 
     armas_x_submatrix_unsafe(&a1, A, N/2, N/2, N-N/2, N-N/2);
     solve_right_forward(&b1, &a1, alpha, flags, min_mblock_size, cache);
@@ -215,7 +215,7 @@ void solve_right_backward(
     armas_x_submatrix_unsafe(&b1, B, 0, 0, B->rows, N/2);
 
     ops = flags & ARMAS_TRANSA ? ARMAS_TRANSB : ARMAS_NULL;
-    armas_x_mult_kernel_nc(&b1, -__ONE, &b0, &a0, ops, cache);
+    armas_x_mult_kernel_nc(&b1, -ONE, &b0, &a0, ops, cache);
 
     armas_x_submatrix_unsafe(&b0, B, 0, 0, B->rows, N/2);
     armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);

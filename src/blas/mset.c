@@ -81,7 +81,7 @@ int armas_x_set_values(armas_x_dense_t *A, armas_x_valuefunc_t value, int flags)
         if (A->rows != A->cols)
             return -1;
         for (j = 0; j < A->cols; j++) {
-            A->elems[j*A->step + j] = flags & ARMAS_UNIT ? __ONE : value(j, j);
+            A->elems[j*A->step + j] = flags & ARMAS_UNIT ? ONE : value(j, j);
             for (i = j+1; i < A->rows; i++) {
                 armas_x_set_unsafe(A, i, j, value(i, j));
                 armas_x_set_unsafe(A, j, i, armas_x_get_unsafe(A, i, j));
@@ -119,9 +119,9 @@ void armas_x_make_trm(armas_x_dense_t *m, int flags)
         // clear lower triangular/trapezoidial part
         for (j = 0; j < m->cols; j++) {
             if (flags & ARMAS_UNIT)
-                m->elems[j + j*m->step] = __ONE;
+                m->elems[j + j*m->step] = ONE;
             for (i = j+1; i < m->rows; i++) {
-                m->elems[j*m->step+i] = __ZERO;
+                m->elems[j*m->step+i] = ZERO;
             }
         }
     }
@@ -129,10 +129,10 @@ void armas_x_make_trm(armas_x_dense_t *m, int flags)
         // clear upper triangular/trapezoidial part
         for (j = 0; j < m->cols; j++) {
             for (i = 0; i < m->rows && i < j; i++) {
-                m->elems[i + j*m->step] = __ZERO;
+                m->elems[i + j*m->step] = ZERO;
             }
             if (flags & ARMAS_UNIT && j < m->rows)
-                m->elems[j + j*m->step] = __ONE;
+                m->elems[j + j*m->step] = ONE;
         }
     }
 }

@@ -265,7 +265,7 @@ void trsv_forward_recursive(
     } else {
         armas_x_submatrix_unsafe(&a1, A, N/2, 0, N-N/2, N/2);
     }
-    armas_x_mvmult_unsafe(__ONE, &x1, -alpha, &a1, &x0, flags);
+    armas_x_mvmult_unsafe(ONE, &x1, -alpha, &a1, &x0, flags);
 
     // bottom part
     armas_x_submatrix_unsafe(&a1, A, N/2, N/2, N-N/2, N-N/2);
@@ -317,7 +317,7 @@ void trsv_backward_recursive(
     } else {
         armas_x_submatrix_unsafe(&a0, A, N/2, 0, N-N/2, N/2);
     }
-    armas_x_mvmult_unsafe(__ONE, &x0, -alpha, &a0, &x1, flags);
+    armas_x_mvmult_unsafe(ONE, &x0, -alpha, &a0, &x1, flags);
 
     // top part
     armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);

@@ -78,22 +78,22 @@ void madd_lower_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_d
         // top triangle
         for (k = j; k < j+3; k++) {
             for (i = k; i < j+3 && i < nR; i++) {
-                a[i+k*lda] = alpha*__ABS(a[i+k*lda]) + beta*__ABS(b[i+k*ldb]);
+                a[i+k*lda] = alpha*ABS(a[i+k*lda]) + beta*ABS(b[i+k*ldb]);
             }
         }
         // rest of the column block
         for (i = j+3; i < nR; i++) {
-            a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
-            a[i+(j+1)*lda] = alpha*__ABS(a[i+(j+1)*lda]) + beta*__ABS(b[i+(j+1)*ldb]);
-            a[i+(j+2)*lda] = alpha*__ABS(a[i+(j+2)*lda]) + beta*__ABS(b[i+(j+2)*ldb]);
-            a[i+(j+3)*lda] = alpha*__ABS(a[i+(j+3)*lda]) + beta*__ABS(b[i+(j+3)*ldb]);
+            a[i+(j+0)*lda] = alpha*ABS(a[i+(j+0)*lda]) + beta*ABS(b[i+(j+0)*ldb]);
+            a[i+(j+1)*lda] = alpha*ABS(a[i+(j+1)*lda]) + beta*ABS(b[i+(j+1)*ldb]);
+            a[i+(j+2)*lda] = alpha*ABS(a[i+(j+2)*lda]) + beta*ABS(b[i+(j+2)*ldb]);
+            a[i+(j+3)*lda] = alpha*ABS(a[i+(j+3)*lda]) + beta*ABS(b[i+(j+3)*ldb]);
         }
     }
     if (j == nC)
         return;
     for (; j < nC; j++) {
         for (i = j; i < nR; i++) {
-            a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
+            a[i+(j+0)*lda] = alpha*ABS(a[i+(j+0)*lda]) + beta*ABS(b[i+(j+0)*ldb]);
         }
     }
 }
@@ -145,15 +145,15 @@ void madd_upper_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_d
     for (j = 0; j < nC-3; j += 4) {
         // top column block
         for (i = 0; i <= j && i < nR; i++) {
-            a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
-            a[i+(j+1)*lda] = alpha*__ABS(a[i+(j+1)*lda]) + beta*__ABS(b[i+(j+1)*ldb]);
-            a[i+(j+2)*lda] = alpha*__ABS(a[i+(j+2)*lda]) + beta*__ABS(b[i+(j+2)*ldb]);
-            a[i+(j+3)*lda] = alpha*__ABS(a[i+(j+3)*lda]) + beta*__ABS(b[i+(j+3)*ldb]);
+            a[i+(j+0)*lda] = alpha*ABS(a[i+(j+0)*lda]) + beta*ABS(b[i+(j+0)*ldb]);
+            a[i+(j+1)*lda] = alpha*ABS(a[i+(j+1)*lda]) + beta*ABS(b[i+(j+1)*ldb]);
+            a[i+(j+2)*lda] = alpha*ABS(a[i+(j+2)*lda]) + beta*ABS(b[i+(j+2)*ldb]);
+            a[i+(j+3)*lda] = alpha*ABS(a[i+(j+3)*lda]) + beta*ABS(b[i+(j+3)*ldb]);
         }
         // bottom triangle
         for (i = j+1; i < j+4 && i < nR; i++) {
             for (k = i; k < j+4; k++) {
-                a[i+k*lda] = alpha*__ABS(a[i+k*lda]) + beta*__ABS(b[i+k*ldb]);
+                a[i+k*lda] = alpha*ABS(a[i+k*lda]) + beta*ABS(b[i+k*ldb]);
             }
         }
     }
@@ -161,7 +161,7 @@ void madd_upper_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_d
         return;
     for (; j < nC; j++) {
         for (i = 0; i <= j && i < nR; i++) {
-            a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
+            a[i+(j+0)*lda] = alpha*ABS(a[i+(j+0)*lda]) + beta*ABS(b[i+(j+0)*ldb]);
         }
     }
 }
@@ -229,17 +229,17 @@ void madd_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t
         for (j = 0; j < nC-3; j += 4) {
             // top column block
             for (i = 0; i < nR; i++) {
-                a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[(j+0)+i*ldb]);
-                a[i+(j+1)*lda] = alpha*__ABS(a[i+(j+1)*lda]) + beta*__ABS(b[(j+1)+i*ldb]);
-                a[i+(j+2)*lda] = alpha*__ABS(a[i+(j+2)*lda]) + beta*__ABS(b[(j+2)+i*ldb]);
-                a[i+(j+3)*lda] = alpha*__ABS(a[i+(j+3)*lda]) + beta*__ABS(b[(j+3)+i*ldb]);
+                a[i+(j+0)*lda] = alpha*ABS(a[i+(j+0)*lda]) + beta*ABS(b[(j+0)+i*ldb]);
+                a[i+(j+1)*lda] = alpha*ABS(a[i+(j+1)*lda]) + beta*ABS(b[(j+1)+i*ldb]);
+                a[i+(j+2)*lda] = alpha*ABS(a[i+(j+2)*lda]) + beta*ABS(b[(j+2)+i*ldb]);
+                a[i+(j+3)*lda] = alpha*ABS(a[i+(j+3)*lda]) + beta*ABS(b[(j+3)+i*ldb]);
             }
         }
         if (j == nC)
             return;
         for (; j < nC; j++) {
             for (i = 0; i < nR; i++) {
-                a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[(j+0)+i*ldb]);
+                a[i+(j+0)*lda] = alpha*ABS(a[i+(j+0)*lda]) + beta*ABS(b[(j+0)+i*ldb]);
             }
         }
         return;
@@ -248,17 +248,17 @@ void madd_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t
     for (j = 0; j < nC-3; j += 4) {
         // top column block
         for (i = 0; i < nR; i++) {
-            a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
-            a[i+(j+1)*lda] = alpha*__ABS(a[i+(j+1)*lda]) + beta*__ABS(b[i+(j+1)*ldb]);
-            a[i+(j+2)*lda] = alpha*__ABS(a[i+(j+2)*lda]) + beta*__ABS(b[i+(j+2)*ldb]);
-            a[i+(j+3)*lda] = alpha*__ABS(a[i+(j+3)*lda]) + beta*__ABS(b[i+(j+3)*ldb]);
+            a[i+(j+0)*lda] = alpha*ABS(a[i+(j+0)*lda]) + beta*ABS(b[i+(j+0)*ldb]);
+            a[i+(j+1)*lda] = alpha*ABS(a[i+(j+1)*lda]) + beta*ABS(b[i+(j+1)*ldb]);
+            a[i+(j+2)*lda] = alpha*ABS(a[i+(j+2)*lda]) + beta*ABS(b[i+(j+2)*ldb]);
+            a[i+(j+3)*lda] = alpha*ABS(a[i+(j+3)*lda]) + beta*ABS(b[i+(j+3)*ldb]);
         }
     }
     if (j == nC)
         return;
     for (; j < nC; j++) {
         for (i = 0; i < nR; i++) {
-            a[i+(j+0)*lda] = alpha*__ABS(a[i+(j+0)*lda]) + beta*__ABS(b[i+(j+0)*ldb]);
+            a[i+(j+0)*lda] = alpha*ABS(a[i+(j+0)*lda]) + beta*ABS(b[i+(j+0)*ldb]);
         }
     }
 }
@@ -305,11 +305,15 @@ int armas_x_mplus(
         return armas_x_axpby(alpha, A, beta, B, cf);
 
     if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
-        if (A->rows != B->cols || A->cols != B->rows)
+        if (A->rows != B->cols || A->cols != B->rows) {
+            cf->error = ARMAS_ESIZE;
             return -1;
+        }
     } else {
-        if (A->rows != B->rows || A->cols != B->cols)
+        if (A->rows != B->rows || A->cols != B->cols) {
+            cf->error = ARMAS_ESIZE;
             return -1;
+        }
     }
 
     switch (flags & (ARMAS_LOWER|ARMAS_UPPER)) {

@@ -65,7 +65,7 @@ int armas_x_ext_axpby_unsafe(
     register int i, kx, ky, xinc, yinc, N;
     DTYPE y0, y1, p0, p1, x0, x1, c0, c1;
 
-    if (beta == __ONE)
+    if (beta == ONE)
         return armas_x_ext_axpy_unsafe(Y, alpha, X);
 
     xinc = X->rows == 1 ? X->step : 1;

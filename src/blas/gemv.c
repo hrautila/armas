@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -286,7 +286,7 @@ int armas_x_mvmult_unsafe(
     if (armas_x_size(A) == 0)
         return 0;
 
-    if (beta != __ONE)
+    if (beta != ONE)
         armas_x_scale_unsafe(y, beta);
     gemv_unb(y, A, x, alpha, flags);
     return 0;
@@ -355,12 +355,12 @@ int armas_x_mvmult(
         return -1;
     }
 
-    if (beta != __ONE) {
+    if (beta != ONE) {
         armas_x_scale_unsafe(y, beta);
     }
     if (conf->optflags & ARMAS_ORECURSIVE) {
         armas_env_t *env = armas_getenv();
-        gemv_recursive(y, A, x, alpha, __ONE, flags, env->blas2min);
+        gemv_recursive(y, A, x, alpha, ONE, flags, env->blas2min);
     } else {
         gemv_unb(y, A, x, alpha, flags);
     }

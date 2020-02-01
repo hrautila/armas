@@ -84,11 +84,11 @@ void armas_x_ext_adot_unsafe(
     int yinc = Y->rows == 1 ? Y->step : 1;
     int N = armas_x_size(X);
 
-    if (alpha == __ZERO) {
+    if (alpha == ZERO) {
         return;
     }
 
-    s0 = c0 = __ZERO;
+    s0 = c0 = ZERO;
     for (i = 0; i < N; ++i) {
         twoprod(&h0, &p0, X->elems[(i+0)*xinc], Y->elems[(i+0)*yinc]);
         twosum(&s0, &z0, s0, h0);
@@ -128,11 +128,11 @@ void armas_x_ext_adot_dx_unsafe(
     int yinc =   Y->rows == 1 ? Y->step : 1;
     int N = armas_x_size(X);
 
-    if (alpha == __ZERO) {
+    if (alpha == ZERO) {
         return;
     }
 
-    s = c = __ZERO;
+    s = c = ZERO;
     // (x + dx) * y == h + (p + dx*y); h + p = x * y;
     for (i = 0; i < N; ++i) {
         twoprod(&p, &q, X->elems[(i+0)*xinc], Y->elems[(i+0)*yinc]);
@@ -177,7 +177,7 @@ int armas_x_ext_adot(
         cf->error = ARMAS_ESIZE;
         return -1;
     }
-    s = u = __ZERO;
+    s = u = ZERO;
     armas_x_ext_adot_unsafe(&s, &u, alpha, x, y);
     *result = s + u;
     return 0;

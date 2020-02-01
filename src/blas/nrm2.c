@@ -91,31 +91,31 @@ ABSTYPE armas_x_nrm2(const armas_x_dense_t *x, armas_conf_t *conf)
     // only for column or row vectors
     if (x->cols != 1 && x->rows != 1) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return __ABSZERO;
+        return ABSZERO;
     }
 
     if (armas_x_size(x) == 0) {
-        return __ABSZERO;
+        return ABSZERO;
     }
     if (armas_x_size(x) == 1) {
-        return __ABS(x->elems[0]);
+        return ABS(x->elems[0]);
     }
 
     int inc  = x->rows == 1 ? x->step : 1;
-    sum = __ABSONE;
-    scale = __ABSZERO;
+    sum = ABSONE;
+    scale = ABSZERO;
     for (i = 0; i < armas_x_size(x); i += 1) {
-        if (x->elems[(i+0)*inc] != __ZERO) {
-            a0 = __ABS(x->elems[(i+0)*inc]);
+        if (x->elems[(i+0)*inc] != ZERO) {
+            a0 = ABS(x->elems[(i+0)*inc]);
             if (a0 > scale) {
-                sum = __ONE + sum * ((scale/a0)*(scale/a0));
+                sum = ONE + sum * ((scale/a0)*(scale/a0));
                 scale = a0;
             } else {
                 sum = sum + (a0/scale)*(a0/scale);
             }
         }
     }
-    return scale*__SQRT(sum);
+    return scale*SQRT(sum);
 }
 #else
 #warning "Missing defines; no code!"

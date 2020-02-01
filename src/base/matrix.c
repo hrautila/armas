@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -53,31 +53,31 @@
  */
 armas_x_dense_t *armas_x_init(armas_x_dense_t *m, int r, int c)
 {
-  int doff;
+    int doff;
 
-  if (r <= 0 || c <= 0) {
-    m->rows = 0; m->cols = 0;
-    m->step = 0;
-    m->elems = (DTYPE *)0;
-    m->__data = (void *)0;
-    m->__nbytes = 0;
+    if (r <= 0 || c <= 0) {
+        m->rows = 0; m->cols = 0;
+        m->step = 0;
+        m->elems = (DTYPE *)0;
+        m->__data = (void *)0;
+        m->__nbytes = 0;
+        return m;
+    }
+    // set first to adjusted element count
+    m->__nbytes = ALIGNSIZE(r*c, DTYPE);
+    m->__data = calloc(m->__nbytes, sizeof(DTYPE));
+    if ( !m->__data ) {
+        m->__nbytes = 0;
+        return (armas_x_dense_t *)0;
+    }
+    // convert to number of bytes
+    m->__nbytes *= sizeof(DTYPE);
+    m->rows = r;
+    m->cols = c;
+    m->step = r;
+    doff = ALIGNOFFSET(m->__data);
+    m->elems = (DTYPE *)&((unsigned char *)m->__data)[doff];
     return m;
-  }
-  // set first to adjusted element count
-  m->__nbytes = ALIGNSIZE(r*c, DTYPE);
-  m->__data = calloc(m->__nbytes, sizeof(DTYPE));
-  if ( !m->__data ) {
-    m->__nbytes = 0;
-    return (armas_x_dense_t *)0;
-  }
-  // convert to number of bytes
-  m->__nbytes *= sizeof(DTYPE);
-  m->rows = r;
-  m->cols = c;
-  m->step = r;
-  doff = ALIGNOFFSET(m->__data);
-  m->elems = (DTYPE *)&((unsigned char *)m->__data)[doff];
-  return m;
 }
 
 /**
@@ -94,11 +94,11 @@ armas_x_dense_t *armas_x_init(armas_x_dense_t *m, int r, int c)
  */
 armas_x_dense_t *armas_x_newcopy(const armas_x_dense_t *A)
 {
-  armas_x_dense_t *Anew = armas_x_alloc(A->rows, A->cols);
-  if (Anew) {
-    CP(Anew->elems, Anew->step, A->elems, A->step, A->rows, A->cols);
-  }
-  return Anew;
+    armas_x_dense_t *Anew = armas_x_alloc(A->rows, A->cols);
+    if (Anew) {
+        CP(Anew->elems, Anew->step, A->elems, A->step, A->rows, A->cols);
+    }
+    return Anew;
 }
 
 /**
@@ -121,21 +121,21 @@ armas_x_dense_t *armas_x_newcopy(const armas_x_dense_t *A)
  */
 int armas_x_intolerance(const armas_x_dense_t *A, const armas_x_dense_t *B, ABSTYPE atol, ABSTYPE rtol)
 {
-  register int i, j;
-  ABSTYPE df, ref;
+    register int i, j;
+    ABSTYPE df, ref;
 
-  if (A->rows != B->rows || A->cols != B->cols)
-    return 0;
-
-  for (j = 0; j < A->cols; j++) {
-    for (i = 0; i < A->rows; i++) {
-      df = __ABS(A->elems[i+j*A->step] - B->elems[i+j*B->step]);
-      ref = atol + rtol * __ABS(B->elems[i+j*B->step]);
-      if (df > ref)
+    if (A->rows != B->rows || A->cols != B->cols)
         return 0;
+
+    for (j = 0; j < A->cols; j++) {
+        for (i = 0; i < A->rows; i++) {
+            df = ABS(A->elems[i+j*A->step] - B->elems[i+j*B->step]);
+            ref = atol + rtol * ABS(B->elems[i+j*B->step]);
+            if (df > ref)
+                return 0;
+        }
     }
-  }
-  return 1;
+    return 1;
 }
 
 /**
@@ -160,48 +160,42 @@ static const ABSTYPE ATOL = 1e-8;
  */
 int armas_x_allclose(const armas_x_dense_t *A, const armas_x_dense_t *B)
 {
-  return armas_x_intolerance(A, B, ATOL, RTOL);
+    return armas_x_intolerance(A, B, ATOL, RTOL);
 }
 
 
 void armas_x_printf(FILE *out, const char *efmt, const armas_x_dense_t *m)
 {
-  unsigned int i, j;
-  if (!m)
-    return;
-  if (!efmt)
-    efmt = "%8.1e";
+    unsigned int i, j;
+    if (!m)
+        return;
+    if (!efmt)
+        efmt = "%8.1e";
 
-  int rowpartial = m->rows > 18;
-  int colpartial = m->cols > 9;
-  for (i = 0; i < m->rows; i++ ) {
-    printf("[");
-    for (j = 0; j < m->cols; j++ ) {
-      if (j > 0) {
-	printf(", ");
-      }
-      printf(efmt, m->elems[j*m->step+i]);
-      if (colpartial && j == 3) {
-        j = m->cols - 5;
-        printf(", ...");
-      }
+    int rowpartial = m->rows > 18;
+    int colpartial = m->cols > 9;
+    for (i = 0; i < m->rows; i++ ) {
+        printf("[");
+        for (j = 0; j < m->cols; j++ ) {
+            if (j > 0) {
+                printf(", ");
+            }
+            printf(efmt, m->elems[j*m->step+i]);
+            if (colpartial && j == 3) {
+                j = m->cols - 5;
+                printf(", ...");
+            }
+        }
+        printf("]\n");
+        if (rowpartial && i == 8) {
+            printf(" ....\n");
+            i = m->rows - 10;
+        }
     }
-    printf("]\n");
-    if (rowpartial && i == 8) {
-      printf(" ....\n");
-      i = m->rows - 10;
-    }
-  }
 }
 
 void armas_x_print(const armas_x_dense_t *m, FILE *out)
 {
-  armas_x_printf(out, "%8.1", m);
+    armas_x_printf(out, "%8.1", m);
 }
 
-
-
-
-// Local Variables:
-// indent-tabs-mode: nil
-// End:

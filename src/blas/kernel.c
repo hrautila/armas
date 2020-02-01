@@ -78,8 +78,8 @@ int armas_x_mult_kernel(
     int ip, jp, kp, nP, nI;
     armas_x_dense_t Ca, Ac, Bc, Acpy, Bcpy;
 
-    if (alpha == __ZERO) {
-        if (beta != __ONE) {
+    if (alpha == ZERO) {
+        if (beta != ONE) {
             armas_x_scale_unsafe(C, beta);
         }
         return 0;
@@ -134,7 +134,7 @@ int armas_x_mult_kernel_nc(
     int flags,
     cache_t *cache)
 {
-    if (alpha == __ZERO) {
+    if (alpha == ZERO) {
         return 0;
     }
 

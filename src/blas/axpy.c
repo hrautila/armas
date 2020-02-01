@@ -131,7 +131,7 @@ int armas_x_axpy(
     const armas_x_dense_t *x,
     armas_conf_t *conf)
 {
-    return armas_x_axpby(__ONE, y, alpha, x, conf);
+    return armas_x_axpby(ONE, y, alpha, x, conf);
 }
 
 #else

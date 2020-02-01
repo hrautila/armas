@@ -41,10 +41,10 @@ void sum_of_sq(ABSTYPE *ssum, ABSTYPE *scale, armas_x_dense_t *X, ABSTYPE sum, A
 
     for (i = 0; i < armas_x_size(X); i += 1) {
         a0 = armas_x_get_at_unsafe(X, i);
-        if (a0 != __ZERO) {
-            a0 = __ABS(a0);
+        if (a0 != ZERO) {
+            a0 = ABS(a0);
             if (a0 > scl) {
-                sum = __ONE + sum * ((scl/a0)*(scl/a0));
+                sum = ONE + sum * ((scl/a0)*(scl/a0));
                 scl = a0;
             } else {
                 sum = sum + (a0/scl)*(a0/scl);
@@ -65,13 +65,13 @@ ABSTYPE matrix_norm_frb(const armas_x_dense_t *x, armas_conf_t *conf)
     armas_x_dense_t v;
     ABSTYPE ssum, scale;
 
-    ssum = __ABSONE;
-    scale = __ABSZERO;
+    ssum = ABSONE;
+    scale = ABSZERO;
     for (k = 0; k < x->cols; k++) {
         armas_x_column(&v, x, k);
         sum_of_sq(&ssum, &scale, &v, ssum, scale);
     }
-    return scale*__SQRT(ssum);
+    return scale*SQRT(ssum);
 }
 
 /*
@@ -82,11 +82,11 @@ ABSTYPE matrix_norm_one(const armas_x_dense_t *x, armas_conf_t *conf)
 {
     int k;
     armas_x_dense_t v;
-    ABSTYPE cmax, amax = __ABSZERO;
+    ABSTYPE cmax, amax = ABSZERO;
 
     for (k = 0; k < x->cols; k++) {
         armas_x_column(&v, x, k);
-        cmax = __ABS(armas_x_asum(&v, conf));
+        cmax = ABS(armas_x_asum(&v, conf));
         if (cmax > amax) {
             amax = cmax;
         }
@@ -102,11 +102,11 @@ ABSTYPE matrix_norm_inf(const armas_x_dense_t *x, armas_conf_t *conf)
 {
     int k;
     armas_x_dense_t v;
-    ABSTYPE cmax, amax = __ABSZERO;
+    ABSTYPE cmax, amax = ABSZERO;
 
     for (k = 0; k < x->rows; k++) {
         armas_x_row(&v, x, k);
-        cmax = __ABS(armas_x_asum(&v, conf));
+        cmax = ABS(armas_x_asum(&v, conf));
         if (cmax > amax) {
             amax = cmax;
         }
@@ -129,13 +129,13 @@ ABSTYPE matrix_norm_inf(const armas_x_dense_t *x, armas_conf_t *conf)
  */
 ABSTYPE armas_x_mnorm(const armas_x_dense_t *A, int which, armas_conf_t *conf)
 {
-    ABSTYPE normval = __ABSZERO;
+    ABSTYPE normval = ABSZERO;
 
     if (!conf)
         conf = armas_conf_default();
 
     if (! A || armas_x_size(A) == 0)
-        return __ABSZERO;
+        return ABSZERO;
 
     int is_vector = A->rows == 1 || A->cols == 1;
     switch (which) {
@@ -151,7 +151,7 @@ ABSTYPE armas_x_mnorm(const armas_x_dense_t *A, int which, armas_conf_t *conf)
             normval = armas_x_nrm2(A, conf);
         } else {
             conf->error = ARMAS_EIMP;
-            normval = __ABSZERO;
+            normval = ABSZERO;
         }
         break;
     case ARMAS_NORM_INF:

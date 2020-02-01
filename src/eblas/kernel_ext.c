@@ -238,10 +238,10 @@ int armas_x_ext_mult_kernel(
             armas_x_make(&dC, nI, nJ, cache->ab_step, cache->dC);
             armas_x_submatrix_unsafe(&Ca, C, ip, jp, nI, nJ);
             // compute C0 + dC = beta*C
-            if (beta != __ONE)
+            if (beta != ONE)
                 armas_x_ext_scale_unsafe(&Ca, &dC, beta, &Ca);
             else
-                armas_x_scale_unsafe(&dC, __ZERO);
+                armas_x_scale_unsafe(&dC, ZERO);
 
             for (kp = 0; kp < P; kp += cache->KB) {
                 nP = min(cache->KB, P-kp);
@@ -282,7 +282,7 @@ int armas_x_ext_mult_kernel_nc(
     int flags,
     cache_t *cache)
 {
-    return armas_x_ext_mult_kernel(__ONE, C, alpha, A, B, flags, cache);
+    return armas_x_ext_mult_kernel(ONE, C, alpha, A, B, flags, cache);
 }
 
 /*

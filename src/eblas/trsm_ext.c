@@ -113,7 +113,7 @@ void solve_ext_lu_llt(
             bk = armas_x_get_unsafe(Bc, i, j);
             twoprod(&s0, &u0, alpha, bk);
             u0 += alpha * armas_x_get_unsafe(dB, i, j);
-            armas_x_ext_adot_dx_unsafe(&s0, &u0, -__ONE, &b0, &d0, &a0);
+            armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &b0, &d0, &a0);
 
             if (!unit) {
                 ak = armas_x_get_unsafe(Ac, i, i);
@@ -183,13 +183,13 @@ void solve_ext_blk_lu_llt(
         armas_x_submatrix_unsafe(&B1,  B,  cI, 0, nI, B->cols);
         armas_x_submatrix_unsafe(&dB1, dB, cI, 0, nI, dB->cols);
 
-        if (alpha != __ONE) {
+        if (alpha != ONE) {
             armas_x_ext_scale_unsafe(&B1, &dB1, alpha, &B1);
         } else {
-            armas_x_scale_unsafe(&dB1, __ZERO);
+            armas_x_scale_unsafe(&dB1, ZERO);
         }
-        armas_x_ext_panel_dB_unsafe(&B1, &dB1, -__ONE, &A0, &B0, &dB0, mflags, cache);
-        solve_ext_lu_llt(&B1, &dB1, __ONE, &A1, unit, upper);
+        armas_x_ext_panel_dB_unsafe(&B1, &dB1, -ONE, &A0, &B0, &dB0, mflags, cache);
+        solve_ext_lu_llt(&B1, &dB1, ONE, &A1, unit, upper);
     }
     armas_x_merge_unsafe(B, dB);
 }
@@ -254,7 +254,7 @@ void solve_ext_lut_ll(
             bk = armas_x_get_unsafe(Bc, i, j);
             twoprod(&s0, &u0, alpha, bk);
             u0 += alpha * armas_x_get_unsafe(dB, i, j);
-            armas_x_ext_adot_dx_unsafe(&s0, &u0, -__ONE, &b0, &d0, &a0);
+            armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &b0, &d0, &a0);
 
             if (!unit) {
                 ak = armas_x_get_unsafe(Ac, i, i);
@@ -323,13 +323,13 @@ void solve_ext_blk_lut_ll(
         armas_x_submatrix_unsafe(&B1,  B,  cI, 0, nI, B->cols);
         armas_x_submatrix_unsafe(&dB1, dB, cI, 0, nI, B->cols);
 
-        if (alpha != __ONE) {
+        if (alpha != ONE) {
             armas_x_ext_scale_unsafe(&B1, &dB1, alpha, &B1);
         } else {
-            armas_x_scale_unsafe(&dB1, __ZERO);
+            armas_x_scale_unsafe(&dB1, ZERO);
         }
-        armas_x_ext_panel_dB_unsafe(&B1, &dB1, -__ONE, &A0, &B0, &dB0, mflags, cache);
-        solve_ext_lut_ll(&B1, &dB1, __ONE, &A1, unit, upper);
+        armas_x_ext_panel_dB_unsafe(&B1, &dB1, -ONE, &A0, &B0, &dB0, mflags, cache);
+        solve_ext_lut_ll(&B1, &dB1, ONE, &A1, unit, upper);
     }
     armas_x_merge_unsafe(B, dB);
 }
@@ -391,7 +391,7 @@ void solve_ext_ru_rlt(
             bk = armas_x_get_unsafe(Bc, j, i);
             twoprod(&s0, &u0, alpha, bk);
             u0 += alpha * armas_x_get_unsafe(dB, i, j);
-            armas_x_ext_adot_dx_unsafe(&s0, &u0, -__ONE, &b0, &d0, &a0);
+            armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &b0, &d0, &a0);
 
             if (!unit) {
                 ak = armas_x_get_unsafe(Ac, i, i);
@@ -460,13 +460,13 @@ void solve_ext_blk_ru_rlt(
         armas_x_submatrix_unsafe(&B1,  B,  0, cI, B->rows, nI);
         armas_x_submatrix_unsafe(&dB1, dB, 0, cI, B->rows, nI);
 
-        if (alpha != __ONE) {
+        if (alpha != ONE) {
             armas_x_ext_scale_unsafe(&B1, &dB1, alpha, &B1);
         } else {
-            armas_x_scale_unsafe(&dB1, __ZERO);
+            armas_x_scale_unsafe(&dB1, ZERO);
         }
-        armas_x_ext_panel_dA_unsafe(&B1, &dB1, -__ONE, &B0, &dB0, &A0, mflags, cache);
-        solve_ext_ru_rlt(&B1, &dB1, __ONE, &A1, unit, upper);
+        armas_x_ext_panel_dA_unsafe(&B1, &dB1, -ONE, &B0, &dB0, &A0, mflags, cache);
+        solve_ext_ru_rlt(&B1, &dB1, ONE, &A1, unit, upper);
     }
     armas_x_merge_unsafe(&B1, &dB1);
 }
@@ -529,7 +529,7 @@ void solve_ext_rut_rl(
             bk = armas_x_get_unsafe(Bc, j, i);
             twoprod(&s0, &u0, alpha, bk);
             u0 += alpha * armas_x_get_unsafe(dB, j, i);
-            armas_x_ext_adot_dx_unsafe(&s0, &u0, -__ONE, &b0, &d0, &a0);
+            armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &b0, &d0, &a0);
 
             if (!unit) {
                 ak = armas_x_get_unsafe(Ac, i, i);
@@ -601,13 +601,13 @@ void solve_ext_blk_rut_rl(
         armas_x_submatrix_unsafe(&B1,  B,  0, cI, B->rows, nI);
         armas_x_submatrix_unsafe(&dB1, dB, 0, cI, B->rows, nI);
 
-        if (alpha != __ONE) {
+        if (alpha != ONE) {
             armas_x_ext_scale_unsafe(&B1, &dB1, alpha, &B1);
         } else {
-            armas_x_scale_unsafe(&dB1, __ZERO);
+            armas_x_scale_unsafe(&dB1, ZERO);
         }
-        armas_x_ext_panel_dA_unsafe(&B1, &dB1, -__ONE, &B0, &dB0, &A0, mflags, cache);
-        solve_ext_rut_rl(&B1, &dB1, __ONE, &A1, unit, upper);
+        armas_x_ext_panel_dA_unsafe(&B1, &dB1, -ONE, &B0, &dB0, &A0, mflags, cache);
+        solve_ext_rut_rl(&B1, &dB1, ONE, &A1, unit, upper);
     }
     armas_x_merge_unsafe(B, dB);
 }
@@ -647,7 +647,7 @@ void armas_x_ext_solve_trm_unb_unsafe(
             armas_x_submatrix_unsafe(&B0, B, 0, cJ, B->rows, nJ);
             armas_x_submatrix_unsafe(&dB0, dB, 0, cJ, B->rows, nJ);
         }
-        armas_x_scale_unsafe(&dB0, __ZERO);
+        armas_x_scale_unsafe(&dB0, ZERO);
 
         // solve column or row panel;
         switch (flags & (ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANSA)) {
@@ -709,7 +709,7 @@ void armas_x_ext_solve_trm_blk_unsafe(
             armas_x_submatrix_unsafe(&B0, B, 0,  cJ, B->rows, nJ);
             armas_x_submatrix_unsafe(&dB0, dB, 0,  cJ, B->rows, nJ);
         }
-        armas_x_scale_unsafe(&dB0, __ZERO);
+        armas_x_scale_unsafe(&dB0, ZERO);
 
         // solve column or row panel;
         switch (flags & (ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANSA)) {

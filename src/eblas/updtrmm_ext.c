@@ -83,7 +83,7 @@ void ext_update_trm_diagonal(
             }
             armas_x_submatrix_unsafe(&c0, C, i, i, 1, C->cols-i);
             armas_x_submatrix_unsafe(&d0, dC, i, i, 1, C->cols-i);
-            armas_x_scale_unsafe(&d0, __ZERO);
+            armas_x_scale_unsafe(&d0, ZERO);
             armas_x_ext_mvmult_dx_unsafe(beta, &C0, &d0, alpha, &B0, &a0, flg);
             armas_x_ext_merge(&c0, &c0, &d0);
         }
@@ -112,7 +112,7 @@ void ext_update_trm_diagonal(
             }
             armas_x_submatrix_unsafe(&c0, C, i, i, C->rows-i, 1);
             armas_x_submatrix_unsafe(&d0, dC, i, i, C->rows-i, 1);
-            armas_x_scale_unsafe(&d0, __ZERO);
+            armas_x_scale_unsafe(&d0, ZERO);
             armas_x_mvmult_unsafe(beta, &c0, &dc, alpha, &A0, &b0, flg);
             armas_x_ext_merge(&c0, &c0, &d0);
         }

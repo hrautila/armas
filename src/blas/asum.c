@@ -40,10 +40,10 @@ ABSTYPE vec_asum(const armas_x_dense_t *X,  int N)
     xinc = X->rows == 1 ? X->step : 1;
     c0 = c1 = c2 = c3 = 0.0;
     for (i = 0; i < N-3; i += 4) {
-        z0 = __ABS(X->elems[(i+0)*xinc]);
-        z1 = __ABS(X->elems[(i+1)*xinc]);
-        z2 = __ABS(X->elems[(i+2)*xinc]);
-        z3 = __ABS(X->elems[(i+3)*xinc]);
+        z0 = ABS(X->elems[(i+0)*xinc]);
+        z1 = ABS(X->elems[(i+1)*xinc]);
+        z2 = ABS(X->elems[(i+2)*xinc]);
+        z3 = ABS(X->elems[(i+3)*xinc]);
         c0 += z0;
         c1 += z1;
         c2 += z2;
@@ -55,13 +55,13 @@ ABSTYPE vec_asum(const armas_x_dense_t *X,  int N)
     k = i*xinc;
     switch (N-i) {
     case 3:
-        c0 += __ABS(X->elems[k]);
+        c0 += ABS(X->elems[k]);
         k += xinc;
     case 2:
-        c1 += __ABS(X->elems[k]);
+        c1 += ABS(X->elems[k]);
         k += xinc;
     case 1:
-        c2 += __ABS(X->elems[k]);
+        c2 += ABS(X->elems[k]);
     }
 update:
     return c0 + c1 + c2 + c3;
@@ -75,14 +75,14 @@ DTYPE vec_asum_kahan(const armas_x_dense_t *X, int N)
     register ABSTYPE t0, y0, t1, y1;
 
     xinc = X->rows == 1 ? X->step : 1;
-    c0 = c1 = s0 = s1 = __ZERO;
+    c0 = c1 = s0 = s1 = ZERO;
     for (k = 0; k < N-1; k += 2) {
-        y0 = __ABS(X->elems[(k+0)*xinc]) - c0;
+        y0 = ABS(X->elems[(k+0)*xinc]) - c0;
         t0 = s0 + y0;
         c0 = (t0 - s0) - y0;
         s0 = t0;
 
-        y1 = __ABS(X->elems[(k+1)*xinc]) - c1;
+        y1 = ABS(X->elems[(k+1)*xinc]) - c1;
         t1 = s1 + y1;
         c1 = (t1 - s1) - y1;
         s1 = t1;
@@ -90,7 +90,7 @@ DTYPE vec_asum_kahan(const armas_x_dense_t *X, int N)
     if (k == N)
         return s0 + s1;
 
-    y0 = __ABS(X->elems[(k+0)*xinc]) - c0;
+    y0 = ABS(X->elems[(k+0)*xinc]) - c0;
     t0 = s0 + y0;
     c0 = (t0 - s0) - y0;
     s0 = t0;
@@ -156,7 +156,7 @@ ABSTYPE armas_x_asum(const armas_x_dense_t *x, armas_conf_t *conf)
     // only for column or row vectors
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return __ZERO;
+        return ZERO;
     }
 
     armas_env_t *env = armas_getenv();

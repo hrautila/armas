@@ -10,13 +10,13 @@
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_ext_asum) && defined(armas_x_ext_sum_unsafe)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // if extended precision enabled
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -32,17 +32,17 @@ void ext_asum2s(DTYPE *h, DTYPE *l, const armas_x_dense_t *X, int N)
     register ABSTYPE a0, a1;
     int xinc = X->rows == 1 ? X->step : 1;
 
-    c0 = c1 = __ZERO;
-    a0 = a1 = __ZERO;
+    c0 = c1 = ZERO;
+    a0 = a1 = ZERO;
     for (i = 0; i < N-1; i += 2) {
-        twosum(&c0, &z0, c0, __ABS(X->elems[(i+0)*xinc]));
-        twosum(&c1, &z1, c1, __ABS(X->elems[(i+1)*xinc]));
+        twosum(&c0, &z0, c0, ABS(X->elems[(i+0)*xinc]));
+        twosum(&c1, &z1, c1, ABS(X->elems[(i+1)*xinc]));
         a0 += z0; a1 += z1;
     }
 
     if (i != N) {
         k = i*xinc;
-        twosum(&c0, &z0, c0, __ABS(X->elems[k]));
+        twosum(&c0, &z0, c0, ABS(X->elems[k]));
         a0 += z0;
     }
 
@@ -60,8 +60,8 @@ void ext_sum2s(DTYPE *h, DTYPE *l, const armas_x_dense_t *X, int N)
     register DTYPE a0, a1, a2, a3;
     int xinc = X->rows == 1 ? X->step : 1;
 
-    c0 = c1 = c2 = c3 = __ZERO;
-    a0 = a1 = a2 = a3 = __ZERO;
+    c0 = c1 = c2 = c3 = ZERO;
+    a0 = a1 = a2 = a3 = ZERO;
     for (i = 0; i < N-3; i += 4) {
         twosum(&c0, &z0, c0, X->elems[(i+0)*xinc]);
         twosum(&c1, &z1, c1, X->elems[(i+1)*xinc]);
@@ -149,7 +149,7 @@ int armas_x_ext_sum(DTYPE *result, DTYPE alpha, const armas_x_dense_t *X, int fl
         ext_sum2s(&h, &l, X, armas_x_size(X));
     }
 
-    if (alpha != __ONE) {
+    if (alpha != ONE) {
         twoprod(result, &q, alpha, h);
         *result += q + alpha*l;
     } else {
@@ -160,7 +160,7 @@ int armas_x_ext_sum(DTYPE *result, DTYPE alpha, const armas_x_dense_t *X, int fl
 
 #else
 #warning "Missing defines; no code!"
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
 
 
 // Local Variables:
