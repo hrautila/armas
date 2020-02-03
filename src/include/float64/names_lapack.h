@@ -121,7 +121,7 @@
 // internal QL related function available for others
 #define armas_x_update_ql_left           armas_d_update_ql_left
 #define armas_x_update_ql_right          armas_d_update_ql_right
-#define armas_unblk_ql_reflector         armas_d_unblk_ql_reflector
+#define armas_x_unblk_ql_reflector       armas_d_unblk_ql_reflector
 
 // QR functions
 #define armas_x_qrfactor                 armas_d_qrfactor
