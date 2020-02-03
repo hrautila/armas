@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -11,26 +11,26 @@
 #include "dtype.h"
 #include "dlpack.h"
 
-// ------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__bdsvd2x2) && defined(__bdsvd2x2_vec)
-#define __ARMAS_PROVIDES 1
+#if defined(armas_x_bdsvd2x2) && defined(armas_x_bdsvd2x2_vec)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// ----------------------------------------------------------------------------
 
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 #include "internal_lapack.h"
 
 /*
  * NOTES:
  *
- * Singular Value Decomposition is similiarity transformation 
+ * Singular Value Decomposition is similiarity transformation
  *
  *    Q.T*A*P = S
  *
@@ -61,7 +61,7 @@
  *      (1/2)*[(g^2 + (|f| + |h|)^2) + (g^2 + (|f| - |h|)^2)]
  *
  *  therefore:
- *      2*C = [ sqrt(g^2 + (|f|+|h|)^2) + sqrt(g^2 + (|f|-|h|)^2) ]^2 
+ *      2*C = [ sqrt(g^2 + (|f|+|h|)^2) + sqrt(g^2 + (|f|-|h|)^2) ]^2
  *  and
  *      s1 = sqrt(C/2) =   sqrt(g^2 + (|f|+|h|)^2) + sqrt(g^2 + (|f|-|h|)^2)
  *      s2 = sqrt(2*D/C) = |h||f|/sqrt(g^2 + (|f|+|h|)^2) + sqrt(g^2 + (|f|-|h|)^2)
@@ -98,13 +98,13 @@
  * \return
  *      Value of the smaller singular value.
  */
-DTYPE __bdsvd2x2(DTYPE *smin, DTYPE *smax, DTYPE f, DTYPE g, DTYPE h)
+DTYPE armas_x_bdsvd2x2(DTYPE * smin, DTYPE * smax, DTYPE f, DTYPE g, DTYPE h)
 {
     DTYPE C, fa, ga, ha, fhmax, fhmin, gs, d, t;
 
-    fa = __ABS(f);
-    ha = __ABS(h);
-    ga = __ABS(g);
+    fa = ABS(f);
+    ha = ABS(h);
+    ga = ABS(g);
     if (fa > ha) {
         fhmax = fa;
         fhmin = ha;
@@ -113,9 +113,9 @@ DTYPE __bdsvd2x2(DTYPE *smin, DTYPE *smax, DTYPE f, DTYPE g, DTYPE h)
         fhmin = fa;
     }
 
-    if (fhmin == __ZERO) {
-        *smin = __ZERO;
-        if (fhmax == __ZERO) {
+    if (fhmin == ZERO) {
+        *smin = ZERO;
+        if (fhmax == ZERO) {
             *smax = ga;
         } else {
             if (fhmax > ga) {
@@ -124,25 +124,26 @@ DTYPE __bdsvd2x2(DTYPE *smin, DTYPE *smax, DTYPE f, DTYPE g, DTYPE h)
                 fhmin = fhmax;
                 fhmax = ga;
             }
-            *smax = fhmax * __SQRT(1.0 + (fhmin/fhmax)*(fhmin/fhmax));
+            *smax = fhmax * SQRT(1.0 + (fhmin / fhmax) * (fhmin / fhmax));
         }
         return *smin;
     }
 
-    t  = 1.0 + fhmin/fhmax;
-    d  = (fhmax - fhmin)/fhmax;
+    t = 1.0 + fhmin / fhmax;
+    d = (fhmax - fhmin) / fhmax;
     if (ga < fhmax) {
-        gs = ga/fhmax;
-        C = (__SQRT(gs*gs + t*t) + __SQRT(gs*gs + d*d))/2.0;
+        gs = ga / fhmax;
+        C = (SQRT(gs * gs + t * t) + SQRT(gs * gs + d * d)) / 2.0;
     } else {
         gs = fhmax / ga;
-        if (gs == __ZERO) {
+        if (gs == ZERO) {
             *smin = (fhmin * fhmax) / ga;
             *smax = ga;
             return *smin;
-        } 
-        C = __SQRT(1.0 + (gs*t)*(gs*t)) + __SQRT(1.0 + (gs*d)*(gs*d));
-        C /= 2.0*gs;
+        }
+        C = SQRT(1.0 + (gs * t) * (gs * t)) +
+            SQRT(1.0 + (gs * d) * (gs * d));
+        C /= 2.0 * gs;
     }
     *smin = fhmin / C;
     *smax = fhmax * C;
@@ -154,8 +155,8 @@ static inline DTYPE sign(DTYPE a, DTYPE b)
     return signbit(b) ? -a : a;
 }
 
-#ifndef __TWO
-#define __TWO 2.0
+#ifndef TWO
+#define TWO 2.0
 #endif
 
 /*
@@ -179,110 +180,116 @@ static inline DTYPE sign(DTYPE a, DTYPE b)
  *
  * Compatible with LAPACK xLASV2.
  */
-void __bdsvd2x2_vec(DTYPE *ssmin, DTYPE *ssmax,
-                    DTYPE *cosl, DTYPE *sinl, DTYPE *cosr, DTYPE *sinr,
-                    DTYPE f, DTYPE g, DTYPE h)
+void armas_x_bdsvd2x2_vec(DTYPE * ssmin, DTYPE * ssmax, DTYPE * cosl,
+                          DTYPE * sinl, DTYPE * cosr, DTYPE * sinr,
+                          DTYPE f, DTYPE g, DTYPE h)
 {
     DTYPE smin, smax, clt, slt, crt, srt;
     DTYPE amax, amin, fhmax, fhmin;
     DTYPE gt, ga, fa, ha, d, t, l, m, t2, m2, s, r, a, tsign;
     int swap = 0, gmax = 0;
 
-    fa = __ABS(f); ha = __ABS(h); ga = __ABS(g);
+    fa = ABS(f);
+    ha = ABS(h);
+    ga = ABS(g);
     if (fa > ha) {
-        fhmax = f; amax = fa;
-        fhmin = h; amin = ha;
+        fhmax = f;
+        amax = fa;
+        fhmin = h;
+        amin = ha;
     } else {
-        fhmax = h; amax = ha;
-        fhmin = f; amin = fa;
+        fhmax = h;
+        amax = ha;
+        fhmin = f;
+        amin = fa;
         swap = 1;
     }
     gt = g;
 
-    if (ga == __ZERO) {
+    if (ga == ZERO) {
         smin = amin;
         smax = amax;
-        clt = __ONE;
-        crt = __ONE;
-        slt = __ZERO;
-        srt = __ZERO;
+        clt = ONE;
+        crt = ONE;
+        slt = ZERO;
+        srt = ZERO;
         goto signs;
     }
 
     if (ga > amax) {
         gmax = 1;
-        if (amax/ga < __EPS) {
+        if (amax / ga < EPS) {
             // very large ga
             smax = ga;
             if (amin > 1.0) {
-                smin  =  amax / ( ga / amin );
+                smin = amax / (ga / amin);
             } else {
-                smin = (amax / ga)*amin;
+                smin = (amax / ga) * amin;
             }
-            clt = __ONE;
-            slt = fhmin / gt;  
+            clt = ONE;
+            slt = fhmin / gt;
             crt = fhmax / gt;
-            srt = __ONE;
+            srt = ONE;
             goto signs;
         }
     }
     // normal case here
-    d = amax  - amin;
+    d = amax - amin;
     if (d == amax) {
         // infinite F or H
-        l = __ONE;
+        l = ONE;
     } else {
-        l = d / amax;   // l = (amax - amin)/amax;
+        l = d / amax;           // l = (amax - amin)/amax;
     }
-    m = gt/fhmax;
-    t = __TWO - l;  // t = 1 + (amax/amin)
+    m = gt / fhmax;
+    t = TWO - l;              // t = 1 + (amax/amin)
 
-    m2 = m*m;
-    t2 = t*t;
-    s  = __SQRT(t2 + m2);
-    r  = l == __ZERO ? fabs(m) : __SQRT(l*l + m2);
+    m2 = m * m;
+    t2 = t * t;
+    s = SQRT(t2 + m2);
+    r = l == ZERO ? fabs(m) : SQRT(l * l + m2);
 
-    a  = 0.5*(s + r);
+    a = 0.5 * (s + r);
     smin = amin / a;
     smax = amax * a;
     // upto here this same as function bsvd2x2(). Code below
     // is not understood :(
 
-    if (m2 == __ZERO) {
-        if (l == __ZERO) {
-            t = sign(2.0, fhmax)*sign(1.0, gt); // 2.0 or -2.0
+    if (m2 == ZERO) {
+        if (l == ZERO) {
+            t = sign(2.0, fhmax) * sign(1.0, gt);       // 2.0 or -2.0
         } else {
-            t = gt / sign(d, fhmax) + m/t;
+            t = gt / sign(d, fhmax) + m / t;
         }
     } else {
-        t = (m / (s+t) + m /(r+l)) * (1.0 + a);
+        t = (m / (s + t) + m / (r + l)) * (1.0 + a);
     }
-    l = sqrt(t*t + 4);
-    crt = 2.0/l;
+    l = sqrt(t * t + 4);
+    crt = 2.0 / l;
     srt = t / l;
-    clt = (crt + srt*m) / a;
+    clt = (crt + srt * m) / a;
     slt = (fhmin / fhmax) * srt / a;
-    
- signs:
+
+  signs:
     if (swap) {
         *cosr = slt;
         *sinr = clt;
         *cosl = srt;
         *sinl = crt;
-        tsign = sign(__ONE, *cosr)*sign(__ONE, *cosl)*sign(__ONE, f);
+        tsign = sign(ONE, *cosr) * sign(ONE, *cosl) * sign(ONE, f);
     } else {
         *cosr = crt;
         *sinr = srt;
         *cosl = clt;
         *sinl = slt;
-        tsign = sign(__ONE, *sinr)*sign(__ONE, *sinl)*sign(__ONE, h);
+        tsign = sign(ONE, *sinr) * sign(ONE, *sinl) * sign(ONE, h);
     }
     if (gmax)
-        tsign = sign(__ONE, *sinr)*sign(__ONE, *cosl)*sign(__ONE, g);
-        
+        tsign = sign(ONE, *sinr) * sign(ONE, *cosl) * sign(ONE, g);
+
     // correct signs of smin & smax
     *ssmax = sign(smax, tsign);
-    *ssmin = sign(smin, tsign*sign(__ONE,f)*sign(__ONE,h));
+    *ssmin = sign(smin, tsign * sign(ONE, f) * sign(ONE, h));
 }
 
 
@@ -310,20 +317,22 @@ void __bdsvd2x2_vec(DTYPE *ssmin, DTYPE *ssmax,
  * z1 = Zt/2
  * z2 = 2*(a*c - b*b)/Zt
  */
-void __sym_eigen2x2(DTYPE *z1, DTYPE *z2, DTYPE a, DTYPE b, DTYPE c)
+void armas_x_sym_eigen2x2(DTYPE * z1, DTYPE * z2, DTYPE a, DTYPE b, DTYPE c)
 {
     DTYPE T, b2a, amca, Zt, acmax, acmin;
 
-    acmax = a; acmin = c;
-    if (__ABS(c) > __ABS(a)) {
-        acmax = c; acmin = a;
+    acmax = a;
+    acmin = c;
+    if (ABS(c) > ABS(a)) {
+        acmax = c;
+        acmin = a;
     }
-    b2a = __ABS(b + b);
+    b2a = ABS(b + b);
     T = a + c;
-    amca = __ABS(a - c);
-    Zt = T + __COPYSIGN(__HYPOT(amca, b2a), T);
-    *z1 = __HALF*Zt;
-    *z2 = __TWO*((acmax/Zt) * acmin - (b/Zt)*b);
+    amca = ABS(a - c);
+    Zt = T + COPYSIGN(HYPOT(amca, b2a), T);
+    *z1 = HALF * Zt;
+    *z2 = TWO * ((acmax / Zt) * acmin - (b / Zt) * b);
 }
 
 
@@ -341,33 +350,30 @@ void __sym_eigen2x2(DTYPE *z1, DTYPE *z2, DTYPE a, DTYPE b, DTYPE c)
  *  => x0 = 1/ht
  *     x1 = (z1 - a)/(ht*b)
  */
-void __sym_eigen2x2vec(DTYPE *z1, DTYPE *z2, DTYPE *cs, DTYPE *sn, DTYPE a, DTYPE b, DTYPE c)
+void armas_x_sym_eigen2x2vec(DTYPE * z1, DTYPE * z2, DTYPE * cs,
+                             DTYPE * sn, DTYPE a, DTYPE b, DTYPE c)
 {
     DTYPE T, b2a, amca, Zt, acmax, acmin, ht;
 
-    acmax = a; acmin = c;
-    if (__ABS(c) > __ABS(a)) {
-        acmax = c; acmin = a;
+    acmax = a;
+    acmin = c;
+    if (ABS(c) > ABS(a)) {
+        acmax = c;
+        acmin = a;
     }
-    b2a = __ABS(b + b);
+    b2a = ABS(b + b);
     T = a + c;
-    amca = __ABS(a - c);
-    Zt = T + __COPYSIGN(__HYPOT(amca, b2a), T);
-    *z1 = __HALF*Zt;
-    *z2 = __TWO*((acmax/Zt) * acmin - (b/Zt)*b);
-        
+    amca = ABS(a - c);
+    Zt = T + COPYSIGN(HYPOT(amca, b2a), T);
+    *z1 = HALF * Zt;
+    *z2 = TWO * ((acmax / Zt) * acmin - (b / Zt) * b);
+
     // these should be thought out for cancellation effects....
-    ht = __HYPOT(1.0, (*z1 - a)/b);
-    *cs = 1.0/ht;
-    *sn = (*z1 - a)/(b*ht);
+    ht = HYPOT(1.0, (*z1 - a) / b);
+    *cs = 1.0 / ht;
+    *sn = (*z1 - a) / (b * ht);
 }
 
-
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
-
+#else
+#warning "Missing defines. No code!"
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
