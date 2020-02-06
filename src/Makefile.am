@@ -95,6 +95,36 @@ COMPAT =
 if CONFIG_COMPAT
 endif
 
+LAPACK = \
+	lapack/aux.c \
+	lapack/bdsweep.c \
+	lapack/bdsvd.c \
+	lapack/bdsvd_dk.c \
+	lapack/bdsvd_gr.c \
+	lapack/chol.c \
+	lapack/cholpv.c \
+	lapack/cholupd.c \
+	lapack/diag.c \
+	lapack/givens.c \
+	lapack/house.c \
+	lapack/housem.c \
+	lapack/hhouse.c \
+	lapack/ldlbk.c \
+	lapack/ldlbkl.c \
+	lapack/ldlbku.c \
+	lapack/lqbld.c \
+	lapack/lq.c \
+	lapack/lqmult.c \
+	lapack/lqsolve.c \
+	lapack/lu.c \
+	lapack/qrbld.c \
+	lapack/qr.c \
+	lapack/qrmult.c \
+	lapack/qrsolve.c \
+	lapack/qrt.c \
+	lapack/rotate.c \
+	lapack/trdsweep.c
+
 if OLD
 noinst_HEADERS = \
 	inc/cond.h \
@@ -221,7 +251,7 @@ OLD_XBLAS3 = \
 	blas3/updtrm_ext.c \
 	blas3/syrk_ext.c
 
-LAPACK = \
+OLD_LAPACK = \
 	lapack/housem.c \
 	lapack/hhouse.c \
 	lapack/trdbis.c \
@@ -345,7 +375,7 @@ libarmasd_la_LIBADD = libd.la
 
 
 # double precision
-libd_la_SOURCES = $(COMMON) $(BLAS) $(EBLAS) $(ACCEL) $(COMPAT)
+libd_la_SOURCES = $(COMMON) $(BLAS) $(EBLAS) $(ACCEL) $(COMPAT) $(LAPACK)
 libd_la_CPPFLAGS = -DFLOAT64 
 
 # # sparse double precision
