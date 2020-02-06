@@ -38,7 +38,7 @@ enum pivot_dir {
   do { if ( (exp) ) return -1; } while (0)
 
 // "empty" matrix;
-#define __EMPTY (armas_x_dense_t ){                   \
+#define EMPTY_MATRIX (armas_x_dense_t ){              \
     .elems = (DTYPE *)0,                              \
     .step = 0,                                        \
     .rows = 0,                                        \
@@ -50,7 +50,7 @@ enum pivot_dir {
 
 #if __GNUC__
 // macro to initialize matrix to "empty" to avoid GCC "maybe-uninitialized" errors
-#define EMPTY(A) A = __EMPTY
+#define EMPTY(A) A = EMPTY_MATRIX
 #else
 #define EMPTY(A)
 #endif
@@ -58,13 +58,25 @@ enum pivot_dir {
 extern int compute_lb(int M, int N, int wsize, WSSIZE wsizer);
 
 static inline
-long __IMAX(long a, long b) {
+long IMAX(long a, long b) {
   return a > b ? a : b;
 }
 
 static inline
-long __IMIN(long a, long b) {
+long IMIN(long a, long b) {
   return a < b ? a : b;
+}
+
+static inline
+DTYPE MIN(DTYPE a, DTYPE b)
+{
+    return a < b ? a : b;
+}
+
+static inline
+DTYPE MAX(DTYPE a, DTYPE b)
+{
+    return a < b ? b : a;
 }
 
 // helper functions
@@ -190,6 +202,33 @@ extern void armas_x_sym_eigen2x2vec(DTYPE *z1, DTYPE *z2, DTYPE *cs, DTYPE *sn, 
 //extern int armas_x_trdevd_qr(armas_x_dense_t *D, armas_x_dense_t *E,
 //		       armas_x_dense_t *V, armas_x_dense_t *CS, ABSTYPE tol, int flags, armas_conf_t *conf);
 
+// Bidiagonal/Tridiagonal QR/QL sweeps
+extern
+int armas_x_bd_qrsweep(armas_x_dense_t * D, armas_x_dense_t * E,
+                       armas_x_dense_t * Cr, armas_x_dense_t * Sr,
+                       armas_x_dense_t * Cl, armas_x_dense_t * Sl,
+                       DTYPE f0, DTYPE g0, int saves);
+extern
+int armas_x_bd_qrzero(armas_x_dense_t * D, armas_x_dense_t * E,
+                      armas_x_dense_t * Cr, armas_x_dense_t * Sr,
+                      armas_x_dense_t * Cl, armas_x_dense_t * Sl, int saves);
+extern
+int armas_x_bd_qlsweep(armas_x_dense_t * D, armas_x_dense_t * E,
+                       armas_x_dense_t * Cr, armas_x_dense_t * Sr,
+                       armas_x_dense_t * Cl, armas_x_dense_t * Sl, DTYPE f0,
+                       DTYPE g0, int saves);
+extern
+int armas_x_bd_qlzero(armas_x_dense_t * D, armas_x_dense_t * E,
+                      armas_x_dense_t * Cr, armas_x_dense_t * Sr,
+                      armas_x_dense_t * Cl, armas_x_dense_t * Sl, int saves);
+extern
+int armas_x_trd_qlsweep(armas_x_dense_t * D, armas_x_dense_t * E,
+                        armas_x_dense_t * Cr, armas_x_dense_t * Sr, DTYPE f0,
+                        DTYPE g0, int saves);
+extern
+int armas_x_trd_qrsweep(armas_x_dense_t * D, armas_x_dense_t * E,
+                        armas_x_dense_t * Cr, armas_x_dense_t * Sr, DTYPE f0,
+                        DTYPE g0, int saves);
 
 
 #endif /* __ARMAS_INTERNAL_LAPACK_H */
