@@ -13,21 +13,20 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_gvcompute) && defined(armas_x_gvrotate)
-#define __ARMAS_PROVIDES 1
+#if defined(armas_x_gvleft) && defined(armas_x_gvright)
+#define ARMAS_PROVIDES 1
 #endif
-// this file requires external public functions
-#define __ARMAS_REQUIRES 1
-
+#if defined(armas_x_gvrotate)
+#define ARMAS_REQUIRES 1
+#endif
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
 //! \cond
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 #include "internal_lapack.h"
-#include "auxiliary.h"
 //! \endcond
 
 /*
@@ -63,35 +62,53 @@
  *  if it is applied consistently. (19.8.2014)
  */
 
-/**
- * \brief Compute Givens rotation.
+/*
+ * \brief Apply plane rotations from left.
  *
- * Compatible to blas.DROTG and lapack.DLARTG.
+ * See armas_gvleft() for details.
  *
- * \ingroup lapack givens
+ * \ingroup lapackaux internal
  */
-void armas_x_gvcompute(DTYPE *c, DTYPE *s, DTYPE *r, DTYPE a, DTYPE b)
+static inline
+void gvleft(armas_x_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
+            int col, int ncol)
 {
-    __gvrotg(c, s, r, a, b);
+    DTYPE t0, *y0, *y1;
+    int k, n;
+
+    y0 = &A->elems[col * A->step + r1];
+    y1 = &A->elems[col * A->step + r2];
+    for (k = 0, n = 0; k < ncol; k++, n += A->step) {
+        t0 = c * y0[n] + s * y1[n];
+        y1[n] = c * y1[n] - s * y0[n];
+        y0[n] = t0;
+    }
 }
 
-/**
- * \brief Apply Givens rotation.
+
+/*
+ * \brief Apply plane rotations from right.
  *
- * Computes
+ * See armas_gvright() for details.
  *
- *     ( v0 )  = G(c, s) * ( y0 )  or ( v0 v1 ) = ( y0 y1 ) * G(c, s)
- *     ( v1 )              ( y1 )
- *
- *     G(c, s) = ( c  s )  => ( v0 ) = ( c*y0 + s*y1 )
- *               (-s  c )     ( v1 )   ( c*y1 - s*y0 )
- *
- * \ingroup lapack givens
+ * \ingroup lapackaux internal
  */
-void armas_x_gvrotate(DTYPE *v0, DTYPE *v1, DTYPE c, DTYPE s, DTYPE y0, DTYPE y1)
+static inline
+void gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
+             int row, int nrow)
 {
-    __gvrot(v0, v1, c, s, y0, y1);
+    DTYPE t0, *y0, *y1;
+    int k;
+
+    y0 = &A->elems[c1 * A->step + row];
+    y1 = &A->elems[c2 * A->step + row];
+    for (k = 0; k < nrow; k++) {
+        t0 = c * y0[k] + s * y1[k];
+        y1[k] = c * y1[k] - s * y0[k];
+        y0[k] = t0;
+    }
 }
+
 
 /**
  * \brief Apply Givens rotation (c, s) to rows of A.
@@ -111,7 +128,8 @@ void armas_x_gvrotate(DTYPE *v0, DTYPE *v1, DTYPE c, DTYPE s, DTYPE y0, DTYPE y1
  *
  * \ingroup lapack givens
  */
-void armas_x_gvleft(armas_x_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int col, int ncol)
+void armas_x_gvleft(armas_x_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
+                    int col, int ncol)
 {
     DTYPE v0;
     int k, lastc;
@@ -119,38 +137,39 @@ void armas_x_gvleft(armas_x_dense_t *A, DTYPE c, DTYPE s, int r1, int r2, int co
     if (col >= A->cols)
         return;
 
-    lastc = min(col+ncol, A->cols);
+    lastc = min(col + ncol, A->cols);
     if (r1 == r2) {
         // one row
         for (k = col; k < lastc; k++) {
             v0 = armas_x_get(A, r1, k);
-            armas_x_set(A, r1, k, c*v0);
+            armas_x_set(A, r1, k, c * v0);
         }
         return;
     }
-    __gvleft(A, c, s, r1, r2, col, ncol);
+    gvleft(A, c, s, r1, r2, col, ncol);
 }
 
 
 /**
- * \brief Apply Givens rotation (c, s) to columns of A.
+ * @brief Apply Givens rotation (c, s) to columns of A.
  *
- * \param A
+ * @param A
  *      Target matrix
- * \param c, s
+ * @param c, s
  *      Givens rotation paramers
- * \param c1
+ * @pparam c1
  *      Index to first column
- * \param c2
+ * @param c2
  *      Index to second column
- * \param row
+ * @param row
  *      Start row
- * \param nrow
+ * @param nrow
  *      Number of rows
  *
- * \ingroup lapack givens
+ * @ingroup lapack givens
  */
-void armas_x_gvright(armas_x_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int row, int nrow)
+void armas_x_gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
+                     int row, int nrow)
 {
     DTYPE v0;
     int k, lastr;
@@ -158,20 +177,20 @@ void armas_x_gvright(armas_x_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int r
     if (row >= A->rows)
         return;
 
-    lastr = min(A->rows, row+nrow);
+    lastr = min(A->rows, row + nrow);
     if (c1 == c2) {
         // one column
         for (k = row; k < lastr; k++) {
             v0 = armas_x_get(A, k, c1);
-            armas_x_set(A, k, c1, c*v0);
+            armas_x_set(A, k, c1, c * v0);
         }
         return;
     }
-    __gvright(A, c, s, c1, c2, row, nrow);
+    gvright(A, c, s, c1, c2, row, nrow);
 }
 
 /**
- * \brief Apply multiple Givens rotations to matrix A from left or right.
+ * @brief Apply multiple Givens rotations to matrix A from left or right.
  *
  * Applies sequence of plane rotations to matrix A from either left or right.
  * The transformation has the form A = P*A (left) or A = A*P.T (right) where
@@ -188,46 +207,47 @@ void armas_x_gvright(armas_x_dense_t *A, DTYPE c, DTYPE s, int c1, int c2, int r
  *
  * Left/right is indicated with flags parameter.
  *
- * \param A [in,out]
+ * @param A [in,out]
  *      Target matrix
- * \param start [in]
+ * @nparam start [in]
  *      Start row (left update) or column (right update)
- * \param S, C [in]
+ * @param S, C [in]
  *      Rotation parameters
- * \param nrot [in]
+ * @param nrot [in]
  *      Number of rotation to apply.
- * \param flags [in]
+ * @param flags [in]
  *      Select from left (ARMAS_LEFT) or right (ARMAS_RIGHT). Or with direction
  *      flag backward (ARMAS_BACKWARD)  or forward (ARMAS_FORWARD). Forward is
  *      default direction for updates.
- * \return
+ * @return
  *      Number of rotation applied, min(nrot, A->rows-start) for left and
  *      min(nrot, A->cols-start) for right.
  *
- * \ingroup lapack givens
+ * @ingroup lapack givens
  */
-int armas_x_gvupdate(armas_x_dense_t *A, int start, 
-                     armas_x_dense_t *C, armas_x_dense_t *S, int nrot, int flags)
+int armas_x_gvupdate(armas_x_dense_t * A, int start,
+                     armas_x_dense_t * C, armas_x_dense_t * S, int nrot,
+                     int flags)
 {
-    int k, n, end = start+nrot;
+    int k, n, end = start + nrot;
     DTYPE c, s;
 
     if (flags & ARMAS_BACKWARD) {
         if (flags & ARMAS_LEFT) {
             end = min(A->rows, end);
             for (k = end, n = nrot; n > 0 && k > start; n--, k--) {
-                c = armas_x_get_at_unsafe(C, n-1);
-                s = armas_x_get_at_unsafe(S, n-1);
+                c = armas_x_get_at_unsafe(C, n - 1);
+                s = armas_x_get_at_unsafe(S, n - 1);
                 if (c != 1.0 || s != 0.0)
-                    __gvleft(A, c, s, k-1, k, 0, A->cols);
+                    gvleft(A, c, s, k - 1, k, 0, A->cols);
             }
         } else {
             end = min(A->cols, end);
             for (k = end, n = nrot; n > 0 && k > start; n--, k--) {
-                c = armas_x_get_at_unsafe(C, n-1);
-                s = armas_x_get_at_unsafe(S, n-1);
+                c = armas_x_get_at_unsafe(C, n - 1);
+                s = armas_x_get_at_unsafe(S, n - 1);
                 if (c != 1.0 || s != 0.0)
-                    __gvright(A, c, s, k-1, k, 0, A->rows);
+                    gvright(A, c, s, k - 1, k, 0, A->rows);
             }
         }
     } else {
@@ -238,7 +258,7 @@ int armas_x_gvupdate(armas_x_dense_t *A, int start,
                 c = armas_x_get_at_unsafe(C, n);
                 s = armas_x_get_at_unsafe(S, n);
                 if (c != 1.0 || s != 0.0)
-                    __gvleft(A, c, s, k, k+1, 0, A->cols);
+                    gvleft(A, c, s, k, k + 1, 0, A->cols);
             }
         } else {
             end = min(A->cols, end);
@@ -246,7 +266,7 @@ int armas_x_gvupdate(armas_x_dense_t *A, int start,
                 c = armas_x_get_at_unsafe(C, n);
                 s = armas_x_get_at_unsafe(S, n);
                 if (c != 1.0 || s != 0.0)
-                    __gvright(A, c, s, k, k+1, 0, A->rows);
+                    gvright(A, c, s, k, k + 1, 0, A->rows);
             }
         }
     }
@@ -264,7 +284,8 @@ int armas_x_gvupdate(armas_x_dense_t *A, int start,
  *
  *  Assumes len(X) == len(Y).
  */
-int armas_x_gvrot_vec(armas_x_dense_t *X, armas_x_dense_t *Y, DTYPE c, DTYPE s)
+int armas_x_gvrot_vec(armas_x_dense_t * X, armas_x_dense_t * Y, DTYPE c,
+                      DTYPE s)
 {
     DTYPE x, y;
     int k;
@@ -277,12 +298,6 @@ int armas_x_gvrot_vec(armas_x_dense_t *X, armas_x_dense_t *Y, DTYPE c, DTYPE s)
     }
     return 0;
 }
-
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
-
+#else
+#warning "Missing defines. No code!"
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

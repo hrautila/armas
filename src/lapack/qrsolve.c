@@ -11,23 +11,23 @@
 #include "dtype.h"
 #include "dlpack.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_qrsolve) && defined(armas_x_qrsolve_w)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_qrmult) 
-#define __ARMAS_REQUIRES 1
+#if defined(armas_x_qrmult)
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 
 //! \cond
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 #include "internal_lapack.h"
 //! \endcond
 
@@ -45,7 +45,7 @@
  * Otherwise find the least squares solution of an overdetermined system, i.e.,
  *   solve the least squares problem: \f$ min || B - A*X || \f$
  *
- * \param[in,out] B     
+ * \param[in,out] B
  *     On entry, the right hand side N-by-P matrix B.  On exit, the solution matrix X.
  *
  * \param[in] A
@@ -68,32 +68,29 @@
  * Compatible with lapack.GELS (the m >= n part)
  * \ingroup lapack
  */
-int armas_x_qrsolve(armas_x_dense_t *B,
-		    const armas_x_dense_t *A,
-		    const armas_x_dense_t *tau,
-		    int flags,
-		    armas_conf_t *cf)
+int armas_x_qrsolve(armas_x_dense_t * B,
+                    const armas_x_dense_t * A,
+                    const armas_x_dense_t * tau, int flags, armas_conf_t * cf)
 {
-  if (!cf)
-    cf = armas_conf_default();
+    if (!cf)
+        cf = armas_conf_default();
 
-  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-  if (armas_x_qrsolve_w(B, A, tau, flags, &wb, cf) < 0)
-    return -1;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
+    if (armas_x_qrsolve_w(B, A, tau, flags, &wb, cf) < 0)
+        return -1;
 
-  wbs = &wb;
-  if (wb.bytes > 0) {
-    if (!armas_walloc(&wb, wb.bytes)) {
-      cf->error = ARMAS_EMEMORY;
-      return -1;
-    }
-  }
-  else
-    wbs = ARMAS_NOWORK;
-  
-  int stat = armas_x_qrsolve_w(B, A, tau, flags, wbs, cf);
-  armas_wrelease(&wb);
-  return stat;
+    wbs = &wb;
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            cf->error = ARMAS_EMEMORY;
+            return -1;
+        }
+    } else
+        wbs = ARMAS_NOWORK;
+
+    int stat = armas_x_qrsolve_w(B, A, tau, flags, wbs, cf);
+    armas_wrelease(&wb);
+    return stat;
 }
 
 
@@ -110,12 +107,12 @@ int armas_x_qrsolve(armas_x_dense_t *B,
  * Otherwise find the least squares solution of an overdetermined system, i.e.,
  *   solve the least squares problem: \f$ min || B - A*X || \f$
  *
- * @param[in,out] B     
+ * @param[in,out] B
  *     On entry, the right hand side N-by-P matrix B.  On exit, the solution matrix X.
  *
  * @param[in] A
  *     The elements on and above the diagonal contain the min(M,N)-by-N upper
- *     trapezoidal matrix R. The elements below the diagonal with the vector 'tau', 
+ *     trapezoidal matrix R. The elements below the diagonal with the vector 'tau',
  *     represent the ortogonal matrix Q as product of elementary reflectors.
  *     Matrix A and vector tau are as returned by armas_x_qrfactor()
  *
@@ -129,76 +126,69 @@ int armas_x_qrsolve(armas_x_dense_t *B,
  * @param wb
  *    Workspace, size as in armas_x_qrmult()
  *
- * @param[in,out] conf  
- *    Optinal blocking configuration. If not given default will be used. Unblocked
- *    invocation is indicated with conf.lb == 0.
+ * @param[in,out] conf
+ *    Optinal configuration options.
  *
  * Compatible with lapack.GELS (the m >= n part)
  * \ingroup lapack
  */
-int armas_x_qrsolve_w(armas_x_dense_t *B,
-		      const armas_x_dense_t *A,
-		      const armas_x_dense_t *tau,
-		      int flags,
-		      armas_wbuf_t *wb,
-		      armas_conf_t *conf)
+int armas_x_qrsolve_w(armas_x_dense_t * B,
+                      const armas_x_dense_t * A,
+                      const armas_x_dense_t * tau,
+                      int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-  armas_x_dense_t R, BT, BB;
-  size_t wsmin, wsz = 0;
+    armas_x_dense_t R, BT, BB;
+    size_t wsmin, wsz = 0;
 
-  if (!conf)
-    conf = armas_conf_default();
+    if (!conf)
+        conf = armas_conf_default();
 
-  if (!B || !A || !tau) {
-    conf->error = ARMAS_EINVAL;
-    return -1;
-  }
+    if (!B || !A || !tau) {
+        conf->error = ARMAS_EINVAL;
+        return -1;
+    }
 
-  if (wb && wb->bytes == 0) {
-    return armas_x_qrmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
-  }
+    if (wb && wb->bytes == 0) {
+        return armas_x_qrmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
+    }
 
-  if ( B->rows != A->rows ) {
-    conf->error = ARMAS_ESIZE;
-    return -1;
-  }
+    if (B->rows != A->rows) {
+        conf->error = ARMAS_ESIZE;
+        return -1;
+    }
 
-  wsmin = B->cols * sizeof(DTYPE);
-  if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
-    conf->error = ARMAS_EWORK;
-    return -1;
-  }
-  armas_x_submatrix(&R, A, 0, 0, A->cols, A->cols);
-  armas_x_submatrix(&BT, B, 0, 0, A->cols, B->cols);
+    wsmin = B->cols * sizeof(DTYPE);
+    if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
+        conf->error = ARMAS_EWORK;
+        return -1;
+    }
+    armas_x_submatrix(&R, A, 0, 0, A->cols, A->cols);
+    armas_x_submatrix(&BT, B, 0, 0, A->cols, B->cols);
 
-  if (flags & ARMAS_TRANS) {
-    // solve ovedetermined system A.T*X = B
+    if (flags & ARMAS_TRANS) {
+        // solve ovedetermined system A.T*X = B
 
-    // B' = R.-1*B
-    ONERROR(armas_x_solve_trm(&BT, __ONE, &R, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA, conf));
+        // B' = R.-1*B
+        armas_x_solve_trm(&BT, ONE, &R,
+                          ARMAS_LEFT | ARMAS_UPPER | ARMAS_TRANSA, conf);
 
-    // clear bottom part of B
-    armas_x_submatrix(&BB, B, A->cols, 0, -1, -1);
-    armas_x_mscale(&BB, 0.0, ARMAS_ANY);
-    
-    // X = Q*B
-    ONERROR(armas_x_qrmult_w(B, A, tau, ARMAS_LEFT, wb, conf));
-  } else {
-    // solve least square problem min || A*X - B ||
+        // clear bottom part of B
+        armas_x_submatrix(&BB, B, A->cols, 0, -1, -1);
+        armas_x_mscale(&BB, 0.0, 0, conf);
 
-    // B' = Q.T*B
-    ONERROR(armas_x_qrmult_w(B, A, tau, ARMAS_LEFT|ARMAS_TRANS, wb, conf));
-    
-    // X = R.-1*B'
-    ONERROR(armas_x_solve_trm(&BT, __ONE, &R, ARMAS_LEFT|ARMAS_UPPER, conf));
-  }
-  return 0;
+        // X = Q*B
+        armas_x_qrmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
+    } else {
+        // solve least square problem min || A*X - B ||
+
+        // B' = Q.T*B
+        armas_x_qrmult_w (B, A, tau, ARMAS_LEFT | ARMAS_TRANS, wb, conf);
+
+        // X = R.-1*B'
+        armas_x_solve_trm (&BT, ONE, &R, ARMAS_LEFT | ARMAS_UPPER, conf);
+    }
+    return 0;
 }
-
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-  
-// Local Variables
-// indent-tabs-mode: nil
-// End:
-
+#else
+#warning "Missing defines. No code!"
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

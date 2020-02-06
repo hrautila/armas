@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -11,29 +11,29 @@
 #include "dtype.h"
 #include "dlpack.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_lqsolve) && defined(armas_x_lqsolve_w) 
-#define __ARMAS_PROVIDES 1
+#if defined(armas_x_lqsolve) && defined(armas_x_lqsolve_w)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_lqmult) 
-#define __ARMAS_REQUIRES 1
+#if defined(armas_x_lqmult)
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// ----------------------------------------------------------------------------
 
 //! \cond
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 #include "internal_lapack.h"
 //! \endcond
 static inline
-int __ws_lqsolve(int M, int N, int lb)
+int ws_lqsolve(int M, int N, int lb)
 {
-  return lb == 0 ? M : lb*(M+lb);
+    return lb == 0 ? M : lb * (M + lb);
 }
 
 /**
@@ -73,31 +73,28 @@ int __ws_lqsolve(int M, int N, int lb)
  *
  * Compatible with lapack.GELS (the m >= n part)
  */
-int armas_x_lqsolve(armas_x_dense_t *B,
-		    const armas_x_dense_t *A,
-		    const armas_x_dense_t *tau,
-		    int flags,
-		    armas_conf_t *cf)
+int armas_x_lqsolve(armas_x_dense_t * B,
+                    const armas_x_dense_t * A,
+                    const armas_x_dense_t * tau, int flags, armas_conf_t * cf)
 {
-  if (!cf)
-    cf = armas_conf_default();
+    if (!cf)
+        cf = armas_conf_default();
 
-  armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-  if (armas_x_lqsolve_w(B, A, tau, flags, &wb, cf) < 0)
-    return -1;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
+    if (armas_x_lqsolve_w(B, A, tau, flags, &wb, cf) < 0)
+        return -1;
 
-  wbs = &wb;
-  if (wb.bytes > 0) {
-    if (!armas_walloc(&wb, wb.bytes)) {
-      cf->error = ARMAS_EMEMORY;
-      return -1;
-    }
-  }
-  else
-    wbs = ARMAS_NOWORK;
-  int stat = armas_x_lqsolve_w(B, A, tau, flags, wbs, cf);
-  armas_wrelease(&wb);
-  return stat;
+    wbs = &wb;
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            cf->error = ARMAS_EMEMORY;
+            return -1;
+        }
+    } else
+        wbs = ARMAS_NOWORK;
+    int stat = armas_x_lqsolve_w(B, A, tau, flags, wbs, cf);
+    armas_wrelease(&wb);
+    return stat;
 }
 
 
@@ -136,75 +133,69 @@ int armas_x_lqsolve(armas_x_dense_t *B,
  *     Workspace, size as for armas_x_lqmult_w()
  *
  * @param[in,out] conf
- *     Optinal blocking configuration. If not given default will be used. Unblocked
- *     invocation is indicated with conf.lb == 0.
+ *     Configuration options.
  *
  * @retval  0  Success
  * @retval -1  Error, last error in conf.error.
  *
  * Compatible with lapack.GELS (the m >= n part)
  */
-int armas_x_lqsolve_w(armas_x_dense_t *B,
-		      const armas_x_dense_t *A,
-		      const armas_x_dense_t *tau,
-		      int flags,
-		      armas_wbuf_t *wb,
-		      armas_conf_t *conf)
+int armas_x_lqsolve_w(armas_x_dense_t * B,
+                      const armas_x_dense_t * A,
+                      const armas_x_dense_t * tau,
+                      int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-  armas_x_dense_t L, BL, BB;
-  size_t wsmin, wsz = 0;
+    armas_x_dense_t L, BL, BB;
+    size_t wsmin, wsz = 0;
+    armas_env_t *env;
+    if (!conf)
+        conf = armas_conf_default();
 
-  if (!conf)
-    conf = armas_conf_default();
+    if (!B || !A || !tau) {
+        conf->error = ARMAS_EINVAL;
+        return -1;
+    }
+    if (wb && wb->bytes == 0) {
+        return armas_x_lqmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
+    }
 
-  if (!B || !A || !tau) {
-    conf->error = ARMAS_EINVAL;
-    return -1;
-  }
-  if (wb && wb->bytes == 0) {
-    return armas_x_lqmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
-  }
+    if (B->rows != A->cols) {
+        conf->error = ARMAS_ESIZE;
+        return -1;
+    }
 
-  if ( B->rows != A->cols ) {
-    conf->error = ARMAS_ESIZE;
-    return -1;
-  }
+    wsmin = B->rows * sizeof(DTYPE);
+    if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
+        conf->error = ARMAS_EWORK;
+        return -1;
+    }
+    armas_x_submatrix(&L, A, 0, 0, A->rows, A->rows);
+    armas_x_submatrix(&BL, B, 0, 0, A->rows, B->cols);
 
-  wsmin = B->rows * sizeof(DTYPE);
-  if (! wb || (wsz = armas_wbytes(wb)) < wsmin) {
-    conf->error = ARMAS_EWORK;
-    return -1;
-  }
-  armas_x_submatrix(&L, A, 0, 0, A->rows, A->rows);
-  armas_x_submatrix(&BL, B, 0, 0, A->rows, B->cols);
+    if (flags & ARMAS_TRANS) {
+        // solve least square problem min || A.T*X - B ||
 
-  if (flags & ARMAS_TRANS) {
-    // solve least square problem min || A.T*X - B ||
+        // B' = Q.T*B
+        armas_x_lqmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
 
-    // B' = Q.T*B
-    ONERROR(armas_x_lqmult_w(B, A, tau, ARMAS_LEFT, wb, conf));
-    
-    // X = L.-1*B'
-    ONERROR(armas_x_solve_trm(&BL, __ONE, &L, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf));
+        // X = L.-1*B'
+        armas_x_solve_trm(&BL, ONE, &L,
+                          ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf);
 
-  } else {
-    // solve underdetermined system A*X = B
-    // B' = L.-1*B
-    ONERROR(armas_x_solve_trm(&BL, __ONE, &L, ARMAS_LEFT|ARMAS_LOWER, conf));
+    } else {
+        // solve underdetermined system A*X = B
+        // B' = L.-1*B
+        armas_x_solve_trm(&BL, ONE, &L, ARMAS_LEFT|ARMAS_LOWER, conf);
 
-    // clear bottom part of B
-    armas_x_submatrix(&BB, B, A->rows, 0, -1, -1);
-    armas_x_mscale(&BB, 0.0, ARMAS_ANY);
-    
-    // X = Q.T*B'
-    ONERROR(armas_x_lqmult_w(B, A, tau, ARMAS_LEFT|ARMAS_TRANS, wb, conf));
-  }
-  return 0;
+        // clear bottom part of B
+        armas_x_submatrix(&BB, B, A->rows, 0, -1, -1);
+        armas_x_mscale(&BB, ZERO, 0, conf);
+
+        // X = Q.T*B'
+        armas_x_lqmult_w(B, A, tau, ARMAS_LEFT|ARMAS_TRANS, wb, conf);
+    }
+    return 0;
 }
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-  
-// Local Variables
-// indent-tabs-mode: nil
-// End:
-
+#else
+#warning "Missing defines. No code."
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
