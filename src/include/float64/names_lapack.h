@@ -202,6 +202,12 @@
 #define armas_x_bdsvd2x2_vec             armas_d_bdsvd2x2_vec
 #define armas_x_bdsvd_golub		         armas_d_bdsvd_golub
 #define armas_x_bdsvd_demmel		     armas_d_bdsvd_demmel
+#define armas_x_bd_qrsweep               armas_d_bd_qrsweep
+#define armas_x_bd_qlsweep               armas_d_bd_qlsweep
+#define armas_x_bd_qrzero                armas_d_bd_qrzero
+#define armas_x_bd_qlzero                armas_d_bd_qlzero
+#define armas_x_trd_qrsweep              armas_d_trd_qrsweep
+#define armas_x_trd_qlsweep              armas_d_trd_qlsweep
 
 // SVD
 #define armas_x_svd		                 armas_d_svd
