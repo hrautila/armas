@@ -101,6 +101,9 @@ LAPACK = \
 	lapack/bdsvd.c \
 	lapack/bdsvd_dk.c \
 	lapack/bdsvd_gr.c \
+	lapack/bibld.c \
+	lapack/bired.c \
+	lapack/biredm.c \
 	lapack/chol.c \
 	lapack/cholpv.c \
 	lapack/cholupd.c \
@@ -112,17 +115,28 @@ LAPACK = \
 	lapack/ldlbk.c \
 	lapack/ldlbkl.c \
 	lapack/ldlbku.c \
+	lapack/ldl.c \
+	lapack/ldlpv.c \
 	lapack/lqbld.c \
 	lapack/lq.c \
 	lapack/lqmult.c \
 	lapack/lqsolve.c \
 	lapack/lu.c \
+	lapack/qdroot.c \
+	lapack/qlbld.c \
+	lapack/ql.c \
+	lapack/qlmult.c \
 	lapack/qrbld.c \
 	lapack/qr.c \
 	lapack/qrmult.c \
 	lapack/qrsolve.c \
 	lapack/qrt.c \
+	lapack/rbtgm.c \
+	lapack/rbtgu.c \
 	lapack/rotate.c \
+	lapack/rqbld.c \
+	lapack/rq.c \
+	lapack/rqmult.c \
 	lapack/trdsweep.c
 
 if OLD
