@@ -147,7 +147,7 @@ int armas_x_lqsolve_w(armas_x_dense_t * B,
 {
     armas_x_dense_t L, BL, BB;
     size_t wsmin, wsz = 0;
-    armas_env_t *env;
+
     if (!conf)
         conf = armas_conf_default();
 
