@@ -108,10 +108,18 @@ LAPACK = \
 	lapack/cholpv.c \
 	lapack/cholupd.c \
 	lapack/diag.c \
+	lapack/dqds.c \
+	lapack/evd.c \
 	lapack/givens.c \
+	lapack/hess.c \
+	lapack/hessm.c \
 	lapack/house.c \
 	lapack/housem.c \
 	lapack/hhouse.c \
+	lapack/inv.c \
+	lapack/invldl.c \
+	lapack/invspd.c \
+	lapack/invtrm.c \
 	lapack/ldlbk.c \
 	lapack/ldlbkl.c \
 	lapack/ldlbku.c \
@@ -137,189 +145,12 @@ LAPACK = \
 	lapack/rqbld.c \
 	lapack/rq.c \
 	lapack/rqmult.c \
-	lapack/trdsweep.c
+	lapack/trdsweep.c \
+	lapack/tribld.c \
+	lapack/trired.c \
+	lapack/triredm.c
 
 if OLD
-noinst_HEADERS = \
-	inc/cond.h \
-	inc/dtype.h \
-	inc/dlpack.h \
-	inc/internal.h \
-	inc/internal_lapack.h \
-	inc/scheduler.h \
-	inc/eft.h \
-	inc/eft_arm.h \
-	inc/eft_x86_64.h \
-	inc/sync.h \
-	inc/chan.h \
-	inc/compat.h \
-	inc/kernel.h \
-	inc/kernel_ext.h \
-	inc/matrix.h \
-	inc/mult.h \
-	inc/mult_armneon_f32.h \
-	inc/mult_armneon_fma_f32.h \
-	inc/mult_nosimd.h \
-	inc/mult_sse_f64.h \
-	inc/mult_avx_f32.h \
-	inc/mult_avx_f64.h \
-	inc/mult_fma_f32.h \
-	inc/mult_fma_f64.h \
-	inc/mvec_nosimd.h \
-	inc/pivot.h \
-	inc/partition.h \
-	inc/simd.h \
-	inc/mult_avx_c128.h \
-	inc/mult_avx_c64.h \
-	inc/mult_avx_f32.h \
-	inc/mult_fma_c128.h \
-	inc/mult_fma_c64.h \
-	inc/mult_fma_f32.h \
-	inc/mult_sse_c128.h \
-	inc/mult_sse_c64.h \
-	inc/mult_sse_f32.h \
-	inc/mult_ext_avx_f32.h \
-	inc/mult_ext_avx_f64.h \
-	inc/mult_ext_nosimd.h
-
-
-OLD_COMMON = \
-	core/armas.c \
-	core/support.c \
-	core/sched.c \
-	core/cache.c \
-	core/pivot_ext.c \
-	core/json_reader.c \
-	core/json_writer.c
-
-OLD_CORE = \
-	core/matrix.c \
-	core/matrix_ext.c \
-	core/mnorm.c \
-	core/mscale.c \
-	core/plus.c \
-	core/partition.c \
-	core/pivot.c \
-	core/madd.c \
-	core/msub.c \
-	core/mmul.c \
-	core/mdiv.c \
-	core/mapply.c \
-	core/iomm.c \
-	core/json_base.c \
-	core/json_file.c
-
-OLD_BLAS1 = \
-	blas1/asum.c \
-	blas1/axpy.c \
-	blas1/copy.c \
-	blas1/dot.c \
-	blas1/iamax.c \
-	blas1/nrm2.c \
-	blas1/scal.c \
-	blas1/swap.c
-
-OLD_XBLAS1 = \
-	blas1/asum_ext.c \
-	blas1/dot_ext.c \
-	blas1/axpy_ext.c
-
-OLD_BLAS2 = \
-	blas2/gemv.c \
-	blas2/symv.c \
-	blas2/ger.c \
-	blas2/syr2.c \
-	blas2/syr.c \
-	blas2/trmv.c \
-	blas2/trsv.c \
-	blas2/updtrmv.c 
-
-OLD_XBLAS2 = \
-	blas2/gemv_ext.c \
-	blas2/symv_ext.c \
-	blas2/trsv_ext.c \
-	blas2/trmv_ext.c \
-	blas2/update_ext.c
-
-OLD_BLAS3 = \
-	blas3/kernel.c \
-	blas3/gemm.c \
-	blas3/symm.c \
-	blas3/syr2k.c \
-	blas3/syrk.c \
-	blas3/trmm_blk.c \
-	blas3/trmm.c \
-	blas3/trmm_rec.c \
-	blas3/trmm_unb.c \
-	blas3/trsm_blk.c \
-	blas3/trsm.c \
-	blas3/trsm_rec.c \
-	blas3/trsm_unb.c \
-	blas3/updtrmm.c
-
-OLD_XBLAS3 = \
-	blas3/kernel_ext.c \
-	blas3/symm_ext.c \
-	blas3/trmm_ext.c \
-	blas3/trsm_ext.c \
-	blas3/updtrm_ext.c \
-	blas3/syrk_ext.c
-
-OLD_LAPACK = \
-	lapack/housem.c \
-	lapack/hhouse.c \
-	lapack/trdbis.c \
-	lapack/cholupd.c \
-	lapack/cholpv.c \
-	lapack/invldl.c \
-	lapack/ldl.c \
-	lapack/ldlpv.c \
-	lapack/inv.c \
-	lapack/invtrm.c \
-	lapack/invspd.c \
-	lapack/rbtgm.c \
-	lapack/rbtgu.c \
-	lapack/house.c \
-	lapack/support.c \
-	lapack/qr.c \
-	lapack/qrmult.c \
-	lapack/qrbld.c  \
-	lapack/qrsolve.c  \
-	lapack/ql.c \
-	lapack/qlmult.c \
-	lapack/qlbld.c \
-	lapack/lq.c \
-	lapack/lqmult.c \
-	lapack/lqbld.c \
-	lapack/lqsolve.c \
-	lapack/rq.c \
-	lapack/rqmult.c \
-	lapack/rqbld.c \
-	lapack/ldlbk.c \
-	lapack/ldlbkl.c \
-	lapack/ldlbku.c \
-	lapack/lu.c \
-	lapack/chol.c \
-	lapack/givens.c \
-	lapack/qdroot.c \
-	lapack/diag.c \
-	lapack/sort.c \
-	lapack/bired.c \
-	lapack/bibld.c \
-	lapack/trired.c \
-	lapack/tribld.c \
-	lapack/hess.c \
-	lapack/bdsvd.c \
-	lapack/bdsvd_gr.c \
-	lapack/bdsvd_dk.c \
-	lapack/aux.c \
-	lapack/trdsec.c \
-	lapack/trdevd.c \
-	lapack/evd.c \
-	lapack/svd.c \
-	lapack/qrt.c \
-	lapack/dqds.c
-
 SPARSE = \
 	sparse/iluz.c \
 	sparse/icholz.c \
