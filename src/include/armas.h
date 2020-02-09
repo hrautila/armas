@@ -450,7 +450,7 @@ void armas_pivot_free(armas_pivot_t *ptable)
  * @brief Pivot vector size.
  */
 __ARMAS_INLINE
-int armas_pivot_size(armas_pivot_t *ptable)
+int armas_pivot_size(const armas_pivot_t *ptable)
 {
   return ptable ? ptable->npivots : 0;
 }
@@ -468,12 +468,12 @@ int *armas_pivot_data(armas_pivot_t *ptable)
  * @brief Get pivot at index k.
  */
 __ARMAS_INLINE
-int armas_pivot_get(armas_pivot_t *ptable, int k)
+int armas_pivot_get(const armas_pivot_t *ptable, int k)
 {
   return ptable && k >= 0 && k < ptable->npivots ? ptable->indexes[k] : 0;
 }
 __ARMAS_INLINE
-int armas_pivot_get_unsafe(armas_pivot_t *ptable, int k)
+int armas_pivot_get_unsafe(const armas_pivot_t *ptable, int k)
 {
   return ptable->indexes[k];
 }
@@ -493,7 +493,7 @@ void armas_pivot_set_unsafe(armas_pivot_t *ptable, int k, int val)
   ptable->indexes[k] = val;
 }
 
-extern void armas_pivot_printf(FILE* out, const char *fmt, armas_pivot_t *pivot);
+extern void armas_pivot_printf(FILE* out, const char *fmt, const armas_pivot_t *pivot);
 
 // ------------------------------------------------------------------------------
 // workspace

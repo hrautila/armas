@@ -16,7 +16,7 @@
 
 #include "pivot.h"
 
-void armas_pivot_printf(FILE *out, const char *fmt, armas_pivot_t *P)
+void armas_pivot_printf(FILE *out, const char *fmt, const armas_pivot_t *P)
 {
     int k;
     if (!P)
