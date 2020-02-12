@@ -90,7 +90,7 @@ void armas_x_sort_vec(armas_x_dense_t * D, int updown)
 /*
  * \brief Find minumum or maximum absolute value in vector
  */
-static inline
+static
 int vec_minmax(armas_x_dense_t * D, int updown)
 {
     int k, ix, incx, n;
@@ -116,7 +116,7 @@ int vec_minmax(armas_x_dense_t * D, int updown)
 /*
  * \brief Find minumum or maximum absolute value in vector
  */
-static inline
+static
 int vec_abs_minmax(armas_x_dense_t * D, int minmax)
 {
     int k, ix, n, incx;
@@ -157,7 +157,7 @@ int vec_abs_minmax(armas_x_dense_t * D, int minmax)
  *      Sort to ascending order if updown > 0 and descending order if < 0.
  */
 int armas_x_sort_eigenvec(armas_x_dense_t * D, armas_x_dense_t * U,
-                    armas_x_dense_t * V, armas_x_dense_t * C, int updown)
+                          armas_x_dense_t * V, armas_x_dense_t * C, int updown)
 {
     DTYPE t0;
     int k, pk, N = armas_x_size(D);
