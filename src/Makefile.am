@@ -43,9 +43,13 @@ BLAS = \
 	blas/mscale.c \
 	blas/mset.c \
 	blas/nrm2.c \
+	blas/swap.c \
 	blas/symm.c \
+	blas/symv.c \
 	blas/syr.c \
 	blas/syr2.c \
+	blas/syr2k.c \
+	blas/syrk.c \
 	blas/trmm.c \
 	blas/trmm_blk.c \
 	blas/trmm_rec.c \
@@ -56,29 +60,27 @@ BLAS = \
 	blas/trsm_rec.c \
 	blas/trsm_unb.c \
 	blas/trsv.c \
-	blas/updtrmv.c \
 	blas/updtrmm.c \
-	blas/syrk.c \
-	blas/syr2k.c
+	blas/updtrmv.c
 
 EBLAS =
 if CONFIG_EXT_PRECISION
 EBLAS += \
-	eblas/kernel_ext.c \
-	eblas/gemm_ext.c \
-	eblas/scale.c \
-	eblas/dot_ext.c \
 	eblas/asum_ext.c \
 	eblas/axpy_ext.c \
+	eblas/dot_ext.c \
+	eblas/gemm_ext.c \
 	eblas/gemv_ext.c \
-	eblas/trmm_ext.c \
-	eblas/trsm_ext.c \
-	eblas/trmv_ext.c \
-	eblas/trsv_ext.c \
+	eblas/ger_ext.c \
+	eblas/kernel_ext.c \
+	eblas/scale.c \
 	eblas/symv_ext.c \
 	eblas/syr2_ext.c \
 	eblas/syr_ext.c \
-	eblas/ger_ext.c
+	eblas/trmm_ext.c \
+	eblas/trmv_ext.c \
+	eblas/trsm_ext.c \
+	eblas/trsv_ext.c
 endif
 
 ACCEL =
@@ -145,6 +147,10 @@ LAPACK = \
 	lapack/rqbld.c \
 	lapack/rq.c \
 	lapack/rqmult.c \
+	lapack/sort.c \
+	lapack/trdbis.c \
+	lapack/trdevd.c \
+	lapack/trdsec.c \
 	lapack/trdsweep.c \
 	lapack/tribld.c \
 	lapack/trired.c \
