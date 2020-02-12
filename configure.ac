@@ -104,6 +104,9 @@ AC_MSG_NOTICE([CONFIG_COMPAT = $enable_compat])
 AC_MSG_NOTICE([CONFIG_SPARSE = $enable_sparse])
 
 AC_CONFIG_FILES([Makefile
-	src/Makefile])
+	src/Makefile
+    tests/Makefile
+    tests/blas/Makefile
+])
 
 AC_OUTPUT
