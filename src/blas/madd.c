@@ -78,6 +78,11 @@ int armas_x_madd(armas_x_dense_t *A, DTYPE alpha, int flags, armas_conf_t *cf)
     if (!cf)
         cf = armas_conf_default();
 
+    if (armas_x_isvector(A)) {
+        vec_add(A, alpha, armas_x_size(A));
+        return 0;
+    }
+
     switch (flags & (ARMAS_SYMM|ARMAS_UPPER|ARMAS_LOWER)) {
     case ARMAS_UPPER:
         // scale strictly upper triangular part, if UNIT set, don't touch diagonal
