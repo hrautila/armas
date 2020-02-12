@@ -28,8 +28,8 @@
 // -----------------------------------------------------------------------------
 
 //! \cond
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 #include "internal_lapack.h"
 #include "auxiliary.h"
 //! \endcond
