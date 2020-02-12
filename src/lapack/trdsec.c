@@ -538,7 +538,7 @@ void trdsec_eigenvec_delta(armas_x_dense_t * qi, armas_x_dense_t * dl,
  */
 static
 void trdsec_eigen2_build(armas_x_dense_t * Q, armas_x_dense_t * z,
-                         armas_x_dense_t * Q2)
+                         armas_x_dense_t * Q2, armas_conf_t *cf)
 {
     armas_x_dense_t qi, delta;
     int k;
@@ -547,7 +547,7 @@ void trdsec_eigen2_build(armas_x_dense_t * Q, armas_x_dense_t * z,
     for (k = 0; k < armas_x_size(z); k++) {
         armas_x_column(&qi, Q, k);
         armas_x_row(&delta, Q2, k);
-        trdsec_eigenvec_delta(&qi, &delta, z);
+        trdsec_eigenvec_delta(&qi, &delta, z, cf);
     }
 }
 
