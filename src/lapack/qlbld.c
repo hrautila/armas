@@ -71,7 +71,7 @@ int unblk_qlbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
         armas_x_mscale(&ABL, ZERO, 0, conf);
         armas_x_mscale(&ATL, ZERO, 0, conf);
         armas_x_diag(&D, &ATL, nk - mk);
-        armas_x_add(&D, 1.0, conf);
+        armas_x_madd(&D, ONE, 0, conf);
     }
 
     while (ABR.rows > 0 && ABR.cols > 0) {
@@ -146,7 +146,7 @@ int blk_qlbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
             // blocking factor is multiple of K
             armas_x_mscale(&ATL, ZERO, 0, conf);
             armas_x_diag(&D, &ATL, nk - mk);
-            armas_x_add(&D, 1.0, conf);
+            armas_x_madd(&D, ONE, 0, conf);
         }
     }
 

@@ -85,7 +85,7 @@ int unblk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
         armas_x_mscale(&ATR, ZERO, 0, conf);
         armas_x_mscale(&ABR, ZERO, 0, conf);
         armas_x_diag(&D, &ABR, 0);
-        armas_x_add(&D, 1.0, conf);
+        armas_x_madd(&D, ONE, 0, conf);
     }
 
     while (ATL.rows > 0 && ATL.cols > 0) {
@@ -164,7 +164,7 @@ int blk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
             // blocking factor is multiple of K
             armas_x_mscale(&ABR, ZERO, 0, conf);
             armas_x_diag(&D, &ABR, 0);
-            armas_x_add(&D, 1.0, conf);
+            armas_x_madd(&D, ONE, 0, conf);
         }
     }
 
