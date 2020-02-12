@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -11,19 +11,20 @@
 #include "dtype.h"
 #include "dlpack.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_bdsvd) && defined(armas_x_bdsvd_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_gvcompute) && defined(armas_x_gvupdate) && defined(armas_x_bdsvd2x2_vec)
+#if defined(armas_x_gvcompute) && defined(armas_x_gvupdate) \
+    && defined(armas_x_bdsvd2x2_vec)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 //! \cond
 #include "matrix.h"
@@ -278,16 +279,12 @@ int armas_x_bdsvd_w(armas_x_dense_t * D,
         err = armas_x_bdsvd_demmel(D, E, uu, vv, &CS, tol, flags, conf);
     }
     if (err == 0) {
-        armas_x_eigen_sort(D, uu, vv, __nil, conf);
+        armas_x_sort_eigenvec(D, uu, vv, __nil, -1);
     } else {
         conf->error = ARMAS_ECONVERGE;
     }
     return err;
 }
-
-#endif                          /* ARMAS_PROVIDES && ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#else
+#warning "Missing defines. No code."
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

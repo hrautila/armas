@@ -44,5 +44,6 @@ int compute_lb(int M, int N, int wsz, WSSIZE worksize)
     }
     return lb < 0 ? 0 : lb;
 }
-
-#endif                          /* ARMAS_PROVIDES && ARMAS_REQUIRES */
+#else
+#warning "Missing defines. No code."
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
