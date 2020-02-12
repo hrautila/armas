@@ -19,7 +19,7 @@
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(arma_x_update_trm)
+#if defined(armas_x_update_trm)
 #define ARMAS_REQUIRES 1
 #endif
 
@@ -85,5 +85,6 @@ int armas_x_update_sym(
     int uflags = flags & ARMAS_TRANS ? ARMAS_TRANSA : ARMAS_TRANSB;
     return armas_x_update_trm(beta, C, alpha, A, A, uflags, conf);
 }
-
+#else
+#warning "Missing defines. No code."
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
