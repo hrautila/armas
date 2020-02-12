@@ -21,7 +21,7 @@
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
-#if defined(__gemv_recursive)
+#if defined(armas_x_adot_unsafe)
 #define ARMAS_REQUIRES 1
 #endif
 
@@ -70,7 +70,7 @@ void symv_unb(
     int flags,
     int N)
 {
-    armas_x_dense_t yy, xx, aa;
+    armas_x_dense_t xx, aa;
     DTYPE yk;
 
     if (N <= 0)
@@ -80,7 +80,7 @@ void symv_unb(
         for (int j = 0; j < N; j++) {
             armas_x_subvector_unsafe(&xx, X, 0, j);
             armas_x_submatrix_unsafe(&aa, A, j, 0, 1, j);
-            yk = __ZERO;
+            yk = ZERO;
             armas_x_adot_unsafe(&yk, alpha, &xx, &aa);
 
             armas_x_subvector_unsafe(&xx, X, j+1, N-j-1);
@@ -91,10 +91,10 @@ void symv_unb(
         return;
     }
 
-    for (j = 0; j < N; j++) {
+    for (int j = 0; j < N; j++) {
         armas_x_subvector_unsafe(&xx, X, 0, j);
         armas_x_submatrix_unsafe(&aa, A, 0, j, j, 1);
-        yk = __ZERO;
+        yk = ZERO;
         armas_x_adot_unsafe(&yk, alpha, &xx, &aa);
 
         armas_x_subvector_unsafe(&xx, X, j+1, N-j-1);
@@ -241,8 +241,9 @@ int armas_x_mvmult_sym(
         return -1;
     }
 
-    symv_unb(beta, y, A, x, alpha, flags, nx);
+    symv_unb(beta, y, alpha, A, x, flags, nx);
     return 0;
 }
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
+#else
+#warning "Missing defines. No code."
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
