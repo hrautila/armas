@@ -4,132 +4,241 @@
 #include <unistd.h>
 #include <time.h>
 
-#if defined(FLOAT32)
-#include <armas/smatrix.h>
-typedef armas_s_dense_t armas_x_dense_t;
-typedef float DTYPE;
+#include "testing.h"
+#define __null (armas_x_dense_t *)0
 
-#define armas_x_init       armas_s_init
-#define armas_x_set_values armas_s_set_values
-#define armas_x_mult       armas_s_mult
-#define armas_x_transpose  armas_s_transpose
-#define armas_x_release    armas_s_release
-#define armas_x_mult_trm   armas_s_mult_trm
-#define armas_x_mcopy      armas_s_mcopy
+int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
+{
+    armas_d_dense_t X, Xg, Y, X0, A, At;
+    DTYPE n0, n1;
+    int ok, fails = 0;
 
-#else
-#include <armas/dmatrix.h>
-typedef armas_d_dense_t armas_x_dense_t;
-typedef double DTYPE;
+    armas_d_init(&Y, N, K);
+    armas_d_init(&X0, N, K);
+    armas_d_init(&X, N, K);
+    armas_d_init(&Xg, N, K);
+    armas_d_init(&A, N, N);
+    armas_d_init(&At, N, N);
 
-#define armas_x_init       armas_d_init
-#define armas_x_set_values armas_d_set_values
-#define armas_x_mult       armas_d_mult
-#define armas_x_transpose  armas_d_transpose
-#define armas_x_release    armas_d_release
-#define armas_x_mult_trm   armas_d_mult_trm
-#define armas_x_mcopy      armas_d_mcopy
+    armas_d_set_values(&X, unitrand, 0);
+    armas_d_set_values(&Y, zero, 0);
+    armas_d_mcopy(&X0, &X, 0, cf);
+    armas_d_set_values(&A, unitrand, ARMAS_UPPER);
+    if (unit) {
+        for (int i = 0; i < N; i++) {
+            armas_d_set(&A, i, i, 1.0);
+        }
+    }
+    armas_d_mcopy(&At, &A, ARMAS_TRANS, cf);
 
-#endif
-#include "helper.h"
+    printf("** trmm: left, %s\n", unit ? "unit diagonal" : "");
+    // trmm(A, X) == gemm(A, X)
+    armas_d_mult_trm(&X, -2.0, &A, ARMAS_LEFT|ARMAS_UPPER|unit, cf);
+    armas_d_mult(0.0, &Xg, -2.0, &A, &X0, 0, cf);
+    n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : trmm(X, A, U|N) == gemm(upper(A), X)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+    fails += 1 - ok;
+    armas_d_mcopy(&X, &X0, 0, cf);
+
+    // trmm(A.T, X) == gemm(A.T, X)
+    armas_d_mult_trm(&X, -2.0, &A,  ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA|unit, cf);
+    armas_d_mult(0.0, &Xg, -2.0, &A, &X0, ARMAS_TRANSA, cf);
+
+    n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : trmm(X, A, U|T) == gemm(upper(A).T, X)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+    fails += 1 - ok;
+
+    armas_d_mcopy(&X, &X0, 0, cf);
+
+    // trmv(A, X) == gemv(A, X)
+    armas_d_mult_trm(&X, -2.0, &At,  ARMAS_LEFT|ARMAS_LOWER|unit, cf);
+    armas_d_mult(0.0, &Xg, -2.0, &At, &X0, 0, cf);
+
+    n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : trmm(X, A, L|N) == gemm(lower(A), X)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+    fails += 1 - ok;
+
+    armas_d_mcopy(&X, &X0, 0, cf);
+
+    // trmv(A.T, X) == gemv(A.T, X)
+    armas_d_mult_trm(&X, -2.0, &At,  ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA|unit, cf);
+    armas_d_mult(0.0, &Xg, -2.0, &At, &X0, ARMAS_TRANSA, cf);
+
+    n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : trmm(X, A, L|T) == gemm(lower(A).T, X)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+    fails += 1 - ok;
+
+    return fails;
+}
+int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
+{
+    armas_d_dense_t X, Y, X0, Xg, A, At;
+    DTYPE n0, n1;
+    int ok, fails = 0;
+
+    armas_d_init(&Y, K, N);
+    armas_d_init(&X0, K, N);
+    armas_d_init(&X, K, N);
+    armas_d_init(&Xg, K, N);
+    armas_d_init(&A, N, N);
+    armas_d_init(&At, N, N);
+
+    armas_d_set_values(&X, unitrand, 0);
+    armas_d_set_values(&Y, zero, 0);
+    armas_d_mcopy(&X0, &X, 0, cf);
+    armas_d_set_values(&A, unitrand, ARMAS_UPPER);
+    if (unit) {
+        for (int i = 0; i < N; i++) {
+            armas_d_set(&A, i, i, 1.0);
+        }
+    }
+    armas_d_mcopy(&At, &A, ARMAS_TRANS, cf);
+
+    printf("** trmm: right, %s\n", unit ? "unit diagonal" : "");
+    // trmm(A, X) == gemm(A, X)
+    armas_d_mult_trm(&X, -2.0, &A, ARMAS_RIGHT|ARMAS_UPPER|unit, cf);
+    armas_d_mult(0.0, &Xg, -2.0, &X0, &A, 0, cf);
+
+    n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : trmm(X, A, U|N) == gemm(X, upper(A))\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+    fails += 1 - ok;
+
+    armas_d_mcopy(&X, &X0, 0, cf);
+    // trmm(A.T, X) == gemm(A.T, X)
+    armas_d_mult_trm(&X, -2.0, &A,  ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANSA|unit, cf);
+    armas_d_mult(0.0, &Xg, -2.0, &X0, &A, ARMAS_TRANSB, cf);
+
+    n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : trmm(X, A, U|T) == gemm(X, upper(A).T)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+    fails += 1 - ok;
+
+    armas_d_mcopy(&X, &X0, 0, cf);
+
+    // trmv(A, X) == gemv(A, X)
+    armas_d_mult_trm(&X, -2.0, &At,  ARMAS_RIGHT|ARMAS_LOWER|unit, cf);
+    armas_d_mult(0.0, &Xg, -2.0, &X0, &At, 0, cf);
+
+    n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : trmm(X, A, L|N) == gemm(X, lower(A))\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+    fails += 1 - ok;
+
+    armas_d_mcopy(&X, &X0, 0, cf);
+
+    // trmv(A.T, X) == gemv(A.T, X)
+    armas_d_mult_trm(&X, -2.0, &At,  ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA|unit, cf);
+    armas_d_mult(0.0, &Xg, -2.0, &X0, &At, ARMAS_TRANSB, cf);
+
+    n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : trmm(X, A, L|T) == gemm(X, lower(A).T)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+    fails += 1 - ok;
+
+    return fails;
+}
+
 
 int main(int argc, char **argv)
 {
+    armas_conf_t cf;
+    armas_env_t *env;
+    int opt;
+    int N = 411, K = 203;
+    int fails = 0;
+    int verbose = 0;
+    int unit = 0;
+    int all = 1;
+    int do_left = 0;
+    int do_right = 0;
 
-    armas_conf_t conf;
-    armas_x_dense_t C, B0, A, B;
-
-    int ok, opt, fails = 0;
-    int N = 600;
-    int verbose = 1;
-    DTYPE alpha = 1.0, n0, n1;
-
-    while ((opt = getopt(argc, argv, "v")) != -1) {
+    cf = *armas_conf_default();
+    env = armas_getenv();
+    while ((opt = getopt(argc, argv, "vr:nb:uLR")) != -1) {
         switch (opt) {
         case 'v':
-            verbose++;
+            verbose += 1;
+            break;
+        case 'r':
+            env->blas2min = atoi(optarg);
+            cf.optflags |= env->blas2min != 0 ? ARMAS_ORECURSIVE : ARMAS_ONAIVE;
+            all = 0;
+            break;
+        case 'n':
+            cf.optflags |= ARMAS_ONAIVE;
+            all = 0;
+            break;
+        case 'b':
+            env->mb = atoi(optarg);
+            env->nb = env->kb = env->mb;
+            cf.optflags = 0;
+            all = 0;
+            break;
+        case 'u':
+            unit = ARMAS_UNIT;
+            all = 0;
+            break;
+        case 'L':
+            do_left = 1 - do_left;
+            all = 0;
+            break;
+        case 'R':
+            do_right = 1 - do_right;
+            all = 0;
             break;
         default:
-            fprintf(stderr, "usage: test_trmm [-v] [size]\n");
+            fprintf(stderr, "usage: trmn [-uvLR N K]\n");
             exit(1);
         }
     }
 
-    if (optind < argc)
+    if (optind < argc-1) {
         N = atoi(argv[optind]);
-
-    conf = *armas_conf_default();
-
-    armas_x_init(&C, N, N);
-    armas_x_init(&A, N, N);
-    armas_x_init(&B, N, N);
-    armas_x_init(&B0, N, N);
-
-    armas_x_set_values(&C, zero, ARMAS_NULL);
-    armas_x_set_values(&A, zero, ARMAS_NULL);
-    armas_x_set_values(&A, unitrand, ARMAS_UPPER);
-    armas_x_set_values(&B, one, ARMAS_NULL);
-    armas_x_mcopy(&B0, &B);
-
-    // B = A*B
-    armas_x_mult_trm(&B, alpha, &A, ARMAS_UPPER | ARMAS_LEFT, &conf);
-    armas_x_mult(0.0, &C, alpha, &A, &B0, ARMAS_NULL, &conf);
-
-    n0 = rel_error(&n1, &B, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-    printf("%6s: trmm(B, A, L|U)   == gemm(TriU(A), B)\n", PASS(ok));
-    if (verbose > 0) {
-        printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
+        K = atoi(argv[optind+1]);
+    } else if (optind < argc) {
+        N = K = atoi(argv[optind]);
     }
-    fails += 1 - ok;
 
-    armas_x_set_values(&B, one, ARMAS_NULL);
-    armas_x_set_values(&B0, one, ARMAS_NULL);
-    armas_x_set_values(&C, zero, ARMAS_NULL);
-    armas_x_mult_trm(&B, alpha, &A, ARMAS_UPPER | ARMAS_LEFT | ARMAS_TRANSA,
-                     &conf);
-    armas_x_mult(0.0, &C, alpha, &A, &B0, ARMAS_TRANSA, &conf);
-
-    n0 = rel_error(&n1, &B, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-    printf("%6s: trmm(B, A, L|U|T) == gemm(TriU(A).T, B)\n", PASS(ok));
-    if (verbose > 0) {
-        printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    if (all) {
+        fails += left(N, K, 0, verbose, &cf);
+        fails += left(N, K, ARMAS_UNIT, verbose, &cf);
+        fails += right(N, K, 0, verbose, &cf);
+        fails += right(N, K, ARMAS_UNIT, verbose, &cf);
+    } else {
+        if (do_left)
+            fails += left(N, K, unit, verbose, &cf);
+        if (do_right)
+            fails += right(N, K, unit, verbose, &cf);
     }
-    fails += 1 - ok;
-
-    armas_x_set_values(&B, one, ARMAS_NULL);
-    armas_x_set_values(&B0, one, ARMAS_NULL);
-    armas_x_set_values(&C, zero, ARMAS_NULL);
-    armas_x_mult_trm(&B, alpha, &A, ARMAS_UPPER | ARMAS_RIGHT, &conf);
-    armas_x_mult(0.0, &C, alpha, &B0, &A, ARMAS_NULL, &conf);
-
-    n0 = rel_error(&n1, &B, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-    printf("%6s: trmm(B, A, R|U)   == gemm(B, TriU(A))\n", PASS(ok));
-    if (verbose > 0) {
-        printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
-    }
-    fails += 1 - ok;
-
-    armas_x_set_values(&B, one, ARMAS_NULL);
-    armas_x_set_values(&B0, one, ARMAS_NULL);
-    armas_x_set_values(&C, zero, ARMAS_NULL);
-    armas_x_mult_trm(&B, alpha, &A, ARMAS_UPPER | ARMAS_RIGHT | ARMAS_TRANSA,
-                     &conf);
-    armas_x_mult(0.0, &C, alpha, &B0, &A, ARMAS_TRANSB, &conf);
-
-    n0 = rel_error(&n1, &B, &C, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-    printf("%6s: trmm(B, A, R|U|T) == gemm(B, TriU(A).T)\n", PASS(ok));
-    if (verbose > 0) {
-        printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
-    }
-    fails += 1 - ok;
 
     exit(fails);
 }
-
-// Local Variables:
-// indent-tabs-mode: nil
-// End:
