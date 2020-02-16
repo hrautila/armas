@@ -27,7 +27,9 @@ UNIT_TESTS = \
 	symm \
 	trmm \
 	trsm \
-	trmrk
+	trmrk \
+	gemv \
+	trmv
     ## symm trmm trsm syrk trmrk syr2k gemv ger trmv trsv diag
 
 check_PROGRAMS = $(UNIT_TESTS)
@@ -49,13 +51,13 @@ trsm_LDADD    = $(LIBARMAS)
 # syr2k_SOURCES = syr2k.c ../helper.c
 # syr2k_LDADD   = $(LIBARMAS)
 trmrk_SOURCES = trmrk.c ../helper.c
-trmrk_LDADD    = $(LIBARMAS)
-# gemv_SOURCES  = gemv.c ../helper.c
-# gemv_LDADD    = $(LIBARMAS)
+trmrk_LDADD   = $(LIBARMAS)
+gemv_SOURCES  = gemv.c ../helper.c
+gemv_LDADD    = $(LIBARMAS)
 # ger_SOURCES   = ger.c ../helper.c
 # ger_LDADD    = $(LIBARMAS)
-# trmv_SOURCES  = trmv.c ../helper.c
-# trmv_LDADD    = $(LIBARMAS)
+trmv_SOURCES  = trmv.c ../helper.c
+trmv_LDADD    = $(LIBARMAS)
 # trsv_SOURCES  = trsv.c ../helper.c
 # trsv_LDADD    = $(LIBARMAS)
 # diag_SOURCES   = diag.c ../helper.c
