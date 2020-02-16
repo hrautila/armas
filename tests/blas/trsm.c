@@ -45,28 +45,13 @@ int test_left_right(int N, int verbose, int unit)
     armas_x_set_values(&B, one, 0);
     armas_x_mult_trm(&B, 1.0, &A, ARMAS_UPPER, 0);
     armas_x_mcopy(&Bt, &B, ARMAS_TRANS, &cf);
-    if (N < 10)
-    {
-        printf("A\n");
-        armas_x_printf(stdout, "%6.3f", &A);
-    }
+
     nrmB = armas_x_mnorm(&B, ARMAS_NORM_INF, &cf);
     // ||k*A.-1*B + (B.T*-k*A.-T).T|| ~ eps
     armas_x_solve_trm(&B, 2.0, &A, ARMAS_LEFT | ARMAS_UPPER, &cf);
     armas_x_solve_trm(&Bt, -2.0, &A, ARMAS_RIGHT | ARMAS_UPPER | ARMAS_TRANS, &cf);
-    if (N < 10)
-    {
-        printf("B\n");
-        armas_x_printf(stdout, "%6.3f", &B);
-        printf("Bt\n");
-        armas_x_printf(stdout, "%6.3f", &Bt);
-    }
     armas_x_mplus(1.0, &B, 1.0, &Bt, ARMAS_TRANS, &cf);
-    if (N < 10)
-    {
-        printf("B + B.T\n");
-        armas_x_printf(stdout, "%6.3f", &B);
-    }
+
     n0 = armas_x_mnorm(&B, ARMAS_NORM_INF, &cf) / nrmB;
     ok = isOK(n0, N) || n0 == 0.0;
     printf("%6s : k*A^-1*B  ==  (k*B^T*A^-T)^T\n", PASS(ok));
