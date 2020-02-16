@@ -24,7 +24,10 @@ endif
 
 UNIT_TESTS = \
 	gemm \
-	symm
+	symm \
+	trmm \
+	trsm \
+	trmrk
     ## symm trmm trsm syrk trmrk syr2k gemv ger trmv trsv diag
 
 check_PROGRAMS = $(UNIT_TESTS)
@@ -34,19 +37,19 @@ check_PROGRAMS = $(UNIT_TESTS)
 # base_LDADD    = $(LIBARMAS)
 
 gemm_SOURCES  = gemm.c ../helper.c
-gemm_LDADD    = $(top_builddir)/src/libarmasd.la
+gemm_LDADD    = $(LIBARMAS)
 symm_SOURCES  = symm.c ../helper.c
 symm_LDADD    = $(LIBARMAS)
-# trmm_SOURCES  = trmm.c ../helper.c
-# trmm_LDADD    = $(LIBARMAS)
-# trsm_SOURCES  = trsm.c ../helper.c
-# trsm_LDADD    = $(LIBARMAS)
+trmm_SOURCES  = trmm.c ../helper.c
+trmm_LDADD    = $(LIBARMAS)
+trsm_SOURCES  = trsm.c ../helper.c
+trsm_LDADD    = $(LIBARMAS)
 # syrk_SOURCES  = syrk.c ../helper.c
 # syrk_LDADD    = $(LIBARMAS)
 # syr2k_SOURCES = syr2k.c ../helper.c
 # syr2k_LDADD   = $(LIBARMAS)
-# trmrk_SOURCES = trmrk.c ../helper.c
-# trmrk_LDADD    = $(LIBARMAS)
+trmrk_SOURCES = trmrk.c ../helper.c
+trmrk_LDADD    = $(LIBARMAS)
 # gemv_SOURCES  = gemv.c ../helper.c
 # gemv_LDADD    = $(LIBARMAS)
 # ger_SOURCES   = ger.c ../helper.c
