@@ -19,6 +19,8 @@
 #include "armas.h"
 
 #define CMEMSIZE 256*1024L
+#define CMEM_MIN 4096
+#define L1MEM_MIN 1024
 
 static struct armas_env __env_config = {
     .mb = 64,             // MB (row count)
@@ -105,9 +107,6 @@ void armas_read_environment()
             break;
         }
     }
-    cstr = getenv(ENV_ARMAS_DEBUG);
-    if (cstr && tolower(*cstr) == 'y')
-        __env_config.fixed = 1;
 
     // get cache memory size; L2MEM,L1MEM
     cstr = getenv(ENV_ARMAS_CACHE);
@@ -132,11 +131,11 @@ void armas_read_environment()
             switch (n) {
             case 0:
                 if (val > 0)
-                    __env_config.cmem = val;
+                    __env_config.cmem =  val < CMEM_MIN ? CMEM_MIN : val;;
                 break;
             case 1:
                 if (val > 0)
-                    __env_config.l1mem = val;
+                    __env_config.l1mem =  val < L1MEM_MIN ? L1MEM_MIN : val;;
                 break;
             }
         }
