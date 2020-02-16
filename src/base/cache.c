@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2015
+// Copyright (c) Harri Rautila, 2015-2020
 
 // This file is part of github.com/hrautila/armas. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -23,12 +23,12 @@
  *     given size when aligned to cacheline.
  *   - compute cache aligned start address
  *
- *  For standard precision computations divide the cache buffer to two buffers
- *  that hold current source operand blocks. (configuration elements mb, nb, kb)
- *  (mb-x-nb) result is computed from (mb-x-kb) * (kb-x-nb). In order to access
- *  elements in increasing memory order we organise the cache data to computation
- *  (kb-x-mb).T * (kb-x-nb)
- *  So we need to intermediate blocks with row stride of kb.
+ * For standard precision computations divide the cache buffer to two buffers
+ * that hold current source operand blocks. (configuration elements mb, nb, kb)
+ * (mb-x-nb) result is computed from (mb-x-kb) * (kb-x-nb). In order to access
+ * elements in increasing memory order we organise the cache data to computation
+ * (kb-x-mb).T * (kb-x-nb)
+ * So we need to intermediate blocks with row stride of kb.
  */
 
 
@@ -122,8 +122,8 @@ void armas_cbuf_release(armas_cbuf_t *cbuf)
 }
 
 /*
- * Divide buffer with size 'S' bytes to 2 blocks of size 'k*m' and 'k*n' items where
- * item size is 'p' bytes.
+ * Divide buffer with size 'S' bytes to 2 blocks of size 'k*m' and 'k*n' items
+ * where item size is 'p' bytes.
  *
  *  (m + n)*k = S/p and m/n = a, k/n = b => n = k/b
  *
@@ -143,8 +143,8 @@ void armas_cbuf_release(armas_cbuf_t *cbuf)
  * \brief Two way split of cache buffer.
  *
  * Divide cache buffer two blocks of size 'kb*mb' and 'kb*nb' items where
- * item size is 'p' bytes. Ensure that each columns of kb items starts at cpu cache line.
- * (ie. kb*p mod CACHELINE == 0).
+ * item size is 'p' bytes. Ensure that each columns of kb items starts
+ * at cpu cache line.(ie. kb*p mod CACHELINE == 0).
  *
  * \param [in] cbuf
  *      Cache buffer
@@ -161,8 +161,9 @@ void armas_cbuf_release(armas_cbuf_t *cbuf)
  * \param [in] p
  *      item size in bytes
  */
-void armas_cbuf_split2(
-    armas_cbuf_t *cbuf, void **aptr, void **bptr, size_t *mb, size_t *nb, size_t *kb, size_t p)
+void armas_cbuf_split2(armas_cbuf_t *cbuf,
+                       void **aptr, void **bptr, size_t *mb,
+                       size_t *nb, size_t *kb, size_t p)
 {
     size_t clp, kn, mn, nn, S = cbuf->len/p;
     double a, b;
@@ -196,8 +197,8 @@ void armas_cbuf_split2(
 }
 
 static
-int armas_cache_fixed2(
-    cache_t *cache, armas_cbuf_t *cbuf, size_t mb, size_t nb, size_t kb, size_t p)
+int armas_cache_fixed2(cache_t *cache, armas_cbuf_t *cbuf,
+                       size_t mb, size_t nb, size_t kb, size_t p)
 {
     size_t bytes = (kb > (CACHELINE/p) ? kb : (CACHELINE/p))*(mb + nb)*p;
     if (bytes > cbuf->cmem) {
@@ -232,8 +233,8 @@ int armas_cache_fixed2(
  * \brief Setup cache for two-way split cache buffer
  *
  */
-void armas_cache_setup2(
-    cache_t *cache, armas_cbuf_t *cbuf, size_t mb, size_t nb, size_t kb, size_t p)
+void armas_cache_setup2(cache_t *cache, armas_cbuf_t *cbuf,
+                        size_t mb, size_t nb, size_t kb, size_t p)
 {
     cache->MB = mb;
     cache->NB = nb;
@@ -277,8 +278,9 @@ void armas_cache_setup2(
  *  k*n*(m/n + 2) == (k^2/b)*(a + 2) = S
  *  k = sqrt(b*S/(2 + a))
  */
-void armas_cbuf_split3(
-    armas_cbuf_t *cbuf, void **aptr, void **bptr, void **cptr, size_t *mb, size_t *nb, size_t *kb, size_t p)
+void armas_cbuf_split3(armas_cbuf_t *cbuf,
+                       void **aptr, void **bptr, void **cptr,
+                       size_t *mb, size_t *nb, size_t *kb, size_t p)
 {
     size_t clp, kn, mn, nn, S = cbuf->len/p;
     double a, b;
@@ -317,12 +319,12 @@ void armas_cbuf_split3(
 }
 
 /*
- * Setup three-way split up cache buffer with fixed block sizes. If provided memory block is too
- * small return with error.
+ * Setup three-way split up cache buffer with fixed block sizes.
+ * If provided memory block is too small return with error.
  */
 static
-int armas_cache_fixed3(
-    cache_t *cache, armas_cbuf_t *cbuf, size_t mb, size_t nb, size_t kb, size_t p)
+int armas_cache_fixed3(cache_t *cache, armas_cbuf_t *cbuf,
+                       size_t mb, size_t nb, size_t kb, size_t p)
 {
     size_t bytes = (kb > (CACHELINE/p) ? kb : (CACHELINE/p))*(mb + 2*nb)*p;
     if (bytes > cbuf->cmem) {
@@ -352,7 +354,8 @@ int armas_cache_fixed3(
     return 0;
 }
 
-void armas_cache_setup3(cache_t *cache, armas_cbuf_t *cbuf, size_t mb, size_t nb, size_t kb, size_t p)
+void armas_cache_setup3(cache_t *cache, armas_cbuf_t *cbuf,
+                        size_t mb, size_t nb, size_t kb, size_t p)
 {
     cache->MB = mb;
     cache->NB = nb;
@@ -390,11 +393,13 @@ void armas_cache_setup(cache_t *cache, armas_cbuf_t *cbuf, int three, size_t p)
 {
     armas_env_t *env = armas_getenv();
     if (three == 3) {
-        if (env->fixed && armas_cache_fixed3(cache, cbuf, env->mb, env->nb, env->kb, p) == 0)
+        if (env->fixed &&
+            armas_cache_fixed3(cache, cbuf, env->mb, env->nb, env->kb, p) == 0)
             return;
         armas_cache_setup3(cache, cbuf, env->mb, env->nb, env->kb, p);
     } else {
-        if (env->fixed && armas_cache_fixed2(cache, cbuf, env->mb, env->nb, env->kb, p) == 0)
+        if (env->fixed &&
+            armas_cache_fixed2(cache, cbuf, env->mb, env->nb, env->kb, p) == 0)
             return;
         armas_cache_setup2(cache, cbuf, env->mb, env->nb, env->kb, p);
     }
