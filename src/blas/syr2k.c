@@ -85,16 +85,19 @@ int armas_x_update2_sym(
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-
+    int uflags = flags & (ARMAS_UPPER | ARMAS_LOWER);
     // do it twice with triangular update
     if (flags & ARMAS_TRANS) {
-        if (armas_x_update_trm(beta, C, alpha, A, B, ARMAS_TRANSA, conf) < 0)
+        if (armas_x_update_trm(beta, C,
+                               alpha, A, B, uflags|ARMAS_TRANSA, conf) < 0)
             return -1;
-        return armas_x_update_trm(beta, C, alpha, B, A, ARMAS_TRANSA, conf);
+        return armas_x_update_trm(ONE, C,
+                                  alpha, B, A, uflags | ARMAS_TRANSA, conf);
     }
-    if (armas_x_update_trm(beta, C, alpha, A, B, ARMAS_TRANSB, conf) < 0)
+    if (armas_x_update_trm(beta, C
+                           , alpha, A, B, uflags | ARMAS_TRANSB, conf) < 0)
         return -1;
-    return armas_x_update_trm(beta, C, alpha, B, A, ARMAS_TRANSB, conf);
+    return armas_x_update_trm(ONE, C, alpha, B, A, uflags | ARMAS_TRANSB, conf);
 }
 #else
 #warning "Missing defines; no code"
