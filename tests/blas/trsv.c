@@ -23,6 +23,9 @@ int test_row_vector(int N, int verbose, int flags)
     armas_d_set_values(&X, one, ARMAS_NULL);
     armas_d_set_values(&A, zeromean, flags);
 
+    printf("** trsv (row vector): %s %s\n",
+           (flags & ARMAS_UPPER) ? "upper" : "lower",
+           (flags & ARMAS_UNIT) ? "unit-diagonal" : "");
     if (verbose > 1 && N < 10) {
         printf("Z:\n");
         armas_d_printf(stdout, "%6.3f", &Z);
@@ -61,7 +64,6 @@ int test_row_vector(int N, int verbose, int flags)
     return fails;
 }
 
-
 int test_col_vector(int N, int verbose, int flags)
 {
     armas_conf_t conf = *armas_conf_default();
@@ -79,10 +81,9 @@ int test_col_vector(int N, int verbose, int flags)
     armas_d_set_values(&X, one, ARMAS_NULL);
     armas_d_set_values(&A, zeromean, flags);
 
-    if (verbose > 1 && N < 10) {
-        printf("Z:\n");
-        armas_d_printf(stdout, "%6.3f", &Z);
-    }
+    printf("** trsv (column vector): %s %s\n",
+           (flags & ARMAS_UPPER) ? "upper" : "lower",
+           (flags & ARMAS_UNIT) ? "unit-diagonal" : "");
 
     armas_d_mvmult(0.0, &X, 1.0, &A, &X0, 0, &conf);
     armas_d_mvsolve_trm(&X, 1.0, &A, flags, &conf);
@@ -122,11 +123,26 @@ int main(int argc, char **argv)
     int opt;
     int N = 77;
     int verbose = 0;
+    int all = 1;
+    int unit = 0;
+    int lower = 0;
+    int upper = 0;
 
-    while ((opt = getopt(argc, argv, "v")) != -1) {
+    while ((opt = getopt(argc, argv, "vULu")) != -1) {
         switch (opt) {
         case 'v':
             verbose++;
+            break;
+        case 'u':
+            unit = ARMAS_UNIT;
+            break;
+        case 'U':
+            upper = 1;
+            all = 0;
+            break;
+        case 'L':
+            lower = 1;
+            all = 0;
             break;
         default:
             fprintf(stderr, "usage: trsv [size]\n");
@@ -140,15 +156,24 @@ int main(int argc, char **argv)
 
     int fails = 0;
 
-    fails += test_row_vector(N, verbose, ARMAS_UPPER);
-    fails += test_col_vector(N, verbose, ARMAS_UPPER);
-    fails += test_row_vector(N, verbose, ARMAS_LOWER);
-    fails += test_col_vector(N, verbose, ARMAS_LOWER);
-
-
+    if (all) {
+        fails += test_row_vector(N, verbose, ARMAS_UPPER);
+        fails += test_row_vector(N, verbose, ARMAS_UPPER|ARMAS_UNIT);
+        fails += test_col_vector(N, verbose, ARMAS_UPPER);
+        fails += test_col_vector(N, verbose, ARMAS_UPPER|ARMAS_UNIT);
+        fails += test_row_vector(N, verbose, ARMAS_LOWER);
+        fails += test_row_vector(N, verbose, ARMAS_LOWER|ARMAS_UNIT);
+        fails += test_col_vector(N, verbose, ARMAS_LOWER);
+        fails += test_col_vector(N, verbose, ARMAS_LOWER|ARMAS_UNIT);
+    } else {
+        if (upper) {
+            fails += test_row_vector(N, verbose, ARMAS_UPPER|unit);
+            fails += test_col_vector(N, verbose, ARMAS_UPPER|unit);
+        }
+        if (lower) {
+            fails += test_row_vector(N, verbose, ARMAS_LOWER|unit);
+            fails += test_col_vector(N, verbose, ARMAS_LOWER|unit);
+        }
+    }
     exit(fails);
 }
-
-// Local Variables:
-// indent-tabs-mode: nil
-// End:
