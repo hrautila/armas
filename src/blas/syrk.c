@@ -82,7 +82,9 @@ int armas_x_update_sym(
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-    int uflags = flags & ARMAS_TRANS ? ARMAS_TRANSA : ARMAS_TRANSB;
+    int uflags = flags & (ARMAS_UPPER | ARMAS_LOWER);
+    uflags |= (flags & ARMAS_TRANS ? ARMAS_TRANSA : ARMAS_TRANSB);
+
     return armas_x_update_trm(beta, C, alpha, A, A, uflags, conf);
 }
 #else
