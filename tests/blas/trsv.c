@@ -9,35 +9,40 @@
 int test_row_vector(int N, int verbose, int flags)
 {
     armas_conf_t conf = *armas_conf_default();
-    armas_d_dense_t Z, X, A, X0;
+    armas_x_dense_t Z, X, A, X0;
     int ok, fails = 0;
     double n0, n1;
     char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
 
-    armas_d_init(&Z, N + 2, N);
-    armas_d_row(&X0, &Z, 0);
-    armas_d_row(&X, &Z, 1);
-    armas_d_submatrix(&A, &Z, 2, 0, N, N);
+    armas_x_init(&Z, N + 2, N);
+    armas_x_row(&X0, &Z, 0);
+    armas_x_row(&X, &Z, 1);
+    armas_x_submatrix(&A, &Z, 2, 0, N, N);
 
-    armas_d_set_values(&X0, one, ARMAS_NULL);
-    armas_d_set_values(&X, one, ARMAS_NULL);
-    armas_d_set_values(&A, zeromean, flags);
-
+    armas_x_set_values(&X0, one, ARMAS_NULL);
+    armas_x_set_values(&X, one, ARMAS_NULL);
+    armas_x_set_values(&A, zeromean, flags);
+    if (flags & ARMAS_UNIT) {
+        for (int i = 0; i < N; i++) {
+            armas_x_set(&A, i, i, 1.0);
+        }
+    }
     printf("** trsv (row vector): %s %s\n",
            (flags & ARMAS_UPPER) ? "upper" : "lower",
            (flags & ARMAS_UNIT) ? "unit-diagonal" : "");
-    if (verbose > 1 && N < 10) {
-        printf("Z:\n");
-        armas_d_printf(stdout, "%6.3f", &Z);
+    if (verbose > 1) {
+        MAT_PRINT("Z", &Z);
     }
 
-    armas_d_mvmult(0.0, &X, 1.0, &A, &X0, 0, &conf);
-    armas_d_mvsolve_trm(&X, 1.0, &A, flags, &conf);
+    armas_x_mvmult(0.0, &X, 1.0, &A, &X0, 0, &conf);
+    if (verbose > 1) {
+        MAT_PRINT("X = A*X0", &X);
+    }
+    armas_x_mvsolve_trm(&X, 1.0, &A, flags, &conf);
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-    if (verbose > 2 && N < 10) {
-        printf("X-X0:\n");
-        armas_d_printf(stdout, "%6.3f", &X);
+    if (verbose > 2) {
+        MAT_PRINT("result", &X);
     }
     printf("%6s : row(X) = trsv(trmv(X, A, %c|N), A, %c|N)\n", PASS(ok), uplo,
            uplo);
@@ -46,14 +51,10 @@ int test_row_vector(int N, int verbose, int flags)
         printf("  || error ||: %e\n", n0);
     }
 
-    armas_d_mvmult(0.0, &X, 1.0, &A, &X0, ARMAS_TRANS, &conf);
-    armas_d_mvsolve_trm(&X, 1.0, &A, flags | ARMAS_TRANS, &conf);
+    armas_x_mvmult(0.0, &X, 1.0, &A, &X0, ARMAS_TRANS, &conf);
+    armas_x_mvsolve_trm(&X, 1.0, &A, flags | ARMAS_TRANS, &conf);
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-    if (verbose > 2 && N < 10) {
-        printf("X-X0:\n");
-        armas_d_printf(stdout, "%6.3f", &X);
-    }
     printf("%6s : row(X) = trsv(trmv(X, A, %c|T), A, %c|T)\n", PASS(ok), uplo,
            uplo);
     if (verbose > 0) {
@@ -67,31 +68,31 @@ int test_row_vector(int N, int verbose, int flags)
 int test_col_vector(int N, int verbose, int flags)
 {
     armas_conf_t conf = *armas_conf_default();
-    armas_d_dense_t Z, X, A, X0, tmp;
+    armas_x_dense_t Z, X, A, X0, tmp;
     int ok, fails = 0;
     double n0, n1;
     char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
 
-    armas_d_init(&Z, N, N + 2);
-    armas_d_column(&X0, &Z, 0);
-    armas_d_column(&X, &Z, 1);
-    armas_d_submatrix(&A, &Z, 0, 2, N, N);
+    armas_x_init(&Z, N, N + 2);
+    armas_x_column(&X0, &Z, 0);
+    armas_x_column(&X, &Z, 1);
+    armas_x_submatrix(&A, &Z, 0, 2, N, N);
 
-    armas_d_set_values(&X0, one, ARMAS_NULL);
-    armas_d_set_values(&X, one, ARMAS_NULL);
-    armas_d_set_values(&A, zeromean, flags);
+    armas_x_set_values(&X0, one, ARMAS_NULL);
+    armas_x_set_values(&X, one, ARMAS_NULL);
+    armas_x_set_values(&A, zeromean, flags);
 
     printf("** trsv (column vector): %s %s\n",
            (flags & ARMAS_UPPER) ? "upper" : "lower",
            (flags & ARMAS_UNIT) ? "unit-diagonal" : "");
 
-    armas_d_mvmult(0.0, &X, 1.0, &A, &X0, 0, &conf);
-    armas_d_mvsolve_trm(&X, 1.0, &A, flags, &conf);
+    armas_x_mvmult(0.0, &X, 1.0, &A, &X0, 0, &conf);
+    armas_x_mvsolve_trm(&X, 1.0, &A, flags, &conf);
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
     if (verbose > 2 && N < 10) {
         printf("X-X0:\n");
-        armas_d_printf(stdout, "%6.3f", armas_d_col_as_row(&tmp, &X));
+        armas_x_printf(stdout, "%6.3f", armas_x_col_as_row(&tmp, &X));
     }
     printf("%6s : col(X) = trsv(trmv(X, A, %c|N), A, %c|N)\n", PASS(ok), uplo,
            uplo);
@@ -100,13 +101,13 @@ int test_col_vector(int N, int verbose, int flags)
         printf("  || error ||: %e\n", n0);
     }
 
-    armas_d_mvmult(0.0, &X, 1.0, &A, &X0, ARMAS_TRANS, &conf);
-    armas_d_mvsolve_trm(&X, 1.0, &A, flags | ARMAS_TRANS, &conf);
+    armas_x_mvmult(0.0, &X, 1.0, &A, &X0, ARMAS_TRANS, &conf);
+    armas_x_mvsolve_trm(&X, 1.0, &A, flags | ARMAS_TRANS, &conf);
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
     if (verbose > 2 && N < 10) {
         printf("X-X0:\n");
-        armas_d_printf(stdout, "%6.3f", armas_d_col_as_row(&tmp, &X));
+        armas_x_printf(stdout, "%6.3f", armas_x_col_as_row(&tmp, &X));
     }
     printf("%6s : col(X) = trsv(trmv(X, A, %c|T), A, %c|T)\n", PASS(ok), uplo,
            uplo);
