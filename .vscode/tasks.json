@@ -1,0 +1,45 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "debug build library",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/build; make CFLAGS='-g -O0'",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build library",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/build; make CFLAGS='-O3 -march'",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "build library",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/build; make CFLAGS='-g -O1' check",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "test"
+        },
+        {
+            "label": "build a programm",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/tests; make gemm",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}

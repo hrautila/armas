@@ -1,0 +1,4 @@
+{
+    "c-cpp-flylint.includePaths": [".", "${workspaceRoot}/src/inc", "${workspaceRoot}"],
+    "C_Cpp.default.includePath": ["${workspaceRoot}/src/include"]
+}
