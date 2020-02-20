@@ -36,10 +36,23 @@
         {
             "label": "build a programm",
             "type": "shell",
-            "command": "cd ${workspaceRoot}/tests; make gemm",
+            "command": "cd ${workspaceRoot}/build; cd ${input:directory}; make ${input:target}",
             "problemMatcher": [
                 "$gcc"
             ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "target",
+            "type": "promptString",
+            "description": "make target"
+        },
+        {
+            "id": "directory",
+            "type": "promptString",
+            "default": "${relativeFileDirname}",
+            "description": "Directory under build tree"
         }
     ]
 }
