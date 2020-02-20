@@ -10,6 +10,7 @@
 
 #define NAME "diag"
 
+static
 int test_left(int M, int N, int verbose, armas_conf_t *cf)
 {
     armas_x_dense_t A0, A1, D;
@@ -36,6 +37,7 @@ int test_left(int M, int N, int verbose, armas_conf_t *cf)
     return 1 - ok;
 }
 
+static
 int test_right(int M, int N, int verbose, armas_conf_t *cf)
 {
     armas_x_dense_t A0, A1, D;
