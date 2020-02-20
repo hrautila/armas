@@ -10,100 +10,85 @@
 
 #define NAME "diag"
 
-int test_left(int M, int N, int verbose)
+int test_left(int M, int N, int verbose, armas_conf_t *cf)
 {
     armas_x_dense_t A0, A1, D;
     int ok;
-    DTYPE nrm;
-    armas_conf_t conf = *armas_conf_default();
+    DTYPE nrm, n1;
 
     armas_x_init(&A0, M, N);
     armas_x_init(&A1, M, N);
     armas_x_init(&D, M, 1);
 
-    armas_x_set_values(&A0, unitrand, ARMAS_ANY);
-    armas_x_mcopy(&A1, &A0);
-    armas_x_set_values(&D, unitrand, ARMAS_ANY);
+    armas_x_set_values(&A0, unitrand, 0);
+    armas_x_mcopy(&A1, &A0, 0, cf);
+    armas_x_set_values(&D, unitrand, 0);
 
-    armas_x_mult_diag(&A1, &D, 1.0, ARMAS_LEFT, &conf);
-    if (verbose > 1 && N < 10) {
-        printf("A0\n");
-        armas_x_printf(stdout, "%6.3f", &A0);
-        printf("A1\n");
-        armas_x_printf(stdout, "%6.3f", &A1);
-    }
-    armas_x_solve_diag(&A1, &D, 1.0, ARMAS_LEFT, &conf);
-#if 0
-    armas_x_scale_plus(1.0, &A1, -1.0, &A0, ARMAS_NOTRANS, &conf);
-    if (verbose > 1 && N < 10) {
-        printf("A1 - A0\n");
-        armas_x_printf(stdout, "%6.3f", &A1);
-    }
-    nrm = armas_x_mnorm(&A1, ARMAS_NORM_ONE, &conf);
-#endif
-    nrm = rel_error((DTYPE *) 0, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+    armas_x_mult_diag(&A1, 1.0, &D, ARMAS_LEFT, cf);
+    armas_x_solve_diag(&A1, 1.0, &D, ARMAS_LEFT, cf);
+
+    nrm = rel_error(&n1, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = isOK(nrm, N);
-    printf("%4s: A = D.-1*D*A\n", PASS(ok));
+    printf("%6s: A == D.-1*D*A\n", PASS(ok));
     if (verbose > 0)
-        printf("  M=%d, N=%d || rel error ||_1: %e\n", M, N, nrm);
+        printf("    || rel error ||_1: %e [%d]\n", nrm, ndigits(nrm));
 
-    return ok;
+    return 1 - ok;
 }
 
-int test_right(int M, int N, int verbose)
+int test_right(int M, int N, int verbose, armas_conf_t *cf)
 {
     armas_x_dense_t A0, A1, D;
     int ok;
-    DTYPE nrm;
-    armas_conf_t conf = *armas_conf_default();
+    DTYPE nrm, n1;
 
     armas_x_init(&A0, M, N);
     armas_x_init(&A1, M, N);
     armas_x_init(&D, N, 1);
 
-    armas_x_set_values(&A0, unitrand, ARMAS_ANY);
-    armas_x_mcopy(&A1, &A0);
-    armas_x_set_values(&D, unitrand, ARMAS_ANY);
+    armas_x_set_values(&A0, unitrand, 0);
+    armas_x_mcopy(&A1, &A0, 0, cf);
+    armas_x_set_values(&D, unitrand, 0);
 
-    armas_x_mult_diag(&A1, &D, 1.0, ARMAS_RIGHT, &conf);
-    if (verbose > 1 && N < 10) {
-        printf("A0\n");
-        armas_x_printf(stdout, "%6.3f", &A0);
-        printf("A1\n");
-        armas_x_printf(stdout, "%6.3f", &A1);
-    }
-    armas_x_solve_diag(&A1, &D, 1.0, ARMAS_RIGHT, &conf);
-#if 0
-    armas_x_scale_plus(1.0, &A1, -1.0, &A0, ARMAS_NOTRANS, &conf);
-    if (verbose > 1 && N < 10) {
-        printf("A1 - A0\n");
-        armas_x_printf(stdout, "%6.3f", &A1);
-    }
-    nrm = armas_x_mnorm(&A1, ARMAS_NORM_ONE, &conf);
-#endif
-    nrm = rel_error((DTYPE *) 0, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+    armas_x_mult_diag(&A1, 1.0, &D, ARMAS_RIGHT, cf);
+    armas_x_solve_diag(&A1, 1.0, &D, ARMAS_RIGHT, cf);
+
+    nrm = rel_error(&n1, &A1, &A0, ARMAS_NORM_ONE, 0, cf);
     ok = isOK(nrm, N);
-    printf("%4s: A = A*D*D.-1\n", PASS(ok));
+    printf("%6s: A == A*D*D.-1\n", PASS(ok));
     if (verbose > 0)
-        printf("  M=%d, N=%d || rel error ||_1: %e\n", M, N, nrm);
+        printf("    || rel error ||_1: %e, [%d]\n", nrm, ndigits(nrm));
 
-    return ok;
+    return 1 - ok;
 }
 
 int main(int argc, char **argv)
 {
+    armas_conf_t *cf;
     int opt;
     int M = 787;
     int N = 741;
     int verbose = 1;
+    int all = 1;
+    int left = 0;
+    int right = 0;
 
-    while ((opt = getopt(argc, argv, "v")) != -1) {
+    cf = armas_conf_default();
+    while ((opt = getopt(argc, argv, "vLR")) != -1) {
         switch (opt) {
         case 'v':
             verbose += 1;
             break;
+        case 'L':
+            left = 1;
+            all = 0;
+            break;
+        case 'R':
+            right = 1;
+            all = 0;
+            break;
         default:
-            fprintf(stderr, "usage: %s [-v] [M N LB]\n", NAME);
+            fprintf(stderr, "usage: %s [-vLR] [M N]\n", NAME);
             exit(1);
         }
     }
@@ -117,13 +102,15 @@ int main(int argc, char **argv)
     }
 
     int fails = 0;
-    if (!test_left(M, N, verbose))
-        fails++;
-    if (!test_right(M, N, verbose))
-        fails++;
+    if (all) {
+        fails += test_left(M, N, verbose, cf);
+        fails += test_right(M, N, verbose, cf);
+    } else {
+        if (left)
+            fails += test_left(M, N, verbose, cf);
+        if (right)
+            fails += test_right(M, N, verbose, cf);
+    }
+
     exit(fails);
 }
-
-// Local Variables:
-// indent-tabs-mode: nil
-// End:
