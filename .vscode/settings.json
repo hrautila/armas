@@ -1,4 +1,17 @@
 {
-    "c-cpp-flylint.includePaths": [".", "${workspaceRoot}/src/inc", "${workspaceRoot}"],
-    "C_Cpp.default.includePath": ["${workspaceRoot}/src/include"]
+    "c-cpp-flylint.includePaths": [
+        ".",
+        "${workspaceFolder}/src/include",
+        "${workspaceFolder}",
+        "${workspaceFolder}/tests"
+    ],
+    "C_Cpp.default.includePath": [
+        ".",
+        "${workspaceFolder}/src/include",
+        "${workspaceFolder}",
+        "${workspaceFolder}/tests"
+    ],
+    "C_Cpp.clang_format_style":
+       "{ BasedOnStyle: Google, UseTab: Never, TabWidth: 4, IndentCaseLabels: false, IndentWidth: 4, ColumnLimit: 0, BreakBeforeBraces: Linux}"
+
 }
