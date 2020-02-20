@@ -25,7 +25,7 @@
             "group": "build"
         },
         {
-            "label": "build library",
+            "label": "run checks",
             "type": "shell",
             "command": "cd ${workspaceRoot}/build; make CFLAGS='-g -O1' check",
             "problemMatcher": [
