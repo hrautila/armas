@@ -6,6 +6,7 @@
 
 #include "testing.h"
 
+static
 int test_row_vector(int N, int verbose, int flags)
 {
     armas_conf_t conf = *armas_conf_default();
@@ -65,10 +66,11 @@ int test_row_vector(int N, int verbose, int flags)
     return fails;
 }
 
+static
 int test_col_vector(int N, int verbose, int flags)
 {
     armas_conf_t conf = *armas_conf_default();
-    armas_x_dense_t Z, X, A, X0, tmp;
+    armas_x_dense_t Z, X, A, X0;
     int ok, fails = 0;
     double n0, n1;
     char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
@@ -81,6 +83,11 @@ int test_col_vector(int N, int verbose, int flags)
     armas_x_set_values(&X0, one, ARMAS_NULL);
     armas_x_set_values(&X, one, ARMAS_NULL);
     armas_x_set_values(&A, zeromean, flags);
+    if (flags & ARMAS_UNIT) {
+        for (int i = 0; i < N; i++) {
+            armas_x_set(&A, i, i, 1.0);
+        }
+    }
 
     printf("** trsv (column vector): %s %s\n",
            (flags & ARMAS_UPPER) ? "upper" : "lower",
@@ -90,12 +97,11 @@ int test_col_vector(int N, int verbose, int flags)
     armas_x_mvsolve_trm(&X, 1.0, &A, flags, &conf);
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-    if (verbose > 2 && N < 10) {
-        printf("X-X0:\n");
-        armas_x_printf(stdout, "%6.3f", armas_x_col_as_row(&tmp, &X));
+    if (verbose > 1) {
+        MAT_PRINT("Z", &Z);
     }
-    printf("%6s : col(X) = trsv(trmv(X, A, %c|N), A, %c|N)\n", PASS(ok), uplo,
-           uplo);
+    printf("%6s : col(X) = trsv(trmv(X, A, %c|N), A, %c|N)\n", 
+        PASS(ok), uplo, uplo);
     fails += 1 - ok;
     if (verbose > 0) {
         printf("  || error ||: %e\n", n0);
@@ -105,12 +111,11 @@ int test_col_vector(int N, int verbose, int flags)
     armas_x_mvsolve_trm(&X, 1.0, &A, flags | ARMAS_TRANS, &conf);
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-    if (verbose > 2 && N < 10) {
-        printf("X-X0:\n");
-        armas_x_printf(stdout, "%6.3f", armas_x_col_as_row(&tmp, &X));
+    if (verbose > 1) {
+        MAT_PRINT("Z", &Z);
     }
-    printf("%6s : col(X) = trsv(trmv(X, A, %c|T), A, %c|T)\n", PASS(ok), uplo,
-           uplo);
+    printf("%6s : col(X) = trsv(trmv(X, A, %c|T), A, %c|T)\n",
+        PASS(ok), uplo, uplo);
     if (verbose > 0) {
         printf("  || error ||: %e\n", n0);
     }
