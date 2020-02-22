@@ -49,25 +49,25 @@ void update_trmv_unb(
     const armas_x_dense_t *Y,
     int flags)
 {
-    armas_x_dense_t a0;
-    DTYPE yk;
+    armas_x_dense_t a0, x0, y0;
+    DTYPE dk;
 
     switch (flags & (ARMAS_UPPER|ARMAS_LOWER)) {
     case ARMAS_UPPER:
-        for (int j = 0; j < A->cols; j++) {
-            armas_x_submatrix(&a0, A, 0, j, min(j+1, A->cols), 1);
-            yk = armas_x_get_at_unsafe(Y, j);
-            armas_x_axpby_unsafe(beta, &a0, alpha*yk, X);
-            //__mult_mv1axpy(&A->elems[j*A->step], &X->elems[0], xinc, alpha*Y->elems[j*yinc], min(M, j+1));
+        for (int j = 0; j < A->rows; j++) {
+            armas_x_submatrix_unsafe(&a0, A, j, j, 1, A->cols-j);
+            armas_x_subvector_unsafe(&y0, Y, j, A->cols-j);
+            dk = armas_x_get_at_unsafe(X, j);
+            armas_x_axpby_unsafe(beta, &a0, alpha*dk, &y0);
         }
         break;
     case ARMAS_LOWER:
     default:
         for (int j = 0; j < A->cols; j++) {
-            armas_x_submatrix(&a0, A, 0, j, A->cols-j, 1);
-            yk = armas_x_get_at_unsafe(Y, j);
-            armas_x_axpby_unsafe(beta, &a0, alpha*yk, X);
-            //__mult_mv1axpy(&A->elems[j+j*A->step], &X->elems[j*xinc], xinc, alpha*Y->elems[j*yinc], M-j);
+            armas_x_submatrix_unsafe(&a0, A, j, j, A->rows-j, 1);
+            armas_x_subvector_unsafe(&x0, X, j, A->rows-j);
+            dk = armas_x_get_at_unsafe(Y, j);
+            armas_x_axpby_unsafe(beta, &a0, alpha*dk, &x0);
         }
     }
 }
@@ -102,7 +102,6 @@ void update_trmv_recursive(
     }
 
     if (flags & ARMAS_UPPER) {
-        armas_x_subvector_unsafe(&x0, X, 0, nd/2);
         armas_x_subvector_unsafe(&y0, Y, nd/2, N-nd/2);
         armas_x_submatrix_unsafe(&A0, A, 0, nd/2, nd/2, N-nd/2);
         armas_x_mvupdate_rec(beta, &A0, alpha, &x0, &y0, flags);
