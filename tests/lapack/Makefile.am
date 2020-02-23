@@ -23,12 +23,22 @@ LIBARMAS = $(top_builddir)/src/libarmasd.la
 endif
 
 UNIT_TESTS = \
-	chol
+	chol givens house housem ldlbk ldlt
 
 check_PROGRAMS = $(UNIT_TESTS)
 
-chol_SOURCES  = chol.c ../helper.c
-chol_LDADD    = $(LIBARMAS)
+chol_SOURCES   = chol.c ../helper.c
+chol_LDADD     = $(LIBARMAS)
+givens_SOURCES = givens.c ../helper.c
+givens_LDADD   = $(LIBARMAS)
+house_SOURCES  = house.c ../helper.c
+house_LDADD    = $(LIBARMAS)
+housem_SOURCES = housem.c ../helper.c
+housem_LDADD   = $(LIBARMAS)
+ldlbk_SOURCES  = ldlbk.c ../helper.c
+ldlbk_LDADD    = $(LIBARMAS)
+ldlt_SOURCES   = ldlt.c ../helper.c
+ldlt_LDADD     = $(LIBARMAS)
 
 TESTS = $(check_PROGRAMS)
 
