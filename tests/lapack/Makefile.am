@@ -23,7 +23,7 @@ LIBARMAS = $(top_builddir)/src/libarmasd.la
 endif
 
 UNIT_TESTS = \
-	chol givens house housem ldlbk ldlt
+	chol givens house housem ldlbk ldlt lu qrbld qrfact
 
 check_PROGRAMS = $(UNIT_TESTS)
 
@@ -39,6 +39,12 @@ ldlbk_SOURCES  = ldlbk.c ../helper.c
 ldlbk_LDADD    = $(LIBARMAS)
 ldlt_SOURCES   = ldlt.c ../helper.c
 ldlt_LDADD     = $(LIBARMAS)
+lu_SOURCES     = lu.c ../helper.c
+lu_LDADD       = $(LIBARMAS)
+qrbld_SOURCES  = qrbld.c ../helper.c
+qrbld_LDADD    = $(LIBARMAS)
+qrfact_SOURCES = qrfact.c ../helper.c
+qrfact_LDADD   = $(LIBARMAS)
 
 TESTS = $(check_PROGRAMS)
 
