@@ -5,16 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "debug tests/testsymm",
+            "name": "debug program",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/tests/testsymm",
-            "args": ["9", "8", "8"],
+            "program": "${workspaceFolder}/build/${input:target}",
+            "args": ["9", "8", "4"],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
-            "environment": [ 
-                {"name": "ARMAS_CONFIG", "value": "6,6,6,6,6,6,y" },
-                {"name": "ARMAS_CACHE", "value": "4096,1024" }
+            "environment": [
+                { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build/src/.libs"}, 
+                { "name": "ARMAS_CONFIG", "value": "4,4,4,4,4,4,y" },
+                { "name": "ARMAS_CACHE", "value": "4096,1024" }
             ],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -25,21 +26,15 @@
                     "ignoreFailures": true
                 }
             ]
-        },
+        }
+    ],
+    "inputs": [
         {
-            "name": "debug tests/testtrsm",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceRoot}/tests/testtrsm",
-            "args": [ "7", "4", "4" ],
-            "stopAtEntry": true,
-            "cwd": "${workspaceFolder}",
-            "environment": [ ],
-            "externalConsole": false,
-            "linux": {
-                "MIMode": "gdb",
-                "miDebuggerPath": "/usr/bin/gdb"
-            }
+            "id": "target",
+            "type": "promptString",
+            //"default": "${relativeFileDirname}/${fileBasenameNoExtension}",
+            "description": "debug target"
         }
     ]
+
 }
