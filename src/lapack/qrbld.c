@@ -118,8 +118,6 @@ int unblk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
     return 0;
 }
 
-
-
 /*
  * Blocked code for generating M by N matrix Q with orthogonal columns which
  * are defined as the first N columns of the product of K first elementary
