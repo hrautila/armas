@@ -13,7 +13,7 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
     int ok;
     int fails = 0;
     DTYPE alpha = 2.0;
-    char *uplo;
+    const char *uplo;
 
     armas_x_init(&C, N, N);
     armas_x_init(&C0, N, N);
@@ -23,8 +23,8 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
     armas_x_set_values(&A, zeromean, ARMAS_NULL);
     armas_x_mcopy(&At, &A, ARMAS_TRANS, cf);
 
-    printf("** symmetric rank-k update: %s\n", flags & ARMAS_UPPER ? "upper" : "lower");
-    uplo = flags & ARMAS_UPPER ? "U" : "L";
+    printf("** symmetric rank-k update: %s\n", (flags & ARMAS_UPPER) ? "upper" : "lower");
+    uplo = (flags & ARMAS_UPPER) ? "U" : "L";
 
     // 1. C = upper(C) + A*A.T;
     armas_x_set_values(&C, one, ARMAS_SYMM);
@@ -35,11 +35,9 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
 
     armas_x_mult(0.0, &C0, alpha, &A, &A, ARMAS_TRANSB, cf);
     armas_x_make_trm(&C0, flags);
-    if (verbose > 1 && N < 10) {
-        printf("syrk(C)\n");
-        armas_x_printf(stdout, "%5.2f", &C);
-        printf("C0\n");
-        armas_x_printf(stdout, "%5.2f", &C0);
+    if (verbose > 1) {
+        MAT_PRINT("syrk(C)", &C);
+        MAT_PRINT("C0", &C0);
     }
 
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, 0, cf);

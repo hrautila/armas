@@ -11,7 +11,7 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
     armas_d_dense_t X, Y, A, A0;
     int ok;
     DTYPE n0, n1;
-    char *uplo = flags & ARMAS_UPPER ? "upper" : "lower";
+    const char *uplo = (flags & ARMAS_UPPER) ? "upper" : "lower";
 
     armas_d_init(&Y, N, 1);
     armas_d_init(&A, N, N);

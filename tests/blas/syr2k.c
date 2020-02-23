@@ -6,12 +6,13 @@
 
 #include "testing.h"
 
+static
 int test_std(int N, int verbose, int flags, armas_conf_t *cf)
 {
     armas_x_dense_t C, C0, A, At, B, Bt;
     int ok, fails = 0;
     DTYPE n0, n1, alpha = 2.0;
-    char *uplo = flags & ARMAS_UPPER ? "U" : "L";
+    const char *uplo = (flags & ARMAS_UPPER) ? "U" : "L";
 
     armas_x_init(&C, N, N);
     armas_x_init(&C0, N, N);
@@ -25,7 +26,8 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
     armas_x_mcopy(&At, &A, ARMAS_TRANS, cf);
     armas_x_mcopy(&Bt, &B, ARMAS_TRANS, cf);
 
-    printf("** symmetric rank-2k update: %s\n", flags & ARMAS_UPPER ? "upper" : "lower");
+    printf("** symmetric rank-2k update: %s\n",
+           (flags & ARMAS_UPPER) ? "upper" : "lower");
     // 1. C = C + A*B.T + B*A.T;
     armas_x_set_values(&C, one, ARMAS_SYMM);
     armas_x_mcopy(&C0, &C, 0, cf);
