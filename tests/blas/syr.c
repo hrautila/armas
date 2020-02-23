@@ -12,7 +12,7 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
     armas_x_dense_t X, A, A0;
     int ok;
     DTYPE n0, n1;
-    char *uplo = (flags & ARMAS_UPPER) != 0 ? "upper" : "lower";
+    const char *uplo = (flags & ARMAS_UPPER) != 0 ? "upper" : "lower";
 
     armas_x_init(&X, N, 1);
     armas_x_init(&A, N, N);
@@ -25,11 +25,11 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
     printf("** symmetric rank-1 update: %s\n", uplo);
 
     armas_x_mvupdate_sym(1.0, &A, 2.0, &X, flags, cf);
-    armas_x_mvupdate_sym(1.0, &A, -2.0, &X, flags, cf);
-
+    armas_x_mvupdate(1.0, &A0, 2.0, &X, &X, cf);
+    armas_x_make_trm(&A0, flags);
     n0 = rel_error(&n1, &A, &A0, ARMAS_NORM_ONE, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-    printf("%6s : %s(A) + 2*x*x^T - 2*x*x^T == A\n", PASS(ok), uplo);
+    printf("%6s : update(%s(A), x) == %s(A + x*x^T)\n", PASS(ok), uplo, uplo);
     if (verbose > 0) {
         printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
