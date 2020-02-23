@@ -103,10 +103,13 @@ AC_MSG_NOTICE([CONFIG_EXT_PRECISION = $enable_ext_precision])
 AC_MSG_NOTICE([CONFIG_COMPAT = $enable_compat])
 AC_MSG_NOTICE([CONFIG_SPARSE = $enable_sparse])
 
-AC_CONFIG_FILES([Makefile
+AC_CONFIG_FILES([
+   Makefile
 	src/Makefile
-    tests/Makefile
-    tests/blas/Makefile
+   tests/Makefile
+   tests/blas/Makefile
+   tests/eblas/Makefile
+   tests/lapack/Makefile
 ])
 
 AC_OUTPUT
