@@ -27,6 +27,7 @@
 // -----------------------------------------------------------------------------
 
 //! \cond
+#include <assert.h>
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
@@ -164,8 +165,11 @@ int armas_x_update_qr_left(armas_x_dense_t * C1, armas_x_dense_t * C2,
                            armas_x_dense_t * T, armas_x_dense_t * W,
                            int transpose, armas_conf_t * conf)
 {
+    require(C1->cols == C2->cols);
+    if (armas_x_size(C1) == 0 && armas_x_size(C2) == 0)
+        return 0;
     // W = C1.T
-    armas_x_mplus(ZERO, W, ONE, C1, ARMAS_TRANSB, conf);
+    armas_x_mcopy(W, C1, ARMAS_TRANS, conf);
     // W = C1.T*Y1 = W*Y1
     armas_x_mult_trm (W, ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
     // W = W + C2.T*Y2
@@ -207,8 +211,11 @@ int armas_x_update_qr_right(armas_x_dense_t * C1, armas_x_dense_t * C2,
                             armas_x_dense_t * T, armas_x_dense_t * W,
                             int transpose, armas_conf_t * conf)
 {
+    require(C1->rows == C2->rows);
+    if (armas_x_size(C1) == 0 && armas_x_size(C2) == 0)
+        return 0;
     // W = C1
-    armas_x_mplus(ZERO, W, ONE, C1, ARMAS_NONE, conf);
+    armas_x_mcopy(W, C1, 0, conf);
     // W = C1*Y1 = W*Y1
     armas_x_mult_trm (W, ONE, Y1, ARMAS_LOWER|ARMAS_UNIT|ARMAS_RIGHT, conf);
     // W = W + C2*Y2
