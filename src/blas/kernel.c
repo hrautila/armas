@@ -94,7 +94,7 @@ int armas_x_mult_kernel(
 
         // scale C block here.... jp, jp+nJ columns, E-R rows
         armas_x_submatrix_unsafe(&Ca, C, 0, jp, C->rows, nJ);
-        __blk_scale(&Ca, beta, C->rows, nJ);
+        blk_scale(&Ca, beta, C->rows, nJ);
 
         for (kp = 0; kp < P; kp += cache->KB) {
             nP = min(cache->KB, P-kp);

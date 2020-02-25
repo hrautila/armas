@@ -30,7 +30,7 @@
 #include "matcpy.h"
 
 static inline
-void __vec_scale(armas_x_dense_t *X,  const DTYPE alpha, int N)
+void vec_scale(armas_x_dense_t *X,  const DTYPE alpha, int N)
 {
     register int i, k;
     register DTYPE *x0;
@@ -66,9 +66,9 @@ void __vec_scale(armas_x_dense_t *X,  const DTYPE alpha, int N)
 int armas_x_scale_unsafe(armas_x_dense_t *x, DTYPE alpha)
 {
     if (armas_x_isvector(x)) {
-        __vec_scale(x, alpha, armas_x_size(x));
+        vec_scale(x, alpha, armas_x_size(x));
     } else {
-        __blk_scale(x, alpha, x->rows, x->cols);
+        blk_scale(x, alpha, x->rows, x->cols);
     }
     return 0;
 }
@@ -99,7 +99,7 @@ int armas_x_scale(armas_x_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
         return -1;
     }
 
-    __vec_scale(x, alpha, armas_x_size(x));
+    vec_scale(x, alpha, armas_x_size(x));
     return 0;
 }
 
@@ -132,19 +132,19 @@ int armas_x_mscale(armas_x_dense_t *m, const DTYPE alpha, int flags, armas_conf_
     switch (flags & (ARMAS_SYMM|ARMAS_UPPER|ARMAS_LOWER)) {
     case ARMAS_UPPER:
         // scale strictly upper triangular part, if UNIT set, don't touch diagonal
-        n = flags & ARMAS_UNIT ? 1 : 0;
+        n = (flags & ARMAS_UNIT) ? 1 : 0;
         for (c = n; c < m->rows; c++) {
             armas_x_submatrix_unsafe(&C, m, c, c+n, 1, m->rows-c-n);
-            __vec_scale(&C, alpha, C.rows);
+            vec_scale(&C, alpha, C.rows);
         }
         break;
 
     case ARMAS_LOWER:
         // scale strictly lower triangular part. if UNIT set, don't touch diagonal
-        n = flags & ARMAS_UNIT ? 1 : 0;
+        n = (flags & ARMAS_UNIT) ? 1 : 0;
         for (c = 0; c < m->cols-n; c++) {
             armas_x_submatrix_unsafe(&C, m, c+n, c, m->rows-c-n, 1);
-            __vec_scale(&C, alpha, C.rows);
+            vec_scale(&C, alpha, C.rows);
         }
         break;
 
@@ -155,10 +155,7 @@ int armas_x_mscale(armas_x_dense_t *m, const DTYPE alpha, int flags, armas_conf_
         }
         // fall through to do it.
     default:
-        for (c = 0; c < m->cols; c++) {
-            armas_x_submatrix_unsafe(&C, m, c, 0, m->rows, 1);
-            __vec_scale(&C, alpha, C.rows);
-        }
+        armas_x_scale_unsafe(m, alpha);
         break;
     }
     return 0;

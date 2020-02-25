@@ -402,7 +402,7 @@ void CPBLK_TRIU_LFILL(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int 
 #endif  /* FLOAT32 && FLOAT64*/
 
 static inline
-void __blk_scale(armas_x_dense_t *x, const DTYPE beta, int M, int N)
+void blk_scale(armas_x_dense_t *x, const DTYPE beta, int M, int N)
 {
     register DTYPE *X = x->elems;
     register int ldX = x->step;
