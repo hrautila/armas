@@ -41,15 +41,8 @@ int test_qrbuild(int M, int N, int K, int lb, int verbose)
     armas_x_qrbuild(&A0, &tau0, K, &conf);
     env->lb = lb;
     armas_x_qrbuild(&A1, &tau0, K, &conf);
-    if (verbose > 1) {
-        MAT_PRINT("unblk.Q(qr(A))", &A0);
-        MAT_PRINT("  blk.Q(qr(A))", &A1);
-    }
 
     n0 = rel_error(&n1, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-    if (verbose > 1) {
-        MAT_PRINT("blk - unblk", &A1);
-    }
     ok = isOK(n0, N);
     printf("%s: unblk.Q(qr(A),%c) == blk.Q(qr(A),%c)\n", PASS(ok), ct, ct);
     if (verbose > 0) {
@@ -100,9 +93,6 @@ int test_qrbuild_identity(int M, int N, int K, int lb, int verbose)
     armas_x_mult(ZERO, &C0, ONE, &A0, &A0, ARMAS_TRANSA, &conf);
 
     n0 = rel_error(&n1, &C0, &C1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
-    if (verbose > 1) {
-        MAT_PRINT("C0 - C1", &C0);
-    }
     ok = isOK(n0, N);
     printf("%s: %s Q(qr(A),%c).T * Q(qr(A),%c) == I\n", PASS(ok), blk, ct, ct);
     if (verbose > 0) {
@@ -151,21 +141,16 @@ int main(int argc, char **argv)
     int fails = 0;
     if (!test_qrbuild(M, N, N, LB, verbose))
         fails += 1;
-#if 0
     if (!test_qrbuild(M, N, N / 2, LB, verbose))
         fails += 1;
-#endif
-#if 0
     if (!test_qrbuild_identity(M, N, N, 0, verbose))
         fails += 1;
     if (!test_qrbuild_identity(M, N, N / 2, 0, verbose))
         fails += 1;
-#endif
-#if 0
     if (!test_qrbuild_identity(M, N, N, LB, verbose))
         fails += 1;
     if (!test_qrbuild_identity(M, N, N / 2, LB, verbose))
         fails += 1;
-#endif
+
     exit(fails);
 }
