@@ -78,7 +78,8 @@ int unblk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
         &ATL, &ATR,
         __nil, &ABR, /**/ A, mk, nk, ARMAS_PBOTTOMRIGHT);
     mat_partition_2x1(
-        &tT, &tB, /**/ tau, nk, ARMAS_PBOTTOM);
+        &tT,
+        &tB, /**/ tau, nk, ARMAS_PBOTTOM);
 
     // zero the right side
     if (nk > 0 && mayclear) {
@@ -95,7 +96,8 @@ int unblk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
             __nil, &a11, &a12,
             __nil, &a21, &A22, /**/ A, 1, ARMAS_PTOPLEFT);
         mat_repartition_2x1to3x1(
-            &tT, &t0, &t1, &t2, /**/ tau, 1, ARMAS_PTOP);
+            &tT,
+            &t0, &t1, &t2, /**/ tau, 1, ARMAS_PTOP);
         // ---------------------------------------------------------------------
         armas_x_submatrix(&w12, W, 0, 0, armas_x_size(&a12), 1);
         armas_x_apply_householder2x1(&t1, &a21,
@@ -107,13 +109,13 @@ int unblk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
 
         // zero
         armas_x_scale(&a01, 0.0, conf);
-
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, &ATR,
             __nil, &ABR, /**/ &A00, &a11, &A22, A, ARMAS_PTOPLEFT);
         mat_continue_3x1to2x1(
-            &tT, &tB, /**/ &t0, &t1, tau, ARMAS_PTOP);
+            &tT,
+            &tB, /**/ &t0, &t1, tau, ARMAS_PTOP);
     }
     return 0;
 }
@@ -149,7 +151,8 @@ int blk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
         &ATL, &ATR,
         __nil, &ABR, /**/ A, mk + uk, nk + uk, ARMAS_PBOTTOMRIGHT);
     mat_partition_2x1(
-        &tT, &tB, /**/ tau, nk + uk, ARMAS_PBOTTOM);
+        &tT,
+        &tB, /**/ tau, nk + uk, ARMAS_PBOTTOM);
 
     // zero the right side
     if (nk + uk > 0) {
@@ -173,7 +176,8 @@ int blk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
             __nil, &A11, &A12,
             __nil, &A21, &A22, /**/ A, lb, ARMAS_PTOPLEFT);
         mat_repartition_2x1to3x1(
-            &tT, &t0, &t1, &t2, /**/ tau, lb, ARMAS_PTOP);
+            &tT,
+            &t0, &t1, &t2, /**/ tau, lb, ARMAS_PTOP);
         // ---------------------------------------------------------------------
         mat_merge2x1(&AL, &A11, &A21);
 
@@ -194,7 +198,8 @@ int blk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
             &ATL, &ATR,
             __nil, &ABR, /**/ &A00, &A11, &A22, A, ARMAS_PTOPLEFT);
         mat_continue_3x1to2x1(
-            &tT, &tB, /**/ &t0, &t1, tau, ARMAS_PTOP);
+            &tT,
+            &tB, /**/ &t0, &t1, tau, ARMAS_PTOP);
     }
     return 0;
 }
