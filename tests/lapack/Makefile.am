@@ -23,7 +23,8 @@ LIBARMAS = $(top_builddir)/src/libarmasd.la
 endif
 
 UNIT_TESTS = \
-	chol givens house housem ldlbk ldlt lu qrbld qrfact
+	chol givens house housem ldlbk ldlt lu qrbld qrfact qrmult \
+	qrsol qlfact qlbld qlmult
 
 check_PROGRAMS = $(UNIT_TESTS)
 
@@ -45,6 +46,16 @@ qrbld_SOURCES  = qrbld.c ../helper.c
 qrbld_LDADD    = $(LIBARMAS)
 qrfact_SOURCES = qrfact.c ../helper.c
 qrfact_LDADD   = $(LIBARMAS)
+qrmult_SOURCES = qrmult.c ../helper.c
+qrmult_LDADD   = $(LIBARMAS)
+qrsol_SOURCES  = qrsol.c ../helper.c
+qrsol_LDADD    = $(LIBARMAS)
+qlbld_SOURCES  = qlbld.c ../helper.c
+qlbld_LDADD    = $(LIBARMAS)
+qlfact_SOURCES = qlfact.c ../helper.c
+qlfact_LDADD   = $(LIBARMAS)
+qlmult_SOURCES = qlmult.c ../helper.c
+qlmult_LDADD   = $(LIBARMAS)
 
 TESTS = $(check_PROGRAMS)
 
