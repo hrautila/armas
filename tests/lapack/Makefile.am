@@ -24,7 +24,7 @@ endif
 
 UNIT_TESTS = \
 	chol givens house housem ldlbk ldlt lu qrbld qrfact qrmult \
-	qrsol qlfact qlbld qlmult
+	qrsol qlfact qlbld qlmult lqfact lqbld lqmult lqsol
 
 check_PROGRAMS = $(UNIT_TESTS)
 
@@ -42,6 +42,14 @@ ldlt_SOURCES   = ldlt.c ../helper.c
 ldlt_LDADD     = $(LIBARMAS)
 lu_SOURCES     = lu.c ../helper.c
 lu_LDADD       = $(LIBARMAS)
+lqbld_SOURCES  = lqbld.c ../helper.c
+lqbld_LDADD    = $(LIBARMAS)
+lqfact_SOURCES = lqfact.c ../helper.c
+lqfact_LDADD   = $(LIBARMAS)
+lqmult_SOURCES = lqmult.c ../helper.c
+lqmult_LDADD   = $(LIBARMAS)
+lqsol_SOURCES  = lqsol.c ../helper.c
+lqsol_LDADD    = $(LIBARMAS)
 qrbld_SOURCES  = qrbld.c ../helper.c
 qrbld_LDADD    = $(LIBARMAS)
 qrfact_SOURCES = qrfact.c ../helper.c
