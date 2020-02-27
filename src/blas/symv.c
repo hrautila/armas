@@ -67,19 +67,16 @@ void symv_unb(
     DTYPE alpha,
     const armas_x_dense_t *A,
     const armas_x_dense_t *X,
-    int flags,
-    int N)
+    int flags)
 {
     armas_x_dense_t xx, aa;
     DTYPE yk;
-
-    if (N <= 0)
-        return;
+    int N = armas_x_size(Y);
 
     if (flags & ARMAS_LOWER) {
         for (int j = 0; j < N; j++) {
-            armas_x_subvector_unsafe(&xx, X, 0, j);
-            armas_x_submatrix_unsafe(&aa, A, j, 0, 1, j);
+            armas_x_subvector_unsafe(&xx, X, 0, j+1);
+            armas_x_submatrix_unsafe(&aa, A, j, 0, 1, j+1);
             yk = ZERO;
             armas_x_adot_unsafe(&yk, alpha, &xx, &aa);
 
@@ -92,8 +89,8 @@ void symv_unb(
     }
 
     for (int j = 0; j < N; j++) {
-        armas_x_subvector_unsafe(&xx, X, 0, j);
-        armas_x_submatrix_unsafe(&aa, A, 0, j, j, 1);
+        armas_x_subvector_unsafe(&xx, X, 0, j+1);
+        armas_x_submatrix_unsafe(&aa, A, 0, j, j+1, 1);
         yk = ZERO;
         armas_x_adot_unsafe(&yk, alpha, &xx, &aa);
 
@@ -128,59 +125,29 @@ void symv_recursive(
     const armas_x_dense_t *X,
     DTYPE alpha,
     int flags,
-    int N)
+    int blas2min)
 {
-    armas_x_dense_t x0, y0;
-    armas_x_dense_t A0;
+    armas_x_dense_t x0, y0, xT, xB, yT, yB;
+    armas_x_dense_t ATL, ATR, ABL, ABR;
+    int N = armas_x_size(Y);
 
-    //printf("symv_recursive: N=%d\", N);
-
-    if (N < MIN_MVEC_SIZE) {
-        symv_unb(Y, A, X, alpha, flags, N);
+    if (N < blas2min) {
+        symv_unb(beta, Y, alpha, A, X, flags);
         return;
     }
 
-    // 1st part  ; diagonal [0:nx/2, 0:ny/2]
-    __subvector(&y0, Y, 0);
-    __subvector(&x0, X, 0);
-    __subblock(&A0, A, 0, 0);
-    if (N/2 < MIN_MVEC_SIZE) {
-        symv_unb(&y0, &A0, &x0, alpha, flags, N/2);
-    } else {
-        symv_recursive(&y0, &A0, &x0, alpha, flags, N/2);
-    }
+    mat_partition2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, N/2, N/2, ARMAS_PTOPLEFT);
+    mat_partitiion2x1(
+        &xT,
+        &xB, /**/ X, N/2, ARMAS_PTOP);
+    mat_partitiion2x1(
+        &yT,
+        &yB, /**/ Y, N/2, ARMAS_PTOP);
 
-    if (flags & ARMAS_LOWER) {
-        // update y[0:N/2] with rectangular part
-        __subblock(&A0, A, N/2, 0);
-        __subvector(&x0, X, N/2);
-        __gemv_recursive(&y0, &A0, &x0, alpha, 1.0, ARMAS_TRANS, 0, N-N/2, 0, N/2);
-
-        // update y[N/2:N] with rectangular part
-        __subvector(&x0, X, 0);
-        __subvector(&y0, Y, N/2);
-        __gemv_recursive(&y0, &A0, &x0, alpha, 1.0, ARMAS_NONE, 0, N/2, 0, N-N/2);
-    } else {
-        // update y[0:N/2] with rectangular part
-        __subblock(&A0, A, 0, N/2);
-        __subvector(&x0, X, N/2);
-        __gemv_recursive(&y0, &A0, &x0, alpha, 1.0, ARMAS_NONE, 0, N-N/2, 0, N/2);
-
-        // update y[N/2:N] with rectangular part
-        __subvector(&x0, X, 0);
-        __subvector(&y0, Y, N/2);
-        __gemv_recursive(&y0, &A0, &x0, alpha, 1.0, ARMAS_TRANS, 0, N/2, 0, N-N/2);
-    }
-
-    // 2nd part ; diagonal [N/2:N, N/2:N]
-    __subvector(&x0, X, N/2);
-    __subblock(&A0, A, N/2, N/2);
-    if (N/2 < MIN_MVEC_SIZE) {
-        symv_unb(&y0, &A0, &x0, alpha, flags, N-N/2);
-    } else {
-        symv_recursive(&y0, &A0, &x0, alpha, flags, N-N/2);
-    }
-
+    symv_recursive(beta, &yT, alpha, &ATL, &xT, flags, blas2min);
+    armas_x_mvmult_recursive(ONE, &yT, alpha, &ATR, &xB, 0, blas2min);
 }
 #endif
 
