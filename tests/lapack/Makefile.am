@@ -1,7 +1,8 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
-INCLUDES = -I$(top_srcdir)/src/include -I$(top_srcdir)/tests
-AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall $(INCLUDES)
+INCLUDE_OPTS = -I$(top_srcdir)/src/include -I$(top_srcdir)/tests
+AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer \
+	-Wall $(INCLUDE_OPTS)
 
 
 noinst_HEADERS = ../helper.h
@@ -24,7 +25,8 @@ endif
 
 UNIT_TESTS = \
 	chol givens house housem ldlbk ldlt lu qrbld qrfact qrmult \
-	qrsol qlfact qlbld qlmult lqfact lqbld lqmult lqsol
+	qrsol qlfact qlbld qlmult lqfact lqbld lqmult lqsol \
+	rqfact rqbld rqmult hessred trdred
 
 check_PROGRAMS = $(UNIT_TESTS)
 
@@ -64,6 +66,16 @@ qlfact_SOURCES = qlfact.c ../helper.c
 qlfact_LDADD   = $(LIBARMAS)
 qlmult_SOURCES = qlmult.c ../helper.c
 qlmult_LDADD   = $(LIBARMAS)
+rqbld_SOURCES  = rqbld.c ../helper.c
+rqbld_LDADD    = $(LIBARMAS)
+rqfact_SOURCES = rqfact.c ../helper.c
+rqfact_LDADD   = $(LIBARMAS)
+rqmult_SOURCES = rqmult.c ../helper.c
+rqmult_LDADD   = $(LIBARMAS)
+hessred_SOURCES = hessred.c ../helper.c
+hessred_LDADD  = $(LIBARMAS)
+trdred_SOURCES = trdred.c ../helper.c
+trdred_LDADD   = $(LIBARMAS)
 
 TESTS = $(check_PROGRAMS)
 

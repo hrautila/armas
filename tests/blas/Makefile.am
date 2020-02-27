@@ -23,7 +23,8 @@ LIBARMAS = $(top_builddir)/src/libarmasd.la
 endif
 
 UNIT_TESTS = \
-	gemm symm trmm trsm trmrk gemv trmv trsv syrk syr2k syr syr2 ger dot diag
+	gemm symm trmm trsm trmrk gemv trmv trsv \
+	syrk syr2k syr syr2 ger dot diag symv
 
 check_PROGRAMS = $(UNIT_TESTS)
 
@@ -51,6 +52,8 @@ trmrk_SOURCES = trmrk.c ../helper.c
 trmrk_LDADD   = $(LIBARMAS)
 gemv_SOURCES  = gemv.c ../helper.c
 gemv_LDADD    = $(LIBARMAS)
+symv_SOURCES  = symv.c ../helper.c
+symv_LDADD    = $(LIBARMAS)
 ger_SOURCES   = ger.c ../helper.c
 ger_LDADD     = $(LIBARMAS)
 trmv_SOURCES  = trmv.c ../helper.c
