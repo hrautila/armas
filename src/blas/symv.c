@@ -117,7 +117,7 @@ void symv_unb(
  *  y1 = A01.T*x0 + A11*x1  = symv(A11, x1) + gemv(A01, x0, T)
  *
  */
-#if 1
+#if 0
 void symv_recursive(
     DTYPE beta,
     armas_x_dense_t *Y,
