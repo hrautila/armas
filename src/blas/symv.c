@@ -32,8 +32,8 @@
 //! \cond
 #include "matrix.h"
 #include "internal.h"
-//#include "nosimd/mvec.h"
-//#include "cond.h"
+#include "partition.h"
+#include "vec_partition.h"
 //! \endcond
 
 
@@ -117,7 +117,7 @@ void symv_unb(
  *  y1 = A01.T*x0 + A11*x1  = symv(A11, x1) + gemv(A01, x0, T)
  *
  */
-#if 0
+#if 1
 void symv_recursive(
     DTYPE beta,
     armas_x_dense_t *Y,
@@ -139,15 +139,22 @@ void symv_recursive(
     mat_partition2x2(
         &ATL, &ATR,
         &ABL, &ABR, /**/ A, N/2, N/2, ARMAS_PTOPLEFT);
-    mat_partitiion2x1(
+    vec_partition2x1(
         &xT,
         &xB, /**/ X, N/2, ARMAS_PTOP);
-    mat_partitiion2x1(
+    vec_partition2x1(
         &yT,
         &yB, /**/ Y, N/2, ARMAS_PTOP);
 
-    symv_recursive(beta, &yT, alpha, &ATL, &xT, flags, blas2min);
-    armas_x_mvmult_recursive(ONE, &yT, alpha, &ATR, &xB, 0, blas2min);
+    if (flags & ARMAS_UPPER) {
+        symv_recursive(beta, &yT, alpha, &ATL, &xT, flags, blas2min);
+        armas_x_mvmult_recursive(ONE, &yT, alpha, &ATR, &xB, 0, blas2min);
+
+        symv_recursive(beta, &yB, alpha, &ABR, &xB, flags, blas2min);
+        armas_x_mvmult_recursive(ONE, &yB, alpha, &ATR, &xT, ARMAS_TRANS, blas2min);
+    } else {
+
+    }
 }
 #endif
 
