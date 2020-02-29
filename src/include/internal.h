@@ -114,9 +114,14 @@ extern void armas_x_mvupdate_unsafe(
 extern void armas_x_mvmult_trm_unsafe(
     armas_x_dense_t *X, DTYPE alpha, const armas_x_dense_t *A, int flags);
 
-extern int armas_x_mvmult_unsafe(
+extern void armas_x_mvmult_unsafe(
     DTYPE beta, armas_x_dense_t *y,
     DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *x, int flags);
+
+extern void armas_x_mvmult_sym_unsafe(
+    DTYPE beta, armas_x_dense_t *y,
+    DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *x, int flags);
+
 
 extern void armas_x_mvupdate_trm_unb(
     DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *x, const armas_x_dense_t *y, int flags);
