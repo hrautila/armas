@@ -23,15 +23,9 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
 
     // Y = A*X
     armas_x_mvmult_sym(0.0, &Y0, 1.0, &A0, &X, flags, cf);
-    if (verbose > 1) {
-        MAT_PRINT("Y0", armas_x_col_as_row(&tmp, &Y0));
-    }
     nrm_y = armas_x_nrm2(&Y0, cf);
     // Y = Y - A*X
     armas_x_mvmult(1.0, &Y0, -1.0, &A0, &X, 0, cf);
-    if (verbose > 1) {
-        MAT_PRINT("Y0 - A*X", armas_x_col_as_row(&tmp, &Y0));
-    }
     nrm_z = armas_x_nrm2(&Y0, cf);
     ok = nrm_z == 0.0 || isOK(nrm_z/nrm_y, N) ? 1 : 0;
     printf("%6s : %s.symv(A, X) == %s(gemv(A, X))\n", PASS(ok), uplo, uplo);
