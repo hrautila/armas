@@ -21,7 +21,7 @@
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
-#if defined(armas_x_mvupdate_trm_unb) && defined(armas_x_mvupdate_rec)
+#if defined(armas_x_mvupdate_unsafe)
 #define ARMAS_REQUIRES 1
 #endif
 
@@ -32,9 +32,45 @@
 //! \cond
 #include "matrix.h"
 #include "internal.h"
-//#include "nosimd/mvec.h"
-
+#include "partition.h"
 //! \endcond
+
+/*
+ *    a00 a10^T   x0 y0 y1^T   y0 x0 x1^T
+ *    a10 A22     x1           y1
+ * 
+ *    a00 = a00 + alpha*x0*y0 + alpha*y0*x0
+ *    a10 = a10 + alpya*y0*x1 + alpha*x0*y1
+ */
+static
+void update_syr2_unb(
+    DTYPE beta,
+    armas_x_dense_t *A,
+    DTYPE alpha,
+    const armas_x_dense_t *X,
+    const armas_x_dense_t *Y,
+    int flags)
+{
+    armas_x_dense_t a10, x1, y1;
+    DTYPE a00, x0, y0;
+
+    for (int j = 0; j < A->rows; j++) {
+        x0 = armas_x_get_at_unsafe(X, j);
+        y0 = armas_x_get_at_unsafe(Y, j);
+        a00 = armas_x_get_unsafe(A, j, j);
+        armas_x_subvector_unsafe(&y1, Y, j+1, A->cols - j - 1);
+        armas_x_subvector_unsafe(&x1, X, j+1, A->cols - j - 1);
+        if (flags & ARMAS_UPPER) {
+           armas_x_submatrix_unsafe(&a10, A, j, j+1, 1, A->cols - j - 1);
+        } else {
+           armas_x_submatrix_unsafe(&a10, A, j+1, j, A->cols - j - 1, 1);
+        }
+        a00 = beta*a00 + TWO*alpha*x0*y0;
+        armas_x_set_unsafe(A, j, j, a00);
+        armas_x_axpby_unsafe(beta, &a10, alpha*y0, &x1);
+        armas_x_axpby_unsafe(ONE, &a10, alpha*x0, &y1);
+    }
+}
 
 static
 void update_syr2_recursive(
@@ -44,58 +80,36 @@ void update_syr2_recursive(
     const armas_x_dense_t *X,
     const armas_x_dense_t *Y,
     int flags,
-    int N,
     int min_mvec_size)
 {
-    armas_x_dense_t x0, y0, A0;
+    armas_x_dense_t xT, xB, yT, yB;
+    armas_x_dense_t ATL, ATR, ABL, ABR;
 
-    if (N < min_mvec_size) {
-        armas_x_mvupdate_trm_unb(beta, A, alpha, X, Y, flags);
-        armas_x_mvupdate_trm_unb(ONE, A, alpha, Y, X, flags);
+    if (A->rows < min_mvec_size) {
+        update_syr2_unb(beta, A, alpha, X, Y, flags);
         return;
     }
 
-    armas_x_subvector_unsafe(&x0, X, 0, N/2);
-    armas_x_subvector_unsafe(&y0, Y, 0, N/2);
-    armas_x_submatrix_unsafe(&A0, A, 0, 0, N/2, N/2);
-    if (N/2 < min_mvec_size) {
-        armas_x_mvupdate_trm_unb(beta, &A0, alpha, &x0, &y0, flags);
-        armas_x_mvupdate_trm_unb(ONE, &A0, alpha, &y0, &x0, flags);
-    } else {
-        update_syr2_recursive(beta, &A0, alpha, &x0, &y0, flags, N/2, min_mvec_size);
-    }
+    mat_partition_2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, A->rows/2, A->cols/2, ARMAS_PTOPLEFT);
+    vec_partition_2x1(
+        &xT,
+        &xB, /**/ X, A->rows/2, ARMAS_PTOP);
+    vec_partition_2x1(
+        &yT,
+        &yB, /**/ Y, A->cols/2, ARMAS_PTOP);
 
+    update_syr2_recursive(beta, &ATL, alpha, &xT, &yT, flags, min_mvec_size);
     if (flags & ARMAS_UPPER) {
-        armas_x_subvector_unsafe(&x0, X, 0, N/2);
-        armas_x_subvector_unsafe(&y0, Y, N/2, N-N/2);
-        armas_x_submatrix_unsafe(&A0, A, 0, N/2, N/2, N-N/2);
-        armas_x_mvupdate_rec(beta, &A0, alpha, &x0, &y0, flags);
-
-        armas_x_subvector_unsafe(&x0, X, N/2, N-N/2);
-        armas_x_subvector_unsafe(&y0, Y, 0, N/2);
-        armas_x_mvupdate_rec(ONE, &A0, alpha, &y0, &x0, flags);
+        armas_x_mvupdate_unsafe(beta, &ATR, alpha, &xB, &yT);
+        armas_x_mvupdate_unsafe(ONE, &ATR, alpha, &xB, &yT);
     } else {
-        armas_x_subvector_unsafe(&y0, Y, 0, N/2);
-        armas_x_subvector_unsafe(&x0, X, N/2, N-N/2);
-        armas_x_submatrix_unsafe(&A0, A, N/2, 0, N-N/2, N/2);
-        armas_x_mvupdate_rec(beta, &A0, alpha, &x0, &y0, flags);
-
-        armas_x_subvector_unsafe(&y0, Y, N/2, N-N/2);
-        armas_x_subvector_unsafe(&x0, X, 0, N/2);
-        armas_x_mvupdate_rec(ONE, &A0, alpha, &y0, &x0, flags);
+        armas_x_mvupdate_unsafe(beta, &ABL, alpha, &xT, &yB);
+        armas_x_mvupdate_unsafe(ONE, &ABL, alpha, &xT, &yB);
     }
-
-    armas_x_subvector_unsafe(&y0, Y, N/2, N-N/2);
-    armas_x_subvector_unsafe(&x0, X, N/2, N-N/2);
-    armas_x_submatrix_unsafe(&A0, A, N/2, N/2, N-N/2, N-N/2);
-    if (N-N/2 < min_mvec_size) {
-        armas_x_mvupdate_trm_unb(beta, &A0, alpha, &x0, &y0, flags);
-        armas_x_mvupdate_trm_unb(ONE, &A0, alpha, &y0, &x0, flags);
-    } else {
-        update_syr2_recursive(beta, &A0, alpha, &x0, &y0, flags, N-N/2, min_mvec_size);
-    }
+    update_syr2_recursive(beta, &ABR, alpha, &xB, &yB, flags, min_mvec_size);
 }
-
 
 /**
  * @brief Symmetric matrix rank-2 update.
@@ -155,21 +169,18 @@ int armas_x_mvupdate2_sym(
     armas_env_t *env = armas_getenv();
     // default precision here
     switch (conf->optflags) {
-    case ARMAS_ORECURSIVE:
-        update_syr2_recursive(beta, A, alpha, x, y, flags, nx, env->blas2min);
+    case ARMAS_ONAIVE:
+        update_syr2_unb(beta, A, alpha, x, y, flags);
         break;
 
-    case ARMAS_ONAIVE:
+    case ARMAS_ORECURSIVE:
     default:
-        armas_x_mvupdate_trm_unb(beta, A, alpha, x, y, flags);
-        armas_x_mvupdate_trm_unb(ONE, A, alpha, y, x, flags);
+        update_syr2_recursive(beta, A, alpha, x, y, flags, env->blas2min);
         break;
 
     }
     return 0;
 }
-
 #else
 #warning "Missing defines; no code!"
-
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRED */
