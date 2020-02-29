@@ -6,11 +6,13 @@
 
 #include "testing.h"
 
-int test_std(int M, int N, int verbose, armas_conf_t *cf)
+int test_std(int M, int N, int verbose, int flags, armas_conf_t *cf)
 {
     armas_x_dense_t X, Y, Y0, A, At;
-    DTYPE nrm_y, nrm_z;
+    DTYPE n0, n1;
     int ok;
+    const char *test = (flags & ARMAS_TRANS)
+        ? "gemv(A^T, x) == A^T*x" : "gemv(A, x) == A*x";
 
     armas_x_init(&Y, M, 1);
     armas_x_init(&Y0, M, 1);
@@ -18,26 +20,48 @@ int test_std(int M, int N, int verbose, armas_conf_t *cf)
     armas_x_init(&A, M, N);
     armas_x_init(&At, N, M);
 
-    armas_x_set_values(&Y, zero, ARMAS_NULL);
-    armas_x_set_values(&Y0, zero, ARMAS_NULL);
+    armas_x_set_values(&Y, unitrand, ARMAS_NULL);
     armas_x_set_values(&X, unitrand, ARMAS_NULL);
     armas_x_set_values(&A, unitrand, ARMAS_NULL);
     armas_x_mcopy(&At, &A, ARMAS_TRANS, cf);
+    armas_x_mcopy(&Y0, &Y, 0, cf);
 
     // Y = A*X
-    armas_x_mvmult(0.0, &Y, 1.0, &A, &X, 0, cf);
-    nrm_y = armas_x_nrm2(&Y, cf);
-    // Y = Y - A^T*X
-    armas_x_mvmult(1.0, &Y, -1.0, &At, &X, ARMAS_TRANS, cf);
+    if (flags & ARMAS_TRANS) {
+        armas_x_mvmult(2.0, &Y, ONE, &At, &X, ARMAS_TRANS, cf);
+        for (int i = 0; i < M; i++) {
+            armas_x_dense_t a0;
+            armas_x_column(&a0, &At, i);
+            DTYPE yk = 2.0 * armas_x_get_at_unsafe(&Y0, i);
+            armas_x_adot(&yk, ONE, &a0, &X, cf);
+            armas_x_set_at_unsafe(&Y0, i, yk);
+        }
+    } else {
+        armas_x_mvmult(2.0, &Y, ONE, &A, &X, 0, cf);
+        for (int i = 0; i < M; i++) {
+            armas_x_dense_t a0;
+            armas_x_row(&a0, &A, i);
+            DTYPE yk = 2.0 * armas_x_get_at_unsafe(&Y0, i);
+            armas_x_adot(&yk, ONE, &a0, &X, cf);
+            armas_x_set_at_unsafe(&Y0, i, yk);
+        }
+    }
+    // armas_x_mvmult(1.0, &Y, -1.0, &At, &X, ARMAS_TRANS, cf);
     if (N < 10 && verbose > 1) {
         printf("Y\n"); armas_x_printf(stdout, "%5.2f", &Y);
     }
-    nrm_z = armas_x_nrm2(&Y, cf);
-    ok = nrm_z == 0.0 || isOK(nrm_z/nrm_y, N) ? 1 : 0;
-    printf("%6s : gemv(A, X) == gemv(A.T, X, T)\n", PASS(ok));
+    n0 = rel_error(&n1, &Y, &Y0, ARMAS_NORM_TWO, 0, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : %s\n", PASS(ok), test);
     if (verbose > 0) {
-        printf("   || rel error || : %e, [%d]\n", nrm_z/nrm_y, ndigits(nrm_z/nrm_y));
+        printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
+
+    armas_x_release(&Y);
+    armas_x_release(&Y0);
+    armas_x_release(&X);
+    armas_x_release(&A);
+    armas_x_release(&At);
     return 1 - ok;
 }
 
@@ -80,7 +104,8 @@ int main(int argc, char **argv)
         M = N = atoi(argv[optind]);
     }
 
-    fails += test_std(M, N, verbose, &cf);
+    fails += test_std(M, N, verbose, 0, &cf);
+    fails += test_std(M, N, verbose, ARMAS_TRANS, &cf);
 
     exit(fails);
 }
