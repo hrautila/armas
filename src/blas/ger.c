@@ -17,10 +17,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_mvupdate) && \
-  defined(armas_x_mvupdate_unb) && \
-  defined(armas_x_mvupdate_rec)
-
+#if defined(armas_x_mvupdate) && defined(armas_x_mvupdate_unsafe)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
@@ -33,6 +30,7 @@
 //! \cond
 #include "matrix.h"
 #include "internal.h"
+#include "partition.h"
 //! \endcond
 
 
@@ -103,7 +101,6 @@ void update4axpy(
     }
 }
 
-
 static
 void update1axpy(
     DTYPE beta,
@@ -145,95 +142,72 @@ void update1axpy(
  */
 static
 void update_ger_unb(
-    armas_x_dense_t *A,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y,
     DTYPE beta,
+    armas_x_dense_t *A,
     DTYPE alpha,
-    int flags,
-    int N, int M)
+    const armas_x_dense_t *X,
+    const armas_x_dense_t *Y)
 {
     armas_x_dense_t y0;
     armas_x_dense_t A0;
     register int j;
-    for (j = 0; j < N-3; j += 4) {
+    for (j = 0; j < A->cols-3; j += 4) {
         armas_x_submatrix_unsafe(&A0, A, 0, j, A->rows, 4);
         armas_x_subvector_unsafe(&y0, Y, j, 4);
-        update4axpy(beta, &A0, alpha, X, &y0, M);
+        update4axpy(beta, &A0, alpha, X, &y0, A->rows);
     }
-    if (j == N)
+    if (j == A->cols)
         return;
 
-    for (; j < N; j++) {
+    for (; j < A->cols; j++) {
         armas_x_submatrix_unsafe(&A0, A, 0, j, A->rows, 1);
         armas_x_subvector_unsafe(&y0, Y, j, 1);
-        update1axpy(beta, &A0, alpha, X, &y0, M);
+        update1axpy(beta, &A0, alpha, X, &y0, A->rows);
     }
 }
 
 static
 void update_ger_recursive(
+    DTYPE beta,
     armas_x_dense_t *A,
+    DTYPE alpha,
     const armas_x_dense_t *X,
     const armas_x_dense_t *Y,
-    DTYPE beta,
-    DTYPE alpha,
-    int flags,
-    int N, int M,
     int min_mvec_size)
 {
-    armas_x_dense_t x0, y0;
-    armas_x_dense_t A0;
+    armas_x_dense_t xT, xB, yT, yB;
+    armas_x_dense_t ATL, ATR, ABL, ABR;
 
-    if (M < min_mvec_size || N < min_mvec_size) {
-        update_ger_unb(A, X, Y, beta, alpha, flags, N, M);
+    if (A->rows < min_mvec_size || A->cols < min_mvec_size) {
+        update_ger_unb(beta, A, alpha, X, Y);
         return;
     }
 
-    //printf("update 1. block.. [0,0] - [%d,%d]\n", M/2, N/2);
-    armas_x_subvector_unsafe(&x0, X, 0, M/2);
-    armas_x_subvector_unsafe(&y0, Y, 0, N/2);
-    armas_x_submatrix_unsafe(&A0, A, 0, 0, M/2, N/2);
-    update_ger_recursive(&A0, &x0, &y0, beta, alpha, flags, N/2, M/2, min_mvec_size);
+    mat_partition_2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, A->rows/2, A->cols/2, ARMAS_PTOPLEFT);
+    vec_partition_2x1(
+        &xT,
+        &xB, /**/ X, A->rows/2, ARMAS_PTOP);
+    vec_partition_2x1(
+        &yT,
+        &yB, /**/ Y, A->cols/2, ARMAS_PTOP);
 
-    //printf("update 2. block... [%d,0] - [%d,%d]\n", M/2, M-M/2, N/2);
-    armas_x_subvector_unsafe(&x0, X, M/2, M-M/2);
-    armas_x_submatrix_unsafe(&A0, A, M/2, 0, M-M/2, N/2);
-    update_ger_recursive(&A0, &x0, &y0, beta, alpha, flags, N/2, M-M/2, min_mvec_size);
-
-    //printf("update 3. block... [0,%d] - [%d,%d]\n", N/2, M/2, N-N/2);
-    armas_x_subvector_unsafe(&x0, X, 0, M/2);
-    armas_x_subvector_unsafe(&y0, Y, N/2, N-N/2);
-    armas_x_submatrix_unsafe(&A0, A, 0, N/2, M/2, N-N/2);
-    update_ger_recursive(&A0, &x0, &y0, beta, alpha, flags, N-N/2, M/2, min_mvec_size);
-
-    //printf("update 4. block... [%d,%d] - [%d,%d]\n", M/2, N/2, M-M/2, N-N/2);
-    armas_x_subvector_unsafe(&x0, X, M/2, M-M/2);
-    armas_x_submatrix_unsafe(&A0, A, M/2, N/2, M-M/2, N-N/2);
-    update_ger_recursive(&A0, &x0, &y0, beta, alpha, flags, N-N/2, M-M/2, min_mvec_size);
+    update_ger_recursive(beta, &ATL, alpha, &xT, &yT, min_mvec_size);
+    update_ger_recursive(beta, &ATR, alpha, &xT, &yB, min_mvec_size);
+    update_ger_recursive(beta, &ABL, alpha, &xB, &yT, min_mvec_size);
+    update_ger_recursive(beta, &ABR, alpha, &xB, &yB, min_mvec_size);
 }
 
-void armas_x_mvupdate_unb(
+void armas_x_mvupdate_unsafe(
     DTYPE beta,
     armas_x_dense_t *A,
     DTYPE alpha,
     const armas_x_dense_t *X,
-    const armas_x_dense_t *Y,
-    int flags)
-{
-    update_ger_unb(A, X, Y, beta, alpha, flags, A->cols, A->rows);
-}
-
-void armas_x_mvupdate_rec(
-    DTYPE beta,
-    armas_x_dense_t *A,
-    DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y,
-    int flags)
+    const armas_x_dense_t *Y)
 {
     armas_env_t *env = armas_getenv();
-    update_ger_recursive(A, X, Y, beta, alpha, flags, A->cols, A->rows, env->blas2min);
+    update_ger_recursive(beta, A, alpha, X, Y, env->blas2min);
 }
 
 /**
@@ -287,17 +261,16 @@ int armas_x_mvupdate(
     // normal precision here
     switch (conf->optflags) {
     case ARMAS_ONAIVE:
-        update_ger_unb(A, x, y, beta, alpha, 0, ny, nx);
+        update_ger_unb(beta, A, alpha, x, y);
         break;
 
     case ARMAS_ORECURSIVE:
     default:
-        update_ger_recursive(A, x, y, beta, alpha, 0, ny, nx, env->blas2min);
+        update_ger_recursive(beta, A, alpha, x, y, env->blas2min);
         break;
     }
     return 0;
 }
-
 #else
 #warning "Missing defines; no code"
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
