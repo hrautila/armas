@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -8,7 +8,7 @@
 #include "dtype.h"
 #include "dlpack.h"
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_householder)
 #define ARMAS_PROVIDES 1
@@ -20,7 +20,7 @@
 
 // compile if type dependent public function names defined
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 
 //! \cond
