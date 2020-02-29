@@ -102,14 +102,8 @@ extern void armas_x_axpby_unsafe(
 
 extern int armas_x_scale_unsafe(armas_x_dense_t *x, DTYPE alpha);
 
-extern void armas_x_mvupdate_unb(
-    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y, int flags);
-
-extern void armas_x_mvupdate_rec(
-    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y, int flags);
-
 extern void armas_x_mvupdate_unsafe(
-    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y, int flags);
+    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y);
 
 extern void armas_x_mvmult_trm_unsafe(
     armas_x_dense_t *X, DTYPE alpha, const armas_x_dense_t *A, int flags);
@@ -122,11 +116,7 @@ extern void armas_x_mvmult_sym_unsafe(
     DTYPE beta, armas_x_dense_t *y,
     DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *x, int flags);
 
-
-extern void armas_x_mvupdate_trm_unb(
-    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *x, const armas_x_dense_t *y, int flags);
-
-extern void armas_x_mvupdate_trm_rec(
+extern void armas_x_mvupdate_trm_unsafe(
     DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *x, const armas_x_dense_t *y, int flags);
 
 extern int armas_x_mult_kernel(

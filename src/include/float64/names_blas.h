@@ -91,8 +91,6 @@
 #define armas_x_mvmult_trm_unsafe        armas_d_mvmult_trm_unsafe
 #define armas_x_mvmult_unsafe            armas_d_mvmult_unsafe
 #define armas_x_mvupdate_unsafe          armas_d_mvupdate_unsafe
-#define armas_x_mvupdate_unb             armas_d_mvupdate_unb
-#define armas_x_mvupdate_rec             armas_d_mvupdate_rec
 #define armas_x_mult_kernel              armas_d_mult_kernel
 #define armas_x_mult_kernel_nc           armas_d_mult_kernel_nc
 #define armas_x_mult_kernel_inner        armas_d_mult_kernel_inner
@@ -106,7 +104,7 @@
 #define armas_x_solve_blocked            armas_d_solver_blocked
 #define armas_x_solve_trm_unsafe         armas_d_solve_trm_unsafe
 #define armas_x_mvupdate_trm_unb         armas_d_mvupdate_trm_unb
-#define armas_x_mvupdate_trm_rec         armas_d_mvupdate_trm_rec
+#define armas_x_mvupdate_trm_unsafe      armas_d_mvupdate_trm_unsafe
 #define armas_x_mvsolve_trm_unsafe       armas_d_mvsolve_trm_unsafe
 
 // unsafe extended precision
