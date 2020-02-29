@@ -20,7 +20,7 @@
 #define ARMAS_PROVIDES 1
 #endif
 // this module requires external public functions
-#if defined(armas_x_mvupdate_trm_unb) && defined(armas_x_mvupdate_trm_rec)
+#if defined(armas_x_mvupdate_trm)
 #define ARMAS_REQUIRES 1
 #endif
 
@@ -31,7 +31,6 @@
 //! \cond
 #include "matrix.h"
 #include "internal.h"
-#include "nosimd/mvec.h"
 //! \endcond
 
 /**
@@ -63,35 +62,7 @@ int armas_x_mvupdate_sym(
     int flags,
     armas_conf_t *conf)
 {
-    int nx = armas_x_size(x);
-
-    if (armas_x_size(A) == 0 || nx == 0)
-        return 0;
-
-    if (!conf)
-        conf = armas_conf_default();
-
-    if (!armas_x_isvector(x)) {
-        conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
-    }
-    if (A->cols != nx || A->rows != nx) {
-        conf->error = ARMAS_ESIZE;
-        return -1;
-    }
-
-    // default precision
-    switch (conf->optflags) {
-    case ARMAS_ORECURSIVE:
-        armas_x_mvupdate_trm_rec(beta, A, alpha, x, x, flags);
-        break;
-
-    case ARMAS_ONAIVE:
-    default:
-        armas_x_mvupdate_trm_unb(beta, A, alpha, x, x, flags);
-        break;
-    }
-    return 0;
+    return armas_x_mvupdate_trm(beta, A, alpha, x, x, flags, conf);
 }
 
 #else
