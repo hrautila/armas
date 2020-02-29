@@ -250,7 +250,7 @@ void armas_x_mvmult_unsafe(
 {
     armas_env_t *env = armas_getenv();
     if (armas_x_size(A) == 0)
-        return 0;
+        return;
 
     if (beta != ONE)
         armas_x_scale_unsafe(y, beta);
