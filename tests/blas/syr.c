@@ -24,8 +24,8 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
 
     printf("** symmetric rank-1 update: %s\n", uplo);
 
-    armas_x_mvupdate_sym(1.0, &A, 2.0, &X, flags, cf);
-    armas_x_mvupdate(1.0, &A0, 2.0, &X, &X, cf);
+    armas_x_mvupdate_sym(2.0, &A, 2.0, &X, flags, cf);
+    armas_x_mvupdate(2.0, &A0, 2.0, &X, &X, cf);
     armas_x_make_trm(&A0, flags);
     n0 = rel_error(&n1, &A, &A0, ARMAS_NORM_ONE, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;

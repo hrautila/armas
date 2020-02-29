@@ -8,7 +8,7 @@
 
 int test_std(int M, int N, int verbose, armas_conf_t *cf)
 {
-    armas_x_dense_t X, Y, A, A0;
+    armas_x_dense_t X, Y, A, A0, a0;
     int ok;
     DTYPE n0, n1;
 
@@ -22,12 +22,17 @@ int test_std(int M, int N, int verbose, armas_conf_t *cf)
     armas_x_set_values(&A, unitrand, 0);
     armas_x_mcopy(&A0, &A, 0, cf);
 
-    armas_x_mvupdate(1.0, &A, 1.0, &X, &Y, cf);
-    armas_x_mvupdate(1.0, &A, -1.0, &X, &Y, cf);
+    armas_x_mvupdate(2.0, &A, 2.0, &X, &Y, cf);
+    for (int j = 0; j < A0.cols; j++) {
+        armas_x_column(&a0, &A0, j);
+        DTYPE yk = armas_x_get_at(&Y, j);
+        armas_x_axpby(2.0, &a0, 2.0*yk, &X, cf);
+    }
+    // armas_x_mvupdate(1.0, &A, -1.0, &X, &Y, cf);
 
     n0 = rel_error(&n1, &A, &A0, ARMAS_NORM_ONE, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
-    printf("%6s : A == A + x*y^T - x*y^T\n", PASS(ok));
+    printf("%6s : update(A, x, y) == A + x*y^T\n", PASS(ok));
     if (verbose > 0) {
         printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }

@@ -25,9 +25,9 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
     printf("** symmetric rank-2 update: %s\n", uplo);
 
     // compute 2 ways; sym update/update + make upper
-    armas_d_mvupdate2_sym(1.0, &A, 2.0, &X, &Y, flags, cf);
+    armas_d_mvupdate2_sym(2.0, &A, 2.0, &X, &Y, flags, cf);
 
-    armas_d_mvupdate(1.0, &A0, 2.0, &X, &Y, cf);
+    armas_d_mvupdate(2.0, &A0, 2.0, &X, &Y, cf);
     armas_d_mvupdate(1.0, &A0, 2.0, &Y, &X, cf);
     armas_d_make_trm(&A0, flags);
 
