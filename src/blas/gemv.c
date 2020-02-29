@@ -240,7 +240,7 @@ void gemv_recursive(
 /**
  * Matrix vector multiply with no bounds check.
  */
-int armas_x_mvmult_unsafe(
+void armas_x_mvmult_unsafe(
     DTYPE beta,
     armas_x_dense_t *y,
     DTYPE alpha,
@@ -255,7 +255,6 @@ int armas_x_mvmult_unsafe(
     if (beta != ONE)
         armas_x_scale_unsafe(y, beta);
     gemv_recursive(y, alpha, A, x, flags, env->blas2min);
-    return 0;
 }
 
 
