@@ -31,6 +31,7 @@
 #include "matrix.h"
 #include "internal.h"
 #include "nosimd/mvec.h"
+#include "partition.h"
 //! \endcond
 
 // Y = alpha*A*X + beta*Y for rows R:E, A is M*N and 0 < R < E <= M, Update
@@ -39,9 +40,9 @@
 static
 void gemv_unb_abs(
     armas_x_dense_t *Y,
+    DTYPE alpha,
     const armas_x_dense_t *A,
     const armas_x_dense_t *X,
-    DTYPE alpha,
     int flags)
 {
     int i, j, xinc, yinc;
@@ -61,7 +62,7 @@ void gemv_unb_abs(
             a1 = &A->elems[(i+1)*A->step];
             a2 = &A->elems[(i+2)*A->step];
             a3 = &A->elems[(i+3)*A->step];
-            __vmult4dot_abs(y, yinc, a0, a1, a2, a3, x, xinc, alpha, A->rows);
+            vmult4dot_abs(y, yinc, a0, a1, a2, a3, x, xinc, alpha, A->rows);
         }
         if (i == A->cols)
             return;
@@ -72,13 +73,13 @@ void gemv_unb_abs(
             y = &Y->elems[i*yinc];
             a0 = &A->elems[(i+0)*A->step];
             a1 = &A->elems[(i+1)*A->step];
-            __vmult2dot_abs(y, yinc, a0, a1, x, xinc, alpha, A->rows);
+            vmult2dot_abs(y, yinc, a0, a1, x, xinc, alpha, A->rows);
             i += 2;
         }
         if (i < A->cols) {
             y = &Y->elems[i*yinc];
             a0 = &A->elems[(i+0)*A->step];
-            __vmult1dot_abs(y, yinc, a0, x, xinc, alpha, A->rows);
+            vmult1dot_abs(y, yinc, a0, x, xinc, alpha, A->rows);
         }
         return;
     }
@@ -92,7 +93,7 @@ void gemv_unb_abs(
         a1 = &A->elems[(j+1)*A->step];
         a2 = &A->elems[(j+2)*A->step];
         a3 = &A->elems[(j+3)*A->step];
-        __vmult4axpy_abs(y, yinc, a0, a1, a2, a3, x, xinc, alpha, A->rows);
+        vmult4axpy_abs(y, yinc, a0, a1, a2, a3, x, xinc, alpha, A->rows);
     }
 
     if (j == A->cols)
@@ -104,22 +105,22 @@ void gemv_unb_abs(
         x = &X->elems[j*xinc];
         a0 = &A->elems[(j+0)*A->step];
         a1 = &A->elems[(j+1)*A->step];
-        __vmult2axpy_abs(y, yinc, a0, a1, x, xinc, alpha, A->rows);
+        vmult2axpy_abs(y, yinc, a0, a1, x, xinc, alpha, A->rows);
         j += 2;
     }
     if (j < A->cols) {
         x = &X->elems[j*xinc];
         a0 = &A->elems[(j+0)*A->step];
-        __vmult1axpy_abs(y, yinc, a0, x, xinc, alpha, A->cols);
+        vmult1axpy_abs(y, yinc, a0, x, xinc, alpha, A->cols);
     }
 }
 
 static
 void gemv_unb(
     armas_x_dense_t *Y,
+    DTYPE alpha,
     const armas_x_dense_t *A,
     const armas_x_dense_t *X,
-    DTYPE alpha,
     int flags)
 {
     int i, j, yinc, xinc;
@@ -128,14 +129,13 @@ void gemv_unb(
     register const DTYPE *a0, *a1, *a2, *a3;
 
     if (flags & ARMAS_ABS) {
-        gemv_unb_abs(Y, A, X, alpha, flags);
+        gemv_unb_abs(Y, alpha, A, X, flags);
         return;
     }
 
     xinc = X->rows == 1 ? X->step : 1;
     yinc = Y->rows == 1 ? Y->step : 1;
     if ((flags & ARMAS_TRANSA) || (flags & ARMAS_TRANS)) {
-
         x = &X->elems[0*xinc];
         for (i = 0; i < A->cols-3; i += 4) {
             y = &Y->elems[i*yinc];
@@ -143,7 +143,7 @@ void gemv_unb(
             a1 = &A->elems[(i+1)*A->step];
             a2 = &A->elems[(i+2)*A->step];
             a3 = &A->elems[(i+3)*A->step];
-            __vmult4dot(y, yinc, a0, a1, a2, a3, x, xinc, alpha, A->rows);
+            vmult4dot(y, yinc, a0, a1, a2, a3, x, xinc, alpha, A->rows);
         }
         if (i == A->cols)
             return;
@@ -154,13 +154,13 @@ void gemv_unb(
             y = &Y->elems[i*yinc];
             a0 = &A->elems[(i+0)*A->step];
             a1 = &A->elems[(i+1)*A->step];
-            __vmult2dot(y, yinc, a0, a1, x, xinc, alpha, A->rows);
+            vmult2dot(y, yinc, a0, a1, x, xinc, alpha, A->rows);
             i += 2;
         }
         if (i < A->cols) {
             y = &Y->elems[i*yinc];
             a0 = &A->elems[(i+0)*A->step];
-            __vmult1dot(y, yinc, a0, x, xinc, alpha, A->rows);
+            vmult1dot(y, yinc, a0, x, xinc, alpha, A->rows);
         }
         return;
     }
@@ -174,7 +174,7 @@ void gemv_unb(
         a1 = &A->elems[(j+1)*A->step];
         a2 = &A->elems[(j+2)*A->step];
         a3 = &A->elems[(j+3)*A->step];
-        __vmult4axpy(y, yinc, a0, a1, a2, a3, x, xinc, alpha, A->rows);
+        vmult4axpy(y, yinc, a0, a1, a2, a3, x, xinc, alpha, A->rows);
     }
 
     if (j == A->cols)
@@ -186,90 +186,55 @@ void gemv_unb(
         x = &X->elems[j*xinc];
         a0 = &A->elems[(j+0)*A->step];
         a1 = &A->elems[(j+1)*A->step];
-        __vmult2axpy(y, yinc, a0, a1, x, xinc, alpha, A->rows);
+        vmult2axpy(y, yinc, a0, a1, x, xinc, alpha, A->rows);
         j += 2;
     }
     if (j < A->cols) {
         x = &X->elems[j*xinc];
         a0 = &A->elems[(j+0)*A->step];
-        __vmult1axpy(y, yinc, a0, x, xinc, alpha, A->rows);
+        vmult1axpy(y, yinc, a0, x, xinc, alpha, A->rows);
     }
 }
 
 static
 void gemv_recursive(
     armas_x_dense_t *Y,
+    DTYPE alpha,
     const armas_x_dense_t *A,
     const armas_x_dense_t *X,
-    DTYPE alpha,
-    DTYPE beta,
     int flags,
     int min_mvec_size)
 {
-    armas_x_dense_t x0, y0;
-    armas_x_dense_t A0;
+    armas_x_dense_t xT, xB, yT, yB;
+    armas_x_dense_t ATL, ATR, ABL, ABR;
     int ny = armas_x_size(Y);
     int nx = armas_x_size(X);
 
     // ny is rows in A, Y, nx is cols in A, rows in X
-    if (ny < min_mvec_size || nx < min_mvec_size) {
-        gemv_unb(Y, A, X, alpha, flags);
+    if (min_mvec_size == 0 || ny < min_mvec_size || nx < min_mvec_size) {
+        gemv_unb(Y, alpha, A, X, flags);
         return;
     }
 
-    // 1st block [0, 0] -> [ny/2, nx/2]
-    armas_x_subvector_unsafe(&x0, X, 0, nx/2);
-    armas_x_subvector_unsafe(&y0, Y, 0, ny/2);
-    if (flags & ARMAS_TRANS) {
-        armas_x_submatrix_unsafe(&A0, A, 0, 0, nx/2, ny/2);
-    } else {
-        armas_x_submatrix_unsafe(&A0, A, 0, 0, ny/2, nx/2);
-    }
-    if (ny/2 < min_mvec_size || nx/2 < min_mvec_size) {
-        gemv_unb(&y0, &A0, &x0, alpha, flags);
-    } else {
-        gemv_recursive(&y0, &A0, &x0, alpha, beta, flags, min_mvec_size);
-    }
+    mat_partition_2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, A->rows/2, A->cols/2, ARMAS_PTOPLEFT);
+    vec_partition_2x1(
+        &xT,
+        &xB, /**/ X, nx/2, ARMAS_PTOP);
+    vec_partition_2x1(
+        &yT,
+        &yB, /**/ Y, ny/2, ARMAS_PTOP);
 
-    // 2nd block; lower part of y, A = [ny/2, 0] -> [ny-ny/2, nx/2]
-    armas_x_subvector_unsafe(&y0, Y, ny/2, ny-ny/2);
+    gemv_recursive(&yT, alpha, &ATL, &xT, flags, min_mvec_size);
     if (flags & ARMAS_TRANS) {
-        armas_x_submatrix_unsafe(&A0, A, 0, ny/2, nx/2, ny-ny/2);
+        gemv_recursive(&yT, alpha, &ABL, &xB, flags, min_mvec_size);
+        gemv_recursive(&yB, alpha, &ATR, &xT, flags, min_mvec_size);
     } else {
-        armas_x_submatrix_unsafe(&A0, A, ny/2, 0, ny-ny/2, nx/2);
+        gemv_recursive(&yT, alpha, &ATR, &xB, flags, min_mvec_size);
+        gemv_recursive(&yB, alpha, &ABL, &xT, flags, min_mvec_size);
     }
-    if (ny/2 < min_mvec_size || nx/2 < min_mvec_size) {
-        gemv_unb(&y0, &A0, &x0, alpha, flags);
-    } else {
-        gemv_recursive(&y0, &A0, &x0, alpha, beta, flags, min_mvec_size);
-    }
-
-    // 3rd block; uppert of Y, lower part of X
-    armas_x_subvector_unsafe(&x0, X, nx/2, nx-nx/2);
-    armas_x_subvector_unsafe(&y0, Y, 0, ny/2);
-    if (flags & ARMAS_TRANS) {
-        armas_x_submatrix_unsafe(&A0, A, nx/2, 0, nx-nx/2, ny/2);
-    } else {
-        armas_x_submatrix_unsafe(&A0, A, 0, nx/2, ny/2, nx-nx/2);
-    }
-    if (ny/2 < min_mvec_size || nx/2 < min_mvec_size) {
-        gemv_unb(&y0, &A0, &x0, alpha, flags);
-    } else {
-        gemv_recursive(&y0, &A0, &x0, alpha, beta, flags, min_mvec_size);
-    }
-
-    // 4th block
-    armas_x_subvector_unsafe(&y0, Y, ny/2, ny-ny/2);
-    if (flags & ARMAS_TRANS) {
-        armas_x_submatrix_unsafe(&A0, A, nx/2, ny/2, nx-nx/2, ny-ny/2);
-    } else {
-        armas_x_submatrix_unsafe(&A0, A, ny/2, nx/2, ny-ny/2, nx-nx/2);
-    }
-    if (ny/2 < min_mvec_size || nx/2 < min_mvec_size) {
-        gemv_unb(&y0, &A0, &x0, alpha, flags);
-    } else {
-        gemv_recursive(&y0, &A0, &x0, alpha, beta, flags, min_mvec_size);
-    }
+    gemv_recursive(&yB, alpha, &ABR, &xB, flags, min_mvec_size);
 }
 
 /**
@@ -283,12 +248,13 @@ int armas_x_mvmult_unsafe(
     const armas_x_dense_t *x,
     int flags)
 {
+    armas_env_t *env = armas_getenv();
     if (armas_x_size(A) == 0)
         return 0;
 
     if (beta != ONE)
         armas_x_scale_unsafe(y, beta);
-    gemv_unb(y, A, x, alpha, flags);
+    gemv_recursive(y, alpha, A, x, flags, env->blas2min);
     return 0;
 }
 
@@ -358,11 +324,11 @@ int armas_x_mvmult(
     if (beta != ONE) {
         armas_x_scale_unsafe(y, beta);
     }
-    if (conf->optflags & ARMAS_ORECURSIVE) {
-        armas_env_t *env = armas_getenv();
-        gemv_recursive(y, A, x, alpha, ONE, flags, env->blas2min);
+    if (conf->optflags & ARMAS_ONAIVE) {
+        gemv_unb(y, alpha, A, x, flags);
     } else {
-        gemv_unb(y, A, x, alpha, flags);
+        armas_env_t *env = armas_getenv();
+        gemv_recursive(y, alpha, A, x, flags, env->blas2min);
     }
     return 0;
 }
