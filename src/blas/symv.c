@@ -33,7 +33,6 @@
 #include "matrix.h"
 #include "internal.h"
 #include "partition.h"
-#include "vec_partition.h"
 //! \endcond
 
 
@@ -62,43 +61,40 @@
 
 static
 void symv_unb(
-    DTYPE beta,
     armas_x_dense_t *Y,
     DTYPE alpha,
     const armas_x_dense_t *A,
     const armas_x_dense_t *X,
     int flags)
 {
-    armas_x_dense_t xx, aa;
-    DTYPE yk;
-    int N = armas_x_size(Y);
-
-    if (flags & ARMAS_LOWER) {
-        for (int j = 0; j < N; j++) {
-            armas_x_subvector_unsafe(&xx, X, 0, j+1);
-            armas_x_submatrix_unsafe(&aa, A, j, 0, 1, j+1);
-            yk = ZERO;
-            armas_x_adot_unsafe(&yk, alpha, &xx, &aa);
-
-            armas_x_subvector_unsafe(&xx, X, j+1, N-j-1);
-            armas_x_submatrix_unsafe(&aa, A, j+1, j, N-j-1, 1);
-            armas_x_adot_unsafe(&yk, alpha, &xx, &aa);
-            armas_x_set_at_unsafe(Y, j, beta*yk);
+    armas_x_dense_t x1, y1, a01;
+    DTYPE x0, y0, a00;
+    /*
+     *    y0     a00  a01^T  x0
+     *    y1     a01  A11    x1
+     *
+     *    y0 = y0 + alpha*a00*x0 + alpha*dot(a01, x1)
+     *    y1 = y1 + alpha*x0*a01
+     */
+    for (int j = 0; j < A->cols; j++) {
+        if (flags & ARMAS_LOWER) {
+            armas_x_submatrix_unsafe(&a01, A, j + 1, j, A->rows - j - 1, 1);
+        } else {
+            armas_x_submatrix_unsafe(&a01, A, j, j + 1, 1, A->cols - j - 1);
         }
-        return;
+        armas_x_subvector_unsafe(&x1, X, j + 1, A->rows - j - 1);
+        armas_x_subvector_unsafe(&y1, Y, j + 1, A->rows - j - 1);
+        y0 = armas_x_get_at_unsafe(Y, j);
+        x0 = armas_x_get_at_unsafe(X, j);
+        a00 = armas_x_get_unsafe(A, j, j);
+        // y0 = y0 + alpha*x0*a00, + alpha*dot(x1, x01)
+        y0 += alpha * x0 * a00;
+        armas_x_adot_unsafe(&y0, alpha, &x1, &a01);
+        armas_x_set_at_unsafe(Y, j, y0);
+        // y1 = y1 + alpha*a00*x1
+        armas_x_axpby_unsafe(ONE, &y1, alpha * x0, &a01);
     }
-
-    for (int j = 0; j < N; j++) {
-        armas_x_subvector_unsafe(&xx, X, 0, j+1);
-        armas_x_submatrix_unsafe(&aa, A, 0, j, j+1, 1);
-        yk = ZERO;
-        armas_x_adot_unsafe(&yk, alpha, &xx, &aa);
-
-        armas_x_subvector_unsafe(&xx, X, j+1, N-j-1);
-        armas_x_submatrix_unsafe(&aa, A, j, j+1, 1, N-j-1);
-        armas_x_adot_unsafe(&yk, alpha, &xx, &aa);
-        armas_x_set_at_unsafe(Y, j, beta*yk);
-    }
+    return;
 }
 
 /*
@@ -117,48 +113,60 @@ void symv_unb(
  *  y1 = A01.T*x0 + A11*x1  = symv(A11, x1) + gemv(A01, x0, T)
  *
  */
-#if 0
+static
 void symv_recursive(
-    DTYPE beta,
     armas_x_dense_t *Y,
+    DTYPE alpha,
     const armas_x_dense_t *A,
     const armas_x_dense_t *X,
-    DTYPE alpha,
     int flags,
     int blas2min)
 {
-    armas_x_dense_t x0, y0, xT, xB, yT, yB;
+    armas_x_dense_t xT, xB, yT, yB;
     armas_x_dense_t ATL, ATR, ABL, ABR;
     int N = armas_x_size(Y);
 
     if (N < blas2min) {
-        symv_unb(beta, Y, alpha, A, X, flags);
+        symv_unb(Y, alpha, A, X, flags);
         return;
     }
 
-    mat_partition2x2(
+    mat_partition_2x2(
         &ATL, &ATR,
         &ABL, &ABR, /**/ A, N/2, N/2, ARMAS_PTOPLEFT);
-    vec_partition2x1(
+    vec_partition_2x1(
         &xT,
         &xB, /**/ X, N/2, ARMAS_PTOP);
-    vec_partition2x1(
+    vec_partition_2x1(
         &yT,
         &yB, /**/ Y, N/2, ARMAS_PTOP);
 
     if (flags & ARMAS_UPPER) {
-        symv_recursive(beta, &yT, alpha, &ATL, &xT, flags, blas2min);
-        armas_x_mvmult_recursive(ONE, &yT, alpha, &ATR, &xB, 0, blas2min);
+        symv_recursive(&yT, alpha, &ATL, &xT, flags, blas2min);
+        armas_x_mvmult_unsafe(ONE, &yT, alpha, &ATR, &xB, 0);
 
-        symv_recursive(beta, &yB, alpha, &ABR, &xB, flags, blas2min);
-        armas_x_mvmult_recursive(ONE, &yB, alpha, &ATR, &xT, ARMAS_TRANS, blas2min);
+        symv_recursive(&yB, alpha, &ABR, &xB, flags, blas2min);
+        armas_x_mvmult_unsafe(ONE, &yB, alpha, &ATR, &xT, ARMAS_TRANS);
     } else {
+        symv_recursive(&yT, alpha, &ATL, &xT, flags, blas2min);
+        armas_x_mvmult_unsafe(ONE, &yT, alpha, &ABL, &xB, ARMAS_TRANS);
+
+        symv_recursive(&yB, alpha, &ABR, &xB, flags, blas2min);
+        armas_x_mvmult_unsafe(ONE, &yB, alpha, &ABL, &xT, 0);
 
     }
 }
-#endif
 
-
+void armas_x_mvmult_sym_unsafe(
+    DTYPE beta, armas_x_dense_t *y, DTYPE alpha,
+    const armas_x_dense_t *A, const armas_x_dense_t *x, int flags)
+{
+    armas_env_t *env = armas_getenv();
+    if (beta != ONE) {
+        armas_x_scale_unsafe(y, beta);
+    }
+    symv_recursive(y, alpha, A, x, flags, env->blas2min);
+}
 /**
  * @brief Symmetric matrix-vector multiply.
  *
@@ -214,8 +222,11 @@ int armas_x_mvmult_sym(
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-
-    symv_unb(beta, y, alpha, A, x, flags, nx);
+    armas_env_t *env = armas_getenv();
+    if (beta != ONE) {
+        armas_x_scale_unsafe(y, beta);
+    }
+    symv_recursive(y, alpha, A, x, flags, env->blas2min);
     return 0;
 }
 #else
