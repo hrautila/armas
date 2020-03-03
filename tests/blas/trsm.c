@@ -245,21 +245,17 @@ int main(int argc, char **argv)
         case 'r':
             env->blas2min = atoi(optarg);
             cf.optflags |= env->blas2min != 0 ? ARMAS_ORECURSIVE : ARMAS_ONAIVE;
-            all = 0;
             break;
         case 'n':
             cf.optflags |= ARMAS_ONAIVE;
-            all = 0;
             break;
         case 'b':
             env->mb = atoi(optarg);
             env->nb = env->kb = env->mb;
             cf.optflags = 0;
-            all = 0;
             break;
         case 'u':
             unit = ARMAS_UNIT;
-            all = 0;
             break;
         case 'C':
             Aconstant = STRTOF(optarg);
