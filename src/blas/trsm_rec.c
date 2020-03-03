@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -18,8 +18,7 @@
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_solve_unb) && \
-  defined(armas_x_mult_kernel_nc)
+#if defined(armas_x_solve_unb) && defined(armas_x_mult_kernel_nc)
 #define ARMAS_REQUIRES 1
 #endif
 
@@ -29,18 +28,9 @@
 
 #include "matrix.h"
 #include "internal.h"
-//#include "nosimd/mvec.h"
+#include "partition.h"
 
 // Recursive versions of TRSM
-
-/*
- *   RIGHT-UPPER             RIGHT-LOWER
- *
- *            A00 | A01               A00 |  0  
- *   B0|B1 * -----------     B0|B1 * -----------
- *             0  | A11               A10 | A11 
- *
- */
 
 /*
  *   LEFT-UPPER-TRANS        LEFT-LOWER
@@ -61,35 +51,33 @@
 static
 void solve_left_forward(
     armas_x_dense_t *B,
-    const armas_x_dense_t *A,
     DTYPE alpha,
+    const armas_x_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t b0, b1, a0, a1;
-    int N = A->cols;
+    armas_x_dense_t ATL, ATR, ABL, ABR, BT, BB;
 
-    if (N < min_mblock_size) {
+    if (A->cols < min_mblock_size) {
         armas_x_solve_unb(B, alpha, A, flags|ARMAS_LEFT);
         return;
     }
 
-    armas_x_submatrix_unsafe(&b0, B, 0, 0, N/2, B->cols);
-    armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);
-    solve_left_forward(&b0, &a0, alpha, flags, min_mblock_size, cache);
+    mat_partition_2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, A->rows/2, A->cols/2, ARMAS_PTOPLEFT);
+    mat_partition_2x1(
+        &BT,
+        &BB, /**/ B, A->cols/2, ARMAS_PTOP);
 
-    // update B[0:N/2, S:E] with B[N/2:N, S:E]
+    solve_left_forward(&BT, alpha, &ATL, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_submatrix_unsafe(&a0, A, 0, N/2, N/2, N-N/2);
+        armas_x_mult_kernel_nc(&BB, -ONE, &ATR, &BT, ARMAS_TRANSA, cache);
     } else {
-        armas_x_submatrix_unsafe(&a0, A, N/2, 0, N-N/2, N/2);
+        armas_x_mult_kernel_nc(&BB, -ONE, &ABL, &BT, 0, cache);
     }
-    armas_x_submatrix_unsafe(&b1, B, N/2, 0, N-N/2, B->cols);
-    armas_x_mult_kernel_nc(&b1, -ONE, &a0, &b0, flags, cache);
-
-    armas_x_submatrix_unsafe(&a1, A, N/2, N/2, N-N/2, N-N/2);
-    solve_left_forward(&b1, &a1, alpha, flags, min_mblock_size, cache);
+    solve_left_forward(&BB, alpha, &ABR, flags, min_mblock_size, cache);
 }
 
 
@@ -112,34 +100,32 @@ void solve_left_forward(
 static
 void solve_left_backward(
     armas_x_dense_t *B,
-    const armas_x_dense_t *A,
     DTYPE alpha,
+    const armas_x_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t b0, b1, a0, a1;
-    int N = A->cols;
+    armas_x_dense_t ATL, ATR, ABL, ABR, BT, BB;
 
     if (A->cols < min_mblock_size) {
         armas_x_solve_unb(B, alpha, A, flags|ARMAS_LEFT);
         return;
     }
+    mat_partition_2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, A->rows/2, A->cols/2, ARMAS_PBOTTOMRIGHT);
+    mat_partition_2x1(
+        &BT,
+        &BB, /**/ B, A->cols/2, ARMAS_PBOTTOM);
 
-    armas_x_submatrix_unsafe(&b1, B, N/2, 0, N-N/2, B->cols);
-    armas_x_submatrix_unsafe(&a1, A, N/2, N/2, N-N/2, N-N/2);
-    solve_left_backward(&b1, &a1, alpha, flags, min_mblock_size, cache);
-
+    solve_left_backward(&BB, alpha, &ABR, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_submatrix_unsafe(&a1, A, 0, N/2, N/2, N-N/2);
+        armas_x_mult_kernel_nc(&BT, -ONE, &ATR, &BB, 0, cache);
     } else {
-        armas_x_submatrix_unsafe(&a1, A, N/2, 0, N-N/2, N/2);
+        armas_x_mult_kernel_nc(&BT, -ONE, &ABL, &BB, ARMAS_TRANSA, cache);
     }
-    armas_x_submatrix_unsafe(&b0, B, 0, 0, N/2, B->cols);
-    armas_x_mult_kernel_nc(&b0, -ONE, &a1, &b1, flags, cache);
-
-    armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);
-    solve_left_backward(&b0, &a0, alpha, flags, min_mblock_size, cache);
+    solve_left_backward(&BT, alpha, &ATL, flags, min_mblock_size, cache);
 }
 
 
@@ -149,38 +135,33 @@ void solve_left_backward(
 static
 void solve_right_forward(
     armas_x_dense_t *B,
-    const armas_x_dense_t *A,
     DTYPE alpha,
+    const armas_x_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t b0, b1, a0, a1;
-    int ops, N = A->cols;
+    armas_x_dense_t ATL, ATR, ABL, ABR, BL, BR;
 
     if (A->cols < min_mblock_size) {
         armas_x_solve_unb(B, alpha, A, flags|ARMAS_RIGHT);
         return;
     }
 
-    armas_x_submatrix_unsafe(&b0, B, 0, 0, B->rows, N/2);
-    armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);
-    solve_right_forward(&b0, &a0, alpha, flags, min_mblock_size, cache);
+    mat_partition_2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, A->rows/2, A->cols/2, ARMAS_PTOPLEFT);
+    mat_partition_1x2(
+        &BL, &BR,   /**/ B, A->cols/2, ARMAS_PLEFT);
 
+    solve_right_forward(&BL, alpha, &ATL, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_submatrix_unsafe(&a0, A, 0, N/2, N/2, N-N/2);
+        armas_x_mult_kernel_nc(&BR, -ONE, &BL, &ATR, 0, cache);
     } else {
-        armas_x_submatrix_unsafe(&a0, A, N/2, 0, N-N/2, N/2);
+        armas_x_mult_kernel_nc(&BR, -ONE, &BL, &ABL, ARMAS_TRANSB, cache);
     }
-    armas_x_submatrix_unsafe(&b1, B, 0, N/2, B->rows, N-N/2);
-
-    ops = flags & ARMAS_TRANSA ? ARMAS_TRANSB : ARMAS_NULL;
-    armas_x_mult_kernel_nc(&b1, -ONE, &b0, &a0, ops, cache);
-
-    armas_x_submatrix_unsafe(&a1, A, N/2, N/2, N-N/2, N-N/2);
-    solve_right_forward(&b1, &a1, alpha, flags, min_mblock_size, cache);
+    solve_right_forward(&BR, alpha, &ABR, flags, min_mblock_size, cache);
 }
-
 
 /*
  * Backward substitution for RIGHT-UPPER-TRANSA and RIGHT-LOWER
@@ -188,38 +169,32 @@ void solve_right_forward(
 static
 void solve_right_backward(
     armas_x_dense_t *B,
-    const armas_x_dense_t *A,
     DTYPE alpha,
+    const armas_x_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t b0, b1, a0;
-    int ops;
-    int N = A->cols;
+    armas_x_dense_t ATL, ATR, ABL, ABR, BL, BR;
 
-    if (N < min_mblock_size) {
+    if (A->cols < min_mblock_size) {
         armas_x_solve_unb(B, alpha, A, flags|ARMAS_RIGHT);
         return;
     }
 
-    armas_x_submatrix_unsafe(&b0, B, 0, N/2, B->rows, N-N/2);
-    armas_x_submatrix_unsafe(&a0, A, N/2, N/2, N-N/2, N-N/2);
-    solve_right_backward(&b0, &a0, alpha, flags, min_mblock_size, cache);
+    mat_partition_2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, A->rows/2, A->cols/2, ARMAS_PBOTTOMRIGHT);
+    mat_partition_1x2(
+        &BL, &BR,   /**/ B, A->cols/2, ARMAS_PRIGHT);
 
+    solve_right_backward(&BR, alpha, &ABR, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_submatrix_unsafe(&a0, A, 0, N/2, N/2, N-N/2);
+        armas_x_mult_kernel_nc(&BL, -ONE, &BR, &ATR, ARMAS_TRANSB, cache);
     } else {
-        armas_x_submatrix_unsafe(&a0, A, N/2, 0, N-N/2, N/2);
+        armas_x_mult_kernel_nc(&BL, -ONE, &BR, &ABL, 0, cache);
     }
-    armas_x_submatrix_unsafe(&b1, B, 0, 0, B->rows, N/2);
-
-    ops = flags & ARMAS_TRANSA ? ARMAS_TRANSB : ARMAS_NULL;
-    armas_x_mult_kernel_nc(&b1, -ONE, &b0, &a0, ops, cache);
-
-    armas_x_submatrix_unsafe(&b0, B, 0, 0, B->rows, N/2);
-    armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);
-    solve_right_backward(&b0, &a0, alpha, flags, min_mblock_size, cache);
+    solve_right_backward(&BL, alpha, &ATL, flags, min_mblock_size, cache);
 }
 
 void armas_x_solve_recursive(
@@ -233,27 +208,26 @@ void armas_x_solve_recursive(
     switch (flags&(ARMAS_UPPER|ARMAS_LOWER|ARMAS_RIGHT|ARMAS_TRANSA)) {
     case ARMAS_RIGHT|ARMAS_UPPER:
     case ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA:
-        solve_right_forward(B, A, alpha, flags, env->blas2min, mcache);
+        solve_right_forward(B, alpha, A, flags, env->blas2min, mcache);
         break;
 
     case ARMAS_RIGHT|ARMAS_LOWER:
     case ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANSA:
-        solve_right_backward(B, A, alpha, flags, env->blas2min, mcache);
+        solve_right_backward(B, alpha, A, flags, env->blas2min, mcache);
         break;
 
     case ARMAS_UPPER:
     case ARMAS_LOWER|ARMAS_TRANSA:
-        solve_left_backward(B, A, alpha, flags, env->blas2min, mcache);
+        solve_left_backward(B, alpha, A, flags, env->blas2min, mcache);
         break;
 
     case ARMAS_LOWER:
     case ARMAS_UPPER|ARMAS_TRANSA:
     default:
-        solve_left_forward(B, A, alpha, flags, env->blas2min, mcache);
+        solve_left_forward(B, alpha, A, flags, env->blas2min, mcache);
         break;
     }
 }
-
 #else
 #warning "Missing defines; no code!"
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
