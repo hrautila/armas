@@ -64,6 +64,8 @@ int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         for (k = 0; k < armas_x_size(d); k++) {
             DTYPE aval =
                 armas_x_get_at_unsafe(A, k) * armas_x_get_at_unsafe(d, k);
@@ -78,6 +80,8 @@ int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         // scale columns; 
         for (k = 0; k < armas_x_size(d); k++) {
             armas_x_column(&c, A, k);
@@ -90,6 +94,8 @@ int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         // scale rows; for each column element-wise multiply of D element
         for (k = 0; k < armas_x_size(d); k++) {
             armas_x_row(&c, A, k);
@@ -134,6 +140,8 @@ int armas_x_solve_diag(armas_x_dense_t * A, DTYPE alpha,
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         for (k = 0; k < armas_x_size(d); k++) {
             DTYPE aval =
                 armas_x_get_at_unsafe(A, k) / armas_x_get_at_unsafe(d, k);
@@ -148,6 +156,8 @@ int armas_x_solve_diag(armas_x_dense_t * A, DTYPE alpha,
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         // scale columns; 
         for (k = 0; k < armas_x_size(d); k++) {
             DTYPE aval = alpha * armas_x_get_at_unsafe(d, k);
@@ -161,6 +171,8 @@ int armas_x_solve_diag(armas_x_dense_t * A, DTYPE alpha,
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         // scale rows; for each column element-wise multiply of D element
         for (k = 0; k < armas_x_size(d); k++) {
             DTYPE aval = alpha * armas_x_get_at_unsafe(d, k);
