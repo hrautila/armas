@@ -142,33 +142,35 @@ int unblk_bdreduce_left(armas_x_dense_t * A, armas_x_dense_t * tauq,
 
         // compute householder to zero subdiagonal entries
         armas_x_compute_householder(&a11, &a21, &tq1, conf);
-        tauqv = armas_x_get(&tq1, 0, 0);
 
-        // y21 := a12 + A22.T*a21
-        armas_x_axpby(ZERO, &y21, ONE, &a12, conf);
-        armas_x_mvmult(ONE, &y21, ONE, &A22, &a21, ARMAS_TRANSA, conf);
+        if (a12.cols > 0) {
+            // y21 := a12 + A22.T*a21
+            armas_x_axpby(ZERO, &y21, ONE, &a12, conf);
+            armas_x_mvmult(ONE, &y21, ONE, &A22, &a21, ARMAS_TRANSA, conf);
 
-        // a12 := a12 - tauq*y21
-        armas_x_axpy(&a12, -tauqv, &y21, conf);
+            // a12 := a12 - tauq*y21
+            tauqv = armas_x_get(&tq1, 0, 0);
+            armas_x_axpy(&a12, -tauqv, &y21, conf);
 
-        // compute householder to zero elements above 1st superdiagonal
-        armas_x_compute_householder_vec(&a12, &tp1, conf);
-        taupv = armas_x_get(&tp1, 0, 0);
-        v0 = armas_x_get(&a12, 0, 0);
-        armas_x_set(&a12, 0, 0, 1.0);
+            // compute householder to zero elements above 1st superdiagonal
+            armas_x_compute_householder_vec(&a12, &tp1, conf);
+            taupv = armas_x_get(&tp1, 0, 0);
+            v0 = armas_x_get(&a12, 0, 0);
+            armas_x_set(&a12, 0, 0, ONE);
 
-        // [v == a12, u == a21]
-        beta = armas_x_dot(&y21, &a12, conf);
-        // z21 := tauq*beta*v == tauq*beta*a21
-        armas_x_axpby(ZERO, &z21, tauqv * beta, &a21, conf);
-        // z21 := A22*v - z21 == A22*a12 - z21
-        armas_x_mvmult(-ONE, &z21, ONE, &A22, &a12, ARMAS_NONE, conf);
-        // A22 := A22 - tauq*u*y21 == A22 - tauq*a21*y21
-        armas_x_mvupdate(ONE, &A22, -tauqv, &a21, &y21, conf);
-        // A22 := A22 - taup*z21*v == A22 - taup*z21*a12
-        armas_x_mvupdate(ONE, &A22, -taupv, &z21, &a12, conf);
+            // [v == a12, u == a21]
+            beta = armas_x_dot(&y21, &a12, conf);
+            // z21 := tauq*beta*v == tauq*beta*a21
+            armas_x_axpby(ZERO, &z21, tauqv * beta, &a21, conf);
+            // z21 := A22*v - z21 == A22*a12 - z21
+            armas_x_mvmult(-ONE, &z21, ONE, &A22, &a12, ARMAS_NONE, conf);
+            // A22 := A22 - tauq*u*y21 == A22 - tauq*a21*y21
+            armas_x_mvupdate(ONE, &A22, -tauqv, &a21, &y21, conf);
+            // A22 := A22 - taup*z21*v == A22 - taup*z21*a12
+            armas_x_mvupdate(ONE, &A22, -taupv, &z21, &a12, conf);
 
-        armas_x_set(&a12, 0, 0, v0);
+            armas_x_set(&a12, 0, 0, v0);
+        }
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -290,7 +292,7 @@ int unblk_bdbuild_left(armas_x_dense_t * A, armas_x_dense_t * tauq,
         armas_x_compute_householder_vec(&a12, &tp1, conf);
         taupv = armas_x_get(&tp1, 0, 0);
         v0 = armas_x_get(&a12, 0, 0);
-        armas_x_set(&a12, 0, 0, 1.0);
+        armas_x_set(&a12, 0, 0, ONE);
 
         // z21 := taup*(A22*v - U20*Y20.T*v - Z20*V20.T*v - beta*u)
         // [v == a12, u == a21]
@@ -388,12 +390,12 @@ int blk_bdreduce_left(armas_x_dense_t * A,
 
         // set superdiagonal entry to one
         v0 = armas_x_get(&A12, A12.rows - 1, 0);
-        armas_x_set(&A12, A12.rows - 1, 0, 1.0);
+        armas_x_set(&A12, A12.rows - 1, 0, ONE);
 
         // A22 := A22 - U2*Y2.T
-        armas_x_mult(1.0, &A22, -1.0, &A21, &Y2, ARMAS_TRANSB, conf);
+        armas_x_mult(ONE, &A22, -ONE, &A21, &Y2, ARMAS_TRANSB, conf);
         // A22 := A22 - Z2*V2.T
-        armas_x_mult(1.0, &A22, -1.0, &Z2, &A12, ARMAS_NONE, conf);
+        armas_x_mult(ONE, &A22, -ONE, &Z2, &A12, ARMAS_NONE, conf);
 
         // restore super-diagonal entry
         armas_x_set(&A12, A12.rows - 1, 0, v0);
@@ -509,36 +511,38 @@ int unblk_bdreduce_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
         armas_x_make(&z21, a12.cols, 1, a12.cols,
                      &armas_x_data(W)[armas_x_size(&y21)]);
 
-        // compute householder to zero subdiagonal entries
+        // compute householder to zero superdiagonal entries
         armas_x_compute_householder(&a11, &a12, &tp1, conf);
-        taupv = armas_x_get(&tp1, 0, 0);
 
-        // y21 := a12 + A22.T*a12
-        armas_x_axpby(ZERO, &y21, ONE, &a21, conf);
-        armas_x_mvmult(ONE, &y21, ONE, &A22, &a12, ARMAS_NONE, conf);
+        if (a21.rows > 0) {
+            // y21 := a21 + A22.T*a12
+            armas_x_axpby(ZERO, &y21, ONE, &a21, conf);
+            armas_x_mvmult(ONE, &y21, ONE, &A22, &a12, ARMAS_NONE, conf);
 
-        // a21 := a21 - taup*y21
-        armas_x_axpy(&a21, -taupv, &y21, conf);
+            // a21 := a21 - taup*y21
+            taupv = armas_x_get(&tp1, 0, 0);
+            armas_x_axpy(&a21, -taupv, &y21, conf);
 
-        // compute householder to zero elements above 1st superdiagonal
-        armas_x_compute_householder_vec(&a21, &tq1, conf);
-        tauqv = armas_x_get(&tq1, 0, 0);
+            // compute householder to zero elements below 1st subdiagonal
+            armas_x_compute_householder_vec(&a21, &tq1, conf);
+            tauqv = armas_x_get(&tq1, 0, 0);
 
-        v0 = armas_x_get(&a21, 0, 0);
-        armas_x_set(&a21, 0, 0, 1.0);
+            v0 = armas_x_get(&a21, 0, 0);
+            armas_x_set(&a21, 0, 0, ONE);
 
-        // [v == a21, u == a12]
-        beta = armas_x_dot(&y21, &a21, conf);
-        // z21 := taup*beta*a12
-        armas_x_axpby(ZERO, &z21, taupv * beta, &a12, conf);
-        // z21 := A22*a21 - z21
-        armas_x_mvmult(-ONE, &z21, ONE, &A22, &a21, ARMAS_TRANS, conf);
-        // A22 := A22 - taup*y21*a12
-        armas_x_mvupdate(ONE, &A22, -taupv, &y21, &a12, conf);
-        // A22 := A22 - tauq*z21*a21
-        armas_x_mvupdate(ONE, &A22, -tauqv, &a21, &z21, conf);
+            // [v == a21, u == a12]
+            beta = armas_x_dot(&y21, &a21, conf);
+            // z21 := taup*beta*a12
+            armas_x_axpby(ZERO, &z21, taupv * beta, &a12, conf);
+            // z21 := A22*a21 - z21
+            armas_x_mvmult(-ONE, &z21, ONE, &A22, &a21, ARMAS_TRANS, conf);
+            // A22 := A22 - taup*y21*a12
+            armas_x_mvupdate(ONE, &A22, -taupv, &y21, &a12, conf);
+            // A22 := A22 - tauq*z21*a21
+            armas_x_mvupdate(ONE, &A22, -tauqv, &a21, &z21, conf);
 
-        armas_x_set_unsafe(&a21, 0, 0, v0);
+            armas_x_set_unsafe(&a21, 0, 0, v0);
+        }
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -671,7 +675,7 @@ int unblk_bdbuild_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
         armas_x_compute_householder_vec(&a21, &tq1, conf);
         tauqv = armas_x_get(&tq1, 0, 0);
         v0 = armas_x_get(&a21, 0, 0);
-        armas_x_set_unsafe(&a21, 0, 0, 1.0);
+        armas_x_set_unsafe(&a21, 0, 0, ONE);
 
         // z21 := tauq*(A22*y - U20*Y20.T*u - Z20*V20.T*u - beta*v)
         // [v == a12, u == a21]
