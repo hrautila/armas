@@ -18,7 +18,7 @@
         {
             "label": "build library",
             "type": "shell",
-            "command": "cd ${workspaceRoot}/build; make CFLAGS='-O3 -march'",
+            "command": "cd ${workspaceRoot}/build; make CFLAGS='-O3 -march=native'",
             "problemMatcher": [
                 "$gcc"
             ],
@@ -34,9 +34,15 @@
             "group": "test"
         },
         {
+            "label": "make clean",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/build; make clean",
+            "group": "build"
+        },
+        {
             "label": "build a programm",
             "type": "shell",
-            "command": "cd ${workspaceRoot}/build; cd ${input:directory}; make ${input:target}",
+            "command": "cd ${workspaceRoot}/build; cd ${input:directory}; make CFLAGS='-g -O0' ${input:target}",
             "problemMatcher": [
                 "$gcc"
             ]
