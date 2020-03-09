@@ -26,10 +26,12 @@ endif
 UNIT_TESTS = \
 	chol givens house housem ldlbk ldlt lu qrbld qrfact qrmult \
 	qrsol qlfact qlbld qlmult lqfact lqbld lqmult lqsol \
-	rqfact rqbld rqmult hessred trdred
+	rqfact rqbld rqmult hessred trdred bidiag
 
 check_PROGRAMS = $(UNIT_TESTS)
 
+bidiag_SOURCES = bidiag.c ../helper.c
+bidiag_LDADD   = $(LIBARMAS)
 chol_SOURCES   = chol.c ../helper.c
 chol_LDADD     = $(LIBARMAS)
 givens_SOURCES = givens.c ../helper.c
