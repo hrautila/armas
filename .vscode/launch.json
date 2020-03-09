@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/${input:target}",
-            "args": ["9", "8", "4"],
+            "args": ["10", "9", "4"],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [
@@ -26,14 +26,41 @@
                     "ignoreFailures": true
                 }
             ]
+        },
+        {
+            "name": "debug core dump",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/${input:target}",
+            "coreDumpPath": "${workspaceFolder}/build/${input:coredump}",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build/src/.libs"}, 
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
         }
+
     ],
     "inputs": [
         {
             "id": "target",
             "type": "promptString",
-            //"default": "${relativeFileDirname}/${fileBasenameNoExtension}",
+            //"default": "${relativeFileDirname}/.libs/${fileBasenameNoExtension}",
             "description": "debug target"
+        },
+        {
+            "id": "coredump",
+            "type": "promptString",
+            "description": "core dump file path"
         }
     ]
 
