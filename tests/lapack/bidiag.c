@@ -226,7 +226,8 @@ int test_mult_qtp(int M, int N, int lb, int verbose)
     armas_x_mcopy(&A1, &A0, 0, &conf);
     // reduce to bidiagonal matrix
     env->lb = lb;
-    armas_x_bdreduce(&A0, &tauq0, &taup0, &conf);
+    if (armas_x_bdreduce(&A0, &tauq0, &taup0, &conf) < 0)
+        printf("reduce error: %d\n", conf.error);
 
     // extract B from A
     armas_x_mcopy(&B, &A0, 0, &conf);
@@ -246,10 +247,10 @@ int test_mult_qtp(int M, int N, int lb, int verbose)
         armas_x_make_trm(&Btmp, ARMAS_LOWER);
     }
 
-    // B = Q.T*B*P; 
-    armas_x_bdmult(&B, &A0, &tauq0, 
+    // B = Q.T*A*P; 
+    armas_x_bdmult(&A1, &A0, &tauq0, 
             ARMAS_LEFT | ARMAS_MULTQ | ARMAS_TRANS, &conf);
-    armas_x_bdmult(&B, &A0, &taup0, ARMAS_RIGHT | ARMAS_MULTP, &conf);
+    armas_x_bdmult(&A1, &A0, &taup0, ARMAS_RIGHT | ARMAS_MULTP, &conf);
 
     nrm = rel_error((DTYPE *) 0, &B, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
     ok = isFINE(nrm, N * ERROR);
@@ -383,6 +384,7 @@ int main(int argc, char **argv)
     }
 
     int fails = 0;
+
     fails += test_reduce(M, N, LB, verbose);
     fails += test_reduce(N, M, LB, verbose);
     fails += test_reduce_trans(M, N, 0, verbose);
