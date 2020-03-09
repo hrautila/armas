@@ -142,7 +142,7 @@ int armas_x_bdmult_w(armas_x_dense_t * C,
 
     // NOTE: sizes are checked in QR/LQ functions.
     if (flags & ARMAS_MULTP) {
-        flags = flags & ARMAS_TRANS ? flags ^ ARMAS_TRANS : flags | ARMAS_TRANS;
+        flags = (flags & ARMAS_TRANS) ? flags ^ ARMAS_TRANS : flags | ARMAS_TRANS;
     }
 
     if (A->rows > A->cols || (A->rows == A->cols && !(flags & ARMAS_LOWER))) {
