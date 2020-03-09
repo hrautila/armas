@@ -26,10 +26,12 @@ endif
 UNIT_TESTS = \
 	chol givens house housem ldlbk ldlt lu qrbld qrfact qrmult \
 	qrsol qlfact qlbld qlmult lqfact lqbld lqmult lqsol \
-	rqfact rqbld rqmult hessred trdred bidiag
+	rqfact rqbld rqmult hessred trdred bidiag bdsvd trdevd
 
 check_PROGRAMS = $(UNIT_TESTS)
 
+bdsvd_SOURCES  = bdsvd.c ../helper.c
+bdsvd_LDADD    = $(LIBARMAS)
 bidiag_SOURCES = bidiag.c ../helper.c
 bidiag_LDADD   = $(LIBARMAS)
 chol_SOURCES   = chol.c ../helper.c
@@ -76,6 +78,8 @@ rqmult_SOURCES = rqmult.c ../helper.c
 rqmult_LDADD   = $(LIBARMAS)
 hessred_SOURCES = hessred.c ../helper.c
 hessred_LDADD  = $(LIBARMAS)
+trdevd_SOURCES = trdevd.c ../helper.c
+trdevd_LDADD   = $(LIBARMAS)
 trdred_SOURCES = trdred.c ../helper.c
 trdred_LDADD   = $(LIBARMAS)
 
