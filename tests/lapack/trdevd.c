@@ -17,7 +17,7 @@
 
 #define NAME "trdevd"
 
-int set_diagonals(armas_x_dense_t *A, int flags, int type, DTYPE coeff)
+int set_diagonals(armas_x_dense_t * A, int flags, int type, DTYPE coeff)
 {
     armas_x_dense_t sD, sE0, sE1;
     int k, N, S, E;
@@ -35,15 +35,15 @@ int set_diagonals(armas_x_dense_t *A, int flags, int type, DTYPE coeff)
     case 2:
         // larger values in the middle
         S = E = 0;
-        for (k = 0; k < N-1; k++) {
+        for (k = 0; k < N - 1; k++) {
             if (k & 0x1) {
-                armas_x_set_at(&sD, N-1-E, coeff*(k+1));
+                armas_x_set_at(&sD, N - 1 - E, coeff * (k + 1));
                 E++;
             } else {
-                armas_x_set_at(&sD, S, coeff*(k+1));
+                armas_x_set_at(&sD, S, coeff * (k + 1));
                 S++;
             }
-            if (k < N-1) {
+            if (k < N - 1) {
                 armas_x_set_at(&sE0, k, 1.0);
                 armas_x_set_at(&sE1, k, 1.0);
             }
@@ -51,9 +51,9 @@ int set_diagonals(armas_x_dense_t *A, int flags, int type, DTYPE coeff)
         break;
     case 1:
         // larger values on top
-        for (k = 0; k < N-1; k++) {
-            armas_x_set_at(&sD, N-1-k, (k+1)*coeff);
-            if (k < N-1) {
+        for (k = 0; k < N - 1; k++) {
+            armas_x_set_at(&sD, N - 1 - k, (k + 1) * coeff);
+            if (k < N - 1) {
                 armas_x_set_at(&sE0, k, 1.0);
                 armas_x_set_at(&sE1, k, 1.0);
             }
@@ -62,8 +62,8 @@ int set_diagonals(armas_x_dense_t *A, int flags, int type, DTYPE coeff)
     default:
         // larger values on bottom
         for (k = 0; k < N; k++) {
-            armas_x_set_at(&sD, k, (k+1)*coeff);
-            if (k < N-1) {
+            armas_x_set_at(&sD, k, (k + 1) * coeff);
+            if (k < N - 1) {
                 armas_x_set_at(&sE0, k, 1.0);
                 armas_x_set_at(&sE1, k, 1.0);
             }
@@ -73,7 +73,7 @@ int set_diagonals(armas_x_dense_t *A, int flags, int type, DTYPE coeff)
 }
 
 // D0 = |D0| - |D1|
-void abs_minus(armas_x_dense_t *D0, armas_x_dense_t *D1)
+void abs_minus(armas_x_dense_t * D0, armas_x_dense_t * D1)
 {
     int k;
     DTYPE tmp;
@@ -93,12 +93,12 @@ int test_eigen(int N, int type, DTYPE coeff, int verbose)
     armas_wbuf_t wb;
     char desc[6] = "typeX";
     desc[4] = '0' + type;
-        
+
     armas_x_init(&A0, N, N);
     set_diagonals(&A0, 0, type, coeff);
 
     armas_x_init(&D, N, 1);
-    armas_x_init(&E, N-1, 1);
+    armas_x_init(&E, N - 1, 1);
     armas_x_diag(&sD, &A0, 0);
     armas_x_diag(&sE0, &A0, 1);
     armas_x_diag(&sE1, &A0, -1);
@@ -108,26 +108,27 @@ int test_eigen(int N, int type, DTYPE coeff, int verbose)
     // unit singular vectors
     armas_x_init(&V, N, N);
     armas_x_diag(&sD, &V, 0);
-    armas_x_madd(&sD, 1.0, 0);
-    
+    armas_x_madd(&sD, ONE, 0, &conf);
+
     armas_x_init(&C, N, N);
-    armas_walloc(&wb, 4*N*sizeof(DTYPE));
+    armas_walloc(&wb, 4 * N * sizeof(DTYPE));
 
     armas_x_trdeigen(&D, &E, &V, ARMAS_WANTV, &conf);
     // compute: V.T*A*V
-    armas_x_mult(0.0, &C, 1.0, &V, &A0, ARMAS_TRANSA, &conf);
-    armas_x_mult(0.0, &A0, 1.0, &C, &V, ARMAS_NOTRANS, &conf);
+    armas_x_mult(ZERO, &C, ONE, &V, &A0, ARMAS_TRANSA, &conf);
+    armas_x_mult(ZERO, &A0, ONE, &C, &V, ARMAS_NOTRANS, &conf);
 
     if (verbose > 2 && N < 10) {
-        printf("D:\n"); armas_x_printf(stdout, "%6.3f", &D);
-        printf("V.T*A*V:\n"); armas_x_printf(stdout, "%6.3f", &A0);
+        printf("D:\n");
+        armas_x_printf(stdout, "%6.3f", &D);
+        printf("V.T*A*V:\n");
+        armas_x_printf(stdout, "%6.3f", &A0);
     }
-
     // compute ||V.T*A*V - S|| (D is column vector, sD is row vector)
     armas_x_diag(&sD, &A0, 0);
     armas_x_axpy(&sD, -1.0, &D, &conf);
     nrm = armas_x_mnorm(&sD, ARMAS_NORM_TWO, &conf);
-    ok = isFINE(nrm, N*__ERROR_EVD);
+    ok = isFINE(nrm, N * __ERROR_EVD);
     printf("%s: [%s] V.T*A*V == eigen(A)\n", PASS(ok), desc);
     if (verbose > 0)
         printf("  N=%d || rel error ||_1: %e [%d]\n", N, nrm, ndigits(nrm));
@@ -138,10 +139,10 @@ int test_eigen(int N, int type, DTYPE coeff, int verbose)
     // compute ||I - V*V.T||_1
     armas_x_mult(0.0, &C, 1.0, &V, &V, ARMAS_TRANSA, &conf);
     armas_x_diag(&sD, &C, 0);
-    armas_x_madd(&sD, -1.0, 0);
+    armas_x_madd(&sD, -ONE, 0, &conf);
 
     nrm = armas_x_mnorm(&C, ARMAS_NORM_ONE, &conf);
-    ok = isFINE(nrm, N*__ERROR);
+    ok = isFINE(nrm, N * __ERROR);
     printf("%s: I == V*V.T\n", PASS(ok));
     if (verbose > 0)
         printf("  N=%d || rel error ||_1: %e [%d]\n", N, nrm, ndigits(nrm));
@@ -171,7 +172,7 @@ int main(int argc, char **argv)
             exit(1);
         }
     }
-    
+
     if (optind < argc) {
         N = atoi(argv[optind]);
     }
@@ -182,8 +183,3 @@ int main(int argc, char **argv)
 
     exit(fails);
 }
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
