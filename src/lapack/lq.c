@@ -64,8 +64,7 @@ int unblk_lqfactor(armas_x_dense_t * A, armas_x_dense_t * tau,
         // ---------------------------------------------------------------------
         armas_x_compute_householder(&a11, &a12, &t1, conf);
 
-        armas_x_submatrix(&w12, W, 0, 0, armas_x_size(&a21), 1);
-
+        armas_x_make(&w12, a21.rows, 1, a21.rows, armas_x_data(W));
         armas_x_apply_householder2x1(&t1, &a12,
                                      &a21, &A22, &w12, ARMAS_RIGHT, conf);
         // ---------------------------------------------------------------------
@@ -77,7 +76,6 @@ int unblk_lqfactor(armas_x_dense_t * A, armas_x_dense_t * tau,
     }
     return 0;
 }
-
 
 /*
  * Blocked factorization.
@@ -107,7 +105,7 @@ int blk_lqfactor(armas_x_dense_t * A, armas_x_dense_t * tau,
             &tT, &t0, &t1, &t2, /**/ tau, lb, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
         // decompose current panel AT = ( A11 A 12 )
-        armas_x_submatrix(&w1, W, 0, 0, A11.rows, 1);
+        armas_x_make(&w1, A11.rows, 1, A11.rows, armas_x_data(W));
         mat_merge1x2(&AR, &A11, &A12);
         unblk_lqfactor(&AR, &t1, &w1, conf);
 
@@ -116,7 +114,7 @@ int blk_lqfactor(armas_x_dense_t * A, armas_x_dense_t * tau,
         armas_x_unblk_lq_reflector(Twork, &AR, &t1, conf);
 
         // update ( A21 A22 )
-        armas_x_submatrix(&Wrk, W, 0, 0, A21.rows, A21.cols);
+        armas_x_make(&Wrk, A21.rows, A21.cols, A21.rows, armas_x_data(W));
         armas_x_update_lq_right(&A21, &A22,
                                 &A11, &A12, Twork, &Wrk, TRUE, conf);
         // ---------------------------------------------------------------------
@@ -152,8 +150,11 @@ int armas_x_update_lq_left(armas_x_dense_t * C1, armas_x_dense_t * C2,
                            armas_x_dense_t * T, armas_x_dense_t * W,
                            int transpose, armas_conf_t * conf)
 {
+    require(C1->cols == C2->cols && W->rows == C1->cols && W->cols == C1->rows);
+    if (armas_x_size(C1) == 0 && armas_x_size(C2) == 0)
+        return 0;
     // W = C1.T
-    armas_x_mplus(ZERO, W, ONE, C1, ARMAS_TRANSB, conf);
+    armas_x_mcopy(W, C1, ARMAS_TRANS, conf);
     // W = C1.T*Y1.T = W*Y1.T
     armas_x_mult_trm(W, ONE, Y1,
                      ARMAS_UPPER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);
@@ -194,8 +195,11 @@ int armas_x_update_lq_right(armas_x_dense_t * C1, armas_x_dense_t * C2,
                             armas_x_dense_t * T, armas_x_dense_t * W,
                             int transpose, armas_conf_t * conf)
 {
+    require(C1->rows == C2->rows && W->rows == C1->rows && W->cols == C1->cols);
+    if (armas_x_size(C1) == 0 && armas_x_size(C2) == 0)
+        return 0;
     // W = C1
-    armas_x_mplus(ZERO, W, ONE, C1, ARMAS_NONE, conf);
+    armas_x_mcopy(W, C1, 0, conf);
     // W = C1*Y1.T = W*Y1.T
     armas_x_mult_trm(W, ONE, Y1,
                      ARMAS_UPPER|ARMAS_UNIT|ARMAS_RIGHT|ARMAS_TRANSA, conf);

@@ -11,7 +11,7 @@
 #include "dtype.h"
 #include "dlpack.h"
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_rqbuild)
 #define ARMAS_PROVIDES 1
@@ -23,7 +23,7 @@
 
 // compile if type dependent public function names defined
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 //! \cond
 #include "matrix.h"
@@ -83,17 +83,16 @@ int unblk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
             __nil, __nil, &A22, /**/ A, 1, ARMAS_PBOTTOMRIGHT);
         mat_repartition_2x1to3x1(
             &tT, &t0, &t1, &t2, /**/ tau, 1, ARMAS_PBOTTOM);
-        // ---------------------------------------------------------------------
-        armas_x_submatrix(&w12, W, 0, 0, armas_x_size(&a01), 1);
-
+        // --------------------------------------------------------------------
+        armas_x_make(&w12, a01.rows, 1, a01.rows, armas_x_data(W));
         armas_x_apply_householder2x1(&t1, &a10,
                                      &a01, &A00, &w12, ARMAS_RIGHT, conf);
 
         tauval = armas_x_get(&t1, 0, 0);
         armas_x_scale(&a10, -tauval, conf);
-        armas_x_set(&a11, 0, 0, 1.0 - tauval);
+        armas_x_set(&a11, 0, 0, ONE - tauval);
         armas_x_scale(&a12, ZERO, conf);
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, &ATR,
             __nil, &ABR, /**/ &A00, &a11, &A22, A, ARMAS_PBOTTOMRIGHT);
@@ -147,25 +146,25 @@ int blk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
             __nil, __nil, &A22, /**/ A, lb, ARMAS_PBOTTOMRIGHT);
         mat_repartition_2x1to3x1(
             &tT, &t0, &t1, &t2, /**/ tau, A11.cols, ARMAS_PBOTTOM);
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------
         mat_merge1x2(&AL, &A10, &A11);
 
         // build block reflector
-        armas_x_submatrix(&Tcur, T, 0, 0, A11.cols, A11.cols);
+        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
         armas_x_mscale(&Tcur, ZERO, 0, conf);
         armas_x_unblk_rq_reflector(&Tcur, &AL, &t1, conf);
 
         // update A00, A01
-        armas_x_submatrix(&Wrk, W, 0, 0, A01.rows, A01.cols);
+        armas_x_make(&Wrk, A01.rows, A01.cols, A01.rows, armas_x_data(W));
         armas_x_update_rq_right(&A01, &A00,
                                 &A11, &A10, &Tcur, &Wrk, TRUE, conf);
 
         // update current block
         unblk_rqbuild(&AL, &t1, W, 0, A10.cols, FALSE, conf);
 
-        // zero top rows
+        // zero right cols
         armas_x_mscale(&A12, ZERO, 0, conf);
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
             &ABL, &ABR, /**/ &A00, &A11, &A22, A, ARMAS_PBOTTOMRIGHT);

@@ -83,11 +83,17 @@ int unblk_qrmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
         Aref = &ATL;
     }
 
-    mat_partition_2x2(&ATL, __nil, __nil, &ABR, /**/ A, mb, nb, pAstart);
-    mat_partition_2x1(&CT, &CB, /**/ C, mb, pStart);
-    mat_partition_2x1(&tT, &tB, /**/ tau, tb, pStart);
+    mat_partition_2x2(
+        &ATL, __nil,
+        __nil, &ABR, /**/ A, mb, nb, pAstart);
+    mat_partition_2x1(
+        &CT,
+        &CB, /**/ C, mb, pStart);
+    mat_partition_2x1(
+        &tT,
+        &tB, /**/ tau, tb, pStart);
 
-    armas_x_submatrix(&w12, W, 0, 0, C->cols, 1);
+    armas_x_make(&w12, C->cols, 1, C->cols, armas_x_data(W));
 
     while (Aref->rows > 0 && Aref->cols > 0) {
         mat_repartition_2x2to3x3(
@@ -99,12 +105,10 @@ int unblk_qrmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
             &CT, &C0, &c1, &C2, /**/ C, 1, pDir);
         mat_repartition_2x1to3x1(
             &tT, &t0, &t1, &t2, /**/ tau, 1, pDir);
-        // ---------------------------------------------------------------------
-
+        // --------------------------------------------------------------------
         armas_x_apply_householder2x1(&t1, &a21, &c1, &C2, &w12,
                                      ARMAS_LEFT, conf);
-
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
             __nil, &ABR, /**/ &A00, &a11, &A22, A, pAdir);
@@ -116,10 +120,6 @@ int unblk_qrmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
     return 0;
 }
 
-
-/*
- *
- */
 static
 int blk_qrmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
                     armas_x_dense_t * tau, armas_x_dense_t * T,
@@ -157,9 +157,11 @@ int blk_qrmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
     mat_partition_2x2(
         &ATL, __nil, __nil, &ABR, /**/ A, mb, nb, pAstart);
     mat_partition_2x1(
-        &CT, &CB, /**/ C, mb, pStart);
+        &CT,
+        &CB, /**/ C, mb, pStart);
     mat_partition_2x1(
-        &tT, &tB, /**/ tau, tb, pStart);
+        &tT,
+        &tB, /**/ tau, tb, pStart);
 
     while (Aref->rows > 0 && Aref->cols > 0) {
         mat_repartition_2x2to3x3(
@@ -174,12 +176,12 @@ int blk_qrmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
         // ---------------------------------------------------------------------
         // build block reflector
         mat_merge2x1(&AL, &A11, &A21);
-        armas_x_submatrix(&Tcur, T, 0, 0, A11.cols, A11.cols);
-        armas_x_mscale(&Tcur, 0.0, 0, conf);
+        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
+        armas_x_mscale(&Tcur, ZERO, 0, conf);
         armas_x_unblk_qr_reflector(&Tcur, &AL, &t1, conf);
 
         // compute Q*C or Q.T*C
-        armas_x_submatrix(&Wrk, W, 0, 0, C1.cols, A11.cols);
+        armas_x_make(&Wrk, C1.cols, A11.cols, C1.cols, armas_x_data(W));
         armas_x_update_qr_left(&C1, &C2, &A11, &A21, &Tcur,
                                &Wrk, transpose, conf);
         // ---------------------------------------------------------------------
@@ -193,7 +195,6 @@ int blk_qrmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
     }
     return 0;
 }
-
 
 /*
  * Unblocked algorith for computing C = C*Q.T and C = C*Q.
@@ -250,13 +251,14 @@ int unblk_qrmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
     }
 
     mat_partition_2x2(
-        &ATL, __nil, __nil, &ABR, /**/ A, mb, nb, pAstart);
+        &ATL, __nil,
+        __nil, &ABR, /**/ A, mb, nb, pAstart);
     mat_partition_1x2(
         &CL, &CR, /**/ C, cb, pCstart);
     mat_partition_2x1(
         &tT, &tB, /**/ tau, tb, pStart);
 
-    armas_x_submatrix(&w12, W, 0, 0, C->rows, 1);
+    armas_x_make(&w12, C->rows, 1, C->rows, armas_x_data(W));
 
     while (Aref->rows > 0 && Aref->cols > 0) {
         mat_repartition_2x2to3x3(
@@ -301,6 +303,7 @@ int blk_qrmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
     armas_x_dense_t CL, CR, C0, C1, C2;
     int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
     int mb, nb, cb, tb, transpose;
+    DTYPE *wdata = armas_x_data(W);
 
     // initialize to "empty" to avoid "maybe-uninitialized" errors
     EMPTY(A00);
@@ -357,12 +360,12 @@ int blk_qrmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
         // ---------------------------------------------------------------------
         // build block reflector
         mat_merge2x1(&AL, &A11, &A21);
-        armas_x_submatrix(&Tcur, T, 0, 0, A11.cols, A11.cols);
+        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
         armas_x_mscale(&Tcur, 0.0, 0, conf);
         armas_x_unblk_qr_reflector(&Tcur, &AL, &t1, conf);
 
         // compute Q*C or Q.T*C
-        armas_x_submatrix(&Wrk, W, 0, 0, C1.rows, A11.cols);
+        armas_x_make(&Wrk, C1.rows, A11.cols, C1.rows, wdata);
         armas_x_update_qr_right(&C1, &C2, &A11, &A21, &Tcur,
                                 &Wrk, transpose, conf);
         // ---------------------------------------------------------------------

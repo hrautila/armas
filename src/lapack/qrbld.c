@@ -42,7 +42,6 @@ static inline int __ws_qrbuild(int M, int N, int lb)
     return lb > 0 ? lb * N : N;
 }
 
-
 /*
  * Unblocked code for generating M by N matrix Q with orthogonal columns which
  * are defined as the first N columns of the product of K first elementary
@@ -69,6 +68,7 @@ int unblk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
     armas_x_dense_t ATL, ATR, ABR, A00, a01, a11, a12, a21, A22;
     armas_x_dense_t tT, tB, t0, t1, t2, w12, D;
     DTYPE tauval;
+    DTYPE *wdata = armas_x_data(W);
 
     EMPTY(ATL);
     EMPTY(A00);
@@ -99,13 +99,13 @@ int unblk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
             &tT,
             &t0, &t1, &t2, /**/ tau, 1, ARMAS_PTOP);
         // ---------------------------------------------------------------------
-        armas_x_submatrix(&w12, W, 0, 0, armas_x_size(&a12), 1);
+        armas_x_make(&w12, a12.cols, 1, a12.cols, wdata);
         armas_x_apply_householder2x1(&t1, &a21,
                                      &a12, &A22, &w12, ARMAS_LEFT, conf);
 
         tauval = armas_x_get(&t1, 0, 0);
         armas_x_scale(&a21, -tauval, conf);
-        armas_x_set(&a11, 0, 0, 1.0 - tauval);
+        armas_x_set(&a11, 0, 0, ONE - tauval);
 
         // zero
         armas_x_scale(&a01, 0.0, conf);
@@ -185,7 +185,7 @@ int blk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
         armas_x_unblk_qr_reflector(T, &AL, &t1, conf);
 
         // update rightside i.e A12, A22
-        armas_x_submatrix(&Wrk, W, 0, 0, A12.cols, A12.rows);
+        armas_x_make(&Wrk, A12.cols, A12.rows, A12.cols, armas_x_data(W));
         armas_x_update_qr_left(&A12, &A22, &A11, &A21, T, &Wrk, FALSE, conf);
 
         // update current block

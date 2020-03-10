@@ -83,16 +83,16 @@ int unblk_qlbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
         mat_repartition_2x1to3x1(
             &tT, &t0, &t1, &t2, /**/ tau, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
-        armas_x_submatrix(&w12, W, 0, 0, armas_x_size(&a10), 1);
+        armas_x_make(&w12, a10.cols, 1, a10.cols, armas_x_data(W));
         armas_x_apply_householder2x1(&t1, &a01,
                                      &a10, &A00, &w12, ARMAS_LEFT, conf);
 
         tauval = armas_x_get(&t1, 0, 0);
         armas_x_scale(&a01, -tauval, conf);
-        armas_x_set(&a11, 0, 0, 1.0 - tauval);
+        armas_x_set(&a11, 0, 0, ONE - tauval);
 
         // zero bottom elements
-        armas_x_scale(&a21, 0.0, conf);
+        armas_x_scale(&a21, ZERO, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, &ATR,
@@ -162,11 +162,11 @@ int blk_qlbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
         mat_merge2x1(&AT, &A01, &A11);
 
         // build block reflector
-        armas_x_submatrix(&Tcur, T, 0, 0, A11.cols, A11.cols);
+        armas_x_make(&Tcur, A11.rows, A11.cols, A11.rows, armas_x_data(T));
         armas_x_unblk_ql_reflector(&Tcur, &AT, &t1, conf);
 
         // update left side i.e A00 and A00 with (I - Y*T*Y.T)
-        armas_x_submatrix(&Wrk, W, 0, 0, A10.cols, A10.rows);
+        armas_x_make(&Wrk, A10.cols, A10.rows, A10.cols, armas_x_data(W));
         armas_x_update_ql_left(&A10, &A00,
                                &A11, &A01, &Tcur, &Wrk, FALSE, conf);
 

@@ -77,7 +77,7 @@ int unblk_qlmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
     mat_partition_2x1(
         &tT, &tB, /**/ tau, tb, pStart);
 
-    armas_x_submatrix(&w12, W, 0, 0, C->cols, 1);
+    armas_x_make(&w12, C->cols, 1, C->cols, armas_x_data(W));
 
     while (Aref->rows > 0 && Aref->cols > 0) {
         mat_repartition_2x2to3x3(
@@ -103,7 +103,6 @@ int unblk_qlmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
     }
     return 0;
 }
-
 
 static
 int blk_qlmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
@@ -159,12 +158,12 @@ int blk_qlmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
         // ---------------------------------------------------------------------
         // block reflector for current block
         mat_merge2x1(&AT, &A01, &A11);
-        armas_x_submatrix(&Tcur, T, 0, 0, A11.cols, A11.cols);
+        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
         armas_x_mscale(&Tcur, ZERO, 0, conf);
         armas_x_unblk_ql_reflector(&Tcur, &AT, &t1, conf);
 
         // update with (I - Y*T*Y.T) or (I - Y*T*Y.T).T
-        armas_x_submatrix(&Wrk, W, 0, 0, C1.cols, A11.cols);
+        armas_x_make(&Wrk, C1.cols, A11.cols, C1.cols, armas_x_data(W));
         armas_x_update_ql_left(&C1, &C0,
                                &A11, &A01, &Tcur, &Wrk, transpose, conf);
         // ---------------------------------------------------------------------
@@ -178,7 +177,6 @@ int blk_qlmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
     }
     return 0;
 }
-
 
 /*
  * Compute C := C*Q or C := C*Q.T where Q is the M-by-N orthogonal matrix
@@ -230,7 +228,7 @@ int unblk_qlmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
     mat_partition_2x1(
         &tT, &tB, /**/ tau, tb, pStart);
 
-    armas_x_submatrix(&w12, W, 0, 0, C->rows, 1);
+    armas_x_make(&w12, C->rows, 1, C->rows, armas_x_data(W));
 
     while (Aref->rows > 0 && Aref->cols > 0) {
         mat_repartition_2x2to3x3(
@@ -256,7 +254,6 @@ int unblk_qlmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
     }
     return 0;
 }
-
 
 static
 int blk_qlmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
@@ -321,12 +318,12 @@ int blk_qlmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
         // ---------------------------------------------------------------------
         // build reflector
         mat_merge2x1(&AT, &A01, &A11);
-        armas_x_submatrix(&Tcur, T, 0, 0, A11.cols, A11.cols);
+        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
         armas_x_mscale(&Tcur, ZERO, 0, conf);
         armas_x_unblk_ql_reflector(&Tcur, &AT, &t1, conf);
 
         // update with current block
-        armas_x_submatrix(&Wrk, W, 0, 0, C1.rows, A11.cols);
+        armas_x_make(&Wrk, C1.rows, A11.cols, C1.rows, armas_x_data(W));
         armas_x_update_ql_right(&C1, &C0,
                                 &A11, &A01, &Tcur, &Wrk, transpose, conf);
         // ---------------------------------------------------------------------

@@ -86,19 +86,19 @@ int unblk_lqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
             __nil, &a21, &A22, /**/ A, 1, ARMAS_PTOPLEFT);
         mat_repartition_2x1to3x1(
             &tT, &t0, &t1, &t2, /**/ tau, 1, ARMAS_PTOP);
-        // ---------------------------------------------------------------------
-        armas_x_submatrix(&w12, W, 0, 0, armas_x_size(&a21), 1);
+        // --------------------------------------------------------------------
+         armas_x_make(&w12, a21.rows, 1, a21.rows, armas_x_data(W));
 
         armas_x_apply_householder2x1(&t1, &a12,
                                      &a21, &A22, &w12, ARMAS_RIGHT, conf);
 
         tauval = armas_x_get(&t1, 0, 0);
         armas_x_scale(&a12, -tauval, conf);
-        armas_x_set(&a11, 0, 0, 1.0 - tauval);
+        armas_x_set(&a11, 0, 0, ONE - tauval);
 
         // zero
         armas_x_scale(&a10, ZERO, conf);
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
             __nil, &ABR, /**/ &A00, &a11, &A22, A, ARMAS_PTOPLEFT);
@@ -155,16 +155,16 @@ int blk_lqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
             __nil, &A21, &A22, /**/ A, lb, ARMAS_PTOPLEFT);
         mat_repartition_2x1to3x1(
             &tT, &t0, &t1, &t2, /**/ tau, lb, ARMAS_PTOP);
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------
         mat_merge1x2(&AL, &A11, &A12);
 
         // build block reflector
-        armas_x_submatrix(&Tcur, T, 0, 0, A11.cols, A11.cols);
+        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
         armas_x_mscale(&Tcur, ZERO, 0, conf);
         armas_x_unblk_lq_reflector(&Tcur, &AL, &t1, conf);
 
         // update A21, A22
-        armas_x_submatrix(&Wrk, W, 0, 0, A21.rows, A21.cols);
+        armas_x_make(&Wrk, A21.rows, A21.cols, A21.rows, armas_x_data(W));
         armas_x_update_lq_right(&A21, &A22,
                                 &A11, &A12, &Tcur, &Wrk, FALSE, conf);
 
@@ -173,7 +173,7 @@ int blk_lqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
 
         // zero top rows
         armas_x_mscale(&A10, ZERO, 0, conf);
-        // ---------------------------------------------------------------------
+        // --------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
             &ABL, &ABR, /**/ &A00, &A11, &A22, A, ARMAS_PTOPLEFT);

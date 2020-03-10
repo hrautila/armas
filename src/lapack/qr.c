@@ -72,7 +72,7 @@ int armas_x_unblk_qrfactor(armas_x_dense_t * A, armas_x_dense_t * tau,
         // ---------------------------------------------------------------------
         armas_x_compute_householder(&a11, &a21, &t1, conf);
 
-        armas_x_submatrix(&w12, W, 0, 0, armas_x_size(&a12), 1);
+        armas_x_make(&w12, a12.cols, 1, a12.cols, armas_x_data(W));
 
         armas_x_apply_householder2x1(&t1, &a21, &a12, &A22,
                                      &w12, ARMAS_LEFT, conf);
@@ -97,7 +97,7 @@ int blk_qrfactor(armas_x_dense_t * A, armas_x_dense_t * tau,
 {
     armas_x_dense_t ATL, ABR, A00, A11, A12, A21, A22, AL;
     armas_x_dense_t tT, tB, t0, t1, t2, w1, Wrk;
-
+    DTYPE *wdata = armas_x_data(W); 
     // initialize to "empty" to avoid "maybe-uninitialized" errors
     EMPTY(ATL);
     EMPTY(ABR);
@@ -121,16 +121,16 @@ int blk_qrfactor(armas_x_dense_t * A, armas_x_dense_t * tau,
         // ---------------------------------------------------------------------
         // decompose current panel AL = ( A11 )
         //                              ( A21 )
-        armas_x_submatrix(&w1, W, 0, 0, A11.rows, 1);
+        armas_x_make(&w1, A11.rows, 1, A11.rows, wdata);
         mat_merge2x1(&AL, &A11, &A21);
         armas_x_unblk_qrfactor(&AL, &t1, &w1, conf);
 
         // build block reflector
-        armas_x_mscale(Twork, 0.0, 0, conf);
+        armas_x_mscale(Twork, ZERO, 0, conf);
         armas_x_unblk_qr_reflector(Twork, &AL, &t1, conf);
 
         // update ( A12 A22 ).T
-        armas_x_submatrix(&Wrk, W, 0, 0, A12.cols, A12.rows);
+        armas_x_make(&Wrk, A12.cols, A12.rows, A12.cols, wdata);
         armas_x_update_qr_left(&A12, &A22, &A11, &A21, Twork, &Wrk, TRUE, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -165,7 +165,7 @@ int armas_x_update_qr_left(armas_x_dense_t * C1, armas_x_dense_t * C2,
                            armas_x_dense_t * T, armas_x_dense_t * W,
                            int transpose, armas_conf_t * conf)
 {
-    require(C1->cols == C2->cols);
+    require(C1->cols == C2->cols && W->rows == C1->cols && W->cols == C1->rows);
     if (armas_x_size(C1) == 0 && armas_x_size(C2) == 0)
         return 0;
     // W = C1.T
@@ -211,7 +211,7 @@ int armas_x_update_qr_right(armas_x_dense_t * C1, armas_x_dense_t * C2,
                             armas_x_dense_t * T, armas_x_dense_t * W,
                             int transpose, armas_conf_t * conf)
 {
-    require(C1->rows == C2->rows);
+    require(C1->rows == C2->rows && W->rows == C1->rows && W->cols == C1->cols);
     if (armas_x_size(C1) == 0 && armas_x_size(C2) == 0)
         return 0;
     // W = C1

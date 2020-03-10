@@ -82,7 +82,7 @@ int unblk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
     mat_partition_2x1(
         &tT, &tB, /**/ tau, tb, pStart);
 
-    armas_x_submatrix(&w12, W, 0, 0, C->cols, 1);
+    armas_x_make(&w12, C->cols, 1, C->cols, armas_x_data(W));
 
     while (Aref->rows > 0 && Aref->cols > 0) {
         mat_repartition_2x2to3x3(
@@ -145,7 +145,8 @@ int blk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
     }
 
     mat_partition_2x2(
-        &ATL, __nil, __nil, &ABR, /**/ A, mb, nb, pAstart);
+        &ATL, __nil,
+        __nil, &ABR, /**/ A, mb, nb, pAstart);
     mat_partition_2x1(
         &CT, &CB, /**/ C, cb, pStart);
     mat_partition_2x1(
@@ -164,12 +165,12 @@ int blk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
         // ---------------------------------------------------------------------
         // build block reflector
         mat_merge1x2(&AR, &A11, &A12);
-        armas_x_submatrix(&Tcur, T, 0, 0, A11.cols, A11.cols);
+        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
         armas_x_mscale(&Tcur, ZERO, 0, conf);
         armas_x_unblk_lq_reflector(&Tcur, &AR, &t1, conf);
 
         // compute Q*C or Q.T*C
-        armas_x_submatrix(&Wrk, W, 0, 0, C1.cols, A11.cols);
+        armas_x_make(&Wrk, C1.cols, A11.cols, C1.cols, armas_x_data(W));
         armas_x_update_lq_left(&C1, &C2,
                                &A11, &A12, &Tcur, &Wrk, transpose, conf);
         // ---------------------------------------------------------------------
@@ -238,11 +239,15 @@ int unblk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
         Aref = &ATL;
     }
 
-    mat_partition_2x2(&ATL, __nil, __nil, &ABR, /**/ A, mb, nb, pAstart);
-    mat_partition_1x2(&CL, &CR, /**/ C, cb, pCstart);
-    mat_partition_2x1(&tT, &tB, /**/ tau, tb, pStart);
+    mat_partition_2x2(
+        &ATL, __nil,
+        __nil, &ABR, /**/ A, mb, nb, pAstart);
+    mat_partition_1x2(
+        &CL, &CR, /**/ C, cb, pCstart);
+    mat_partition_2x1(
+        &tT, &tB, /**/ tau, tb, pStart);
 
-    armas_x_submatrix(&w12, W, 0, 0, C->rows, 1);
+    armas_x_make(&w12, C->rows, 1, C->rows, armas_x_data(W));
 
     while (Aref->rows > 0 && Aref->cols > 0) {
         mat_repartition_2x2to3x3(
@@ -342,12 +347,12 @@ int blk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
         // ---------------------------------------------------------------------
         // build block reflector
         mat_merge1x2(&AR, &A11, &A12);
-        armas_x_submatrix(&Tcur, T, 0, 0, A11.cols, A11.cols);
+        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
         armas_x_mscale(&Tcur, ZERO, 0, conf);
         armas_x_unblk_lq_reflector(&Tcur, &AR, &t1, conf);
 
         // compute Q*C or Q.T*C
-        armas_x_submatrix(&Wrk, W, 0, 0, C1.rows, A11.cols);
+        armas_x_make(&Wrk, C1.rows, A11.cols, C1.rows, armas_x_data(W));
         armas_x_update_lq_right(&C1, &C2,
                                 &A11, &A12, &Tcur, &Wrk, transpose, conf);
         // ---------------------------------------------------------------------
@@ -364,7 +369,7 @@ int blk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
 
 
 /**
- * \brief Multiply with orthogonal matrix Q from LQ factorization
+ * @brief Multiply with orthogonal matrix Q from LQ factorization
  *
  * Multiply and replace C with Q*C or Q.T*C where Q is a real orthogonal matrix
  * defined as the product of k elementary reflectors.
@@ -373,30 +378,30 @@ int blk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
  *
  * as returned by lqfactor().
  *
- * \param[in,out] C
+ * @param[in,out] C
  *     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
  *     N-by-M matrix.  On exit C is overwritten by Q*C or Q.T*C.
  *     If bit RIGHT is set then C is  overwritten by C*Q or C*Q.T
  *
- * \param[in] A
+ * @param[in] A
  *     LQ factorization as returne by lqfactor() where the upper
  *     trapezoidal part holds the elementary reflectors.
  *
- * \param[in] tau
+ * @param[in] tau
  *   The scalar factors of the elementary reflectors.
  *
- * \param[out] W
+ * @param[out] W
  *     Workspace matrix,  required size is returned by WorksizeMultQ().
  *
- * \param[in] flags
+ * @param[in] flags
  *     Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
- *       
- * \param[in,out] conf
+ *
+ * @param[in,out] conf
  *     Blocking configuration. Field LB defines block sized. If it is zero
  *     unblocked invocation is assumed.
  *
- * \retval  0 Success
- * \retval -1 Error, `conf.error` holds error code
+ * @retval  0 Success
+ * @retval -1 Error, `conf.error` holds error code
  * Compatible with lapack.DORMLQ
  *
  * #### Notes
@@ -459,7 +464,7 @@ int armas_x_lqmult(armas_x_dense_t * C,
  *
  * @param[in] flags
  *     Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
- *       
+ *
  * @param[out] W
  *    Workspace buffer needed for computation. To compute size of the required space call 
  *    the function with workspace bytes set to zero. Size of workspace is returned in 
