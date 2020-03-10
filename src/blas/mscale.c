@@ -27,6 +27,7 @@
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
+#include "internal.h"
 #include "matcpy.h"
 
 static inline
@@ -93,6 +94,8 @@ int armas_x_scale(armas_x_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 
     if (armas_x_size(x) == 0)
         return 0;
+    
+    require(x->step >= x->rows);
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
@@ -128,6 +131,8 @@ int armas_x_mscale(armas_x_dense_t *m, const DTYPE alpha, int flags, armas_conf_
 
     if (!cf)
         cf = armas_conf_default();
+
+    require(m->step >= m->rows);
 
     switch (flags & (ARMAS_SYMM|ARMAS_UPPER|ARMAS_LOWER)) {
     case ARMAS_UPPER:

@@ -82,6 +82,8 @@ int armas_x_mult(
     if (armas_x_size(A) == 0 || armas_x_size(B) == 0 || armas_x_size(C) == 0)
         return  0;
 
+    require(A->step >= A->rows && B->step >= B->rows && C->step >= C->rows);
+
     if (!conf)
         conf = armas_conf_default();
 

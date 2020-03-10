@@ -85,6 +85,7 @@ int armas_x_mult_trm(
     if (!conf)
         conf = armas_conf_default();
 
+    require(A->step >= A->rows && B->step >= B->rows);
     // check consistency
     switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
     case ARMAS_RIGHT:

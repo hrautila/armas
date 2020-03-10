@@ -297,6 +297,8 @@ int armas_x_mplus(
     if (!cf)
         cf = armas_conf_default();
 
+    require(A->step >= A->rows && B->step >= B->rows);
+
     if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
         return 0;
     if (armas_x_size(B) == 1)
