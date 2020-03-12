@@ -20,7 +20,7 @@
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_update_trm)
+#if defined(armas_x_mvmult_unsafe) && defined(armas_x_mult_kernel)
 #define ARMAS_REQUIRES 1
 #endif
 
@@ -31,6 +31,7 @@
 //! \cond
 #include "matrix.h"
 #include "internal.h"
+#include "partition.h"
 //! \endcond
 
 static
@@ -53,10 +54,10 @@ void update_syr2k_unb(
         __nil, &ABR, /**/ A, 0, 0, ARMAS_PTOPLEFT);
     mat_partition_2x1(
         &XT,
-        &XB, /* */, X, 0, ARMAS_PTOP);
+        &XB, /* */ X, 0, ARMAS_PTOP);
     mat_partition_2x1(
         &YT,
-        &YB, /* */, Y, 0, ARMAS_PTOP);
+        &YB, /* */ Y, 0, ARMAS_PTOP);
 
     while (ABR.rows > 0 && ABR.cols > 0) {
         mat_repartition_2x2to3x3(
@@ -71,8 +72,8 @@ void update_syr2k_unb(
         // -------------------------------------------------------------------
         ak = ZERO;
         armas_x_adot_unsafe(&ak, 2.0*alpha, &x1, &y1);
-        ak += armas_get_unsafe(&a11, 0, 0) * beta;
-        armas_set_unsafe(&a11, 0, 0, ak);
+        ak += armas_x_get_unsafe(&a11, 0, 0) * beta;
+        armas_x_set_unsafe(&a11, 0, 0, ak);
         if (flags & ARMAS_UPPER) {
             armas_x_mvmult_unsafe(beta, &a01, alpha, &Y0, &x1, 0);
             armas_x_mvmult_unsafe(ONE, &a01, alpha, &X0, &y1, 0);
@@ -90,6 +91,44 @@ void update_syr2k_unb(
             &YT, &YB, /**/ &Y0, &y1, Y, ARMAS_PBOTTOM);
 
     }
+}
+
+static
+void update_syr2k_recursive(
+    DTYPE beta,
+    armas_x_dense_t *A,
+    DTYPE alpha,
+    const armas_x_dense_t *X,
+    const armas_x_dense_t *Y,
+    int flags,
+    int minblock,
+    cache_t *cache)
+{
+    armas_x_dense_t ATL, ATR, ABL, ABR;
+    armas_x_dense_t XT, XB, YT, YB;
+
+    if (A->rows < minblock) {
+        update_syr2k_unb(beta, A, alpha, X, Y, flags);
+        return;
+    }
+
+    mat_partition_2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, A->rows/2, A->rows/2, ARMAS_PTOPLEFT);
+    mat_partition_2x1(
+        &XT, &XB, /* */ X, A->rows/2, ARMAS_PTOP);
+    mat_partition_2x1(
+        &YT, &YB, /* */ Y, A->rows/2, ARMAS_PTOP);
+
+    update_syr2k_recursive(beta, &ATL, alpha, &XT, &YT, flags, minblock, cache);
+    if (flags & ARMAS_UPPER) {
+        armas_x_mult_kernel(beta, &ATR, alpha, &XT, &YB, ARMAS_TRANSB, cache);
+        armas_x_mult_kernel_nc(&ATR, alpha, &YT, &XB, ARMAS_TRANSB, cache);
+    } else {
+        armas_x_mult_kernel(beta, &ABL, alpha, &XB, &YT, ARMAS_TRANSB, cache);
+        armas_x_mult_kernel_nc(&ABL, alpha, &YB, &XT, ARMAS_TRANSB, cache);
+    }
+    update_syr2k_recursive(beta, &ABR, alpha, &XB, &YB, flags, minblock, cache);
 }
 
 static
@@ -111,9 +150,9 @@ void update_syr2k_trans_unb(
         &ATL, __nil,
         __nil, &ABR, /**/ A, 0, 0, ARMAS_PTOPLEFT);
     mat_partition_1x2(
-        &XL, &XR, /* */, X, 0, ARMAS_PLEFT);
+        &XL, &XR, /* */ X, 0, ARMAS_PLEFT);
     mat_partition_1x2(
-        &YL, &YR, /* */, Y, 0, ARMAS_PLEFT);
+        &YL, &YR, /* */ Y, 0, ARMAS_PLEFT);
 
     while (ABR.rows > 0 && ABR.cols > 0) {
         mat_repartition_2x2to3x3(
@@ -121,15 +160,15 @@ void update_syr2k_trans_unb(
             &A00,  &a01, __nil,
             &a10,  &a11, __nil,
             __nil, __nil, &A22, /**/ A, 1, ARMAS_PBOTTOMRIGHT);
-        mat_repartition_2x1to3x1(
+        mat_repartition_1x2to1x3(
             &XL, &X0, &x1, &X2, /**/ X, 1, ARMAS_PRIGHT);
-        mat_repartition_2x1to3x1(
+        mat_repartition_1x2to1x3(
             &YL, &Y0, &y1, &Y2, /**/ Y, 1, ARMAS_PRIGHT);
         // -------------------------------------------------------------------
         ak = ZERO;
         armas_x_adot_unsafe(&ak, 2.0*alpha, &x1, &y1);
-        ak += armas_get_unsafe(&a11, 0, 0) * beta;
-        armas_set_unsafe(&a11, 0, 0, ak);
+        ak += armas_x_get_unsafe(&a11, 0, 0) * beta;
+        armas_x_set_unsafe(&a11, 0, 0, ak);
         if (flags & ARMAS_UPPER) {
             armas_x_mvmult_unsafe(beta, &a01, alpha, &Y0, &x1, ARMAS_TRANS);
             armas_x_mvmult_unsafe(ONE, &a01, alpha, &X0, &y1, ARMAS_TRANS);
@@ -141,9 +180,9 @@ void update_syr2k_trans_unb(
         mat_continue_3x3to2x2(
             &ATL, __nil,
             __nil, &ABR, /**/ &A00, &a11, &A22, A, ARMAS_PBOTTOMRIGHT);
-        mat_continue_3x1to2x1(
+        mat_continue_1x3to1x2(
             &XL, &XR, /**/ &X0, &x1, X, ARMAS_PRIGHT);
-        mat_continue_3x1to2x1(
+        mat_continue_1x3to1x2(
             &YL, &YR, /**/ &Y0, &y1, Y, ARMAS_PRIGHT);
     }
 }
@@ -163,7 +202,7 @@ void update_syr2k_trans_recursive(
     armas_x_dense_t XL, XR, YL, YR;
 
     if (A->rows < minblock) {
-        6update_syr2k_trans_unb(beta, A, alpha, X, Y, flags);
+        update_syr2k_trans_unb(beta, A, alpha, X, Y, flags);
         return;
     }
 
@@ -171,11 +210,11 @@ void update_syr2k_trans_recursive(
         &ATL, &ATR,
         &ABL, &ABR, /**/ A, A->rows/2, A->rows/2, ARMAS_PTOPLEFT);
     mat_partition_1x2(
-        &XL, &XR, /* */, X, A->rows/2, ARMAS_PLEFT);
+        &XL, &XR, /* */ X, A->rows/2, ARMAS_PLEFT);
     mat_partition_1x2(
-        &YL, &YR, /* */, Y, A->rows/2, ARMAS_PLEFT);
+        &YL, &YR, /* */ Y, A->rows/2, ARMAS_PLEFT);
 
-    update_syr2k_trans_recursive(beta, &ATL, alpha, &XL, &YL, flags, minblock);
+    update_syr2k_trans_recursive(beta, &ATL, alpha, &XL, &YL, flags, minblock, cache);
     if (flags & ARMAS_UPPER) {
         armas_x_mult_kernel(beta, &ATR, alpha, &XL, &YR, ARMAS_TRANSA, cache);
         armas_x_mult_kernel_nc(&ATR, alpha, &YL, &XR, ARMAS_TRANSA, cache);
@@ -183,7 +222,7 @@ void update_syr2k_trans_recursive(
         armas_x_mult_kernel(beta, &ABL, alpha, &XR, &YL, ARMAS_TRANSA, cache);
         armas_x_mult_kernel_nc(&ABL, alpha, &YR, &XL, ARMAS_TRANSA, cache);
     }
-    update_syr2k_trans_recursive(beta, &ABR, alpha, &XR, &YR, flags, minblock);
+    update_syr2k_trans_recursive(beta, &ABR, alpha, &XR, &YR, flags, minblock, cache);
 }
 
 /**
@@ -238,19 +277,31 @@ int armas_x_update2_sym(
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-    int uflags = flags & (ARMAS_UPPER | ARMAS_LOWER);
-    // do it twice with triangular update
-    if (flags & ARMAS_TRANS) {
-        if (armas_x_update_trm(beta, C,
-                               alpha, A, B, uflags|ARMAS_TRANSA, conf) < 0)
-            return -1;
-        return armas_x_update_trm(ONE, C,
-                                  alpha, B, A, uflags | ARMAS_TRANSA, conf);
+
+    if (conf->optflags & ARMAS_ONAIVE) {
+        if (flags & ARMAS_TRANS)
+            update_syr2k_trans_unb(beta, C, alpha, A, B, flags);
+        else
+            update_syr2k_unb(beta, C, alpha, A, B, flags);
+        return 0;
     }
-    if (armas_x_update_trm(beta, C
-                           , alpha, A, B, uflags | ARMAS_TRANSB, conf) < 0)
-        return -1;
-    return armas_x_update_trm(ONE, C, alpha, B, A, uflags | ARMAS_TRANSB, conf);
+
+    armas_cbuf_t cbuf = ARMAS_CBUF_EMPTY;
+    if (armas_cbuf_select(&cbuf, conf) < 0) {
+        conf->error = ARMAS_EMEMORY;
+        return -ARMAS_EMEMORY;
+    }
+    cache_t cache;
+    armas_env_t *env = armas_getenv();
+    armas_cache_setup2(&cache, &cbuf, env->mb, env->nb, env->kb, sizeof(DTYPE));
+
+    if (flags & ARMAS_TRANS) 
+        update_syr2k_trans_recursive(beta, C, alpha, A, B, flags, env->lb, &cache);
+    else
+        update_syr2k_recursive(beta, C, alpha, A, B, flags, env->lb, &cache);
+
+    armas_cbuf_release(&cbuf);
+    return 0;
 }
 #else
 #warning "Missing defines; no code"
