@@ -74,7 +74,7 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
 int main(int argc, char **argv)
 {
 
-    armas_conf_t conf;
+    armas_conf_t cf;
     int opt;
     int N = 213;
     int verbose = 1;
@@ -82,11 +82,17 @@ int main(int argc, char **argv)
     int lower = 0;
     int upper = 0;
     int all = 1;
+    armas_env_t *env = armas_getenv();
+    cf = *armas_conf_default();
 
-    while ((opt = getopt(argc, argv, "vUL")) != -1) {
+    while ((opt = getopt(argc, argv, "vULr:")) != -1) {
         switch (opt) {
         case 'v':
             verbose++;
+            break;
+        case 'r':
+            env->lb = atoi(optarg);
+            cf.optflags |= env->lb != 0 ? ARMAS_ORECURSIVE : ARMAS_ONAIVE;
             break;
         case 'L':
             lower = 1;
@@ -105,16 +111,15 @@ int main(int argc, char **argv)
     if (optind < argc)
         N = atoi(argv[optind]);
 
-    conf = *armas_conf_default();
 
     if (all) {
-        fails += test_std(N, verbose, ARMAS_LOWER, &conf);
-        fails += test_std(N, verbose, ARMAS_UPPER, &conf);
+        fails += test_std(N, verbose, ARMAS_LOWER, &cf);
+        fails += test_std(N, verbose, ARMAS_UPPER, &cf);
     } else {
         if (lower)
-            fails += test_std(N, verbose, ARMAS_LOWER, &conf);
+            fails += test_std(N, verbose, ARMAS_LOWER, &cf);
         if (upper)
-            fails += test_std(N, verbose, ARMAS_UPPER, &conf);
+            fails += test_std(N, verbose, ARMAS_UPPER, &cf);
     }
     exit(fails);
 }
