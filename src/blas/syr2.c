@@ -52,23 +52,22 @@ void update_syr2_unb(
     int flags)
 {
     armas_x_dense_t a10, x1, y1;
-    DTYPE a00, x0, y0;
+    DTYPE x0, y0;
 
-    for (int j = 0; j < A->rows; j++) {
-        x0 = armas_x_get_at_unsafe(X, j);
-        y0 = armas_x_get_at_unsafe(Y, j);
-        a00 = armas_x_get_unsafe(A, j, j);
-        armas_x_subvector_unsafe(&y1, Y, j+1, A->cols - j - 1);
-        armas_x_subvector_unsafe(&x1, X, j+1, A->cols - j - 1);
+    for (int j = 0; j < A->cols; j++) {
         if (flags & ARMAS_UPPER) {
-           armas_x_submatrix_unsafe(&a10, A, j, j+1, 1, A->cols - j - 1);
+            // row of A
+            armas_x_submatrix_unsafe(&a10, A, j, j, 1, A->cols - j);
         } else {
-           armas_x_submatrix_unsafe(&a10, A, j+1, j, A->cols - j - 1, 1);
+            // column of A
+            armas_x_submatrix_unsafe(&a10, A, j, j, A->cols - j, 1);
         }
-        a00 = beta*a00 + TWO*alpha*x0*y0;
-        armas_x_set_unsafe(A, j, j, a00);
+        armas_x_subvector_unsafe(&y1, Y, j, A->cols - j);
+        armas_x_subvector_unsafe(&x1, X, j, A->cols - j);
+        x0 = armas_x_get_at_unsafe(&x1, 0);
+        y0 = armas_x_get_at_unsafe(&y1, 0);
         armas_x_axpby_unsafe(beta, &a10, alpha*y0, &x1);
-        armas_x_axpby_unsafe(ONE, &a10, alpha*x0, &y1);
+        armas_x_axpby_unsafe(ONE,  &a10, alpha*x0, &y1);
     }
 }
 
@@ -92,21 +91,21 @@ void update_syr2_recursive(
 
     mat_partition_2x2(
         &ATL, &ATR,
-        &ABL, &ABR, /**/ A, A->rows/2, A->cols/2, ARMAS_PTOPLEFT);
+        &ABL, &ABR, /**/ A, A->rows/2, A->rows/2, ARMAS_PTOPLEFT);
     vec_partition_2x1(
         &xT,
         &xB, /**/ X, A->rows/2, ARMAS_PTOP);
     vec_partition_2x1(
         &yT,
-        &yB, /**/ Y, A->cols/2, ARMAS_PTOP);
+        &yB, /**/ Y, A->rows/2, ARMAS_PTOP);
 
     update_syr2_recursive(beta, &ATL, alpha, &xT, &yT, flags, min_mvec_size);
     if (flags & ARMAS_UPPER) {
-        armas_x_mvupdate_unsafe(beta, &ATR, alpha, &xB, &yT);
-        armas_x_mvupdate_unsafe(ONE, &ATR, alpha, &xB, &yT);
+        armas_x_mvupdate_unsafe(beta, &ATR, alpha, &xT, &yB);
+        armas_x_mvupdate_unsafe(ONE, &ATR, alpha, &yT, &xB);
     } else {
-        armas_x_mvupdate_unsafe(beta, &ABL, alpha, &xT, &yB);
-        armas_x_mvupdate_unsafe(ONE, &ABL, alpha, &xT, &yB);
+        armas_x_mvupdate_unsafe(beta, &ABL, alpha, &xB, &yT);
+        armas_x_mvupdate_unsafe(ONE, &ABL, alpha, &yB, &xT);
     }
     update_syr2_recursive(beta, &ABR, alpha, &xB, &yB, flags, min_mvec_size);
 }
