@@ -154,7 +154,8 @@ LAPACK = \
 	lapack/trdsweep.c \
 	lapack/tribld.c \
 	lapack/trired.c \
-	lapack/triredm.c
+	lapack/triredm.c \
+	lapack/svd.c
 
 if OLD
 SPARSE = \
