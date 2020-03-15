@@ -27,7 +27,7 @@ UNIT_TESTS = \
 	chol givens house housem ldlbk ldlt lu qrbld qrfact qrmult \
 	qrsol qlfact qlbld qlmult lqfact lqbld lqmult lqsol \
 	rqfact rqbld rqmult hessred trdred bidiag bdsvd trdevd \
-	evd gesvd
+	evd gesvd rbt secular
 
 check_PROGRAMS = $(UNIT_TESTS)
 
@@ -75,6 +75,8 @@ qlfact_SOURCES = qlfact.c ../helper.c
 qlfact_LDADD   = $(LIBARMAS)
 qlmult_SOURCES = qlmult.c ../helper.c
 qlmult_LDADD   = $(LIBARMAS)
+rbt_SOURCES    = rbt.c ../helper.c
+rbt_LDADD      = $(LIBARMAS)
 rqbld_SOURCES  = rqbld.c ../helper.c
 rqbld_LDADD    = $(LIBARMAS)
 rqfact_SOURCES = rqfact.c ../helper.c
@@ -87,6 +89,8 @@ trdevd_SOURCES = trdevd.c ../helper.c
 trdevd_LDADD   = $(LIBARMAS)
 trdred_SOURCES = trdred.c ../helper.c
 trdred_LDADD   = $(LIBARMAS)
+secular_SOURCES = secular.c ../helper.c
+secular_LDADD  = $(LIBARMAS)
 
 TESTS = $(check_PROGRAMS)
 

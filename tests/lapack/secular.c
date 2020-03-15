@@ -32,7 +32,7 @@ int test1(int N, double beta, int verbose)
     DTYPE rho, w, nrm;
     int i, ok, fails;
     armas_conf_t conf = *armas_conf_default();
-    
+
     // make N even
     N += (N & 0x1);
     fails = 0;
@@ -45,47 +45,53 @@ int test1(int N, double beta, int verbose)
     armas_x_init(&delta1, N, 1);
     armas_x_init(&Q, N, N);
     armas_x_init(&II, N, N);
-    
+
     armas_x_set_at(&D0, 0, 1.0);
     armas_x_set_at(&Z0, 0, 2.0);
-    for (i = 1; i < N-1; i += 1) {
-        if (i < N/2) {
-            armas_x_set_at(&D0, i, 2.0 - (N/2-i+1)*beta);
+    for (i = 1; i < N - 1; i += 1) {
+        if (i < N / 2) {
+            armas_x_set_at(&D0, i, 2.0 - (N / 2 - i + 1) * beta);
         } else {
-            armas_x_set_at(&D0, i, 2.0 + (i+1-N/2)*beta);
+            armas_x_set_at(&D0, i, 2.0 + (i + 1 - N / 2) * beta);
         }
         armas_x_set_at(&Z0, i, beta);
     }
-    armas_x_set_at(&D0, N-1, 10.0/3.0);
-    armas_x_set_at(&Z0, N-1, 2.0);
+    armas_x_set_at(&D0, N - 1, 10.0 / 3.0);
+    armas_x_set_at(&Z0, N - 1, 2.0);
 
-    w = armas_x_nrm2(&Z0, (armas_conf_t *)0);
-    armas_x_invscale(&Z0, w, (armas_conf_t *)0);
-    
-    rho = 1.0/(w*w);
+    w = armas_x_nrm2(&Z0, (armas_conf_t *) 0);
+    armas_x_scale(&Z0, ONE/w, (armas_conf_t *) 0);
+
+    rho = 1.0 / (w * w);
     if (verbose > 2 && N <= 10) {
         printf("rho: %e\n", rho);
-        printf("D0:\n"); armas_x_printf(stdout, "%13e", &D0);
-        printf("Z0:\n"); armas_x_printf(stdout, "%13e", &Z0);
+        printf("D0:\n");
+        armas_x_printf(stdout, "%13e", &D0);
+        printf("Z0:\n");
+        armas_x_printf(stdout, "%13e", &Z0);
     }
 
     armas_x_trdsec_solve_vec(&D1, &Z1, &Q, &D0, &Z0, rho, &conf);
     armas_x_trdsec_eigen(&Q, &Z1, &Q, &conf);
-    armas_x_mult(0.0, &II, 1.0, &Q, &Q, ARMAS_TRANSA, &conf);
+    armas_x_mult(ZERO, &II, ONE, &Q, &Q, ARMAS_TRANSA, &conf);
     if (verbose > 2 && N <= 10) {
-        printf("D1:\n"); armas_x_printf(stdout, "%13e", &D1);
+        printf("D1:\n");
+        armas_x_printf(stdout, "%13e", &D1);
         armas_x_axpy(&Z1, -1.0, &Z0, &conf);
-        printf("Z0-Z1:\n"); armas_x_printf(stdout, "%13e", &Z1);
-        printf("I:\n"); armas_x_printf(stdout, "%13e", &II);
+        printf("Z0-Z1:\n");
+        armas_x_printf(stdout, "%13e", &Z1);
+        printf("I:\n");
+        armas_x_printf(stdout, "%13e", &II);
     }
 
     armas_x_diag(&sI, &II, 0);
-    armas_x_madd(&sI, -1.0, 0);
+    armas_x_madd(&sI, -ONE, 0, &conf);
     nrm = armas_x_mnorm(&II, ARMAS_NORM_ONE, &conf);
     ok = isOK(nrm, N);
     printf("%s: I == Q.T*Q\n", PASS(ok));
     if (verbose > 0)
-        printf("  N=%d, beta=%13e || rel error ||_1: %e [%d]\n", N, beta, nrm, ndigits(nrm));
+        printf("  N=%d, beta=%13e || rel error ||_1: %e [%d]\n", N, beta, nrm,
+               ndigits(nrm));
     if (!ok)
         fails++;
 
@@ -122,7 +128,7 @@ int main(int argc, char **argv)
             exit(1);
         }
     }
-    
+
     if (optind < argc) {
         N = atoi(argv[optind]);
     }
@@ -139,8 +145,3 @@ int main(int argc, char **argv)
 
     exit(fails);
 }
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
