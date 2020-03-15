@@ -1,30 +1,26 @@
 
-// Copyright (c) Harri Rautila, 2018
+// Copyright (c) Harri Rautila, 2018-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
-
-
-#include <stdio.h>
-#include <armas/armas.h>
 
 //! \cond
 #include <stdio.h>
 
 #include "dtype.h"
 //! \endcond
-// ------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(armas_x_json_write) && defined(armas_x_json_read)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this this requires no external type dependent public functions
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// ----------------------------------------------------------------------------
 
 //! \cond
 #include "matrix.h"
@@ -42,9 +38,9 @@
  * @param[in]  A
  *     Matrix to serialize.
  * @param[in] flags
- *     Serialization control bits. 
+ *     Serialization control bits.
  *
- * 
+ *
  */
 int armas_x_json_write(armas_iostream_t *ios, const armas_x_dense_t *A, int flags)
 {
@@ -79,7 +75,6 @@ int armas_x_json_write(armas_iostream_t *ios, const armas_x_dense_t *A, int flag
     JSON_ONERROR(armas_json_write_simple_token(':', ios));
     JSON_ONERROR(armas_json_write_simple_token('[', ios));
 
-    
     int n = 0;
     for (int j = 0; j < A->cols; j++) {
         for (int i = 0; i < A->rows; i++, n++) {
@@ -96,8 +91,6 @@ int armas_x_json_write(armas_iostream_t *ios, const armas_x_dense_t *A, int flag
 
     return 0;
 }
-
-
 
 enum {
     HAVE_ROWS = 1,
@@ -145,7 +138,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
     armas_x_dense_t *aa;
 
     rows = cols = nnz = flags = 0;
-    
+
     aa = *A;
     tok = armas_json_read_token(iob, sizeof(iob), ios);
     if (tok == ARMAS_JSON_NULL) {
@@ -205,7 +198,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
                 return -1;
             state = MEMBER_KEY;
             break;
-            
+
         case MEMBER_ROW_SEP:
             if (tok != ':')
                 return -1;
@@ -260,7 +253,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
 
         case MEMBER_DTA_SEP:
             if (tok != ':')
-                return -1;           
+                return -1;
             state = MEMBER_DTA_VAL;
             break;
 
@@ -292,7 +285,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
     for (int j = 0; j < cols; j++) {
         for (int i = 0; i < rows; i++, n++) {
             if (n > 0) {
-                if ((tok = armas_json_read_token(iob, sizeof(iob), ios)) != ',') 
+                if ((tok = armas_json_read_token(iob, sizeof(iob), ios)) != ',')
                     goto error_exit;
             }
             tok = armas_json_read_token(iob, sizeof(iob), ios);
@@ -320,7 +313,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
             *A = aa;
         return 0;
     }
-    
+
  error_exit:
     // release reserved space
     if (have_new)
@@ -329,13 +322,6 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
         armas_x_release(aa);
     return -1;
 }
-
-
-
-
+#else
+#warning "Missing defines. No code"
 #endif
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:

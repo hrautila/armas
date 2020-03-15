@@ -1,4 +1,8 @@
-//
+// Copyright (c) Harri Rautila, 2013-2020
+
+// This file is part of github.com/hrautila/armas library. It is free software,
+// distributed under the terms of GNU Lesser General Public License Version 3, or
+// any later version. See the COPYING file included in this archive.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,17 +11,17 @@
 
 #include "dtype.h"
 
-// ------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_mmload) && defined(armas_x_mmdump)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// ----------------------------------------------------------------------------
 
 //! \cond
 #include "matrix.h"
@@ -248,11 +252,11 @@ int __mmread_size(FILE *f, int typecode, int *m, int *n, int *nnz)
  *    for symmetric matrix and only lower triangular part is stored.
  * \param[in] f
  *    Pointer to opened file. Reading starts at current file location.
- * 
+ *
  * \returns
  *    0 on success
  *    <0 on error
- *  
+ *
  */
 int armas_x_mmload(armas_x_dense_t *A, int *flags,  FILE *f)
 {
@@ -261,7 +265,7 @@ int armas_x_mmload(armas_x_dense_t *A, int *flags,  FILE *f)
     char *iobuf;
     size_t ioblen;
     double v;
-    
+
     if (__mmread_banner(f, &typecode) < 0) {
         return -1;
     }
@@ -284,7 +288,7 @@ int armas_x_mmload(armas_x_dense_t *A, int *flags,  FILE *f)
     // number of elements to expect
     nelem = nnz;
     if ((typecode & ARMAS_MM_ARRAY) != 0) 
-        nelem = (typecode & ARMAS_MM_SYMMETRIC) != 0 ? n*(n + 1)/2 : m*n;      
+        nelem = (typecode & ARMAS_MM_SYMMETRIC) != 0 ? n*(n + 1)/2 : m*n;
 
     ioblen = 0;
     iobuf = (char *)0;
@@ -298,13 +302,14 @@ int armas_x_mmload(armas_x_dense_t *A, int *flags,  FILE *f)
             //v = strtod(iobuf, &endptr);
             if (read_value(iobuf, &v) < 0)
                 goto endloop;
-            
+
             if ((typecode & ARMAS_MM_SYMMETRIC) != 0) {
                 // only lower triangular elements provided (n*(n+1)/2 elements)
                 // in packed format
                 if (k == nc) {
-                    c++;          // next column
-                    nc += m - c;  // update start index for following column
+                    // next column, update start index for following column
+                    c++;
+                    nc += m - c;
                     r = c - 1;
                 }
                 r++;
@@ -339,7 +344,7 @@ int armas_x_mmdump(FILE *f, const armas_x_dense_t *A, int flags)
     char *s = "general";
     char *t = TYPE_STRING;
     int n, j, k;
-    
+
     if  ((flags & ARMAS_SYMM) != 0)
         s = "symmetric";
 
@@ -354,11 +359,6 @@ int armas_x_mmdump(FILE *f, const armas_x_dense_t *A, int flags)
     }
     return n;
 }
-
-#endif // defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#else
+#warning "Missing defines! No code."
+#endif // defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)

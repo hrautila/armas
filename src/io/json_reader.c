@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2018
+// Copyright (c) Harri Rautila, 2018-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -8,7 +8,8 @@
 
 #include <stdio.h>
 #include <ctype.h>
-#include <armas/armas.h>
+
+#include "armas.h"
 
 /*
  *  ECMA 404  (https://json.org)
@@ -43,7 +44,7 @@
  *     "" | '.' digits
  *  exp:
  *    "" | 'E' sign digits | 'e' sign digits
- *  sign: 
+ *  sign:
  *    "" | '+' | '-'
  *  string:
  *    '"' characters '"'
@@ -57,7 +58,7 @@
  *    digit | 'A' . 'F' | 'a' . 'f'
  *  ws:
  *    "" | ' ' | '\t' | '\r' | '\n'
- *  
+ *
  */
 
 
@@ -85,7 +86,7 @@ enum {
     JSON_STATE_NULL1,
     JSON_STATE_NULL2,
     JSON_STATE_NULL3
-}; 
+};
 
 
 /**
@@ -97,7 +98,7 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
     int state = JSON_STATE_VALUE;
     int is_frac = 0;
     char lit[8], *cp, *bp;
-    
+
     bp = buf;
     for (;;) {
         /* */
@@ -142,7 +143,7 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
                 break;
             case 'n':
                 *bp++ = '\n';
-                break;              
+                break;
             case 'r':
                 *bp++ = '\r';
                 break;
@@ -171,7 +172,7 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
             *cp++ = c;
             state = JSON_STATE_HEX3;
             break;
-            
+
         case JSON_STATE_HEX3:
             if (!isxdigit(c))
                 return ARMAS_JSON_EINVAL;
@@ -242,7 +243,7 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
                 break;
             }
             break;
-            
+
         case JSON_STATE_EXP1:
             // now we have at least one digit after e|E
             switch (c) {
@@ -281,7 +282,7 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
             if (c != 'e')
                 return ARMAS_JSON_EINVAL;
             return ARMAS_JSON_TRUE;
-            
+
         case JSON_STATE_FALSE:
             if (c != 'a')
                 return ARMAS_JSON_EINVAL;
@@ -330,7 +331,7 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
             case '\"':
                 state = JSON_STATE_STRING;
                 break;
-            
+
             case ' ':
             case '\n':
             case '\t':
@@ -349,7 +350,7 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
             case 'n':
                 state = JSON_STATE_NULL;
                 break;
-                
+
             default:
                 if (c == '\0') {
                     return ARMAS_JSON_EOF;
@@ -364,7 +365,6 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
                 }
                 break;
             }
-            
         }
         if ((size_t)(bp - buf) >= len-1) {
             // end buffer space
@@ -374,8 +374,3 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
     // reach here when hitting EOF
     return ARMAS_JSON_EOF;
 }
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:

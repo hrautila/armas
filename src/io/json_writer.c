@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2018
+// Copyright (c) Harri Rautila, 2018-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -9,7 +9,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
-#include <armas/armas.h>
+
+#include "armas.h"
 
 #define JSON_ONERROR(func)                        \
     do { if ((func) < 0) { return -1; } } while (0);
@@ -22,7 +23,7 @@ int armas_json_write_token(int token, const void *ptr, size_t len, armas_iostrea
     char buf[64], *cp, *numformat = "%.14g";
     int n;
     double v;
-    
+
     switch (token) {
     case '{':
     case '}':
@@ -78,7 +79,7 @@ int armas_json_write_token(int token, const void *ptr, size_t len, armas_iostrea
             n = snprintf(buf, sizeof(buf), "%d", *((int *)ptr));
         } else {
             n = snprintf(buf, sizeof(buf), "%ld", *((long *)ptr));
-        } 
+        }
         for (int k = 0; k < n; k++)
             JSON_ONERROR(armas_putchar(writer, buf[k]));
         break;
@@ -127,8 +128,3 @@ int armas_json_write_simple_token(int tok, armas_iostream_t *ios)
 {
     return armas_json_write_token(tok, (const void *)0, 0, ios);
 }
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:

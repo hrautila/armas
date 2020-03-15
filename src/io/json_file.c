@@ -1,13 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2018
+// Copyright (c) Harri Rautila, 2018-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
-
-
-#include <stdio.h>
-#include <armas/armas.h>
 
 //! \cond
 #include <stdio.h>
@@ -17,13 +13,13 @@
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(armas_x_json_load)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this this requires no external type dependnet public functions
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
 //! \cond
@@ -88,12 +84,6 @@ int armas_x_json_dump(FILE *fp, const armas_x_dense_t *A, int flags)
     armas_iostream_init(&writer, &file_vtable, fp);
     return armas_x_json_write(&writer, A, flags);
 }
-
-
-
+#else
+#warning "Missing defines. No code."
 #endif
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:
