@@ -33,22 +33,19 @@ int test_reduce(int M, int N, int lb, int verbose, int flags)
     armas_x_init(&tau0, N, 1);
     armas_x_init(&tau1, N, 1);
 
-    // set source data
+     // set source data
     armas_x_set_values(&A0, unitrand, flags);
     armas_x_mcopy(&A1, &A0, 0, &conf);
-    if (verbose > 1) {
-        MAT_PRINT("Initial A", &A0);
-    }
+
     env->lb = 0;
     armas_x_trdreduce(&A0, &tau0, flags, &conf);
     if (verbose > 1) {
-        MAT_PRINT("unblk trd(A)", &A0);
+        MAT_PRINT("unblk reduce", &A0);
     }
-
     env->lb = lb;
     armas_x_trdreduce(&A1, &tau1, flags, &conf);
     if (verbose > 1) {
-        MAT_PRINT("blk trd(A)", &A1);
+        MAT_PRINT("blk reduce", &A1);
     }
 
     n0 = rel_error((DTYPE *) 0, &A0, &A1, ARMAS_NORM_ONE, 0, &conf);
@@ -64,7 +61,7 @@ int test_reduce(int M, int N, int lb, int verbose, int flags)
     armas_x_release(&A1);
     armas_x_release(&tau0);
     armas_x_release(&tau1);
-    return ok;
+    return 1 - ok;
 }
 
 // compute ||A - Q*T*Q^T||
@@ -86,9 +83,6 @@ int test_mult_trd(int M, int N, int lb, int verbose, int flags)
     // set source data
     armas_x_set_values(&A0, unitrand, flags);
     armas_x_mcopy(&A1, &A0, 0, &conf);
-    if (verbose > 1) {
-        MAT_PRINT("A", &A0);
-    }
 
     env->lb = lb;
     armas_x_trdreduce(&A0, &tau0, flags, &conf);
@@ -107,20 +101,11 @@ int test_mult_trd(int M, int N, int lb, int verbose, int flags)
     armas_x_mcopy(&e2, &e1, 0, &conf);
     armas_x_diag(&e2, &T0, -1);
     armas_x_mcopy(&e2, &e1, 0, &conf);
-    if (verbose > 1) {
-        MAT_PRINT("T", &T0);
-    }
     // compute Q*T*Q^T
     armas_x_trdmult(&T0, &A0, &tau0, flags | ARMAS_LEFT, &conf);
-    if (verbose > 1) {
-        MAT_PRINT("Q*T", &T0);
-    }
     armas_x_trdmult(&T0, &A0, &tau0, flags | ARMAS_RIGHT | ARMAS_TRANS, &conf);
     // make result triangular (original matrix)
     armas_x_make_trm(&T0, flags);
-    if (verbose > 1) {
-        MAT_PRINT("Q*T*Q^T", &T0);
-    }
 
     nrm = rel_error((DTYPE *) 0, &T0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
     ok = isFINE(nrm, N * ERROR);
@@ -133,7 +118,7 @@ int test_mult_trd(int M, int N, int lb, int verbose, int flags)
     armas_x_release(&tau0);
     armas_x_release(&T0);
     armas_x_release(&T1);
-    return ok;
+    return 1 - ok;
 }
 
 // compute ||T - Q^T*A*Q||
@@ -189,7 +174,7 @@ int test_mult_a(int M, int N, int lb, int verbose, int flags)
     armas_x_release(&tau0);
     armas_x_release(&T0);
     armas_x_release(&T1);
-    return ok;
+    return 1 - ok;
 }
 
 int test_build(int M, int N, int lb, int K, int verbose, int flags)
@@ -230,7 +215,7 @@ int test_build(int M, int N, int lb, int K, int verbose, int flags)
     armas_x_release(&A0);
     armas_x_release(&tauq0);
     armas_x_release(&QQt);
-    return ok;
+    return 1 - ok;
 }
 
 int main(int argc, char **argv)
@@ -261,25 +246,13 @@ int main(int argc, char **argv)
 
     int fails = 0;
 
-    if (!test_reduce(N, N, LB, verbose, ARMAS_LOWER))
-        fails++;
-#if 0
-    if (!test_reduce(N, N, LB, verbose, ARMAS_UPPER))
-        fails++;
-#endif
-    if (!test_mult_trd(N, N, LB, verbose, ARMAS_LOWER))
-        fails++;
-#if 0
-    if (!test_mult_trd(N, N, LB, verbose, ARMAS_UPPER))
-        fails++;
-    if (!test_mult_a(N, N, LB, verbose, ARMAS_LOWER))
-        fails++;
-    if (!test_mult_a(N, N, LB, verbose, ARMAS_UPPER))
-        fails++;
-    if (!test_build(N, N, LB, N / 2, verbose, ARMAS_LOWER))
-        fails++;
-    if (!test_build(N, N, LB, N / 2, verbose, ARMAS_UPPER))
-        fails++;
-#endif
+    fails += test_reduce(N, N, LB, verbose, ARMAS_LOWER);
+    fails += test_reduce(N, N, LB, verbose, ARMAS_UPPER);
+    fails += test_mult_trd(N, N, LB, verbose, ARMAS_LOWER);
+    fails += test_mult_trd(N, N, LB, verbose, ARMAS_UPPER);
+    fails += test_mult_a(N, N, LB, verbose, ARMAS_LOWER);
+    fails += test_mult_a(N, N, LB, verbose, ARMAS_UPPER);
+    fails += test_build(N, N, LB, N / 2, verbose, ARMAS_LOWER);
+    fails += test_build(N, N, LB, N / 2, verbose, ARMAS_UPPER);
     exit(fails);
 }
