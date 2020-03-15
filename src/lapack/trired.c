@@ -112,7 +112,7 @@ int unblk_trdreduce_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
 
         // set subdiagonal to unit
         v0 = armas_x_get(&a21, 0, 0);
-        armas_x_set(&a21, 0, 0, 1.0);
+        armas_x_set(&a21, 0, 0, ONE);
 
         // y21 := tauq*A22*a21
         armas_x_mvmult_sym(ZERO, &y21, tauval, &A22, &a21, ARMAS_LOWER, conf);
@@ -179,6 +179,7 @@ int unblk_trdbuild_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tT,
             &tq0, &tq1, &tq2, /**/ tauq, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
+        // Use top row of Y for workspace
         armas_x_submatrix(&w12, Y, 0, 0, 1, Y00.cols);
 
         if (Y00.cols > 0) {
@@ -190,7 +191,6 @@ int unblk_trdbuild_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
             armas_x_mvmult(ONE, &a21, -ONE, &A20, &y10, ARMAS_NONE, conf);
             // a21 := a21 - Y20*a10
             armas_x_mvmult(ONE, &a21, -ONE, &Y20, &a10, ARMAS_NONE, conf);
-
             // restore subdiagonal value
             armas_x_set(&a10, 0, a10.cols - 1, v0);
         }
@@ -200,7 +200,7 @@ int unblk_trdbuild_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
 
         // set subdiagonal to unit
         v0 = armas_x_get(&a21, 0, 0);
-        armas_x_set(&a21, 0, 0, 1.0);
+        armas_x_set(&a21, 0, 0, ONE);
 
         // y21 := tauq*A22*a21
         armas_x_mvmult_sym(ZERO, &y21, tauval, &A22, &a21, ARMAS_LOWER, conf);
@@ -217,7 +217,6 @@ int unblk_trdbuild_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
         beta = tauval * armas_x_dot(&a21, &y21, conf);
         // y21 := y21 - 0.5*beta*a21
         armas_x_axpy(&y21, -HALF * beta, &a21, conf);
-
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -230,7 +229,7 @@ int unblk_trdbuild_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tB, /**/ &tq0, &tq1, /**/ tauq, ARMAS_PBOTTOM);
     }
 
-    // restore subdiagonal value
+    // restore subdiagonal value; note we access A matrix
     armas_x_set(A, ATL.rows, ATL.cols - 1, v0);
     return err;
 }
@@ -277,7 +276,7 @@ int blk_trdreduce_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
         }
         // set subdiagonal to unit
         v0 = armas_x_get(&A21, 0, A21.cols - 1);
-        armas_x_set(&A21, 0, A21.cols - 1, 1.0);
+        armas_x_set(&A21, 0, A21.cols- 1, 1.0);
 
         // A22 := A22 - A21*Y2.T - Y2*A21.T
         armas_x_update2_sym(ONE, &A22, -ONE, &A21, &Y2, ARMAS_LOWER, conf);
@@ -354,7 +353,7 @@ int unblk_trdreduce_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
 
         // set subdiagonal to unit
         v0 = armas_x_get(&a01, a01.rows - 1, 0);
-        armas_x_set(&a01, a01.rows - 1, 0, 1.0);
+        armas_x_set(&a01, a01.rows - 1, 0, ONE);
 
         // y21 := tauq*A00*a01
         armas_x_mvmult_sym(ZERO, &y21, tauval, &A00, &a01, ARMAS_UPPER, conf);
@@ -412,19 +411,20 @@ int unblk_trdbuild_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
     for (k = 0; k < Y->cols; k++) {
         mat_repartition_2x2to3x3(
             &ATL,
-            &A00, &a01, &A02,
+            &A00,  &a01, &A02,
             __nil, &a11, &a12,
             __nil, __nil, &A22, /**/ A, 1, ARMAS_PTOPLEFT);
         mat_repartition_2x2to3x3(
             &YTL,
-            &Y00, &y01, &Y02,
+            &Y00,  &y01, &Y02,
             __nil, &y11, &y12,
             __nil, __nil, &Y22, /**/ Y, 1, ARMAS_PTOPLEFT);
         mat_repartition_2x1to3x1(
             &tT,
             &tq0, &tq1, &tq2, /**/ tauq, 1, ARMAS_PTOP);
         // ---------------------------------------------------------------------
-        armas_x_submatrix(&w12, Y, -1, 0, 1, Y02.cols);
+        // use bottom row of Y for workspace
+        armas_x_submatrix(&w12, Y, Y->rows - 1, 0, 1, Y02.cols);
 
         if (Y02.cols > 0) {
             // a11 := a11 - a12*y12 - y12*a12
@@ -444,7 +444,7 @@ int unblk_trdbuild_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
 
         // set superdiagonal to unit
         v0 = armas_x_get(&a01, a01.rows - 1, 0);
-        armas_x_set(&a01, a01.rows - 1, 0, 1.0);
+        armas_x_set(&a01, a01.rows - 1, 0, ONE);
 
         // y01 := tauq*A00*a01
         armas_x_mvmult_sym(ZERO, &y01, tauval, &A00, &a01, ARMAS_UPPER, conf);
@@ -521,7 +521,7 @@ int blk_trdreduce_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
         }
         // set superdiagonal to unit
         v0 = armas_x_get(&A01, A01.rows - 1, 0);
-        armas_x_set(&A01, A01.rows - 1, 0, 1.0);
+        armas_x_set(&A01, A01.rows - 1, 0, ONE);
 
         // A00 := A00 - A01*Y0.T - Y0*A01.T
         armas_x_update2_sym(ONE, &A00, -ONE, &A01, &Y0, ARMAS_UPPER, conf);
