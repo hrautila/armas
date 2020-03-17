@@ -30,6 +30,7 @@
 //! \cond
 #include "matrix.h"
 #include "internal.h"
+#include "partition.h"
 //! \endcond
 
 /*
@@ -184,23 +185,50 @@ void trmv_unb(
     }
 }
 
+/*
+ *     A00 | A01   x0
+ *     ---------   --
+ *     A10 | A11   x1
+ *
+ *  For UPPER                              LOWER-TRANS
+ *  x0  = alpha*A00*x0 + alpha*A01*x1      x0 = alpha*A00^T*x1 + alpha*A10^T*x1
+ *  x1  = alpha*A11*x1                     x1 = alpha*A11^T*x1
+ */
 static
 void trmv_forward_recursive(
     armas_x_dense_t *X,
-    const armas_x_dense_t *A,
     DTYPE alpha,
+    const armas_x_dense_t *A,
     int flags,
     int min_mvec_size)
 {
-    armas_x_dense_t x0, x1;
-    armas_x_dense_t a0, a1;
-    int N = A->cols;
+    armas_x_dense_t ATL, ATR, ABL, ABR, xT, xB;
+    //armas_x_dense_t x0, x1;
+    //armas_x_dense_t a0, a1;
+    // int N = A->cols;
 
     if (A->cols < min_mvec_size) {
         trmv_unb(X, alpha, A, flags);
         return;
     }
+    mat_partition_2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, A->rows/2, A->rows/2, ARMAS_PTOPLEFT);
+    vec_partition_2x1(
+        &xT,
+        &xB, /**/ X, A->rows/2, ARMAS_PTOP);
 
+    // top part
+    trmv_forward_recursive(&xT, alpha, &ATL, flags, min_mvec_size);
+    // update top with bottom
+    if (flags & ARMAS_UPPER) {
+        armas_x_mvmult_unsafe(ONE, &xT, alpha, &ATR, &xB, 0);
+    } else {
+        armas_x_mvmult_unsafe(ONE, &xT, alpha, &ABL, &xB, ARMAS_TRANS);
+    }
+    // bottom part
+    trmv_forward_recursive(&xB, alpha, &ABR, flags, min_mvec_size);
+#if 0
     // top part
     armas_x_subvector_unsafe(&x0, X, 0, N/2);
     armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);
@@ -218,26 +246,54 @@ void trmv_forward_recursive(
     // bottom part
     armas_x_submatrix_unsafe(&a1, A, N/2, N/2, N-N/2, N-N/2);
     trmv_forward_recursive(&x1, &a1, alpha, flags, min_mvec_size);
+#endif
 }
 
+/*
+ *     A00 | A01   x0
+ *     ---------   --
+ *     A10 | A11   x1
+ *
+ *  For UPPER - TRANS                      LOWER
+ *  x0  = alpha*A00^T*x0                   x0 = alpha*A00*x0
+ *  x1  = alpha*A01^T*x0 + alpha*A11*x1    x1 = alpha*A10*x0 + alpha*A11*x1
+ */
 static
 void trmv_backward_recursive(
     armas_x_dense_t *X,
-    const armas_x_dense_t *A,
     DTYPE alpha,
+    const armas_x_dense_t *A,
     int flags,
     int min_mvec_size)
 {
-    armas_x_dense_t x0, x1;
-    armas_x_dense_t a0, a1;
-    int N = A->cols;
+    armas_x_dense_t ATL, ATR, ABL, ABR, xT, xB;
+    //armas_x_dense_t x0, x1;
+    //armas_x_dense_t a0, a1;
+    //int N = A->cols;
 
     //printf("trmv_bk_recursive: N=%d\n", N);
     if (A->cols < min_mvec_size) {
         trmv_unb(X, alpha, A, flags);
         return;
     }
+    mat_partition_2x2(
+        &ATL, &ATR,
+        &ABL, &ABR, /**/ A, A->rows/2, A->rows/2, ARMAS_PTOPLEFT);
+    vec_partition_2x1(
+        &xT,
+        &xB, /**/ X, A->rows/2, ARMAS_PTOP);
 
+    // bottom part
+    trmv_backward_recursive(&xB, alpha, &ABR, flags, min_mvec_size);
+    // update bottom with top
+    if (flags & ARMAS_UPPER) {
+        armas_x_mvmult_unsafe(ONE, &xB, alpha, &ATR, &xT, ARMAS_TRANS);
+    } else {
+        armas_x_mvmult_unsafe(ONE, &xB, alpha, &ABL, &xT, 0);
+    }
+    // top part
+    trmv_backward_recursive(&xT, alpha, &ATL, flags, min_mvec_size);
+#if 0
     // bottom part
     armas_x_subvector_unsafe(&x1, X, N/2, N-N/2);
     armas_x_submatrix_unsafe(&a1, A, N/2, N/2, N-N/2, N-N/2);
@@ -256,6 +312,7 @@ void trmv_backward_recursive(
     // top part
     armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);
     trmv_backward_recursive(&x0, &a0, alpha, flags, min_mvec_size);
+#endif
 }
 
 #if defined(armas_x_mvmult_trm_unsafe)
@@ -275,13 +332,13 @@ void armas_x_mvmult_trm_unsafe(
     switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {
     case ARMAS_LOWER|ARMAS_TRANS:
     case ARMAS_UPPER:
-        trmv_forward_recursive(X, A, alpha, flags, env->blas2min);
+        trmv_forward_recursive(X, alpha, A, flags, env->blas2min);
         break;
 
     case ARMAS_UPPER|ARMAS_TRANS:
     case ARMAS_LOWER:
     default:
-        trmv_backward_recursive(X, A, alpha, flags, env->blas2min);
+        trmv_backward_recursive(X, alpha, A, flags, env->blas2min);
         break;
     }
 }
@@ -346,12 +403,12 @@ int armas_x_mvmult_trm(
         switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {
         case ARMAS_LOWER|ARMAS_TRANS:
         case ARMAS_UPPER:
-            trmv_forward_recursive(x, A, alpha, flags, env->blas2min);
+            trmv_forward_recursive(x, alpha, A, flags, env->blas2min);
             break;
         case ARMAS_UPPER|ARMAS_TRANS:
         case ARMAS_LOWER:
         default:
-            trmv_backward_recursive(x, A, alpha, flags, env->blas2min);
+            trmv_backward_recursive(x, alpha, A, flags, env->blas2min);
             break;
         }
     }
