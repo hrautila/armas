@@ -6,111 +6,111 @@
 
 #include "testing.h"
 
-int test_std(int N, int verbose, int unit, armas_conf_t *cf)
+
+int test_mvmult(int N, int verbose, int flags, armas_conf_t *cf)
 {
-    armas_x_dense_t X, Y, X0, A, At;
-    DTYPE nrm_z;
+    armas_x_dense_t X1, Y, X0, A;
+    armas_env_t *env = armas_getenv();
+    DTYPE n0, n1;
     int ok;
-    int fails = 0;
+    int unit = (flags & ARMAS_UNIT) ? 1 : 0;
+    const char *uplo = (flags & ARMAS_UPPER) ? "upper" : "lower";
+    const char *gemv = (flags & ARMAS_TRANS) ? "A^T*x" : "A*x";
+    const char *t = (flags & ARMAS_TRANS) ? "^T" : "";
+    const char *u = (flags & ARMAS_UNIT) ? "unit-diag" : "non-unit";
 
-    armas_x_init(&Y, N, 1);
     armas_x_init(&X0, N, 1);
-    armas_x_init(&X, N, 1);
+    armas_x_init(&X1, N, 1);
+    armas_x_init(&Y, N, 1);
     armas_x_init(&A, N, N);
-    armas_x_init(&At, N, N);
 
-    armas_x_set_values(&X, one, ARMAS_NULL);
-    armas_x_set_values(&Y, zero, ARMAS_NULL);
-    armas_x_mcopy(&X0, &X, 0, cf);
-    armas_x_set_values(&A, one, ARMAS_UPPER);
+    armas_x_set_values(&X0, one, 0);
+    armas_x_mcopy(&Y, &X0, 0, cf);
+    armas_x_set_values(&A, unitrand, flags);
     if (unit) {
         for (int i = 0; i < N; i++) {
-            armas_x_set(&A, i, i, 1.0);
+            armas_x_set(&A, i, i, ONE);
         }
     }
-    armas_x_mcopy(&At, &A, ARMAS_TRANS, cf);
 
-    printf("** trmv: upper, %s\n", unit ? "unit-diagonal" : "");
-    // --- upper ---
-    armas_x_mvmult_trm(&X, -2.0, &A, ARMAS_UPPER|unit, cf);
-    armas_x_mvmult(1.0, &X, 2.0, &A, &X0, ARMAS_NULL, cf);
-    nrm_z = armas_x_nrm2(&X, cf);
-    ok = nrm_z == 0.0 || isOK(nrm_z, N) ? 1 : 0;
-    printf("%6s : trmv(X, U) == gemv(U, X)\n", PASS(ok));
+    env->blas2min = 0;
+    armas_x_mvmult_trm(&X0, 2.0, &A, flags, cf);
+    armas_x_mvmult(ZERO, &X1, 2.0, &A, &Y, flags, cf);
+
+    n0 = rel_error(&n1, &X0, &X1, ARMAS_NORM_TWO, 0, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : trmv(%s(A%s), x) == %s [%s]\n", PASS(ok), uplo, t, gemv, u);
     if (verbose > 0) {
-        printf("    || rel error || : %e, [%d]\n", nrm_z, ndigits(nrm_z));
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
-    fails += 1 - ok;
+    armas_x_release(&X0);
+    armas_x_release(&X1);
+    armas_x_release(&A);
+    armas_x_release(&Y);
+    return 1 - ok;
+}
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+int test_blocked(int N, int verbose, int lb, int flags, armas_conf_t *cf)
+{
+    armas_x_dense_t X1, X0, A;
+    armas_env_t *env = armas_getenv();
+    DTYPE n0, n1;
+    int ok;
+    int unit = (flags & ARMAS_UNIT) ? 1 : 0;
+    const char *uplo = (flags & ARMAS_UPPER) ? "upper" : "lower";
+    const char *t = (flags & ARMAS_TRANS) ? "^T" : "";
+    const char *u = (flags & ARMAS_UNIT) ? "unit-diag" : "non-unit";
 
-    // --- upper, trans ---
-    armas_x_mvmult_trm(&X, -2.0, &A, ARMAS_UPPER|ARMAS_TRANSA|unit, cf);
-    armas_x_mvmult(1.0, &X, 2.0, &A, &X0, ARMAS_TRANSA, cf);
-    nrm_z = armas_x_nrm2(&X, cf);
-    ok = nrm_z == 0.0 || isOK(nrm_z, N) ? 1 : 0;
-    printf("%6s : trmv(X, U^T) == gemv(U^T, X)\n", PASS(ok));
+    armas_x_init(&X0, N, 1);
+    armas_x_init(&X1, N, 1);
+    armas_x_init(&A, N, N);
+
+    armas_x_set_values(&X0, one, 0);
+    armas_x_mcopy(&X1, &X0, 0, cf);
+    armas_x_set_values(&A, unitrand, flags);
+    if (unit) {
+        for (int i = 0; i < N; i++) {
+            armas_x_set(&A, i, i, ONE);
+        }
+    }
+
+    env->blas2min = 0;
+    armas_x_mvmult_trm(&X0, 2.0, &A, flags, cf);
+    env->blas2min = lb;
+    armas_x_mvmult_trm(&X1, 2.0, &A, flags, cf);
+
+
+    n0 = rel_error(&n1, &X0, &X1, ARMAS_NORM_TWO, 0, cf);
+    ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
+    printf("%6s : unblk.%s(A%s)*x == blk.%s(A%s)*x [%s]\n",
+         PASS(ok), uplo, t, uplo, t, u);
     if (verbose > 0) {
-        printf("    || rel error || : %e, [%d]\n", nrm_z, ndigits(nrm_z));
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
-    fails += 1 - ok;
-
-    armas_x_mcopy(&X, &X0, 0, cf);
-
-    printf("** trmv: lower, %s\n", unit ? "unit-diagonal" : "");
-    // --- lower ---
-    armas_x_mvmult_trm(&X, -2.0, &At, ARMAS_LOWER|unit, cf);
-    armas_x_mvmult(1.0, &X, 2.0, &At, &X0, ARMAS_NULL, cf);
-    nrm_z = armas_x_nrm2(&X, cf);
-    ok = nrm_z == 0.0 || isOK(nrm_z, N) ? 1 : 0;
-    printf("%6s : trmv(X, L) == gemv(L, X)\n", PASS(ok));
-    if (verbose > 0) {
-        printf("    || rel error || : %e, [%d]\n", nrm_z, ndigits(nrm_z));
-    }
-    fails += 1 - ok;
-
-    armas_x_mcopy(&X, &X0, 0, cf);
-
-    // --- lower, trans ---
-    armas_x_mvmult_trm(&X, -2.0, &At, ARMAS_LOWER|ARMAS_TRANSA|unit, cf);
-    armas_x_mvmult(1.0, &X, 2.0, &At, &X0, ARMAS_TRANSA, cf);
-    nrm_z = armas_x_nrm2(&X, cf);
-    ok = nrm_z == 0.0 || isOK(nrm_z, N) ? 1 : 0;
-    printf("%6s : trmv(X, L^T) == gemv(L^T, X)\n", PASS(ok));
-    if (verbose > 0) {
-        printf("    || rel error || : %e, [%d]\n", nrm_z, ndigits(nrm_z));
-    }
-    fails += 1 - ok;
-    return fails;
+    armas_x_release(&X0);
+    armas_x_release(&X1);
+    armas_x_release(&A);
+    return 1 - ok;
 }
 
 int main(int argc, char **argv)
 {
     armas_conf_t cf;
-    armas_env_t *env;
 
     int opt;
     int N = 911;
     int fails = 0;
     int verbose = 0;
-    int unit = 0;
+    int lb = 16;
 
     cf = *armas_conf_default();
-    env = armas_getenv();
-    while ((opt = getopt(argc, argv, "vr:ub:")) != -1) {
+    while ((opt = getopt(argc, argv, "vb:")) != -1) {
         switch (opt) {
         case 'v':
             verbose += 1;
             break;
-        case 'r':
-            env->blas2min = atoi(optarg);
-            cf.optflags |= env->blas2min != 0 ? ARMAS_ORECURSIVE : ARMAS_ONAIVE;
-            break;
         case 'b':
-            env->blas1min = atoi(optarg);
-            break;
-        case 'u':
-            unit = ARMAS_UNIT;
+            lb = atoi(optarg);
             break;
         default:
             fprintf(stderr, "usage: trmv [size]\n");
@@ -121,9 +121,28 @@ int main(int argc, char **argv)
     if (optind < argc) {
         N = atoi(argv[optind]);
     }
+    printf("** unblocked trmv against mvmult.\n");
+    fails += test_mvmult(N, verbose, ARMAS_UPPER, &cf);
+    fails += test_mvmult(N, verbose, ARMAS_UPPER|ARMAS_UNIT, &cf);
+    fails += test_mvmult(N, verbose, ARMAS_LOWER, &cf);
+    fails += test_mvmult(N, verbose, ARMAS_LOWER|ARMAS_UNIT, &cf);
 
-    fails += test_std(N, verbose, unit, &cf);
-    fails += test_std(N, verbose, ARMAS_UNIT, &cf);
+    fails += test_mvmult(N, verbose, ARMAS_UPPER|ARMAS_TRANS, &cf);
+    fails += test_mvmult(N, verbose, ARMAS_UPPER|ARMAS_TRANS|ARMAS_UNIT, &cf);
+    fails += test_mvmult(N, verbose, ARMAS_LOWER|ARMAS_TRANS, &cf);
+    fails += test_mvmult(N, verbose, ARMAS_LOWER|ARMAS_TRANS|ARMAS_UNIT, &cf);
+
+    printf("** unblocked trmv against blocked trmv.\n");
+
+    fails += test_blocked(N, verbose, lb, ARMAS_UPPER, &cf);
+    fails += test_blocked(N, verbose, lb, ARMAS_UPPER|ARMAS_UNIT, &cf);
+    fails += test_blocked(N, verbose, lb, ARMAS_LOWER, &cf);
+    fails += test_blocked(N, verbose, lb, ARMAS_LOWER|ARMAS_UNIT, &cf);
+
+    fails += test_blocked(N, verbose, lb, ARMAS_UPPER|ARMAS_TRANS, &cf);
+    fails += test_blocked(N, verbose, lb, ARMAS_UPPER|ARMAS_TRANS|ARMAS_UNIT, &cf);
+    fails += test_blocked(N, verbose, lb, ARMAS_LOWER|ARMAS_TRANS, &cf);
+    fails += test_blocked(N, verbose, lb, ARMAS_LOWER|ARMAS_TRANS|ARMAS_UNIT, &cf);
 
     exit(fails);
 }
