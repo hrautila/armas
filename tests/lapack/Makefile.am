@@ -27,7 +27,7 @@ UNIT_TESTS = \
 	chol givens house housem ldlbk ldlt lu qrbld qrfact qrmult \
 	qrsol qlfact qlbld qlmult lqfact lqbld lqmult lqsol \
 	rqfact rqbld rqmult hessred trdred bidiag bdsvd trdevd \
-	evd gesvd rbt secular
+	evd gesvd rbt secular invtrm inv invspd invldlt
 
 check_PROGRAMS = $(UNIT_TESTS)
 
@@ -47,6 +47,14 @@ house_SOURCES  = house.c ../helper.c
 house_LDADD    = $(LIBARMAS)
 housem_SOURCES = housem.c ../helper.c
 housem_LDADD   = $(LIBARMAS)
+inv_SOURCES    = inv.c ../helper.c
+inv_LDADD      = $(LIBARMAS)
+invspd_SOURCES = invspd.c ../helper.c
+invspd_LDADD   = $(LIBARMAS)
+invldlt_SOURCES = invldlt.c ../helper.c
+invldlt_LDADD  = $(LIBARMAS)
+invtrm_SOURCES = invtrm.c ../helper.c
+invtrm_LDADD   = $(LIBARMAS)
 ldlbk_SOURCES  = ldlbk.c ../helper.c
 ldlbk_LDADD    = $(LIBARMAS)
 ldlt_SOURCES   = ldlt.c ../helper.c
