@@ -20,6 +20,7 @@ extern DTYPE colno(int i, int j);
 extern DTYPE rel_error(DTYPE * dnorm, armas_x_dense_t * computed,
                        armas_x_dense_t * expected, int norm, int flags,
                        armas_conf_t * conf);
+extern void json_read_write(armas_x_dense_t **Aptr, armas_x_dense_t *A, int flags);
 
 extern int check(armas_x_dense_t * A, armas_x_dense_t * B, int chkdir,
                  const char *msg);
