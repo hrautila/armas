@@ -18,50 +18,50 @@
 
 DTYPE unit100(int i, int j)
 {
-    return 100.0*unitrand(i, j);
+    return 100.0 * unitrand(i, j);
 }
 
 int test_equal(int N, int lb, int flags, int verbose)
 {
     armas_x_dense_t A0, A1, A2;
     DTYPE n0, n1;
-    char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
+    char uplo = (flags & ARMAS_UPPER) ? 'U' : 'L';
     int ok, fails = 0;;
-    
+
     armas_conf_t conf = *armas_conf_default();
-    
+    armas_env_t *env = armas_getenv();
+
     armas_x_init(&A0, N, N);
     armas_x_init(&A1, N, N);
     armas_x_init(&A2, N, N);
 
     armas_x_set_values(&A0, unit100, flags);
-    armas_x_mcopy(&A1, &A0);
-    armas_x_mcopy(&A2, &A0);
+    armas_x_mcopy(&A1, &A0, 0, &conf);
+    armas_x_mcopy(&A2, &A0, 0, &conf);
 
     // unblocked; inverse twice
-    conf.lb = 0;
+    env->lb = 0;
     armas_x_inverse_trm(&A1, flags, &conf);
     armas_x_inverse_trm(&A1, flags, &conf);
     n0 = rel_error(&n1, &A1, &A0, ARMAS_NORM_INF, 0, &conf);
-    ok = isFINE(n0, N*__ERROR);
+    ok = isFINE(n0, N * __ERROR);
     fails += 1 - ok;
     printf("%s: [%c] unblk.(A.-1).-1 == A\n", PASS(ok), uplo);
     if (verbose > 0) {
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
-
     // unblocked; inverse twice
-    conf.lb = lb;
+    env->lb = lb;
     armas_x_inverse_trm(&A2, flags, &conf);
     armas_x_inverse_trm(&A2, flags, &conf);
     n0 = rel_error(&n1, &A2, &A0, ARMAS_NORM_INF, 0, &conf);
-    ok = isFINE(n0, N*__ERROR);
+    ok = isFINE(n0, N * __ERROR);
     fails += 1 - ok;
     printf("%s: [%c]   blk.(A.-1).-1 == A\n", PASS(ok), uplo);
     if (verbose > 0) {
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
-    
+
     armas_x_release(&A0);
     armas_x_release(&A1);
     armas_x_release(&A2);
@@ -72,11 +72,11 @@ int test_ident(int N, int lb, int flags, int verbose)
 {
     armas_x_dense_t A0, A1, A2, C, C0, D;
     DTYPE n0, n1;
-    char uplo = flags & ARMAS_UPPER ? 'U' : 'L';
-    int ok, fails = 0;;
-    
+    char uplo = (flags & ARMAS_UPPER) ? 'U' : 'L';
+    int ok, fails = 0;
+
     armas_conf_t conf = *armas_conf_default();
-    
+    armas_env_t *env = armas_getenv();
     armas_x_init(&A0, N, N);
     armas_x_init(&A1, N, N);
     armas_x_init(&A2, N, N);
@@ -85,41 +85,40 @@ int test_ident(int N, int lb, int flags, int verbose)
     // make unit matrix C0
     armas_x_init(&C0, N, N);
     armas_x_diag(&D, &C0, 0);
-    armas_x_madd(&D, 1.0, 0);
-    
+    armas_x_madd(&D, 1.0, 0, &conf);
+
     armas_x_set_values(&A0, unit100, flags);
-    armas_x_mcopy(&A1, &A0);
-    armas_x_mcopy(&A2, &A0);
+    armas_x_mcopy(&A1, &A0, 0, &conf);
+    armas_x_mcopy(&A2, &A0, 0, &conf);
 
     // unblocked
-    conf.lb = 0;
+    env->lb = 0;
     armas_x_inverse_trm(&A1, flags, &conf);
 
     // C = A*A.-1
     armas_x_mult(0.0, &C, 1.0, &A0, &A1, 0, &conf);
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_INF, ARMAS_NONE, &conf);
-    ok = isFINE(n0, N*__ERROR);
+    ok = isFINE(n0, N * __ERROR);
     //ok = isOK(n0, N);
     fails += 1 - ok;
     printf("%s: [%c] unblk.A.-1*A == I\n", PASS(ok), uplo);
     if (verbose > 0) {
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
-
     // blocked
-    conf.lb = lb;
+    env->lb = lb;
     armas_x_inverse_trm(&A2, flags, &conf);
 
     armas_x_mult(0.0, &C, 1.0, &A0, &A2, 0, &conf);
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_INF, ARMAS_NONE, &conf);
-    ok = isFINE(n0, N*__ERROR);
+    ok = isFINE(n0, N * __ERROR);
     fails += 1 - ok;
     printf("%s: [%c]  blk.A.-1*A == I\n", PASS(ok), uplo);
     if (verbose > 0) {
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
     n0 = rel_error(&n1, &A1, &A2, ARMAS_NORM_INF, ARMAS_NONE, &conf);
-    ok = n0 == 0.0 || isFINE(n0, N*__ERROR);
+    ok = n0 == 0.0 || isFINE(n0, N * __ERROR);
     fails += 1 - ok;
     printf("%s: [%c] unblk.A.-1 == blk.A.-1\n", PASS(ok), uplo);
     if (verbose > 0) {
@@ -132,7 +131,7 @@ int test_ident(int N, int lb, int flags, int verbose)
     armas_x_release(&C);
     armas_x_release(&C0);
     return fails;
-}    
+}
 
 
 int main(int argc, char **argv)
@@ -141,7 +140,7 @@ int main(int argc, char **argv)
     int N = 32;
     int LB = 8;
     int verbose = 1;
-  
+
     while ((opt = getopt(argc, argv, "v")) != -1) {
         switch (opt) {
         case 'v':
@@ -152,29 +151,20 @@ int main(int argc, char **argv)
             exit(1);
         }
     }
-    
-    if (optind < argc-1) {
+
+    if (optind < argc - 1) {
         N = atoi(argv[optind]);
-        LB = atoi(argv[optind+1]);
+        LB = atoi(argv[optind + 1]);
     } else if (optind < argc) {
         N = atoi(argv[optind]);
-        LB = N/10 < 4 ? 4 : (N/10) & ~0x1;
+        LB = N / 10 < 4 ? 4 : (N / 10) & ~0x1;
     }
 
     int fails = 0;
-    if (test_ident(N, LB, ARMAS_UPPER, verbose) != 0)
-        fails++;
-    if (test_ident(N, LB, ARMAS_LOWER, verbose) != 0)
-        fails++;
-    if (test_equal(N, LB, ARMAS_UPPER, verbose) != 0)
-        fails++;
-    if (test_equal(N, LB, ARMAS_LOWER, verbose) != 0)
-        fails++;
+    fails += test_ident(N, LB, ARMAS_UPPER, verbose);
+    fails += test_ident(N, LB, ARMAS_LOWER, verbose);
+    fails += test_equal(N, LB, ARMAS_UPPER, verbose);
+    fails += test_equal(N, LB, ARMAS_LOWER, verbose);
 
     exit(fails);
 }
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:
