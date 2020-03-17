@@ -94,6 +94,10 @@ DTYPE unitrand(int i, int j)
     return (DTYPE) drand48();
 }
 
+DTYPE almost_one(int i, int j) 
+{
+    return ONE + zeromean(i, j)/1000.0;
+}
 // std random variable from unit random with box-muller transformation
 DTYPE stdrand(int i, int j)
 {

@@ -14,6 +14,7 @@ extern DTYPE one(int i, int j);
 extern DTYPE zeromean(int i, int j);
 extern DTYPE unitrand(int i, int j);
 extern DTYPE stdrand(int i, int j);
+extern DTYPE almost_one(int i, int j);
 extern DTYPE rowno(int i, int j);
 extern DTYPE colno(int i, int j);
 
