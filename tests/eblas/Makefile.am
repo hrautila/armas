@@ -1,36 +1,38 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall -I../ -I../../src -I../../src/inc
+
+INCLUDES = -I$(top_srcdir)/src/include -I$(top_srcdir)/tests
+AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall $(INCLUDES)
 
 
 noinst_HEADERS = ../helper.h
 
-UNIT_TESTS = 
-
 if ENABLE_FLOAT32
-DTYPE=s
-else if ENABLE_COMPLEX32
-DTYPE=c
-else if ENABLE_COMPLEX64
-DTYPE=z
-else
-DTYPE=d
+LIBARMAS = $(top_builddir)/src/libarmass.la
+endif
+
+if ENABLE_COMPLEX64
+LIBARMAS = $(top_builddir)/src/libarmasc.la
+endif
+
+if ENABLE_COMPLEX128
+LIBARMAS = $(top_builddir)/src/libarmasz.la
+endif
+
+if ENABLE_FLOAT64
+LIBARMAS = $(top_builddir)/src/libarmasd.la
 endif
 
 
-LIBARMAS = ../../src/libarmas$(DTYPE).la
-
-UNIT_TESTS += \
-	efttest gemm
+UNIT_TESTS = \
+	efttest ext_gemm
 
 check_PROGRAMS = $(UNIT_TESTS)
 
-efttest_SOURCES = efttest.c
-
-
-# BLAS (double)
-gemm_SOURCES  = gemm.c ../helper.c
-gemm_LDADD    = $(LIBARMAS)
+efttest_SOURCES   = efttest.c
+efttest_LDADD     = $(LIBARMAS)
+ext_gemm_SOURCES  = ext_gemm.c ../helper.c ../helper_ext.c
+ext_gemm_LDADD    = $(LIBARMAS)
 
 TESTS = $(check_PROGRAMS)
 
