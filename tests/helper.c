@@ -96,7 +96,7 @@ DTYPE unitrand(int i, int j)
 
 DTYPE almost_one(int i, int j) 
 {
-    return ONE + zeromean(i, j)/1000.0;
+    return ONE + zeromean(i, j)/10.0;
 }
 // std random variable from unit random with box-muller transformation
 DTYPE stdrand(int i, int j)
@@ -154,14 +154,17 @@ DTYPE rel_error(DTYPE * dnorm, armas_x_dense_t * computed,
         armas_x_axpy(computed, -1.0, expected, conf);
     } else {
         // computed = computed - expected
-        armas_x_mplus(1.0, computed, -1.0, expected, flags, conf);
+        if (expected)
+            armas_x_mplus(1.0, computed, -1.0, expected, flags, conf);
     }
     // ||computed - expected||
     cnrm = armas_x_mnorm(computed, norm, conf);
     if (dnorm)
         *dnorm = cnrm;
     // ||expected||
-    enrm = armas_x_mnorm(expected, norm, conf);
+    enrm = ONE;
+    if (expected)
+        enrm = armas_x_mnorm(expected, norm, conf);
     return cnrm / enrm;
 }
 
