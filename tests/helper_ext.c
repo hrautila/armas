@@ -79,6 +79,37 @@ void make_ext_trsv_data(
     }
 }
 
+void make_ext_trsm_matrix(
+    int N, int flags,
+    armas_x_dense_t *A, armas_x_dense_t *At,
+    armas_x_dense_t *E, armas_x_dense_t *Et,
+    armas_conf_t *cf)
+{
+    armas_x_dense_t e0, e1, c0, c1;
+
+    if (flags & ARMAS_RIGHT) {
+        armas_x_row(&e0, E, 0);
+        armas_x_row(&e1, Et, 0);
+    } else {
+        armas_x_column(&e0, E, 0);
+        armas_x_column(&e1, Et, 0);
+    }
+    make_ext_trsv_data(N, (flags & ARMAS_RIGHT) != 0, A, At, &e0, &e1);
+
+    int K = (flags & ARMAS_RIGHT) != 0 ? E->rows : E->cols;
+    for (int j = 1; j < K; ++j) {
+        if (flags & ARMAS_RIGHT) {
+            armas_x_row(&c0, E, j);
+            armas_x_row(&c1, Et, j);
+        } else {
+            armas_x_column(&c0, E, j);
+            armas_x_column(&c1, Et, j);
+        }
+        armas_x_copy(&c0, &e0, cf);
+        armas_x_copy(&c1, &e1, cf);
+    }
+}
+
 /*
  * Create test matrix for computing A*1 = E:
  *
@@ -123,6 +154,37 @@ void make_ext_trmv_data(
             armas_x_set_at(E, i, (N - 2 - i) * EPS);
             armas_x_set_at(Et, N - 1 - i, (N - 2 - i) * EPS);
         }
+    }
+}
+
+void make_ext_trmm_matrix(
+    int N, int flags,
+    armas_x_dense_t *A, armas_x_dense_t *At,
+    armas_x_dense_t *E, armas_x_dense_t *Et,
+    armas_conf_t *cf)
+{
+    armas_x_dense_t e0, e1, c0, c1;
+
+    if (flags & ARMAS_RIGHT) {
+        armas_x_row(&e0, E, 0);
+        armas_x_row(&e1, Et, 0);
+    } else {
+        armas_x_column(&e0, E, 0);
+        armas_x_column(&e1, Et, 0);
+    }
+    make_ext_trmv_data(N, A, At, &e0, &e1);
+
+    int K = (flags & ARMAS_RIGHT) != 0 ? E->rows : E->cols;
+    for (int j = 1; j < K; ++j) {
+        if (flags & ARMAS_RIGHT) {
+            armas_x_row(&c0, E, j);
+            armas_x_row(&c1, Et, j);
+        } else {
+            armas_x_column(&c0, E, j);
+            armas_x_column(&c1, Et, j);
+        }
+        armas_x_copy(&c0, &e0, cf);
+        armas_x_copy(&c1, &e1, cf);
     }
 }
 

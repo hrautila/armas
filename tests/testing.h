@@ -59,23 +59,32 @@ int imax(int a, int b)
     return a > b ? a : b;
 }
 
-#define __NANBITS 0x7ff8000000000000L
+#define NANBITS 0x7ff8000000000000L
 
 static inline int isNAN(double v)
 {
     uint64_t *p = (uint64_t *)&v;
-    return (*p & __NANBITS) == __NANBITS;
+    return (*p & NANBITS) == NANBITS;
 }
 
 // extended precision helpers.
 extern void make_ext_trmv_data(int N, armas_x_dense_t *A, armas_x_dense_t *At,
         armas_x_dense_t *E, armas_x_dense_t *Et);
 
+extern void make_ext_trsv_data(int N, int right, armas_x_dense_t *Aa,
+        armas_x_dense_t *Aat,  armas_x_dense_t *Ee, armas_x_dense_t *Eet);
+
+extern void make_ext_trmm_matrix(int N, int flags, armas_x_dense_t *A,
+        armas_x_dense_t *At, armas_x_dense_t *E, armas_x_dense_t *Et,
+        armas_conf_t *cf);
+
+extern void make_ext_trsm_matrix(int N, int flags, armas_x_dense_t *Aa,
+        armas_x_dense_t *Aat,  armas_x_dense_t *Ee, armas_x_dense_t *Eet,
+        armas_conf_t *cf);
+
 extern void make_ext_matrix_data(armas_x_dense_t *A, DTYPE alpha,
         armas_x_dense_t *E, int flags);
 
-extern void make_ext_trsv_data(int N, int right, armas_x_dense_t *Aa,
-        armas_x_dense_t *Aat,  armas_x_dense_t *Ee, armas_x_dense_t *Eet);
 
 extern DTYPE ep_dot_n(armas_x_dense_t * X, armas_x_dense_t * Y, DTYPE start,
                       int N, int prec);
