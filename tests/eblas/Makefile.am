@@ -25,7 +25,7 @@ endif
 
 
 UNIT_TESTS = \
-	efttest ext_gemm
+	efttest ext_gemm ext_trmm
 
 check_PROGRAMS = $(UNIT_TESTS)
 
@@ -33,6 +33,8 @@ efttest_SOURCES   = efttest.c
 efttest_LDADD     = $(LIBARMAS)
 ext_gemm_SOURCES  = ext_gemm.c ../helper.c ../helper_ext.c
 ext_gemm_LDADD    = $(LIBARMAS)
+ext_trmm_SOURCES  = ext_trmm.c ../helper.c ../helper_ext.c
+ext_trmm_LDADD    = $(LIBARMAS)
 
 TESTS = $(check_PROGRAMS)
 
