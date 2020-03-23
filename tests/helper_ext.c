@@ -112,7 +112,8 @@ void make_ext_trsm_matrix(
 
 /*
  * Create test matrix for computing A*1 = E:
- *
+ * 
+ *   UPPER             UPPER|TRANS
  *   N e e e -N   3e   -N -N -N -N -N   -N
  *   . N e e -N   2e    .  N  e  e  e    0
  *   . . N e -N    e    .  .  N  e  e    e
