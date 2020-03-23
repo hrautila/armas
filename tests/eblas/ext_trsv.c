@@ -1,214 +1,144 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <time.h>
-#include <float.h>
+#include <unistd.h>
 
 #include "testing.h"
 
-/*
- * See comments in ext_trsm.c
- */
-void ep_gentrsv(double *dot, double *tcond,
-                armas_x_dense_t *A, armas_x_dense_t *X, armas_x_dense_t *Y,
-                double cond, int flags)
+
+int test_ext(int N, int verbose, int unit, armas_conf_t *cf)
 {
-  armas_x_dense_t R0, D, Rx, Cx;
-  int tk;
+    armas_d_dense_t Y0, Y, A, At, L, Lt, E, Et;
+    DTYPE n0;
+    int ok;
+    int fails = 0;
 
-  // make A identity
-  armas_x_init(&R0, 0, 0);
-  armas_x_set_values(A, zero, 0);
-  armas_x_diag(&D, A, 0);
-  armas_x_set_values(&D, one, 0);
-    
-  switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_TRANS)) {
-  case ARMAS_LOWER|ARMAS_TRANS:
-    armas_x_column(&R0, A, 0);
-    armas_x_subvector(&Rx, &R0, 1, armas_x_size(&R0)-1);
-    tk = 0;
-    break;
-  case ARMAS_LOWER:
-    armas_x_row(&R0, A, A->rows-1);
-    armas_x_subvector(&Rx, &R0, 0, armas_x_size(&R0)-1);
-    tk = X->rows - 1;
-    break;
-  case ARMAS_UPPER|ARMAS_TRANS:
-    armas_x_column(&R0, A, A->cols-1);
-    armas_x_subvector(&Rx, &R0, 0, armas_x_size(&R0)-1);
-    tk = X->rows - 1;
-    break;
-  case ARMAS_UPPER:
-  default:
-    armas_x_row(&R0, A, 0);
-    armas_x_subvector(&Rx, &R0, 1, armas_x_size(&R0)-1);
-    tk = 0;
-    break;
-  }
+    armas_d_init(&Y, N, 1);
+    armas_d_init(&Y0, N, 1);
+    armas_d_init(&E, N, 1);
+    armas_d_init(&Et, N, 1);
+    armas_d_init(&A, N, N);
+    armas_d_init(&At, N, N);
+    armas_d_init(&L, N, N);
+    armas_d_init(&Lt, N, N);
 
-  // generate dot product ...
-  armas_x_subvector(&Cx, X, tk == 0 ? 1 : 0, armas_x_size(X)-1);
-  ep_gendot(dot, tcond, &Rx, &Cx, cond);
-  if (flags & ARMAS_UNIT) {
-    armas_x_set(A, tk, tk, 1.0);
-    armas_x_set_at(X, tk, *dot);
-  } else {
-    armas_x_set(A, tk, tk, *dot);
-    armas_x_set_at(X, tk, 1.0);
-  }
-  
-  // make result vector
-  armas_x_mcopy(Y, X);
-  armas_x_set_at(Y, tk, 2.0*(*dot));
-}
+    // expect: [0, N-1*1]
+    armas_d_set_values(&Y, one, ARMAS_NULL);
+    make_ext_trsv_data(N, 0, &A, &At, &E, &Et);
+    armas_d_mcopy(&Y0, &E, 0, cf);
 
-// ne = norm1 of exact; re = ||exact-result||/||exact||
-void compute(double *ne, double *re,
-             armas_x_dense_t *B, armas_x_dense_t *A, armas_x_dense_t *C,
-             int flags, int prec, int verbose, armas_conf_t *conf)
-{
-  // B = A*B
-  armas_x_mvsolve_trm(B, 1.0, A, flags, conf);
-  if (verbose > 1 && A->rows < 10) {
-    printf("A.-1*B:\n"); armas_x_printf(stdout, "%13e", B);
-  }
-  *re = rel_error(ne, B, C, ARMAS_NORM_INF, ARMAS_NONE, conf);
-}
+    armas_d_mcopy(&Lt, &A, ARMAS_TRANS, cf);
+    armas_d_mcopy(&L, &At, ARMAS_TRANS, cf);
 
-int test(char *name, int N, int flags, int verbose, int prec, double cwant, armas_conf_t *conf)
-{
-  armas_x_dense_t B0, A, B, Ce;
-  double dot, cond, m_c, m_rel;
-  int ok;
-
-
-  armas_x_init(&A, N, N);
-  armas_x_init(&Ce, N, 1);
-  armas_x_init(&B, N, 1);
-  armas_x_init(&B0, N, 1);
-  
-  ep_gentrsv(&dot, &cond, &A, &B0, &B, cwant, flags);
-
-  if (verbose > 1 && N < 10) {
-    printf("A:\n"); armas_x_printf(stdout, "%13e", &A);
-    printf("B0:\n"); armas_x_printf(stdout, "%13e", &B0);
-    printf("B:\n"); armas_x_printf(stdout, "%13e", &B);
-  }
-
-  // extended precision computations
-
-  // 1. A*B
-  compute(&m_c, &m_rel, &B, &A, &B0, flags, prec, verbose, conf);
-
-  ok = m_rel < N*_EPS;
-  printf("%-4s: %s rel.error %e [%e]\n",  PASS(ok), name, m_rel, m_c);
-  if (!ok && N < 10) {
-    printf("B-Ce:\n"); armas_x_printf(stdout, "%13e", &B);
-  }
-
-  armas_x_release(&Ce);
-  armas_x_release(&A);
-  armas_x_release(&B);
-  armas_x_release(&B0);
-
-  return ok;
-}
-
-/*
- *
- */
-int main(int argc, char **argv) 
-{
-
-  armas_conf_t conf;
-
-  int ok, opt;
-  int N = 121;
-  int fails = 0;
-  int normal_prec = 0;
-  int prec = 200;
-  int verbose = 0;
-  int flags = ARMAS_UPPER;
-  int all = 1;
-  int unit = 0;
-  int naive = 0;
-  double cwant = 1.0/_EPS; // wanted condition number
-
-  while ((opt = getopt(argc, argv, "C:p:vnSsLTU")) != -1) {
-    switch (opt) {
-    case 'C':
-      cwant = strtod(optarg, (char **)0);
-      break;
-    case 'p':
-      prec = atoi(optarg);
-      break;
-    case 's':
-      normal_prec = 1;
-      break;
-    case 'n':
-      naive = 1;
-      break;
-    case 'v':
-      verbose += 1;
-      break;
-    case 'S':
-      all = 0;
-      break;
-    case 'L':
-      flags &= ~ARMAS_UPPER;
-      flags |= ARMAS_LOWER;
-      break;
-    case 'T':
-      flags |= ARMAS_TRANS;
-      break;
-    case 'U':
-      flags |= ARMAS_UNIT;
-      unit  |= ARMAS_UNIT;
-      break;
-    default:
-      fprintf(stderr, "usage: ext_trsv [-p bits -C cond -v -SLRTU] [size]\n");
-      exit(1);
+    if (verbose > 2) {
+        armas_x_dense_t row;
+        MAT_PRINT("A", &A);
+        MAT_PRINT("E", armas_d_col_as_row(&row, &E));
+        MAT_PRINT("A^T", &At);
+        MAT_PRINT("E^T", armas_d_col_as_row(&row, &Et));
     }
-  }
-    
-  if (optind < argc) {
-    N = atoi(argv[optind]);
-  }
-  
-  conf = *armas_conf_default();
-  if (!normal_prec)
-    conf.optflags |= ARMAS_OEXTPREC;
-  if (naive)
-    conf.optflags |= ARMAS_ONAIVE;
 
-  if (!all) {
-    //printf("conf .mb, .nb, .kb: %d, %d, %d\n", conf.mb, conf.nb, conf.kb);
-    ok = test("single", N, flags, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-  } else {
-    ok = test("N: u(A)*B  ", N, ARMAS_UPPER, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-    ok = test("N: l(A)*B  ", N, ARMAS_LOWER, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-    ok = test("N: u(A.T)*B", N, ARMAS_UPPER|ARMAS_TRANS, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-    ok = test("N: l(A.T)*B", N, ARMAS_LOWER|ARMAS_TRANS, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
+    // -------------------------------------------------------------
+    // compute ||A^*Y - 1||
 
-    ok = test("U: u(A)*B  ", N, ARMAS_UNIT|ARMAS_UPPER, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-    ok = test("U: l(A)*B  ", N, ARMAS_UNIT|ARMAS_LOWER, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-    ok = test("U: u(A.T)*B", N, ARMAS_UNIT|ARMAS_UPPER|ARMAS_TRANS, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-    ok = test("U: l(A.T)*B", N, ARMAS_UNIT|ARMAS_LOWER|ARMAS_TRANS, verbose, prec, cwant, &conf);
-    fails += 1 - ok;
-  }
+    armas_d_ext_mvsolve_trm(&Y0, 2.0, &A, ARMAS_UPPER, cf);
+    armas_d_madd(&Y0, -2.0, 0, cf);
+    n0 = armas_x_nrm2(&Y0, cf) / N;
 
-  exit(fails);
+    ok = !isNAN(n0) && (n0 == 0.0 || isOK(n0, N));
+    fails += (1 - ok);
+    printf("%6s : expected == ext_trsv(X, U)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+
+    // -------------------------------------------------------------
+    armas_d_mcopy(&Y0, &Et, 0, cf);
+    armas_d_ext_mvsolve_trm(&Y0, -2.0, &At, ARMAS_UPPER | ARMAS_TRANS, cf);
+    armas_d_madd(&Y0, 2.0, 0, cf);
+    n0 = armas_x_nrm2(&Y0, cf) / N;
+
+    ok = !isNAN(n0) && (n0 == 0.0 || isOK(n0, N));
+    fails += (1 - ok);
+    printf("%6s : expected == ext_trsv(X, U|T)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+
+    // -------------------------------------------------------------
+    // compute ||A^*Y - 1||
+    armas_d_mcopy(&Y0, &Et, 0, cf);
+    armas_d_ext_mvsolve_trm(&Y0, 0.5, &L, ARMAS_LOWER, cf);
+    armas_d_madd(&Y0, -0.5, 0, cf);
+    n0 = armas_x_nrm2(&Y0, cf) / N;
+
+    ok = !isNAN(n0) && (n0 == 0.0 || isOK(n0, N));
+    fails += (1 - ok);
+    printf("%6s : expected == ext_trsv(X, L)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+
+    // -------------------------------------------------------------
+    // compute sum(A^*Y - 1)
+    armas_d_mcopy(&Y0, &E, 0, cf);
+    armas_d_ext_mvsolve_trm(&Y0, -0.5, &Lt, ARMAS_LOWER | ARMAS_TRANS, cf);
+    armas_d_madd(&Y0, 0.5, 0, cf);
+    n0 = armas_x_nrm2(&Y0, cf) / N;
+
+    ok = !isNAN(n0) && (n0 == 0.0 || isOK(n0, N));
+    fails += (1 - ok);
+    printf("%6s : expected == ext_trsv(X, L|T)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
+    }
+
+    armas_d_release(&Y);
+    armas_d_release(&Y0);
+    armas_d_release(&E);
+    armas_d_release(&Et);
+    armas_d_release(&A);
+    armas_d_release(&At);
+    armas_d_release(&L);
+    armas_d_release(&Lt);
+
+    return fails;
 }
 
-// Local Variables:
-// indent-tabs-mode: nil
-// End:
+int main(int argc, char **argv)
+{
+    int opt;
+    int N = 77;
+    int verbose = 0;
+    int unit = 0;
+    armas_env_t *env = armas_getenv();
+    armas_conf_t cf = *armas_conf_default();
+
+    while ((opt = getopt(argc, argv, "vr:u")) != -1) {
+        switch (opt) {
+        case 'v':
+            verbose++;
+            break;
+        case 'r':
+            env->blas2min = atoi(optarg);
+            cf.optflags |= env->blas2min != 0 ? ARMAS_ORECURSIVE : ARMAS_ONAIVE;
+            break;
+        case 'u':
+            unit = ARMAS_UNIT;
+            break;
+        default:
+            fprintf(stderr, "usage: trsv [size]\n");
+            exit(1);
+        }
+    }
+
+    if (optind < argc) {
+        N = atoi(argv[optind]);
+    }
+
+    int fails = 0;
+
+    fails += test_ext(N, verbose, unit, &cf);
+    exit(fails);
+}
