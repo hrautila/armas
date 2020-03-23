@@ -13,20 +13,21 @@
     defined(armas_x_ext_adot_unsafe) && \
     defined(armas_x_ext_adot_dx_unsafe) && \
     defined(armas_x_ext_adot)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
 #include "internal.h"
 #include "eft.h"
 
-DTYPE armas_x_ext_dot_unsafe(const armas_x_dense_t *X,  const armas_x_dense_t *Y)
+DTYPE armas_x_ext_dot_unsafe(
+    const armas_x_dense_t *X,  const armas_x_dense_t *Y)
 {
     register int i, kx, ky;
     DTYPE s0, s1, c0, c1, p0, p1, h0, h1, z0, z1;
@@ -58,7 +59,6 @@ DTYPE armas_x_ext_dot_unsafe(const armas_x_dense_t *X,  const armas_x_dense_t *Y
     c0 += z0;
     return s0 + (c0 + c1);
 }
-
 
 /**
  * @brief Compute inner product scaled by constant in extended precision.
@@ -185,12 +185,4 @@ int armas_x_ext_adot(
 
 #else
 #warning "Missing defines; no code!"
-
-#endif /* __ARMAS_REQUIRES && __ARMAS_PROVIDES */
-
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:
-
+#endif /* ARMAS_REQUIRES && ARMAS_PROVIDES */

@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -127,8 +127,8 @@ DTYPE armas_x_dot_unsafe(const armas_x_dense_t *x, const armas_x_dense_t *y)
  * @brief Updates value with inner product of two vectors scaled by constant, \f$ v = alpha*x^T*y \f$
  *
  * @param[in,out] value
- *    On entry initial value. On exit updated with the value of the inner product of x,y scaled
- *    with constant alpha.
+ *    On entry initial value. On exit updated with the value of the inner
+ *    product of x,y scaled  with constant alpha.
  * @param[in] alpha constant
  * @param[in] x vector
  * @param[in] y vector
@@ -138,7 +138,8 @@ DTYPE armas_x_dot_unsafe(const armas_x_dense_t *x, const armas_x_dense_t *y)
  *
  * @ingroup blas1
  */
-int armas_x_adot(DTYPE *value, DTYPE alpha, const armas_x_dense_t *x, const armas_x_dense_t *y, armas_conf_t *conf)
+int armas_x_adot(DTYPE *value, DTYPE alpha, 
+        const armas_x_dense_t *x, const armas_x_dense_t *y, armas_conf_t *conf)
 {
     DTYPE dval;
 
@@ -190,7 +191,6 @@ DTYPE armas_x_dot(const armas_x_dense_t *x, const armas_x_dense_t *y, armas_conf
     }
     return dval;
 }
-
 #else
 #warning "Not compiled; missing defines"
 #endif /* __ARMAS_REQUIRES && __ARMAS_PROVIDES */

@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -7,7 +7,7 @@
 
 #include "dtype.h"
 
-// ------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_ext_asum) && defined(armas_x_ext_sum_unsafe)
 #define ARMAS_PROVIDES 1
@@ -17,12 +17,11 @@
 
 // compile if type dependent public function names defined
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 #include "matrix.h"
 #include "internal.h"
 #include "eft.h"
-
 
 static
 void ext_asum2s(DTYPE *h, DTYPE *l, const armas_x_dense_t *X, int N)
@@ -157,14 +156,6 @@ int armas_x_ext_sum(DTYPE *result, DTYPE alpha, const armas_x_dense_t *X, int fl
     }
     return 0;
 }
-
 #else
 #warning "Missing defines; no code!"
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
-
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:
-
