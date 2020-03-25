@@ -111,9 +111,8 @@ void armas_x_mult_symm_left(
     flags2 = 0;
 
     /*
-     * P is A, B common dimension, e.g. P cols in A and P rows in B.
-     *
-     * [R,R] [E,E] define block on A diagonal that divides A in three blocks
+     * P indexes column/row of A to column/row corresponding C, B matrix.
+     * On single threaded case P == 0. 
      *
      *   upper:                lower:
      *        . A0 .   B0           .  .  .  B0
@@ -171,9 +170,9 @@ void armas_x_mult_symm_left(
             nc = (flags & ARMAS_UPPER) != 0 ? A->cols - c : nI;
             armas_x_submatrix_unsafe(&A0, A, r, c, nr, nc);
             if ((flags & ARMAS_TRANSB) != 0) {
-                armas_x_submatrix_unsafe(&B0, B, j, i+nI, nJ, nI);
+                armas_x_submatrix_unsafe(&B0, B, j, i+nI, nJ, B->cols - i - nI);
             } else {
-                armas_x_submatrix_unsafe(&B0, B, i+nI, j, nI, nJ);
+                armas_x_submatrix_unsafe(&B0, B, i+nI, j, B->rows - i - nI, nJ);
             }
             armas_x_mult_kernel_nc(&C0, alpha, &A0, &B0, flags2, mcache);
         }
