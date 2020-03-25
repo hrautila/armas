@@ -1,251 +1,419 @@
 
-// Copyright (c) Harri Rautila, 2012-2015
+// Copyright (c) Harri Rautila, 2015-2020
 
-// This file is part of github.com/hrautila/matops package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! \file
+//! Matrix-matrix multiplication with symmetric matrix
+
+//! \cond
 #include <stdio.h>
 #include <stdlib.h>
+//! \endcond
 
 #include "dtype.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__kernel_symm_ext) 
-#define __ARMAS_PROVIDES 1
+#if defined(armas_x_ext_mult_sym)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if EXT_PRECISION && defined(__kernel_ext_colblk_inner) && defined(__kernel_ext_panel_inner)
-#define __ARMAS_REQUIRES 1
+#if defined(armas_x_ext_panel_unsafe) && defined(armas_x_ext_mult_inner)
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 
-#include "internal.h"
-#include "scheduler.h"
+//! \cond
 #include "matrix.h"
+#include "internal.h"
 #include "matcpy.h"
-
-extern
-void __kernel_ext_colblk_inner(mdata_t *Cblk, mdata_t *dC,
-                               const mdata_t *Ablk, const mdata_t *Bblk,
-                               DTYPE alpha, int nJ, int nR, int nP, int rb);
+#include "kernel_ext.h"
+#ifdef CONFIG_ACCELERATORS
+#include "accel.h"
+#endif /* CONFIG_ACCELERATORS */
+//! \endcond
 
 // C += A*B; A is the diagonal block
 static
-void __mult_symm_ext_diag(mdata_t *C, mdata_t *dC, const mdata_t *A, const mdata_t *B,
-                          DTYPE alpha, int flags, 
-                          int nP, int nSL, int nRE, cache_t *cache)
+void mult_ext_symm_diag(
+    armas_x_dense_t *C,
+    armas_x_dense_t *dC,
+    DTYPE alpha,
+    const armas_x_dense_t *A,
+    const armas_x_dense_t *B,
+    int flags,
+    cache_t *cache)
 {
-  int unit = flags & ARMAS_UNIT ? 1 : 0;
-  int nA, nB, nAC;
-
-  if (nP == 0)
-    return;
-
-  nAC = flags & ARMAS_RIGHT ? nSL : nRE;
-  
-  if (flags & ARMAS_LOWER) {
-    // upper part of source untouchable, copy diagonal block and fill upper part
-    //colcpy_fill_up(Acpy->md, Acpy->step, A->md, A->step, nAC, nAC, unit);
-    __CPTRIL_UFILL(&cache->Acpy, A, nAC, nAC, unit);
-  } else {
-    // lower part of source untouchable, copy diagonal block and fill lower part
-    //colcpy_fill_low(Acpy->md, Acpy->step, A->md, A->step, nAC, nAC, unit);
-    __CPTRIU_LFILL(&cache->Acpy, A, nAC, nAC, unit);
-  }
-
-  if (flags & ARMAS_RIGHT) {
-    //__CPTRANS(Bcpy->md, Bcpy->step, B->md, B->step, nRE, nSL);
-    __CPBLK_TRANS(&cache->Bcpy, B, nRE, nSL);
-  } else {
-    //__CP(Bcpy->md, Bcpy->step, B->md, B->step, nRE, nSL);
-    __CPBLK(&cache->Bcpy, B, nRE, nSL);
-  }
-
-  if (flags & ARMAS_RIGHT) {
-    __kernel_ext_colblk_inner(C, dC, &cache->Bcpy, &cache->Acpy, alpha, nAC, nRE, nP, cache->rb);
-  } else {
-    __kernel_ext_colblk_inner(C, dC, &cache->Acpy, &cache->Bcpy, alpha, nSL, nAC, nP, cache->rb);
-  }
+    armas_x_dense_t Acpy, Bcpy;
+    int unit = flags & ARMAS_UNIT ? 1 : 0;
+    /*
+     * upper/lower part of source A untouchable, copy triangular block and fill
+     * lower/upper part
+     */
+    if (flags & ARMAS_RIGHT) {
+        armas_x_make(&Acpy, A->rows, A->cols, cache->ab_step, cache->Acpy);
+        if (flags & ARMAS_LOWER) {
+            CPTRIL_UFILL(&Acpy, A, A->rows, A->cols, unit);
+        } else {
+            CPTRIU_LFILL(&Acpy, A, A->rows, A->cols, unit);
+        }
+        if ((flags & ARMAS_TRANSB) != 0) {
+            armas_x_make(&Bcpy, B->rows, B->cols, cache->ab_step, cache->Bcpy);
+            CPBLK(&Bcpy, B, B->rows, B->cols, flags);
+        } else {
+            armas_x_make(&Bcpy, B->cols, B->rows, cache->ab_step, cache->Bcpy);
+            CPBLK_TRANS(&Bcpy, B, B->rows, B->cols, flags);
+        }
+        armas_x_ext_mult_inner(C, dC, alpha, &Bcpy, &Acpy, cache->rb);
+    } else {
+        armas_x_make(&Acpy, A->rows, A->cols, cache->ab_step, cache->Acpy);
+        if (flags & ARMAS_LOWER) {
+            CPTRIL_UFILL(&Acpy, A, A->rows, A->cols, unit);
+        } else {
+            CPTRIU_LFILL(&Acpy, A, A->rows, A->cols, unit);
+        }
+        if ((flags & ARMAS_TRANSB) != 0) {
+            armas_x_make(&Bcpy, B->cols, B->rows, cache->ab_step, cache->Bcpy);
+            CPBLK_TRANS(&Bcpy, B, B->rows, B->cols, flags);
+        } else {
+            armas_x_make(&Bcpy, B->rows, B->cols, cache->ab_step, cache->Bcpy);
+            CPBLK(&Bcpy, B, B->rows, B->cols, flags);
+        }
+        armas_x_ext_mult_inner(C, dC, alpha, &Acpy, &Bcpy, cache->rb);
+    }
 }
-
-
 
 static
-void __kernel_ext_symm_left(mdata_t *C, const mdata_t *A, const mdata_t *B,
-                            DTYPE alpha, DTYPE beta, int flags,
-                            int P, int S, int L, int R, int E,
-                            int KB, int NB, int MB, armas_cbuf_t *cbuf)
+void armas_x_ext_mult_symm_left(
+    DTYPE beta,
+    armas_x_dense_t *C,
+    DTYPE alpha,
+    const armas_x_dense_t *A,
+    const armas_x_dense_t *B,
+    int flags,
+    int P,
+    cache_t *mcache)
 {
-  int i, j, nI, nJ, flags1, flags2;
-  mdata_t Aa;
-  cache_t mcache;
+    int i, j, nI, nJ, flags1, flags2, r, c, nr, nc;
+    armas_x_dense_t A0, B0, C0, dC;
 
-  if (L-S <= 0 || E-R <= 0) {
-    // nothing to do, zero columns or rows
-    return;
-  }
-
-  armas_cache_setup3(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
-  flags1 = 0;
-  flags2 = 0;
-
-  /*
-   * P is A, B common dimension, e.g. P cols in A and P rows in B.
-   *
-   * [R,R] [E,E] define block on A diagonal that divides A in three blocks
-   * if A is upper:
-   *   A0 [0, R] [R, E]; B0 [0, S] [R, L] (R rows,cols in P); (A transposed)
-   *   A1 [R, R] [E, E]; B1 [R, S] [E, L] (E-R rows,cols in P)
-   *   A2 [R, E] [E, N]; B2 [E, S] [N, L] (N-E rows, cols in  P)
-   * if A is LOWER:
-   *   A0 [R, 0] [E, R]; B0 [0, S] [R, L]
-   *   A1 [R, R] [E, E]; B1 [R, S] [E, L] (diagonal block, fill_up);
-   *   A2 [E, R] [E, N]; B2 [E, S] [N, L] (A transpose)
-   *    
-   * C = A0*B0 + A1*B1 + A2*B2
-   */
-  flags1 |= flags & ARMAS_UPPER ? ARMAS_TRANSA : 0;
-  flags2 |= flags & ARMAS_LOWER ? ARMAS_TRANSA : 0;
-
-  for (i = R; i < E; i += MB) {
-    nI = E - i < MB ? E - i : MB;
-
-    // for all column of C, B ...
-    for (j = S; j < L; j += NB) {
-      nJ = L - j < NB ? L - j : NB;
-      __subblock(&C0, C, i, j);
-
-      // block of C upper left at [i,j], lower right at [i+nI, j+nj]
-      __blk_scale_ext(&Cpy, &dC, &C0, beta, nI, nJ);
-
-      // 1. off diagonal block in A; if UPPER then above [i,j]; if LOWER then left of [i,j]
-      //    above|left diagonal
-      __subblock(&A0, A, (flags&ARMAS_UPPER ? 0 : i), (flags&ARMAS_UPPER ? i : 0));
-      __subblock(&B0, B, 0, j);
-
-      __kernel_ext_panel_inner(&Cpy, &dC, &A0, &B0, alpha, flags1, i, nJ, nI, &mcache);
-      //__kernel_ext_colwise_inner_no_scale(&C0, &A0, &B0, alpha, flags1, i, nJ, nI, &cache);
-
-      // 2. on-diagonal block in A;
-      __subblock(&A0, A, i, i);
-      __subblock(&B0, B, i, j);
-      __mult_symm_ext_diag(&C0, &dC, &A0, &B0, alpha, flags, nI, nJ, nI, &mcache);
-
-      // 3. off-diagonal block in A; if UPPER then right of [i, i+nI];
-      //    if LOWER then below [i+nI, i]
-
-      // right|below of diagonal
-      __subblock(&A0, A, (flags&ARMAS_UPPER ? i : i+nI), (flags&ARMAS_UPPER ? i+nI : i));
-      __subblock(&B0, B, i+nI, j);
-      __kernel_ext_panel_inner(&Cpy, &dC, &A0, &B0, alpha, flags2, P-i-nI, nJ, nI, &mcache);
-      //__kernel_ext_colwise_inner_no_scale(&C0, &A0, &B0, alpha, flags2, P-i-nI, nJ, nI, &cache); 
-
-      // merge to original 
-      __blk_merge_ext(&C0, &Cpy, &dC, nI, nJ);
+    if (alpha == 0.0) {
+        if (beta != 1.0) {
+            armas_x_scale_unsafe(C, beta);
+        }
+        return;
     }
+    flags1 = 0;
+    flags2 = 0;
 
-  }
+    /*
+     * P indexes column/row of A to column/row corresponding C, B matrix.
+     * On single threaded case P == 0. 
+     *
+     *   upper:                lower:
+     *        . A0 .   B0           .  .  .  B0
+     *   C0 = . A1 A2  B1      C0 = A0 A1 .  B1
+     *        . .  .   B2           .  A2 .  B2
+     *
+     * C = C + A0*B0 + A1*B1 + A2*B2
+     */
+    flags1 |= (flags & ARMAS_UPPER) != 0 ? ARMAS_TRANSA : 0;
+    flags2 |= (flags & ARMAS_UPPER) != 0 ? 0 : ARMAS_TRANSA;
+    if ((flags & ARMAS_TRANSB) != 0) {
+        flags1 |= ARMAS_TRANSB;
+        flags2 |= ARMAS_TRANSB;
+    }
+    for (i = 0; i < C->rows; i += mcache->MB) {
+        nI = C->rows - i < mcache->MB ? C->rows - i : mcache->MB;
+
+        // for all column of C, B ...
+        for (j = 0; j < C->cols; j += mcache->NB) {
+            nJ = C->cols - j < mcache->NB ? C->cols - j : mcache->NB;
+            armas_x_submatrix_unsafe(&C0, C, i, j, nI, nJ);
+            armas_x_make(&dC, nI, nJ, mcache->ab_step, mcache->dC);
+
+            // block of C upper left at [i,j], lower right at [i+nI, j+nj]
+            if (beta != ONE)
+                armas_x_ext_scale_unsafe(&C0, &dC, beta, &C0);
+            else
+                armas_x_scale_unsafe(&dC, ZERO);
+
+            // off diagonal block in A; if UPPER then above [i,j]; if LOWER then
+            // left of [i,j] above|left diagonal
+            r  = (flags & ARMAS_UPPER) != 0 ? 0 : P+i;
+            c  = (flags & ARMAS_UPPER) != 0 ? P+i : 0;
+            nr = (flags & ARMAS_UPPER) != 0 ? P+i : nI;
+            nc = (flags & ARMAS_UPPER) != 0 ? nI : P+i;
+            armas_x_submatrix_unsafe(&A0, A, r, c, nr, nc);
+            if ((flags & ARMAS_TRANSB) != 0) {
+                armas_x_submatrix_unsafe(&B0, B, j, 0, nJ, i);
+            } else {
+                armas_x_submatrix_unsafe(&B0, B, 0, j, i, nJ);
+            }
+
+            armas_x_ext_panel_unsafe(&C0, &dC, alpha, &A0, &B0, flags1, mcache);
+
+            // on-diagonal block in A;
+            armas_x_submatrix_unsafe(&A0, A, P+i, P+i, nI, nI);
+            if ((flags & ARMAS_TRANSB) != 0) {
+                armas_x_submatrix_unsafe(&B0, B, j, i, nJ, nI);
+            } else {
+                armas_x_submatrix_unsafe(&B0, B, i, j, nI, nJ);
+            }
+            mult_ext_symm_diag(&C0, &dC, alpha, &A0, &B0, flags, mcache);
+
+            // off-diagonal block in A; if UPPER then right of [i, i+nI];
+            // if LOWER then below [i+nI, i]
+            r  = P + ((flags & ARMAS_UPPER) != 0 ? i : i + nI);
+            c  = P + ((flags & ARMAS_UPPER) != 0 ? i + nI : i);
+            nr = (flags & ARMAS_UPPER) != 0 ? nI : A->cols - r;
+            nc = (flags & ARMAS_UPPER) != 0 ? A->cols - c : nI;
+            armas_x_submatrix_unsafe(&A0, A, r, c, nr, nc);
+            if ((flags & ARMAS_TRANSB) != 0) {
+                armas_x_submatrix_unsafe(&B0, B, j, i+nI, nJ, B->cols - i - nI);
+            } else {
+                armas_x_submatrix_unsafe(&B0, B, i+nI, j, B->rows - i - nI, nJ);
+            }
+            armas_x_ext_panel_unsafe(&C0, &dC, alpha, &A0, &B0, flags2, mcache);
+            armas_x_merge2_unsafe(&C0, &C0, &dC);
+        }
+    }
 }
-
 
 static
-void __kernel_ext_symm_right(mdata_t *C, const mdata_t *A, const mdata_t *B,
-                             DTYPE alpha, DTYPE beta, int flags,
-                             int P, int S, int L, int R, int E,
-                             int KB, int NB, int MB, armas_cbuf_t *cbuf)
+void armas_x_ext_mult_symm_right(
+    DTYPE beta,
+    armas_x_dense_t *C,
+    DTYPE alpha,
+    const armas_x_dense_t *A,
+    const armas_x_dense_t *B,
+    int flags,
+    int P,
+    cache_t *mcache)
 {
-  int flags1, flags2;
-  register int nR, nC, ic, ir;
-  mdata_t Aa;
-  cache_t mcache;
+    int flags1, flags2;
+    register int nR, nC, ic, ir, r, c, nr, nc;
+    armas_x_dense_t A0, B0, C0, dC;
 
-  if (L-S <= 0 || E-R <= 0) {
-    // nothing to do, zero columns or rows
-    return;
-  }
-
-  armas_cache_setup3(&mcache, cbuf, MB, NB, KB, sizeof(DTYPE));
-  flags1 = 0;
-  flags2 = 0;
-
-  /*
-   * P is A, B common dimension, e.g. P cols in A and P rows in B.
-   * 
-   * C = B * A;
-   * [S,S] [L,L] define block on A diagonal that divides A in three blocks
-   * if A is upper:
-   *   A0 [0, S] [S, S]; B0 [R, 0] [E, S] (R rows,cols in P); (A transposed)
-   *   A1 [S, S] [L, L]; B1 [R, S] [E, L] (E-R rows,cols in P)
-   *   A2 [S, L] [L, N]; B2 [R, L] [E, N] (N-E rows, cols in  P)
-   * if A is LOWER:
-   *   A0 [S, 0] [S, S]; B0 [R, 0] [E, S]
-   *   A1 [S, S] [L, L]; B1 [R, S] [E, L] (diagonal block, fill_up);
-   *   A2 [L, S] [N, L]; B2 [R, L] [E, N] (A transpose)
-   *
-   * C = A0*B0 + A1*B1 + A2*B2
-   */
-
-  flags1 = flags & ARMAS_TRANSB ? ARMAS_TRANSA : 0;
-  flags2 = flags & ARMAS_TRANSB ? ARMAS_TRANSA : 0;
-  
-  flags1 |= flags & ARMAS_LOWER ? ARMAS_TRANSB : 0;
-  flags2 |= flags & ARMAS_UPPER ? ARMAS_TRANSB : 0;
-
-  for (ic = S; ic < L; ic += NB) {
-    nC = L - ic < NB ? L - ic : NB;
-
-    // for all rows of C, B ...
-    for (ir = R; ir < E; ir += MB) {
-      nR = E - ir < MB ? E - ir : MB;
-
-      __subblock(&C0, C, ir, ic);
-      __blk_scale_ext(&Cpy, &dC, &C0, beta, nI, nJ);
-
-      // above|left diagonal
-      __subblock(&A0, A, (flags&ARMAS_UPPER ? 0 : ic), (flags&ARMAS_UPPER ? ic : 0));
-      __subblock(&B0, B, ir, 0);
-      __kernel_ext_panel_inner(&Cpy, &dC, &A0, &B0, alpha, flags1, ic, nC, nR, &mcache);
-      //__kernel_ext_colwise_inner_no_scale(&C0, &B0, &A0, alpha, flags1, ic, nC, nR, &cache);
-
-      // diagonal block
-      __subblock(&A0, A, ic, ic);
-      __subblock(&B0, B, ir, ic);
-      __mult_ext_symm_diag(&C0, &dC, &A0, &B0, alpha, flags, nC, nC, nR, &mcache); 
-
-      // right|below of diagonal
-      __subblock(&A0, A, (flags&ARMAS_UPPER ? ic : ic+nC), (flags&ARMAS_UPPER ? ic+nC : ic));
-      __subblock(&B0, B, ir, ic+nC);
-      __kernel_ext_panel_inner(&Cpy, &dC, &A0, &B0, alpha, flags2, P-ic-nC, nC, nR, &mcache);
-      //__kernel_ext_colwise_inner_no_scale(&C0, &B0, &A0, alpha, flags2, P-ic-nC, nC, nR, &cache);
-
-      // merge to original 
-      __blk_merge_ext(&C0, &Cpy, &dC, nI, nJ);
+    if (alpha == 0.0) {
+        if (beta != 1.0) {
+            armas_x_scale_unsafe(C, beta);
+        }
+        return;
     }
-  }
+    flags1 = 0;
+    flags2 = 0;
 
+    /*
+     * P is row/column number accessing A matrix. [P, P+B->rows]
+     *
+     *   upper:                lower:
+     *                 . A0 .                  .  .  .
+     *   C0 = B0 B1 B2 . A1 A2   C0 = B0 B1 B2 A0 A1 .
+     *                 . .  .                  .  A2 .
+     *
+     * update nR,nC block of C with stripe of B of nR rows
+     * and stripe of A with nC columns.
+     *
+     * C = C + A0*B0 + A1*B1 + A2*B2
+     */
+
+    flags1 = (flags & ARMAS_TRANSB) != 0 ? ARMAS_TRANSA : 0;
+    flags2 = (flags & ARMAS_TRANSB) != 0 ? ARMAS_TRANSA : 0;
+
+    flags1 |= (flags & ARMAS_UPPER) != 0 ? 0 : ARMAS_TRANSB;
+    flags2 |= (flags & ARMAS_UPPER) != 0 ? ARMAS_TRANSB : 0;
+
+    for (ic = 0; ic < C->cols; ic += mcache->NB) {
+        nC = C->cols - ic < mcache->NB ? C->cols - ic : mcache->NB;
+
+        // for all rows of C, B ...
+        for (ir = 0; ir < C->rows; ir += mcache->MB) {
+            nR = C->rows - ir < mcache->MB ? C->rows - ir : mcache->MB;
+
+            armas_x_submatrix_unsafe(&C0, C, ir, ic, nR, nC);
+            armas_x_make(&dC, nR, nC, mcache->ab_step, mcache->dC);
+
+            // block of C upper left at [i,j], lower right at [i+nI, j+nj]
+            if (beta != ONE)
+                armas_x_ext_scale_unsafe(&C0, &dC, beta, &C0);
+            else
+                armas_x_scale_unsafe(&dC, ZERO);
+
+            // above|left diagonal
+            r  = (flags & ARMAS_UPPER) != 0 ? 0 : P + ic;
+            c  = (flags & ARMAS_UPPER) != 0 ? P + ic : 0;
+            nr = (flags & ARMAS_UPPER) != 0 ? P + ic : nC;
+            nc = (flags & ARMAS_UPPER) != 0 ? nC : P + ic;
+            armas_x_submatrix_unsafe(&A0, A, r, c, nr, nc);
+            if ((flags & ARMAS_TRANSB) != 0) {
+                armas_x_submatrix_unsafe(&B0, B, 0, ir, P + ic, nR);
+            } else {
+                armas_x_submatrix_unsafe(&B0, B, ir, 0, nR, P + ic);
+            }
+            armas_x_ext_panel_unsafe(&C0, &dC, alpha, &B0, &A0, flags1, mcache);
+
+            // diagonal block
+            armas_x_submatrix_unsafe(&A0, A, P+ic, P+ic, nC, nC);
+            if ((flags & ARMAS_TRANSB) != 0) {
+                armas_x_submatrix(&B0, B, ic, ir, nC, nR);
+            } else {
+                armas_x_submatrix(&B0, B, ir, ic, nR, nC);
+            }
+            mult_ext_symm_diag(&C0, &dC, alpha, &A0, &B0, flags, mcache);
+
+            // right|below of diagonal
+            r  = (flags & ARMAS_UPPER) != 0 ? P + ic : P + ic + nC;
+            c  = (flags & ARMAS_UPPER) != 0 ? P + ic + nC : P + ic;
+            nr = (flags & ARMAS_UPPER) != 0 ? nC : A->cols - (P + ic + nC);
+            nc = (flags & ARMAS_UPPER) != 0 ? A->cols - (P + ic + nC) : nC;
+            armas_x_submatrix_unsafe(&A0, A, r, c, nr, nc);
+            if ((flags & ARMAS_TRANSB) != 0) {
+                armas_x_submatrix_unsafe(&B0, B, ic+nC, ir,
+                                         B->rows - (P + ic + nC), nR);
+            } else {
+                armas_x_submatrix_unsafe(&B0, B, ir, ic+nC,
+                                         nR, B->cols - (P + ic + nC));
+            }
+            armas_x_ext_panel_unsafe(&C0, &dC, alpha, &B0, &A0, flags2, mcache);
+            armas_x_merge2_unsafe(&C0, &C0, &dC);
+        }
+    }
 }
 
-
-int __kernel_ext_symm(mdata_t *C, const mdata_t *A, const mdata_t *B,
-                      DTYPE alpha, DTYPE beta, int flags,
-                      int P, int S, int L, int R, int E,
-                      int KB, int NB, int MB, armas_cbuf_t *cbuf)
+/**
+ * @brief Symmetric matrix-matrix multiplication
+ *
+ * If flag *ARMAS_LEFT* is set computes
+ *   - \f$ C = alpha \times A B + beta \times C \f$
+ *   - \f$ C = alpha \times A B^T + beta \times C   \f$ if *ARMAS_TRANSB* set
+ *
+ * If flag *ARMAS_RIGHT* is set computes
+ *   - \f$ C = alpha \times B A + beta \times C    \f$
+ *   - \f$ C = alpha \times B^T A + beta \times C  \f$ if *ARMAS_TRANSB* set
+ *
+ * Matrix A elements are stored on lower (upper) triangular part of the matrix
+ * if flag bit *ARMAS_LOWER* (*ARMAS_UPPER*) is set.
+ *
+ * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
+ * are executed in extended precision.
+ *
+ * @param[in] beta scalar constant
+ * @param[in,out] C result matrix
+ * @param[in] alpha scalar constant
+ * @param[in] A symmetric matrix
+ * @param[in] B second operand matrix
+ * @param[in] flags matrix operand indicator flags
+ * @param[in,out] conf environment configuration
+ *
+ * @retval   0  Operation succeeded
+ * @retval < 0  Failed, conf.error set to actual error code.
+ *
+ * @ingroup blas3
+ */
+int armas_x_ext_mult_sym(
+    DTYPE beta,
+    armas_x_dense_t *C,
+    DTYPE alpha,
+    const armas_x_dense_t *A,
+    const armas_x_dense_t *B,
+    int flags,
+    armas_conf_t *conf)
 {
-  if (flags & ARMAS_RIGHT) {
-    __kernel_ext_symm_right(C, A, B, alpha, beta, flags, P, S, L, R, E, KB, NB, MB);
-  } else {
-    __kernel_ext_symm_left(C, A, B, alpha, beta, flags, P, S, L, R, E, KB, NB, MB);
-  }
-  return 0;
+    int ok;
+
+    if (C->rows == 0 || C->cols == 0)
+        return 0;
+    if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
+        return 0;
+
+    if (!conf)
+        conf = armas_conf_default();
+
+    // check consistency
+    switch (flags & (ARMAS_LEFT|ARMAS_RIGHT|ARMAS_TRANSB)) {
+    case ARMAS_RIGHT|ARMAS_TRANSB:
+        ok = C->rows == B->cols
+            && C->cols == A->cols
+            && B->rows == A->rows
+            && A->rows == A->cols;
+        break;
+    case ARMAS_RIGHT:
+        ok = C->rows == B->rows
+            && C->cols == A->cols
+            && B->cols == A->rows
+            && A->rows == A->cols;
+        break;
+    case ARMAS_LEFT|ARMAS_TRANSB:
+    case ARMAS_TRANSB:
+        ok = C->rows == A->rows
+            && C->cols == B->rows
+            && A->cols == B->cols
+            && A->rows == A->cols;
+        break;
+    case ARMAS_LEFT:
+    default:
+        ok = C->rows == A->rows
+            && C->cols == B->cols
+            && A->cols == B->rows
+            && A->rows == A->cols;
+        break;
+    }
+    if (! ok) {
+        conf->error = ARMAS_ESIZE;
+        return -ARMAS_ESIZE;
+    }
+#if 0
+    if (CONFIG_ACCELERATORS) {
+        struct armas_ac_blas3 args;
+        armas_ac_set_blas3_args(&args, beta, C, alpha, A, B, flags);
+        int rc = armas_ac_dispatch(conf->accel, ARMAS_AC_SYMM, &args, conf);
+        if (rc != -ARMAS_EIMP)
+            return rc;
+        /* fallthru to local version. */
+    }
+#endif
+    armas_cbuf_t cbuf = ARMAS_CBUF_EMPTY;
+
+    if (armas_cbuf_select(&cbuf, conf) < 0) {
+        conf->error = ARMAS_EMEMORY;
+        return -ARMAS_EMEMORY;
+    }
+    cache_t cache;
+    armas_env_t *env = armas_getenv();
+    armas_cache_setup3(&cache, &cbuf, env->mb, env->nb, env->kb, sizeof(DTYPE));
+
+    if (flags & ARMAS_RIGHT) {
+        armas_x_ext_mult_symm_right(beta, C, alpha, A, B, flags, 0, &cache);
+    } else {
+        armas_x_ext_mult_symm_left(beta, C, alpha, A, B, flags, 0, &cache);
+    }
+    armas_cbuf_release(&cbuf);
+    return 0;
 }
 
+void armas_x_ext_mult_sym_unsafe(
+    DTYPE beta,
+    armas_x_dense_t *C,
+    DTYPE alpha,
+    const armas_x_dense_t *A,
+    const armas_x_dense_t *B,
+    int flags,
+    int K,
+    cache_t *cache)
+{
+    if (flags & ARMAS_RIGHT) {
+        armas_x_ext_mult_symm_right(beta, C, alpha, A, B, flags, K, cache);
+    } else {
+        armas_x_ext_mult_symm_left(beta, C, alpha, A, B, flags, K, cache);
+    }
+}
+#else
+#warning "Missing defines. No code"
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
-
-// Local Variables:
-// indent-tabs-mode: nil
-// End:
