@@ -31,9 +31,18 @@ int test_left(int M, int N, int K, int verbose, armas_conf_t *cf)
     armas_x_set_values(&B, unitrand, 0);
     armas_x_mcopy(&Bt, &B, ARMAS_TRANS, cf);
 
-    armas_x_mult_sym(0.0, &C, 1.0, &A, &B, ARMAS_LEFT|ARMAS_UPPER, cf);
-    armas_x_mult(0.0, &T, 1.0, &A, &B, 0, cf);
-    n0 = rel_error(&n1, &C, &T, ARMAS_NORM_ONE, ARMAS_NONE, cf);
+    armas_x_mult(ZERO, &T, ONE, &A, &B, 0, cf);
+    if (verbose > 2) {
+        MAT_PRINT("A", &A);
+        MAT_PRINT("B", &B);
+    }
+
+    armas_x_mult_sym(ZERO, &C, ONE, &A, &B, ARMAS_LEFT|ARMAS_UPPER, cf);
+    if (verbose > 2) {
+        MAT_PRINT("upper(A)*B", &C);
+        MAT_PRINT("A*B", &T);
+    }
+    n0 = rel_error(&n1, &C, &T, ARMAS_NORM_ONE, 0, cf);
 
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
     printf("%6s: symm(upper(A), B)   == gemm(A, B))\n", PASS(ok));
@@ -42,8 +51,7 @@ int test_left(int M, int N, int K, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mult_sym(0.0, &C, 1.0, &A, &Bt, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSB, cf);
-    armas_x_mult(0.0, &T, 1.0, &A, &Bt, ARMAS_TRANSB, cf);
+    armas_x_mult_sym(ZERO, &C, ONE, &A, &Bt, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSB, cf);
     n0 = rel_error(&n1, &C, &T, ARMAS_NORM_ONE, ARMAS_NONE, cf);
 
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -53,8 +61,7 @@ int test_left(int M, int N, int K, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mult_sym(0.0, &C, 1.0, &A, &B, ARMAS_LEFT|ARMAS_LOWER, cf);
-    armas_x_mult(0.0, &T, 1.0, &A, &B, 0, cf);
+    armas_x_mult_sym(ZERO, &C, ONE, &A, &B, ARMAS_LEFT|ARMAS_LOWER, cf);
     n0 = rel_error(&n1, &C, &T, ARMAS_NORM_ONE, ARMAS_NONE, cf);
 
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -64,8 +71,7 @@ int test_left(int M, int N, int K, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mult_sym(0.0, &C, 1.0, &A, &Bt, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSB, cf);
-    armas_x_mult(0.0, &T, 1.0, &A, &Bt, ARMAS_TRANSB, cf);
+    armas_x_mult_sym(ZERO, &C, ONE, &A, &Bt, ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSB, cf);
     n0 = rel_error(&n1, &C, &T, ARMAS_NORM_ONE, ARMAS_NONE, cf);
 
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -74,6 +80,12 @@ int test_left(int M, int N, int K, int verbose, armas_conf_t *cf)
         printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
     fails += 1 - ok;
+
+    armas_x_release(&A);
+    armas_x_release(&C);
+    armas_x_release(&B);
+    armas_x_release(&Bt);
+    armas_x_release(&T);
 
     return fails;
 }
@@ -95,9 +107,9 @@ int test_right(int M, int N, int K, int verbose, armas_conf_t *cf)
     armas_x_set_values(&A, unitrand, ARMAS_SYMM);
     armas_x_set_values(&B, unitrand, 0);
     armas_x_mcopy(&Bt, &B, ARMAS_TRANS, cf);
+    armas_x_mult(ZERO, &T, ONE, &B, &A, 0, cf);
 
-    armas_x_mult_sym(0.0, &C, 1.0, &A, &B, ARMAS_RIGHT|ARMAS_UPPER, cf);
-    armas_x_mult(0.0, &T, 1.0, &B, &A, 0, cf);
+    armas_x_mult_sym(ZERO, &C, ONE, &A, &B, ARMAS_RIGHT|ARMAS_UPPER, cf);
     n0 = rel_error(&n1, &C, &T, ARMAS_NORM_ONE, ARMAS_NONE, cf);
 
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -107,16 +119,14 @@ int test_right(int M, int N, int K, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mult_sym(0.0, &C, 1.0, &A, &Bt, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANSB, cf);
-    armas_x_mult(0.0, &T, 1.0, &Bt, &A, ARMAS_TRANSA, cf);
+    armas_x_mult_sym(ZERO, &C, ONE, &A, &Bt, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANSB, cf);
     n0 = rel_error(&n1, &C, &T, ARMAS_NORM_ONE, ARMAS_NONE, cf);
 
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
     printf("%6s: symm(B^T, upper(A)) == gemm(B^T, A))\n", PASS(ok));
     fails += 1 - ok;
 
-    armas_x_mult_sym(0.0, &C, 1.0, &A, &B, ARMAS_RIGHT|ARMAS_LOWER, cf);
-    armas_x_mult(0.0, &T, 1.0, &B, &A, 0, cf);
+    armas_x_mult_sym(ZERO, &C, ONE, &A, &B, ARMAS_RIGHT|ARMAS_LOWER, cf);
     if (verbose > 0) {
         printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
@@ -129,8 +139,7 @@ int test_right(int M, int N, int K, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mult_sym(0.0, &C, 1.0, &A, &Bt, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSB, cf);
-    armas_x_mult(0.0, &T, 1.0, &Bt, &A, ARMAS_TRANSA, cf);
+    armas_x_mult_sym(ZERO, &C, ONE, &A, &Bt, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSB, cf);
     n0 = rel_error(&n1, &C, &T, ARMAS_NORM_ONE, ARMAS_NONE, cf);
 
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -139,6 +148,13 @@ int test_right(int M, int N, int K, int verbose, armas_conf_t *cf)
         printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
     fails += 1 - ok;
+
+    armas_x_release(&A);
+    armas_x_release(&C);
+    armas_x_release(&B);
+    armas_x_release(&Bt);
+    armas_x_release(&T);
+
     return fails;
 }
 
