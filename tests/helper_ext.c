@@ -217,7 +217,7 @@ void make_ext_matrix_data(
             }
             armas_x_set_unsafe(A, k, i, (DTYPE)A->rows);
             armas_x_set_unsafe(A, A->rows - 1 - k, i, (DTYPE)(-A->rows));
-            armas_x_set_unsafe(E, i, 0, alpha * (A->rows - 2) * EPS);
+            armas_x_set_at_unsafe(E, i, alpha * (A->rows - 2) * EPS);
         }
     } else {
         for (int i = 0; i < A->rows; ++i) {
@@ -227,7 +227,7 @@ void make_ext_matrix_data(
             }
             armas_x_set_unsafe(A, i, k, (DTYPE)A->cols);
             armas_x_set_unsafe(A, i, A->cols - 1 - k, (DTYPE)(-A->cols));
-            armas_x_set_unsafe(E, i, 0, alpha * (A->cols - 2) * EPS);
+            armas_x_set_at_unsafe(E, i, alpha * (A->cols - 2) * EPS);
         }
     }
 }
