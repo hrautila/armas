@@ -74,6 +74,7 @@ EBLAS += \
 	eblas/ger_ext.c \
 	eblas/kernel_ext.c \
 	eblas/scale.c \
+	eblas/symm_ext.c \
 	eblas/symv_ext.c \
 	eblas/syr2_ext.c \
 	eblas/syr_ext.c \
