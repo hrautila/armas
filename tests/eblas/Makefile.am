@@ -25,7 +25,7 @@ endif
 
 
 UNIT_TESTS = \
-	efttest ext_dot ext_gemm ext_trmm ext_trsm ext_gemv ext_trmv ext_trsv
+	efttest ext_dot ext_gemm ext_trmm ext_trsm ext_gemv ext_trmv ext_trsv ext_symm
 
 check_PROGRAMS = $(UNIT_TESTS)
 
@@ -37,6 +37,8 @@ ext_gemm_SOURCES  = ext_gemm.c ../helper.c ../helper_ext.c
 ext_gemm_LDADD    = $(LIBARMAS)
 ext_gemv_SOURCES  = ext_gemv.c ../helper.c ../helper_ext.c
 ext_gemv_LDADD    = $(LIBARMAS)
+ext_symm_SOURCES  = ext_symm.c ../helper.c ../helper_ext.c
+ext_symm_LDADD    = $(LIBARMAS)
 ext_trmm_SOURCES  = ext_trmm.c ../helper.c ../helper_ext.c
 ext_trmm_LDADD    = $(LIBARMAS)
 ext_trmv_SOURCES  = ext_trmv.c ../helper.c ../helper_ext.c
