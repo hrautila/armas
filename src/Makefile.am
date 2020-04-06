@@ -158,31 +158,31 @@ LAPACK = \
 	lapack/triredm.c \
 	lapack/svd.c
 
-if OLD
 SPARSE = \
-	sparse/iluz.c \
-	sparse/icholz.c \
-	sparse/dense.c \
-	sparse/mult.c \
-	sparse/sparse.c \
 	sparse/accum.c \
 	sparse/add.c \
-	sparse/cgrad.c \
-	sparse/pcgrad.c \
-	sparse/cgnr.c \
 	sparse/cgne.c \
+	sparse/cgnr.c \
+	sparse/cgrad.c \
 	sparse/convert.c \
 	sparse/copy.c \
+	sparse/dense.c \
 	sparse/gemv.c \
 	sparse/gmres.c \
-	sparse/pgmres.c \
+	sparse/icholz.c \
+	sparse/iluz.c \
 	sparse/io.c \
+	sparse/mult.c \
+	sparse/pcgrad.c \
+	sparse/pgmres.c \
 	sparse/sort.c \
+	sparse/sparse.c \
 	sparse/symv.c \
 	sparse/trmv.c \
 	sparse/trsv.c \
 	sparse/util.c
 
+if OLD
 OLD_COMPAT = \
 	compat/asum.c \
 	compat/axpy.c \
@@ -228,7 +228,7 @@ libarmasd_la_LIBADD = libd.la
 
 
 # double precision
-libd_la_SOURCES = $(COMMON) $(BLAS) $(EBLAS) $(ACCEL) $(COMPAT) $(LAPACK)
+libd_la_SOURCES = $(COMMON) $(BLAS) $(EBLAS) $(ACCEL) $(COMPAT) $(LAPACK) $(SPARSE)
 libd_la_CPPFLAGS = -DFLOAT64 
 
 # # sparse double precision
