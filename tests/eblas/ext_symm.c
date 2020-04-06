@@ -210,12 +210,10 @@ int main(int argc, char **argv)
             fails += test_unit_b(M, N, verbose, ARMAS_UPPER, &conf);
         if (lower)
             fails += test_unit_b(M, N, verbose, ARMAS_LOWER, &conf);
-#if 0
         if (upper)
             fails += test_almost_one(M, N, verbose, ARMAS_UPPER, &conf);
         if (lower)
             fails += test_almost_one(M, N, verbose, ARMAS_LOWER, &conf);
-#endif
     }
 
     exit(fails);
