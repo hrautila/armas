@@ -35,6 +35,10 @@ typedef double ABSTYPE;
 #define POW   pow
 #define EXP   exp
 
+#define SAFEMIN     DBL_MIN
+// machine accurancy as in LAPACK library
+#define EPS         (DBL_EPSILON/2.0)
+
 // ------------------------------------------------------------------------------
 // public matrix types
 #define armas_x_dense_t       armas_d_dense_t

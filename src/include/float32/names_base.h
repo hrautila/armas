@@ -35,6 +35,10 @@ typedef float ABSTYPE;
 #define POW   powf
 #define EXP   expf
 
+#define SAFEMIN     FLT_MIN
+// machine accurancy as in LAPACK library
+#define EPS         (FLT_EPSILON/2.0)
+
 // ------------------------------------------------------------------------------
 // public matrix types
 #define armas_x_dense_t       armas_s_dense_t

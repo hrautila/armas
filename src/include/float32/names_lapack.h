@@ -15,10 +15,6 @@
  * Definitions for double precision real numbers. (FLOAT64)
  */
 
-#define SAFEMIN     FLT_MIN
-// machine accurancy as in LAPACK library 
-#define EPS         (FLT_EPSILON/2.0)
-
 // internal helpers
 #define armas_x_pivot_index             armas_s_pivot_index
 // public pivot functions

@@ -19,15 +19,22 @@
 /*
  *
  */
+#include "complex64/names_base.h"
+#include "complex64/names_blas.h"
+
 #elif COMPLEX64
 /*
  *
  */
+#include "complex32/names_base.h"
+#include "complex32/names_blas.h"
 
 #elif FLOAT32
 /*
  *
  */
+#include "float32/names_base.h"
+#include "float32/names_blas.h"
 
 #else
 /*
