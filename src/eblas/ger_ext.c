@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012-2015
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -15,13 +15,13 @@
 #if defined(armas_x_ext_mvupdate_unsafe) \
     || defined(armas_x_ext_mvupdate_trm_unsafe) \
     || defined(armas_x_mvupdate2_sym_unsafe)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -54,15 +54,13 @@ int armas_x_ext_mvupdate_unsafe(
  * @brief General matrix rank update.
  *
  * Computes
- *   - \f$ A = A + alpha \times X Y^T \f$
+ *   - \f$ A = beta * A + alpha \times X Y^T \f$
  *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
- *
+ * @param[in]      beta scalar multiplier
  * @param[in,out]  A target matrix
+ * @param[in]      alpha scalar multiplier
  * @param[in]      X source vector
  * @param[in]      Y source vector
- * @param[in]      alpha scalar multiplier
  * @param[in]      conf  configuration block
  *
  * @ingroup blas2
@@ -100,14 +98,6 @@ int armas_x_ext_mvupdate(
     armas_x_ext_mvupdate_unsafe(beta, A, alpha, x, y);
     return 0;
 }
-
-
-
 #else
 #warning "Missing defines. No code!"
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

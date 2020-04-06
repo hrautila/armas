@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2015-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -108,7 +108,7 @@ int armas_x_ext_axpby_dx_unsafe(
     const armas_x_dense_t *X)
 {
     register int i, xinc, yinc, N;
-    DTYPE y0, p0, x0, c0;
+    DTYPE y0, p0, x0, c0, z0, y1, c1;
 
     xinc = X->rows == 1 ? X->step : 1;
     yinc = Y->rows == 1 ? Y->step : 1;
@@ -117,10 +117,11 @@ int armas_x_ext_axpby_dx_unsafe(
     for (i = 0; i < N; ++i) {
         twoprod(&y0, &c0, Y->elems[i*yinc], beta);
         twoprod(&x0, &p0, X->elems[i*xinc], alpha);
-        p0 += c0 + dx * X->elems[i*xinc];
+        z0 = dx * X->elems[i*xinc];
+        p0 += c0;
 
-        twosum(&y0, &c0, x0, y0);
-        Y->elems[(i+0)*yinc] = (p0 + c0) + y0;
+        twosum(&y1, &c1, x0, y0);
+        Y->elems[i*yinc] = y1 + z0 + c1 + p0; //(p0 + c0) + y0;
     }
     return 0;
 }
@@ -164,10 +165,4 @@ int armas_x_ext_axpby(
 }
 #else
 #warning "Missing defines! No code!"
-#endif /* __ARMAS_REQUIRES && __ARMAS_PROVIDES */
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:
-
+#endif /* ARMAS_REQUIRES && ARMAS_PROVIDES */
