@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2018
+// Copyright (c) Harri Rautila, 2018-2020
 
 // This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -7,19 +7,19 @@
 
 #include "spdefs.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armassp_x_mult_diag) && defined(armassp_x_add_diag)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 
-#include <armas/armas.h>
+#include "armas.h"
 #include "sparse.h"
 
 // A = alpha*diag(x)*A or A = alpha*A*diag(x)
@@ -27,27 +27,28 @@
 /**
  * \brief Compute A = alpha*diag(x)*A or A = alpha*A*diag(x)
  */
-int armassp_x_mult_diag(armas_x_sparse_t *A, DTYPE alpha, const armas_x_dense_t *x, int flags)
+int armassp_x_mult_diag(armas_x_sparse_t * A, DTYPE alpha,
+                        const armas_x_dense_t * x, int flags)
 {
     int p;
     DTYPE *xp = armas_x_data(x);
-    DTYPE *Ae =  A->elems.v;
-    
+    DTYPE *Ae = A->elems.v;
+
     if (A->kind != ARMASSP_CSR && A->kind != ARMASSP_CSC)
         return -1;
-    
-    switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
+
+    switch (flags & (ARMAS_LEFT | ARMAS_RIGHT)) {
     case ARMAS_RIGHT:
         if (A->kind == ARMASSP_CSC) {
             for (int i = 0; i < A->cols; i++) {
-                for (p = sp_index(A, i); p < sp_index(A, i+1); p++) {
-                    Ae[p] *= alpha*xp[i];
+                for (p = sp_index(A, i); p < sp_index(A, i + 1); p++) {
+                    Ae[p] *= alpha * xp[i];
                 }
             }
         } else {
             for (int i = 0; i < A->rows; i++) {
-                for (p = sp_index(A, i); p < sp_index(A, i+1); p++) {
-                    Ae[p] *= alpha*xp[sp_at(A, p)];
+                for (p = sp_index(A, i); p < sp_index(A, i + 1); p++) {
+                    Ae[p] *= alpha * xp[sp_at(A, p)];
                 }
             }
         }
@@ -56,14 +57,14 @@ int armassp_x_mult_diag(armas_x_sparse_t *A, DTYPE alpha, const armas_x_dense_t 
     default:
         if (A->kind == ARMASSP_CSR) {
             for (int i = 0; i < A->rows; i++) {
-                for (p = sp_index(A, i); p < sp_index(A, i+1); p++) {
-                    Ae[p] *= alpha*xp[i];
+                for (p = sp_index(A, i); p < sp_index(A, i + 1); p++) {
+                    Ae[p] *= alpha * xp[i];
                 }
             }
         } else {
             for (int i = 0; i < A->cols; i++) {
-                for (p = sp_index(A, i); p < sp_index(A, i+1); p++) {
-                    Ae[p] *= alpha*xp[sp_at(A, p)];
+                for (p = sp_index(A, i); p < sp_index(A, i + 1); p++) {
+                    Ae[p] *= alpha * xp[sp_at(A, p)];
                 }
             }
         }
@@ -75,7 +76,7 @@ int armassp_x_mult_diag(armas_x_sparse_t *A, DTYPE alpha, const armas_x_dense_t 
 /**
  * \brief Compute A = A + mu*I
  */
-int armassp_x_add_diag(armas_x_sparse_t *A, DTYPE mu)
+int armassp_x_add_diag(armas_x_sparse_t * A, DTYPE mu)
 {
     int p;
     DTYPE *Ae;
@@ -83,7 +84,8 @@ int armassp_x_add_diag(armas_x_sparse_t *A, DTYPE mu)
     case ARMASSP_CSR:
         Ae = A->elems.v;
         for (int i = 0; i < A->rows; i++) {
-            for (p = sp_index(A, i); sp_at(A, p) < i && p < sp_index(A, i+1); p++);
+            for (p = sp_index(A, i); sp_at(A, p) < i && p < sp_index(A, i + 1);
+                 p++);
             if (sp_at(A, p) == i)
                 Ae[p] += mu;
         }
@@ -91,7 +93,8 @@ int armassp_x_add_diag(armas_x_sparse_t *A, DTYPE mu)
     case ARMASSP_CSC:
         Ae = A->elems.v;
         for (int i = 0; i < A->cols; i++) {
-            for (p = sp_index(A, i); sp_at(A, p) < i && p < sp_index(A, i+1); p++);
+            for (p = sp_index(A, i); sp_at(A, p) < i && p < sp_index(A, i + 1);
+                 p++);
             if (sp_at(A, p) == i)
                 Ae[p] += mu;
         }
@@ -101,11 +104,6 @@ int armassp_x_add_diag(armas_x_sparse_t *A, DTYPE mu)
     }
     return 0;
 }
-
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#else
+#warning "Missing defines. No code!"
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
