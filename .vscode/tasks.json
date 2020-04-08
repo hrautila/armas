@@ -6,7 +6,7 @@
         {
             "label": "debug build library",
             "type": "shell",
-            "command": "cd ${workspaceRoot}/build; make CFLAGS='-g -O0'",
+            "command": "cd ${workspaceRoot}/build; make CFLAGS='-g -O0 -DARMAS_WITH_CHECKS=1'",
             "problemMatcher": [
                 "$gcc"
             ],
@@ -27,7 +27,7 @@
         {
             "label": "run checks",
             "type": "shell",
-            "command": "cd ${workspaceRoot}/build; make CFLAGS='-g -O1' check",
+            "command": "cd ${workspaceRoot}/build; make CFLAGS='-g -O1 -DARMAS_WITH_CHECKS=1' check",
             "problemMatcher": [
                 "$gcc"
             ],
@@ -42,7 +42,7 @@
         {
             "label": "build a programm",
             "type": "shell",
-            "command": "cd ${workspaceRoot}/build; cd ${input:directory}; make CFLAGS='-g -O0' ${input:target}",
+            "command": "cd ${workspaceRoot}/build; cd ${input:directory}; make CFLAGS='-g -O0 -DARMAS_WITH_CHECKS=1' ${input:target}",
             "problemMatcher": [
                 "$gcc"
             ]
