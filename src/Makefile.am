@@ -87,6 +87,7 @@ endif
 ACCEL =
 if CONFIG_ACCELERATORS
 ACCEL += \
+	base/accel.c \
 	threaded/entry.c \
 	threaded/gemm.c \
 	threaded/symm.c \
@@ -228,7 +229,8 @@ libarmasd_la_LIBADD = libd.la
 
 
 # double precision
-libd_la_SOURCES = $(COMMON) $(BLAS) $(EBLAS) $(ACCEL) $(COMPAT) $(LAPACK) $(SPARSE)
+libd_la_SOURCES =  \
+	$(COMMON) $(BLAS) $(EBLAS) $(ACCEL) $(COMPAT) $(LAPACK) $(SPARSE)
 libd_la_CPPFLAGS = -DFLOAT64 
 
 # # sparse double precision
