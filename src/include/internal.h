@@ -36,7 +36,7 @@ enum armas_partition {
   ARMAS_PBOTTOMRIGHT = 5
 };
 
-typedef struct cache_s {
+typedef struct cache {
   DTYPE *Acpy;  // kb*mb
   DTYPE *Bcpy;  // kb*nb
   size_t ab_step;
@@ -62,20 +62,6 @@ int max(int a, int b) {
   return a < b ? b : a;
 }
 
-#ifdef __OPTIMIZE__
-/* if not compiled with -O0 */
-#define fail_on_error(x)    x
-#define require(x)
-#else
-/* if compiled with -O0 */
-#define require(x)   assert(x)
-#define fail_on_error(x)                        \
-do {                                            \
-    if ((x) < 0) {                              \
-        abort();                                \
-    }                                           \
-} while(0)
-#endif  /* __OPTIMIZE__ */
 #ifdef DEBUG
 #define A_DEBUG(a) do { a; } while (0)
 #else
