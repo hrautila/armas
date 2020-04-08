@@ -38,7 +38,7 @@ static struct armas_conf __default_conf = {
     .error = 0,           // last error (output)
     .optflags = 0,        // opt flags
     .tolmult = 10,        // error tolerance multiplier (tolerance = tolmult*EPSILON)
-    .cbuf = (struct armas_cbuf *)0,
+    .work = (struct armas_wbuf *)0,
     .accel = (struct armas_accel *)0,
     .maxiter = 0,         // max iterators
     .gmres_m = 0,         //
