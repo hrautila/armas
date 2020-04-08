@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -17,7 +17,7 @@
 #include <stdlib.h>
 /* COMPLEX_H */
 #include "armas.h"
-#include "dtype.h"
+//#include "dtype.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -28,54 +28,60 @@ extern "C" {
  * @brief Column major matrix type.
  */
 typedef struct armas_x_dense {
-  DTYPE *elems;   ///< Matrix elements,
-  int step;       ///< Row stride
-  int rows;       ///< Number of rows
-  int cols;       ///< Number of columns
-  void *__data;   ///< Non-null if stucture owns elements
-  int __nbytes;   ///< sizeof __data buffer
+    DTYPE *elems;  ///< Matrix elements,
+    int step;      ///< Row stride
+    int rows;      ///< Number of rows
+    int cols;      ///< Number of columns
+    void *__data;  ///< Non-null if stucture owns elements
+    int __nbytes;  ///< sizeof __data buffer
 } armas_x_dense_t;
-
 
 /**
  * \brief Eigenvalue selection parameters
  */
 typedef struct armas_x_eigen_parameter {
-    int ileft;          ///< Start index of half-open interval [ileft, iright)
-    int iright;         ///< End index of half-open interval [ileft, iright)
-    DTYPE left;         ///< Start eigenvalue of half-open interval [left, right)
-    DTYPE right;        ///< Last eigenvalue of half-open interval [left, right)
-    DTYPE tau;          ///< Requested accurancy; must be > max{|T_i|}*eps
+    int ileft;    ///< Start index of half-open interval [ileft, iright)
+    int iright;   ///< End index of half-open interval [ileft, iright)
+    DTYPE left;   ///< Start eigenvalue of half-open interval [left, right)
+    DTYPE right;  ///< Last eigenvalue of half-open interval [left, right)
+    DTYPE tau;    ///< Requested accurancy; must be > max{|T_i|}*eps
 } armas_x_eigen_parameter_t;
 
-
 //! \brief Define eigenvalue index range [l, r) with default accuracy
-#define ARMAS_EIGEN_INT(l, r)  &(armas_x_eigen_parameter_t){(l), (r), 0.0, 0.0, 0.0}
+#define ARMAS_EIGEN_INT(l, r) \
+    &(armas_x_eigen_parameter_t) { (l), (r), 0.0, 0.0, 0.0 }
 
 //! \brief Define eigenvalue value range [low, high) with default accuracy
-#define ARMAS_EIGEN_VAL(low, high)  &(armas_x_eigen_parameter_t){0, 0, (low), (high), 0.0}
+#define ARMAS_EIGEN_VAL(low, high) \
+    &(armas_x_eigen_parameter_t) { 0, 0, (low), (high), 0.0 }
 
 //! \brief Define eigenvalue index range [l, r) and accuracy parameter tau
-#define ARMAS_EIGEN_INT_TAU(l, r, tau)  &(armas_x_eigen_parameter_t){(l), (r), 0.0, 0.0, tau}
+#define ARMAS_EIGEN_INT_TAU(l, r, tau) \
+    &(armas_x_eigen_parameter_t) { (l), (r), 0.0, 0.0, tau }
 
 //! \brief Define eigenvalue value range [low, high) and accuracy parameter tau
-#define ARMAS_EIGEN_VAL_TAU(low, high, tau)  &(armas_x_eigen_parameter_t){0, 0, (low), (high), tau}
+#define ARMAS_EIGEN_VAL_TAU(low, high, tau) \
+    &(armas_x_eigen_parameter_t) { 0, 0, (low), (high), tau }
 
 //! \brief All eigenvalues with default accuracy
-#define ARMAS_EIGEN_ALL  &(armas_x_eigen_parameter_t){-1, -1, 0.0, 0.0, 0.0}
+#define ARMAS_EIGEN_ALL \
+    &(armas_x_eigen_parameter_t) { -1, -1, 0.0, 0.0, 0.0 }
 
 //! \brief All eigenvalues with accuracy parameter
-#define ARMAS_EIGEN_ALL_TAU(tau)  &(armas_x_eigen_parameter_t){-1, -1, 0.0, 0.0, tau}
+#define ARMAS_EIGEN_ALL_TAU(tau) \
+    &(armas_x_eigen_parameter_t) { -1, -1, 0.0, 0.0, tau }
 
 // Null matrix
 //#define ARMAS_NULL (armas_x_dense_t *)0
 
-static inline int _M(armas_x_dense_t *A) {
-  return A->rows;
+static inline int _M(armas_x_dense_t *A)
+{
+    return A->rows;
 }
 
-static inline int _N(armas_x_dense_t *A) {
-  return A->cols;
+static inline int _N(armas_x_dense_t *A)
+{
+    return A->cols;
 }
 
 // function that constants
@@ -107,7 +113,7 @@ extern void armas_x_make_trm(armas_x_dense_t *m, int flags);
 extern int armas_x_madd(armas_x_dense_t *d, DTYPE alpha, int flags, armas_conf_t *cf);
 extern int armas_x_mscale(armas_x_dense_t *d, DTYPE alpha, int flags, armas_conf_t *cf);
 extern int armas_x_mplus(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int flags, armas_conf_t *cf);
-  // element wise operators
+// element wise operators
 extern int armas_x_mul_elems(armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int flags);
 extern int armas_x_apply(armas_x_dense_t *A, armas_x_operator_t func, int flags);
 extern int armas_x_apply2(armas_x_dense_t *A, armas_x_operator2_t func, DTYPE val, int flags);
@@ -131,7 +137,7 @@ extern int armas_x_json_dump(FILE *fp, const armas_x_dense_t *A, int flags);
 __ARMAS_INLINE
 int armas_x_isvector(const armas_x_dense_t *m)
 {
-  return m && (m->rows == 1 || m->cols == 1);
+    return m && (m->rows == 1 || m->cols == 1);
 }
 
 //! \brief Get number of elements in matrix.
@@ -139,37 +145,37 @@ int armas_x_isvector(const armas_x_dense_t *m)
 __ARMAS_INLINE
 int64_t armas_x_size(const armas_x_dense_t *m)
 {
-  return m ? m->rows * m->cols : 0;
+    return m ? m->rows * m->cols : 0;
 }
 
 __ARMAS_INLINE
 int64_t armas_x_real_index(const armas_x_dense_t *m, int64_t ix)
 {
-  if (m->cols == 1 || m->step == m->rows)
-    return ix;
-  return m->step*(ix / m->rows) + (ix % m->rows);
+    if (m->cols == 1 || m->step == m->rows)
+        return ix;
+    return m->step * (ix / m->rows) + (ix % m->rows);
 }
 
 __ARMAS_INLINE
 int armas_x_index_valid(const armas_x_dense_t *m, int64_t ix)
 {
-  return m && (ix >= -armas_x_size(m) && ix < armas_x_size(m));
+    return m && (ix >= -armas_x_size(m) && ix < armas_x_size(m));
 }
-
-
 
 //! \brief Release matrix allocated space
 //! \ingroup matrix
 __ARMAS_INLINE
 void armas_x_release(armas_x_dense_t *m)
 {
-  if (m && m->__data) {
-    free(m->__data);
-    m->rows = 0; m->cols = 0; m->step = 0;
-    m->elems = (DTYPE *)0;
-    m->__data = (void *)0;
-    m->__nbytes = 0;
-  }
+    if (m && m->__data) {
+        free(m->__data);
+        m->rows = 0;
+        m->cols = 0;
+        m->step = 0;
+        m->elems = (DTYPE *)0;
+        m->__data = (void *)0;
+        m->__nbytes = 0;
+    }
 }
 
 //! \brief Allocate a new matrix of size [r, c]
@@ -177,13 +183,14 @@ void armas_x_release(armas_x_dense_t *m)
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_alloc(int r, int c)
 {
-  armas_x_dense_t *m;
-  if (r <= 0 || c <= 0) {
-    return (armas_x_dense_t *)0;
-  }
-  m = (armas_x_dense_t *)malloc(sizeof(armas_x_dense_t));
-  if ( !m ) return m;
-  return armas_x_init(m, r, c);
+    armas_x_dense_t *m;
+    require(r >= 0 && c >= 0);
+    if (r <= 0 || c <= 0) {
+        return (armas_x_dense_t *)0;
+    }
+    m = (armas_x_dense_t *)malloc(sizeof(armas_x_dense_t));
+    if (!m) return m;
+    return armas_x_init(m, r, c);
 }
 
 //! \brief Release matrix and its allocated space
@@ -191,10 +198,10 @@ armas_x_dense_t *armas_x_alloc(int r, int c)
 __ARMAS_INLINE
 void armas_x_free(armas_x_dense_t *m)
 {
-  if ( !m )
-    return;
-  armas_x_release(m);
-  free(m);
+    if (!m)
+        return;
+    armas_x_release(m);
+    free(m);
 }
 
 //! \brief Make matrix with provided buffer.
@@ -204,45 +211,46 @@ void armas_x_free(armas_x_dense_t *m)
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_make(armas_x_dense_t *m, int r, int c, int s, DTYPE *elems)
 {
-  m->step = s;
-  m->rows = r;
-  m->cols = c;
-  m->elems = elems;
-  m->__data = (void *)0;
-  m->__nbytes = 0;
-  return m;
+    m->step = s;
+    m->rows = r;
+    m->cols = c;
+    m->elems = elems;
+    m->__data = (void *)0;
+    m->__nbytes = 0;
+    return m;
 }
-
 
 // \brief Make A a column vector of B; A = B[:, c]
 //! \ingroup matrix
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_column(armas_x_dense_t *A, const armas_x_dense_t *B, int c)
 {
-  if (armas_x_size(B) == 0 || c >= B->cols)
-	return (armas_x_dense_t*)0;
-  if (c < 0) {
-    c += B->cols;
-  }
-  A->cols = 1;
-  A->rows = B->rows;
-  A->step = B->step;
-  A->elems = &B->elems[c*B->step];
-  A->__data = (void *)0;
-  A->__nbytes = 0;
-  return A;
+    if (armas_x_size(B) == 0)
+        return (armas_x_dense_t *)0;
+    if (c < 0) {
+        c += B->cols;
+    }
+    require(c >= 0 && c < B->cols);
+    A->cols = 1;
+    A->rows = B->rows;
+    A->step = B->step;
+    A->elems = &B->elems[c * B->step];
+    A->__data = (void *)0;
+    A->__nbytes = 0;
+    return A;
 }
 
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_column_unsafe(armas_x_dense_t *A, const armas_x_dense_t *B, int c)
 {
-  A->cols = 1;
-  A->rows = B->rows;
-  A->step = B->step;
-  A->elems = &B->elems[c*B->step];
-  A->__data = (void *)0;
-  A->__nbytes = 0;
-  return A;
+    require(c >= 0 && c < B->cols);
+    A->cols = 1;
+    A->rows = B->rows;
+    A->step = B->step;
+    A->elems = &B->elems[c * B->step];
+    A->__data = (void *)0;
+    A->__nbytes = 0;
+    return A;
 }
 
 // \brief Make A a row vector of B; A = B[r, :]
@@ -250,30 +258,32 @@ armas_x_dense_t *armas_x_column_unsafe(armas_x_dense_t *A, const armas_x_dense_t
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_row(armas_x_dense_t *A, const armas_x_dense_t *B, int r)
 {
-  if (armas_x_size(B) == 0 || r >= B->rows)
-    return (armas_x_dense_t*)0;
-  if (r < 0) {
-    r += B->rows;
-  }
-  A->rows = 1;
-  A->cols = B->cols;
-  A->step = B->step;
-  A->elems = &B->elems[r];
-  A->__data = (void *)0;
-  A->__nbytes = 0;
-  return A;
+    if (armas_x_size(B) == 0)
+        return (armas_x_dense_t *)0;
+    if (r < 0) {
+        r += B->rows;
+    }
+    require(r >= 0 && r < B->rows);
+    A->rows = 1;
+    A->cols = B->cols;
+    A->step = B->step;
+    A->elems = &B->elems[r];
+    A->__data = (void *)0;
+    A->__nbytes = 0;
+    return A;
 }
 
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_row_unsafe(armas_x_dense_t *A, const armas_x_dense_t *B, int r)
 {
-  A->rows = 1;
-  A->cols = B->cols;
-  A->step = B->step;
-  A->elems = &B->elems[r];
-  A->__data = (void *)0;
-  A->__nbytes = 0;
-  return A;
+    require(r >= 0 && r < B->rows);
+    A->rows = 1;
+    A->cols = B->cols;
+    A->step = B->step;
+    A->elems = &B->elems[r];
+    A->__data = (void *)0;
+    A->__nbytes = 0;
+    return A;
 }
 
 //! \brief Make A a submatrix view of B with spesified row stride.
@@ -282,24 +292,28 @@ __ARMAS_INLINE
 armas_x_dense_t *armas_x_submatrix_ext(armas_x_dense_t *A, const armas_x_dense_t *B,
                                        int r, int c, int nr, int nc, int step)
 {
-  if (armas_x_size(B) == 0)
-    return (armas_x_dense_t*)0;
-  if (r < 0) {
-    r += B->rows;
-  }
-  if (c < 0) {
-    c += B->cols;
-  }
-  if (nr < 0) {
-    nr = B->rows - r;
-  }
-  if (nc < 0) {
-    nc = B->cols - c;
-  }
-  if (step < 0) {
-    step = B->step;
-  }
-  return armas_x_make(A, nr, nc, step, &B->elems[c*B->step+r]);
+    if (armas_x_size(B) == 0)
+        return (armas_x_dense_t *)0;
+    if (r < 0) {
+        r += B->rows;
+    }
+    if (c < 0) {
+        c += B->cols;
+    }
+    if (nr < 0) {
+        nr = B->rows - r;
+    }
+    if (nc < 0) {
+        nc = B->cols - c;
+    }
+    if (step < 0) {
+        step = B->step;
+    }
+    require(r >= 0 && (r < B->rows || nr == 0));
+    require(c >= 0 && (c < B->cols || nc == 0));
+    require(nr <= B->rows - r);
+    require(nc <= B->cols - c);
+    return armas_x_make(A, nr, nc, step, &B->elems[c * B->step + r]);
 }
 
 //! \brief Make A submatrix view of B.
@@ -308,7 +322,7 @@ __ARMAS_INLINE
 armas_x_dense_t *armas_x_submatrix(armas_x_dense_t *A, const armas_x_dense_t *B,
                                    int r, int c, int nr, int nc)
 {
-  return armas_x_submatrix_ext(A, B, r, c, nr, nc, B->step);
+    return armas_x_submatrix_ext(A, B, r, c, nr, nc, B->step);
 }
 
 //! \brief Make A submatrix view of B. (Unsafe version without any limit checks.)
@@ -317,7 +331,7 @@ __ARMAS_INLINE
 armas_x_dense_t *armas_x_submatrix_unsafe(armas_x_dense_t *A, const armas_x_dense_t *B,
                                           int r, int c, int nr, int nc)
 {
-  return armas_x_make(A, nr, nc, B->step, &B->elems[c*B->step+r]);
+    return armas_x_make(A, nr, nc, B->step, &B->elems[c * B->step + r]);
 }
 
 //! \brief Make X subvector of Y
@@ -326,16 +340,16 @@ __ARMAS_INLINE
 armas_x_dense_t *armas_x_subvector(armas_x_dense_t *X, const armas_x_dense_t *Y,
                                    int n, int len)
 {
-  if (!armas_x_isvector(Y)) {
-    X->rows = X->cols = 0;
-  } else {
-    if (Y->rows == 1) {
-      armas_x_submatrix(X, Y, 0, n, 1, len);
+    if (!armas_x_isvector(Y)) {
+        X->rows = X->cols = 0;
     } else {
-      armas_x_submatrix(X, Y, n, 0, len, 1);
+        if (Y->rows == 1) {
+            armas_x_submatrix(X, Y, 0, n, 1, len);
+        } else {
+            armas_x_submatrix(X, Y, n, 0, len, 1);
+        }
     }
-  }
-  return X;
+    return X;
 }
 
 //! \brief Make X subvector of Y (Unsafe version without any limit checks.)
@@ -344,12 +358,12 @@ __ARMAS_INLINE
 armas_x_dense_t *armas_x_subvector_unsafe(armas_x_dense_t *X, const armas_x_dense_t *Y,
                                           int n, int len)
 {
-  if (Y->rows == 1) {
-    armas_x_submatrix_unsafe(X, Y, 0, n, 1, len);
-  } else {
-    armas_x_submatrix_unsafe(X, Y, n, 0, len, 1);
-  }
-  return X;
+    if (Y->rows == 1) {
+        armas_x_submatrix_unsafe(X, Y, 0, n, 1, len);
+    } else {
+        armas_x_submatrix_unsafe(X, Y, n, 0, len, 1);
+    }
+    return X;
 }
 
 //! \brief Make A diagonal row vector of B.
@@ -357,20 +371,22 @@ armas_x_dense_t *armas_x_subvector_unsafe(armas_x_dense_t *X, const armas_x_dens
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_diag(armas_x_dense_t *A, const armas_x_dense_t *B, int k)
 {
-  int nk;
-  if (k > 0) {
-    // super diagonal
-    nk = B->rows < B->cols-k ? B->rows : B->cols-k;
-    return armas_x_submatrix_ext(A, B, 0, k, 1, nk, B->step+1);
-  }
-  if (k < 0) {
-    // subdiagonal
-    nk = B->rows+k < B->cols ? B->rows+k : B->cols;
-    return armas_x_submatrix_ext(A, B, -k, 0, 1, nk, B->step+1);
-  }
-  // main diagonal
-  nk = B->rows < B->cols ? B->rows : B->cols;
-  return armas_x_submatrix_ext(A, B, 0, 0, 1, nk, B->step+1);
+    int nk;
+    if (k > 0) {
+        // super diagonal
+        require(k < B->cols);
+        nk = B->rows < B->cols - k ? B->rows : B->cols - k;
+        return armas_x_submatrix_ext(A, B, 0, k, 1, nk, B->step + 1);
+    }
+    if (k < 0) {
+        // subdiagonal
+        require(-k < B->rows);
+        nk = B->rows + k < B->cols ? B->rows + k : B->cols;
+        return armas_x_submatrix_ext(A, B, -k, 0, 1, nk, B->step + 1);
+    }
+    // main diagonal
+    nk = B->rows < B->cols ? B->rows : B->cols;
+    return armas_x_submatrix_ext(A, B, 0, 0, 1, nk, B->step + 1);
 }
 
 //! \brief Make A diagonal row vector of B. (unsafe version).
@@ -378,33 +394,36 @@ armas_x_dense_t *armas_x_diag(armas_x_dense_t *A, const armas_x_dense_t *B, int 
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_diag_unsafe(armas_x_dense_t *A, const armas_x_dense_t *B, int k)
 {
-  int nk;
-  if (k > 0) {
-    // super diagonal (starts at k'th colomn of A)
-    nk = B->rows < B->cols-k ? B->rows : B->cols-k;
-    return armas_x_make(A, 1, nk, B->step+1, &B->elems[k*B->step]);
-  }
-  if (k < 0) {
-    // subdiagonal (starts at k'th row of A)
-    nk = B->rows+k < B->cols ? B->rows+k : B->cols;
-    return armas_x_make(A, 1, nk, B->step+1, &B->elems[-k]);
-  }
-  // main diagonal
-  nk = B->rows < B->cols ? B->rows : B->cols;
-  return armas_x_make(A, 1, nk, B->step+1, &B->elems[0]);
+    int nk;
+    if (k > 0) {
+        // super diagonal (starts at k'th colomn of A)
+        require(k < B->cols);
+        nk = B->rows < B->cols - k ? B->rows : B->cols - k;
+        return armas_x_make(A, 1, nk, B->step + 1, &B->elems[k * B->step]);
+    }
+    if (k < 0) {
+        // subdiagonal (starts at k'th row of A)
+        require(-k < B->rows);
+        nk = B->rows + k < B->cols ? B->rows + k : B->cols;
+        return armas_x_make(A, 1, nk, B->step + 1, &B->elems[-k]);
+    }
+    // main diagonal
+    nk = B->rows < B->cols ? B->rows : B->cols;
+    return armas_x_make(A, 1, nk, B->step + 1, &B->elems[0]);
 }
 
 //! \brief Get element at `[row, col]`
 __ARMAS_INLINE
 DTYPE armas_x_get(const armas_x_dense_t *m, int row, int col)
 {
-  if (armas_x_size(m) == 0)
-    return 0.0;
-  if (row < 0)
-    row += m->rows;
-  if (col < 0)
-    col += m->cols;
-  return m->elems[col*m->step+row];
+    if (armas_x_size(m) == 0)
+        return 0.0;
+    if (row < 0)
+        row += m->rows;
+    if (col < 0)
+        col += m->cols;
+    require(row < m->rows && col < m->cols);
+    return m->elems[col * m->step + row];
 }
 
 //! \brief Get unsafely element at `[row, col]`
@@ -412,7 +431,8 @@ DTYPE armas_x_get(const armas_x_dense_t *m, int row, int col)
 __ARMAS_INLINE
 DTYPE armas_x_get_unsafe(const armas_x_dense_t *m, int row, int col)
 {
-  return m->elems[col*m->step+row];
+    require(row < m->rows && col < m->cols);
+    return m->elems[col * m->step + row];
 }
 
 //! \brief Set element at `[row, col]` to `val`
@@ -420,13 +440,14 @@ DTYPE armas_x_get_unsafe(const armas_x_dense_t *m, int row, int col)
 __ARMAS_INLINE
 void armas_x_set(armas_x_dense_t *m, int row, int col, DTYPE val)
 {
-  if (armas_x_size(m) == 0)
-    return;
-  if (row < 0)
-    row += m->rows;
-  if (col < 0)
-    col += m->cols;
-  m->elems[col*m->step+row] = val;
+    if (armas_x_size(m) == 0)
+        return;
+    if (row < 0)
+        row += m->rows;
+    if (col < 0)
+        col += m->cols;
+    require(row < m->rows && col < m->cols);
+    m->elems[col * m->step + row] = val;
 }
 
 //! \brief Set element unsafely at `[row, col]` to `val`
@@ -434,7 +455,8 @@ void armas_x_set(armas_x_dense_t *m, int row, int col, DTYPE val)
 __ARMAS_INLINE
 void armas_x_set_unsafe(armas_x_dense_t *m, int row, int col, DTYPE val)
 {
-  m->elems[col*m->step+row] = val;
+    require(row < m->rows && col < m->cols);
+    m->elems[col * m->step + row] = val;
 }
 
 //! \brief Set element of vector at index `ix` to `val`.
@@ -442,11 +464,12 @@ void armas_x_set_unsafe(armas_x_dense_t *m, int row, int col, DTYPE val)
 __ARMAS_INLINE
 void armas_x_set_at(armas_x_dense_t *m, int ix, DTYPE val)
 {
-  if (armas_x_size(m) == 0)
-    return;
-  if (ix < 0)
-    ix += armas_x_size(m);
-  m->elems[armas_x_real_index(m, ix)] = val;
+    if (armas_x_size(m) == 0)
+        return;
+    if (ix < 0)
+        ix += armas_x_size(m);
+    require(ix < m->rows*m->cols);
+    m->elems[armas_x_real_index(m, ix)] = val;
 }
 
 //! \brief Set unsafely element of vector at index `ix` to `val`.
@@ -454,7 +477,8 @@ void armas_x_set_at(armas_x_dense_t *m, int ix, DTYPE val)
 __ARMAS_INLINE
 void armas_x_set_at_unsafe(armas_x_dense_t *m, int ix, DTYPE val)
 {
-  m->elems[(m->rows == 1 ? ix*m->step : ix)] = val;
+    require(ix < m->rows*m->cols);
+    m->elems[(m->rows == 1 ? ix * m->step : ix)] = val;
 }
 
 //! \brief Get element of vector at index `ix`.
@@ -462,11 +486,12 @@ void armas_x_set_at_unsafe(armas_x_dense_t *m, int ix, DTYPE val)
 __ARMAS_INLINE
 DTYPE armas_x_get_at(const armas_x_dense_t *m, int ix)
 {
-  if (armas_x_size(m) == 0)
-    return 0.0;
-  if (ix < 0)
-    ix += armas_x_size(m);
-  return m->elems[armas_x_real_index(m, ix)];
+    if (armas_x_size(m) == 0)
+        return 0.0;
+    if (ix < 0)
+        ix += armas_x_size(m);
+    require(ix < m->rows*m->cols);
+    return m->elems[armas_x_real_index(m, ix)];
 }
 
 //! \brief Get unsafely element of vector at index `ix`.
@@ -474,25 +499,28 @@ DTYPE armas_x_get_at(const armas_x_dense_t *m, int ix)
 __ARMAS_INLINE
 DTYPE armas_x_get_at_unsafe(const armas_x_dense_t *m, int ix)
 {
-  return m->elems[(m->rows == 1 ? ix*m->step : ix)];
+    require(ix < m->rows*m->cols);
+    return m->elems[(m->rows == 1 ? ix * m->step : ix)];
 }
 
 __ARMAS_INLINE
 int armas_x_index(const armas_x_dense_t *m, int row, int col)
 {
-  if (armas_x_size(m) == 0)
-    return 0;
-  if (row < 0)
-    row += m->rows;
-  if (col < 0)
-    col += m->cols;
-  return col*m->step + row;
+    if (armas_x_size(m) == 0)
+        return 0;
+    if (row < 0)
+        row += m->rows;
+    if (col < 0)
+        col += m->cols;
+    require(row < m->rows && col < m->cols);
+    return col * m->step + row;
 }
 
 __ARMAS_INLINE
 int armas_x_index_unsafe(const armas_x_dense_t *m, int row, int col)
 {
-  return m ? col*m->step + row : 0;
+    require(row < m->rows && col < m->cols);
+    return m ? col * m->step + row : 0;
 }
 
 //! \brief Get data buffer
@@ -500,14 +528,14 @@ int armas_x_index_unsafe(const armas_x_dense_t *m, int row, int col)
 __ARMAS_INLINE
 DTYPE *armas_x_data(const armas_x_dense_t *m)
 {
-  return m ? m->elems : (DTYPE *)0;
+    return m ? m->elems : (DTYPE *)0;
 }
 
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_col_as_row(armas_x_dense_t *row, armas_x_dense_t *col)
 {
-  armas_x_make(row, 1, armas_x_size(col), 1, armas_x_data(col));
-  return row;
+    armas_x_make(row, 1, armas_x_size(col), 1, armas_x_data(col));
+    return row;
 }
 
 // -------------------------------------------------------------------------------------------
@@ -519,47 +547,45 @@ extern int armas_x_scale_plus(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const
                               int flags, armas_conf_t *cf);
 extern ABSTYPE armas_x_mnorm(const armas_x_dense_t *A, int norm, armas_conf_t *cf);
 extern ABSTYPE armas_x_norm(const armas_x_dense_t *A, int norm, int flags, armas_conf_t *cf);
-extern int     armas_x_scale_to(armas_x_dense_t *A, DTYPE from, DTYPE to, int flags, armas_conf_t *cf);
+extern int armas_x_scale_to(armas_x_dense_t *A, DTYPE from, DTYPE to, int flags, armas_conf_t *cf);
 
 // Blas level 1 functions
-extern int     armas_x_iamax(const armas_x_dense_t *X, armas_conf_t *cf);
+extern int armas_x_iamax(const armas_x_dense_t *X, armas_conf_t *cf);
 extern ABSTYPE armas_x_amax(const armas_x_dense_t *X, armas_conf_t *cf);
 extern ABSTYPE armas_x_asum(const armas_x_dense_t *X, armas_conf_t *cf);
 extern ABSTYPE armas_x_nrm2(const armas_x_dense_t *X, armas_conf_t *cf);
-extern DTYPE   armas_x_dot(const armas_x_dense_t *X, const armas_x_dense_t *Y, armas_conf_t *cf);
-extern int     armas_x_adot(DTYPE *result, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y, armas_conf_t *cf);
-extern int     armas_x_axpy(armas_x_dense_t *Y, DTYPE alpha, const armas_x_dense_t *X, armas_conf_t *cf);
-extern int     armas_x_axpby(DTYPE beta, armas_x_dense_t *Y, DTYPE alpha, const armas_x_dense_t *X, armas_conf_t *cf);
-extern int     armas_x_copy(armas_x_dense_t *Y, const armas_x_dense_t *X, armas_conf_t *cf);
-extern int     armas_x_swap(armas_x_dense_t *Y, armas_x_dense_t *X, armas_conf_t *cf);
+extern DTYPE armas_x_dot(const armas_x_dense_t *X, const armas_x_dense_t *Y, armas_conf_t *cf);
+extern int armas_x_adot(DTYPE *result, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y, armas_conf_t *cf);
+extern int armas_x_axpy(armas_x_dense_t *Y, DTYPE alpha, const armas_x_dense_t *X, armas_conf_t *cf);
+extern int armas_x_axpby(DTYPE beta, armas_x_dense_t *Y, DTYPE alpha, const armas_x_dense_t *X, armas_conf_t *cf);
+extern int armas_x_copy(armas_x_dense_t *Y, const armas_x_dense_t *X, armas_conf_t *cf);
+extern int armas_x_swap(armas_x_dense_t *Y, armas_x_dense_t *X, armas_conf_t *cf);
 
-extern DTYPE   armas_x_sum(const armas_x_dense_t *X, armas_conf_t *cf);
-extern int     armas_x_scale(armas_x_dense_t *X, const DTYPE alpha, armas_conf_t *cf);
-extern int     armas_x_add(armas_x_dense_t *X, const DTYPE alpha, armas_conf_t *cf);
-
+extern DTYPE armas_x_sum(const armas_x_dense_t *X, armas_conf_t *cf);
+extern int armas_x_scale(armas_x_dense_t *X, const DTYPE alpha, armas_conf_t *cf);
+extern int armas_x_add(armas_x_dense_t *X, const DTYPE alpha, armas_conf_t *cf);
 
 // Blas level 2 functions
 extern int armas_x_mvmult(
     DTYPE beta, armas_x_dense_t *Y, DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *X,
     int flags, armas_conf_t *cf);
 extern int armas_x_mvupdate(
-    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y, armas_conf_t *cf);
+    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y, armas_conf_t *cf);
 extern int armas_x_mvmult_sym(
     DTYPE beta, armas_x_dense_t *Y, DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *X,
     int flags, armas_conf_t *cf);
 extern int armas_x_mvupdate2_sym(
-    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,
+    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y,
     int flags, armas_conf_t *cf);
 extern int armas_x_mvupdate_sym(
     DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, int flags, armas_conf_t *cf);
 extern int armas_x_mvupdate_trm(
-    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,
+    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y,
     int flags, armas_conf_t *cf);
 extern int armas_x_mvmult_trm(
-    armas_x_dense_t *X,  DTYPE alpha, const armas_x_dense_t *A, int flags, armas_conf_t *cf);
+    armas_x_dense_t *X, DTYPE alpha, const armas_x_dense_t *A, int flags, armas_conf_t *cf);
 extern int armas_x_mvsolve_trm(
-    armas_x_dense_t *X,  DTYPE alpha, const armas_x_dense_t *A, int flags, armas_conf_t *cf);
-
+    armas_x_dense_t *X, DTYPE alpha, const armas_x_dense_t *A, int flags, armas_conf_t *cf);
 
 // Blas level 3 functions
 extern int armas_x_mult(
@@ -615,17 +641,17 @@ extern int armas_x_ext_mvmult_sym(
     int flags, armas_conf_t *cf);
 
 extern int armas_x_ext_mvupdate(
-    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y, armas_conf_t *cf);
+    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y, armas_conf_t *cf);
 
 extern int armas_x_ext_mvupdate2_sym(
-    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,
+    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y,
     int flags, armas_conf_t *cf);
 
 extern int armas_x_ext_mvupdate_sym(
     DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, int flags, armas_conf_t *cf);
 
 extern int armas_x_ext_mvupdate_trm(
-    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X,  const armas_x_dense_t *Y,
+    DTYPE beta, armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *X, const armas_x_dense_t *Y,
     int flags, armas_conf_t *cf);
 
 extern int armas_x_ext_mult(
@@ -703,7 +729,7 @@ extern int armas_x_lusolve(armas_x_dense_t *B, armas_x_dense_t *A, armas_pivot_t
 extern int armas_x_bkfactor(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *cf);
 
 extern int armas_x_bkfactor_w(
-    armas_x_dense_t *A,  armas_pivot_t *P, int flags, armas_wbuf_t *wrk, armas_conf_t *cf);
+    armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_wbuf_t *wrk, armas_conf_t *cf);
 
 extern int armas_x_bksolve(
     armas_x_dense_t *B, const armas_x_dense_t *A, const armas_pivot_t *P, int flags, armas_conf_t *cf);
@@ -849,7 +875,7 @@ extern int armas_x_trdeigen_w(
     armas_x_dense_t *D, armas_x_dense_t *E, armas_x_dense_t *V, int flags, armas_wbuf_t *wb, armas_conf_t *cf);
 
 extern int armas_x_trdbisect(
-    armas_x_dense_t *Y, armas_x_dense_t *D, armas_x_dense_t *E, const armas_x_eigen_parameter_t *params,  armas_conf_t *cf);
+    armas_x_dense_t *Y, armas_x_dense_t *D, armas_x_dense_t *E, const armas_x_eigen_parameter_t *params, armas_conf_t *cf);
 
 // Secular functions solvers
 extern int armas_x_trdsec_solve(
@@ -911,10 +937,10 @@ extern int armas_x_house(
     armas_x_dense_t *a11, armas_x_dense_t *x, armas_x_dense_t *tau, int flags, armas_conf_t *cf);
 
 extern int armas_x_houseapply(
-    armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *v, armas_x_dense_t *w,  int flags, armas_conf_t *cf);
+    armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *v, armas_x_dense_t *w, int flags, armas_conf_t *cf);
 
 extern int armas_x_houseapply2x1(
-    armas_x_dense_t *a1, armas_x_dense_t *A2, armas_x_dense_t *tau, armas_x_dense_t *v, armas_x_dense_t *w,  int flags, armas_conf_t *cf);
+    armas_x_dense_t *a1, armas_x_dense_t *A2, armas_x_dense_t *tau, armas_x_dense_t *v, armas_x_dense_t *w, int flags, armas_conf_t *cf);
 
 extern int armas_x_housemult(armas_x_dense_t *A, armas_x_dense_t *tau, armas_x_dense_t *Q, int flags, armas_conf_t *cf);
 
@@ -925,7 +951,7 @@ extern int armas_x_hhouse(
     armas_x_dense_t *a11, armas_x_dense_t *x, armas_x_dense_t *tau, int flags, armas_conf_t *cf);
 
 extern int armas_x_hhouse_apply(
-    armas_x_dense_t *tau, armas_x_dense_t *v, armas_x_dense_t *a1,  armas_x_dense_t *A2, armas_x_dense_t *w,  int flags, armas_conf_t *cf);
+    armas_x_dense_t *tau, armas_x_dense_t *v, armas_x_dense_t *a1, armas_x_dense_t *A2, armas_x_dense_t *w, int flags, armas_conf_t *cf);
 
 // Recursive Butterfly
 extern int armas_x_mult_rbt(armas_x_dense_t *A, armas_x_dense_t *U, int flags, armas_conf_t *cf);
@@ -971,9 +997,4 @@ extern int armas_x_pivot_cols(armas_x_dense_t *A, armas_pivot_t *P, int flags, a
 }
 #endif
 
-#endif
-
-
-// Local Variables:
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_MATRIX_H */
