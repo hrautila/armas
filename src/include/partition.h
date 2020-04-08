@@ -274,8 +274,7 @@ void mat_repartition_2x2to3x3(armas_x_dense_t *ATL,
             armas_x_submatrix(A20, A, kr+nb, 0, A->rows-kr-nb, kc);
         if (A21)
             armas_x_submatrix(A21, A, kr+nb, kc, A->rows-kr-nb, nb);
-        /* TODO: change the negative indexes */
-        armas_x_submatrix(A22, A, kr+nb, kc+nb, -1, -1);
+        armas_x_submatrix(A22, A, kr+nb, kc+nb, A->rows-kr-nb, A->cols-kc-nb);
         break;
     case ARMAS_PTOPLEFT:
     default:
@@ -298,8 +297,7 @@ void mat_repartition_2x2to3x3(armas_x_dense_t *ATL,
             armas_x_submatrix(A20, A, kr, 0, A->rows-kr, kc-nb);
         if (A21)
             armas_x_submatrix(A21, A, kr, kc-nb, A->rows-kr, nb);
-        /* TODO: change the negative indexes */
-        armas_x_submatrix(A22, A, kr, kc, -1, -1);
+        armas_x_submatrix(A22, A, kr, kc, A->rows-kr, A->cols-kc);
         break;
     }
 }
@@ -332,7 +330,7 @@ void mat_continue_3x3to2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
             armas_x_submatrix(ATR, A, 0, kc+mb, kr+mb, A->cols-kc-mb);
         if (ABL)
             armas_x_submatrix(ABL, A, kr+mb, 0, A->rows-kr-mb, kc+mb);
-        armas_x_submatrix(ABR, A, kr+mb, kc+mb, -1, -1);
+        armas_x_submatrix(ABR, A, kr+mb, kc+mb, A->rows-kr-mb, A->cols-kc-mb);
         break;
     case ARMAS_PTOPLEFT:
     default:
@@ -341,7 +339,7 @@ void mat_continue_3x3to2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
             armas_x_submatrix(ATR, A, 0, kc, kr, A->cols-kc);
         if (ABL)
             armas_x_submatrix(ABL, A, kr, 0, A->rows-kr, A->cols-kc);
-        armas_x_submatrix(ABR, A, kr, kc, -1, -1);
+        armas_x_submatrix(ABR, A, kr, kc, A->rows-kr, A->cols-kc);
         break;
     }
 }
@@ -356,8 +354,9 @@ void mat_continue_3x3to2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
 __ARMAS_INLINE
 void mat_merge2x1(armas_x_dense_t *ABLK, armas_x_dense_t *AT, armas_x_dense_t *AB)
 {
+    require(AT->step == AB->step);
     if (armas_x_size(AT) == 0 && armas_x_size(AB) == 0) {
-        ABLK->rows = 0; ABLK->cols = 0;
+        ABLK->rows = 0; ABLK->cols = 0; ABLK->step = AB->step;
         return;
     }
     if (armas_x_size(AT) == 0) {
@@ -365,7 +364,7 @@ void mat_merge2x1(armas_x_dense_t *ABLK, armas_x_dense_t *AT, armas_x_dense_t *A
     } else if (armas_x_size(AB) == 0) {
         armas_x_submatrix(ABLK, AT, 0, 0, AT->rows, AT->cols);
     } else {
-        armas_x_submatrix(ABLK, AT, 0, 0, AT->rows+AB->rows, AT->cols);
+        armas_x_make(ABLK, AT->rows+AB->rows, AT->cols, AT->step, AT->elems);
     }
 }
 
@@ -377,8 +376,9 @@ void mat_merge2x1(armas_x_dense_t *ABLK, armas_x_dense_t *AT, armas_x_dense_t *A
 __ARMAS_INLINE
 void mat_merge1x2(armas_x_dense_t *ABLK, armas_x_dense_t *AL, armas_x_dense_t *AR)
 {
+    require(AL->step == AR->step);
     if (armas_x_size(AL) == 0 && armas_x_size(AR) == 0) {
-        ABLK->rows = 0; ABLK->cols = 0;
+        ABLK->rows = 0; ABLK->cols = 0; ABLK->step = AL->step;
         return;
     }
     if (armas_x_size(AL) == 0) {
@@ -386,7 +386,7 @@ void mat_merge1x2(armas_x_dense_t *ABLK, armas_x_dense_t *AL, armas_x_dense_t *A
     } else if (armas_x_size(AR) == 0) {
         armas_x_submatrix(ABLK, AL, 0, 0, AL->rows, AL->cols);
     } else {
-        armas_x_submatrix(ABLK, AL, 0, 0, AL->rows, AL->cols+AR->cols);
+        armas_x_make(ABLK, AL->rows, AL->cols+AR->cols, AL->step, AL->elems);
     }
 }
 
