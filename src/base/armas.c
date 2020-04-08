@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2018
+// Copyright (c) Harri Rautila, 2018-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
