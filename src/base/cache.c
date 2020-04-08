@@ -456,16 +456,18 @@ void armas_cbuf_release_thread_global()
 int armas_cbuf_select(armas_cbuf_t *cbuf, armas_conf_t *cf)
 {
     armas_cbuf_t *cb;
-    if (cf && cf->cbuf) {
-        // use provided cbuf if it looks valid.
-        if (cf->cbuf->data && cf->cbuf->cmem >= cf->cbuf->len) {
-            *cbuf = *cf->cbuf;
+    armas_env_t *env = armas_getenv();
+    if (cf && cf->work) {
+        size_t ws = armas_wbytes(cf->work);
+        if (ws >= env->cmem) {
+            // use provided cbuf if it is large enough.
+            armas_cbuf_make(cbuf, armas_wptr(cf->work), ws, env->l1mem);
+            armas_wreserve(cf->work, ws, 1);
             cbuf->__unaligned = (void *)0;
             return 0;
         }
     }
     if (cf && (cf->optflags & ARMAS_CBUF_LOCAL) != 0) {
-        armas_env_t *env = armas_getenv();
         return armas_cbuf_init(cbuf, env->cmem, env->l1mem) ? 0 : -1;
     }
 
