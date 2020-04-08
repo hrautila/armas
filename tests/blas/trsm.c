@@ -32,7 +32,7 @@ int test_left_right(int N, int verbose, int unit)
 {
     int ok;
     armas_x_dense_t A, B, Bt;
-    DTYPE n0, nrmB;
+    DTYPE n0, n1;
     armas_conf_t cf = *armas_conf_default();
 
     armas_x_init(&A, N, N);
@@ -43,16 +43,14 @@ int test_left_right(int N, int verbose, int unit)
 
     armas_x_set_values(&A, one, ARMAS_SYMM);
     armas_x_set_values(&B, one, 0);
-    armas_x_mult_trm(&B, 1.0, &A, ARMAS_UPPER, 0);
+    armas_x_mult_trm(&B, 0.5, &A, ARMAS_UPPER, 0);
     armas_x_mcopy(&Bt, &B, ARMAS_TRANS, &cf);
 
-    nrmB = armas_x_mnorm(&B, ARMAS_NORM_INF, &cf);
     // ||k*A.-1*B + (B.T*-k*A.-T).T|| ~ eps
     armas_x_solve_trm(&B, 2.0, &A, ARMAS_LEFT | ARMAS_UPPER, &cf);
-    armas_x_solve_trm(&Bt, -2.0, &A, ARMAS_RIGHT | ARMAS_UPPER | ARMAS_TRANS, &cf);
-    armas_x_mplus(1.0, &B, 1.0, &Bt, ARMAS_TRANS, &cf);
+    armas_x_solve_trm(&Bt, 2.0, &A, ARMAS_RIGHT | ARMAS_UPPER | ARMAS_TRANS, &cf);
+    n0 = rel_error(&n1, &B, &Bt, ARMAS_NORM_INF, ARMAS_TRANS, &cf);
 
-    n0 = armas_x_mnorm(&B, ARMAS_NORM_INF, &cf) / nrmB;
     ok = isOK(n0, N) || n0 == 0.0;
     printf("%6s : k*A^-1*B  ==  (k*B^T*A^-T)^T\n", PASS(ok));
     printf("    || rel error || : %e [%d]\n", n0, ndigits(n0));
