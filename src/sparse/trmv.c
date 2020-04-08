@@ -19,8 +19,7 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-#include <armas/armas.h>
-#include "matrix.h"
+#include "armas.h"
 #include "sparse.h"
 
 // b = alpha*A*x; A upper triangular

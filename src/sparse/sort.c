@@ -20,8 +20,7 @@
 // -----------------------------------------------------------------------------
 
 #include <stdio.h>
-#include <armas/armas.h>
-#include "matrix.h"
+#include "armas.h"
 #include "sparse.h"
 
 // \return <0 if a < b, =0 if a==b and >0 if a > b
