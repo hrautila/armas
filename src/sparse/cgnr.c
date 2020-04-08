@@ -162,7 +162,7 @@ int armassp_x_cgnr_w(armas_x_dense_t * x,
         }
         beta = dot_z1 / dot_z;
         // p = beta*p + z;
-        armas_x_scale_plus(beta, &p, ONE, &z, 0, cf);
+        armas_x_axpby(beta, &p, ONE, &z, cf);
     }
 
     cf->numiters = n;

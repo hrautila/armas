@@ -174,7 +174,7 @@ int armassp_x_pcgrad_w(armas_x_dense_t * x,
         }
         beta = dot_rz1 / dot_rz;
         // p = beta*p + z;
-        armas_x_scale_plus(beta, &p, ONE, &z, 0, cf);
+        armas_x_axpby(beta, &p, ONE, &z, cf);
     }
     // -------------------------------------------------------------------------
 

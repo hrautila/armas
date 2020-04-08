@@ -166,7 +166,7 @@ int armassp_x_cgrad_w(armas_x_dense_t * x,
         }
         beta = dot_r1 / dot_r;
         // p = beta*p + r;
-        armas_x_scale_plus(beta, &p, ONE, &r, 0, cf);
+        armas_x_axpby(beta, &p, ONE, &r, cf);
     }
 
     // -------------------------------------------------------------------------

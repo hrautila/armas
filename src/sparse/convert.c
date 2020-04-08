@@ -22,8 +22,7 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 #include <stdio.h>
-#include <armas/armas.h>
-#include "matrix.h"
+#include "armas.h"
 #include "sparse.h"
 #include "splocal.h"
 
@@ -129,9 +128,6 @@ armas_x_sparse_t *csc_to_csr(armas_x_sparse_t * A,
 }
 
 
-#define assert(x) \
-    if (!(x)) fprintf(stderr, "Failed: " #x "\n")
-
 static
 void csc_convert(armas_x_sparse_t * A, const armas_x_sparse_t * B)
 {
@@ -150,7 +146,7 @@ void csc_convert(armas_x_sparse_t * A, const armas_x_sparse_t * B)
         A->ptr[k] = sum;
         sum += cur;
     }
-    assert(A->ptr[B->cols] == B->nnz);
+    require(A->ptr[B->cols] == B->nnz);
     for (int k = 0; k < B->nnz; k++) {
         col = Be[k].j;
         Ae[A->ptr[col]] = Be[k].val;
@@ -189,7 +185,7 @@ void csr_convert(armas_x_sparse_t * A, const armas_x_sparse_t * B)
         A->ptr[k] = sum;
         sum += cur;
     }
-    assert(A->ptr[B->rows] == B->nnz);
+    require(A->ptr[B->rows] == B->nnz);
     for (int k = 0; k < B->nnz; k++) {
         row = Be[k].i;
         Ae[A->ptr[row]] = Be[k].val;
