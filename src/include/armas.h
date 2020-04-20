@@ -171,15 +171,6 @@ enum armas_json_tokens {
     ARMAS_JSON_EOF
 };
 
-enum armas_devtypes {
-    ARMAS_DEV_NULL = 0,
-    ARMAS_DEV_INSTACK = 0x1,
-    ARMAS_DEV_TLOCAL = 0x2,
-
-    ARMAS_DEV_THREAD = 0x4,
-    ARMAS_DEV_TYPEMASK = 0x7
-};
-
 #ifdef ARMAS_WITH_CHECKS
     // with caveats about NDEBUG (see assert() man page)
     #include <assert.h>
@@ -224,8 +215,11 @@ typedef struct armas_cbuf {
 #define ARMAS_CBUF_EMPTY \
     (armas_cbuf_t) { .data = (char *)0, .__unaligned = (void *)0, .__nbytes = 0, .len = 0 }
 
-struct armas_accel;
 struct armas_wbuf;
+/**
+ * @brief Opaque handle to accelerator object.
+ */
+typedef void *armas_ac_handle_t;
 
 /**
  * @brief Configuration parameters
@@ -235,7 +229,7 @@ typedef struct armas_conf {
     int optflags;             ///< config options
     int tolmult;              ///< tolerance multiplier, used tolerance is tolmult*EPSILON
     struct armas_wbuf *work;  ///< user defined space for cache buffer
-    struct armas_accel *accel;
+    armas_ac_handle_t accel;
     // -- parameters for iterative methods
     int maxiter;      ///< Max iterations allowed
     int gmres_m;      ///< Number of columns in GMRES
@@ -248,33 +242,15 @@ typedef struct armas_conf {
 // use default configuration block
 #define ARMAS_CDFLT (armas_conf_t *)0;
 
-struct armas_ac_vtable {
-    int (*dispatch)(int opcode, void *args, struct armas_conf *cf, void *private);
-    int (*release)(void *private);
-};
-
-typedef struct armas_accel {
-    struct armas_ac_vtable *vptr;
-    void *private;
-    void *handle;
-} armas_accel_t;
-
-extern int armas_ac_init(struct armas_accel *ac, const char *name);
-extern void armas_ac_release(struct armas_accel *ac);
-
-__ARMAS_INLINE
-int armas_ac_dispatch(struct armas_accel *ac, int opcode, void *args, struct armas_conf *cf)
-{
-    if (!ac)
-        return -ARMAS_EIMP;
-
-    int rc = (*ac->vptr->dispatch)(opcode, args, cf, ac->private);
-    return rc;
-}
 
 extern armas_conf_t *armas_conf_default();
 extern int armas_last_error();
 extern void armas_init(void);
+
+extern int armas_ac_init(armas_ac_handle_t *handle, const char *name);
+extern void armas_ac_release(armas_ac_handle_t handle);
+extern int armas_ac_dispatch(
+    armas_ac_handle_t handle, int opcode, void *args, struct armas_conf *cf);
 
 extern armas_cbuf_t *armas_cbuf_default(void);
 extern armas_cbuf_t *armas_cbuf_get(armas_conf_t *conf);
