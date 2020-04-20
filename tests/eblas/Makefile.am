@@ -1,8 +1,8 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-INCLUDES = -I$(top_srcdir)/src/include -I$(top_srcdir)/tests
-AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall $(INCLUDES)
+INCLUDE = -I$(top_srcdir)/src/include -I$(top_srcdir)/tests
+AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall $(INCLUDE)
 
 
 noinst_HEADERS = ../helper.h
