@@ -7,7 +7,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "dtype.h"
 #include "armas.h"
+#include "matrix.h"
 #include "accel.h"
 #include "threaded.h"
 
@@ -64,52 +66,22 @@ int armas_ac_threaded_release(void *private)
     return 0;
 }
 
-static
-void threaded_config(struct armas_threaded_conf *acf)
-{
-    int n, val;
-    char *tok, *cstr;
-
-    acf->max_cores = sysconf(_SC_NPROCESSORS_ONLN);
-    cstr = getenv(ENV_ARMAS_THREADED);
-    // parse string: "ELEMS_PER_THREAD,MAXPROCESSORS"
-    for (n = 0, tok = strsep(&cstr, ","); tok; tok = strsep(&cstr, ","), n++) {
-        val = atoi(tok);
-        switch (n) {
-        case 0:
-            if (val > 0)
-                acf->items_per_thread = val;
-            break;
-        case 1:
-            if (val > 0 && val < acf->max_cores)
-                acf->max_cores = val;
-            break;
-        default:
-            break;
-        }
-    }
-}
-
 static struct armas_ac_vtable vtable = (struct armas_ac_vtable){
     .dispatch = armas_ac_threaded_dispatch,
     .release = armas_ac_threaded_release
 };
 
-static struct armas_threaded_conf acf = (struct armas_threaded_conf){
-    .max_cores = 1,
-    .items_per_thread = 400*400
-};
 
-size_t armas_ac_threaded_cores(struct armas_threaded_conf *acf, size_t num_items)
+size_t armas_ac_threaded_cores(size_t num_items)
 {
-    size_t k = (size_t)ceil((double)num_items/(double)acf->items_per_thread);
-    return k < acf->max_cores ? k : acf->max_cores;
+    struct armas_ac_env *env = armas_ac_getenv();
+    size_t k = (size_t)ceil((double)num_items/(double)env->num_items);
+    return k < env->max_cores ? k : env->max_cores;
 }
 
 int armas_ac_threaded_init(struct armas_ac_vtable **vptr, void **private)
 {
-    threaded_config(&acf);
     *vptr = &vtable;
-    *private = (void *)&acf;
+    *private = (void *)armas_ac_getenv();
     return 0;
 }

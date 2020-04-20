@@ -31,7 +31,7 @@ extern int armas_ac_threaded_mult_sym(struct armas_ac_blas3 *args, armas_conf_t 
 extern int armas_ac_threaded_mult_trm(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_threaded_conf *acf);
 extern int armas_ac_threaded_solve_trm(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_threaded_conf *acf);
 
-extern size_t armas_ac_threaded_cores(struct armas_threaded_conf *acf, size_t items);
+extern size_t armas_ac_threaded_cores(size_t items);
 
 // Calculate how many row/column blocks are needed with blocking size WB.
 static inline

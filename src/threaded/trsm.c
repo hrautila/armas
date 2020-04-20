@@ -113,7 +113,7 @@ int threaded_solve_trm_recursive(int thread, int nthreads, struct armas_ac_blas3
 
 int armas_ac_threaded_solve_trm(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_threaded_conf *acf)
 {
-    size_t nproc = armas_ac_threaded_cores(acf, armas_x_size(args->B));
+    size_t nproc = armas_ac_threaded_cores(armas_x_size(args->B));
     int rc = threaded_solve_trm_recursive(0, nproc, args, cf);
     return rc;
 }
