@@ -3,8 +3,8 @@
 #define ARMAS_ACCEL_H 1
 
 #include <stdint.h>
-#include "dtype.h"
-#include "matrix.h"
+#define _GNU_SOURCE
+#include <sched.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,6 +31,74 @@ enum armas_ac_types {
     ARMAS_AC_BLAS3 = 0x3 << 16
 };
 
+/**
+ * @brief Accelerator virtual API functions.
+ */
+struct armas_ac_vtable {
+    int (*dispatch)(int opcode, void *args, struct armas_conf *cf, void *private);
+    int (*release)(void *private);
+};
+
+/**
+ * @brief Accelerator configuration parameters
+ */
+struct armas_ac_env {
+    size_t max_cores;
+    size_t num_items;
+    double weight;
+    int options;
+    cpu_set_t cpus;
+};
+
+struct armas_ac_env *armas_ac_getenv();
+
+/**
+ * @brief Accelerator object
+ */
+typedef struct armas_accel {
+    /* Accelerator API vtable */
+    struct armas_ac_vtable *vptr;
+    /* Implementation private object */
+    void *private;
+    /* Dynamic link library handle for external accelerators. */
+    void *handle;
+} armas_accel_t;
+
+struct armas_ac_blas1;
+struct armas_ac_blas2;
+struct armas_ac_blas3;
+
+union armas_ac_args {
+    struct armas_ac_blas1 *blas1;
+    struct armas_ac_blas2 *blas2;
+    struct armas_ac_blas3 *blas3;
+};
+
+struct armas_ac_block {
+    int row;
+    int column;
+    int nrows;
+    int ncolumns;
+    int block_index;
+    int is_last;
+    int error;
+    union armas_ac_args u;
+};
+
+/**
+ *  Compute the start index if n'th block in ntotal items divided to nblocks.
+ */
+static inline
+int armas_ac_block_index(int n, int nblocks, int ntotal)
+{
+    if (n == nblocks)
+        return ntotal;
+    return (n*ntotal/nblocks) - ((n*ntotal/nblocks) & 0x3);
+}
+
+#ifdef ARMAS_DTYPE_H
+/**
+ */
 struct armas_ac_blas1 {
     size_t tag;
     DTYPE result;
@@ -41,6 +109,8 @@ struct armas_ac_blas1 {
     int flags;
 };
 
+/**
+ */
 struct armas_ac_blas2 {
     size_t tag;
     DTYPE beta;
@@ -52,6 +122,8 @@ struct armas_ac_blas2 {
     char fill[8];
 };
 
+/**
+ */
 struct armas_ac_blas3 {
     size_t tag;
     DTYPE beta;
@@ -62,7 +134,6 @@ struct armas_ac_blas3 {
     int flags;
     char fill[16];
 };
-
 
 static inline
 size_t armas_ac_blas2_tag()
@@ -121,10 +192,9 @@ void armas_ac_set_blas3_args(struct armas_ac_blas3 *args, DTYPE beta, armas_x_de
     args->A = A;
     args->flags = flags;
 }
-
+#endif /* ARMAS_DTYPE_DEFINED */
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif  // ARMAS_ACCEL_H
+#endif  /* ARMAS_ACCEL_H */
