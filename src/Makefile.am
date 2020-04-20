@@ -92,11 +92,10 @@ ACCEL += \
 	threaded/gemm.c \
 	threaded/symm.c \
 	threaded/trmm.c \
-	threaded/trsm.c
-endif
-
-COMPAT =
-if CONFIG_COMPAT
+	threaded/trsm.c \
+	workers/entry.c \
+	workers/scheduler.c \
+	workers/gemm.c
 endif
 
 LAPACK = \
@@ -159,7 +158,9 @@ LAPACK = \
 	lapack/triredm.c \
 	lapack/svd.c
 
-SPARSE = \
+SPARSE =
+if CONFIG_SPARSE
+SPARSE += \
 	sparse/accum.c \
 	sparse/add.c \
 	sparse/cgne.c \
@@ -182,9 +183,11 @@ SPARSE = \
 	sparse/trmv.c \
 	sparse/trsv.c \
 	sparse/util.c
+endif
 
-if OLD
-OLD_COMPAT = \
+COMPAT =
+if CONFIG_COMPAT
+COMPAT += \
 	compat/asum.c \
 	compat/axpy.c \
 	compat/copy.c \
