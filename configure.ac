@@ -45,9 +45,6 @@ AC_ARG_ENABLE(sparse,
    AC_HELP_STRING([--enable-sparse], [enable sparse iterative methods (default is no)]),
       [enable_sparse=$enableval], [enable_sparse=no])
 
-AC_ARG_ENABLE(old,
-   AC_HELP_STRING([--enable-old], [old specs]), [enable_old=$enableval], [enable_old=no])
-   
 # Checks for programs.
 AC_PROG_CC
 ##AC_PROG_RANLIB
@@ -85,7 +82,6 @@ AM_CONDITIONAL([CONFIG_ACCELERATORS], [test "$enable_accelerators" = "yes"])
 AM_CONDITIONAL([CONFIG_EXT_PRECISION], [test "$enable_ext_precision" = "yes"])
 AM_CONDITIONAL([CONFIG_COMPAT], [test "$enable_compat" = "yes"])
 AM_CONDITIONAL([CONFIG_SPARSE], [test "$enable_sparse" = "yes"])
-AM_CONDITIONAL([OLD], [test "$enable_old" = "yes"])
 
 ## enable floating point types
 AM_CONDITIONAL([ENABLE_FLOAT64],    [test "$enable_float64" = "yes"])
@@ -110,6 +106,8 @@ AC_CONFIG_FILES([
    tests/blas/Makefile
    tests/eblas/Makefile
    tests/lapack/Makefile
+   tests/threaded/Makefile
+   tests/workers/Makefile
 ])
 
 AC_OUTPUT
