@@ -86,6 +86,21 @@ armas_cbuf_t *armas_cbuf_init(armas_cbuf_t *cbuf, size_t cmem, size_t l1mem)
 }
 
 /**
+ * @brief Create new cache buffer instance.
+ */
+armas_cbuf_t *armas_sbuf_new(size_t cmem, size_t l1mem)
+{
+    armas_cbuf_t *cb = calloc(1, sizeof(struct armas_cbuf));
+    if (!cb)
+        return cb;
+    if (!armas_cbuf_init(cb, cmem, l1mem)) {
+        free(cb);
+        cb = (struct armas_cbuf *)0;
+    }
+    return cb;
+}
+
+/**
  * @brief Make cache buffer from provided buffer space
  *
  * Makes cache buffer to start on first cache line aligned element of
@@ -121,6 +136,17 @@ void armas_cbuf_release(armas_cbuf_t *cbuf)
     }
 }
 
+/**
+ * @brief Free cache buffer and its resources.
+ */
+void armas_cbuf_free(armas_cbuf_t *cbuf)
+{
+    if (cbuf) {
+        armas_cbuf_release(cbuf);
+        free(cbuf);
+    }
+}
+
 /*
  * Divide buffer with size 'S' bytes to 2 blocks of size 'k*m' and 'k*n' items
  * where item size is 'p' bytes.
@@ -140,25 +166,25 @@ void armas_cbuf_release(armas_cbuf_t *cbuf)
  *  assume: kb >= nb; nb >= mb
  */
 /**
- * \brief Two way split of cache buffer.
+ * @brief Two way split of cache buffer.
  *
  * Divide cache buffer two blocks of size 'kb*mb' and 'kb*nb' items where
  * item size is 'p' bytes. Ensure that each columns of kb items starts
  * at cpu cache line.(ie. kb*p mod CACHELINE == 0).
  *
- * \param [in] cbuf
+ * @param [in] cbuf
  *      Cache buffer
- * \param [out] aptr
+ * @param [out] aptr
  *      Pointer to first cache block. If null no value is returned.
- * \param [out] bptr
+ * @param [out] bptr
  *      Pointer to second cache block. If null no value is returned.
- * \param [in,out] mb
+ * @param [in,out] mb
  *      On entry initial size of mb, on exit calculated cache line aligned size
- * \param [in,out] nb
+ * @param [in,out] nb
  *      On entry initial size of nb, on exit calculated cache line aligned size
- * \param [in,out] kb
+ * @param [in,out] kb
  *      On entry initial size of kb, on exit calculated cache line aligned size
- * \param [in] p
+ * @param [in] p
  *      item size in bytes
  */
 void armas_cbuf_split2(armas_cbuf_t *cbuf,
@@ -435,7 +461,7 @@ armas_cbuf_t *armas_cbuf_create_thread_global()
  */
 armas_cbuf_t *armas_cbuf_get_thread_global()
 {
-    return (armas_cbuf_t *)cbuf_ptr;
+    return armas_cbuf_create_thread_global();
 }
 
 /**
