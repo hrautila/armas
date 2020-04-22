@@ -99,6 +99,7 @@ void armas_x_mult_symm_left(
     cache_t *mcache)
 {
     int i, j, nI, nJ, flags1, flags2, r, c, nr, nc;
+    int mb, nb;
     armas_x_dense_t A0, B0, C0;
 
     if (alpha == 0.0) {
@@ -127,12 +128,14 @@ void armas_x_mult_symm_left(
         flags1 |= ARMAS_TRANSB;
         flags2 |= ARMAS_TRANSB;
     }
-    for (i = 0; i < C->rows; i += mcache->MB) {
-        nI = C->rows - i < mcache->MB ? C->rows - i : mcache->MB;
+    mb = C->rows < mcache->MB ? C->rows : mcache->MB;
+    nb = C->cols < mcache->NB ? C->cols : mcache->NB;
+    for (i = 0; i < C->rows; i += mb) {
+        nI = C->rows - i < mb ? C->rows - i : mb;
 
         // for all column of C, B ...
-        for (j = 0; j < C->cols; j += mcache->NB) {
-            nJ = C->cols - j < mcache->NB ? C->cols - j : mcache->NB;
+        for (j = 0; j < C->cols; j += nb) {
+            nJ = C->cols - j < nb ? C->cols - j : nb;
             armas_x_submatrix_unsafe(&C0, C, i, j, nI, nJ);
 
             // block of C upper left at [i,j], lower right at [i+nI, j+nj]
@@ -224,12 +227,14 @@ void armas_x_mult_symm_right(
     flags1 |= (flags & ARMAS_UPPER) != 0 ? 0 : ARMAS_TRANSB;
     flags2 |= (flags & ARMAS_UPPER) != 0 ? ARMAS_TRANSB : 0;
 
-    for (ic = 0; ic < C->cols; ic += mcache->NB) {
-        nC = C->cols - ic < mcache->NB ? C->cols - ic : mcache->NB;
+    int mb = C->rows < mcache->MB ? C->rows : mcache->MB;
+    int nb = C->cols < mcache->NB ? C->cols : mcache->NB;
+    for (ic = 0; ic < C->cols; ic += nb) {
+        nC = C->cols - ic < nb ? C->cols - ic : nb;
 
         // for all rows of C, B ...
-        for (ir = 0; ir < C->rows; ir += mcache->MB) {
-            nR = C->rows - ir < mcache->MB ? C->rows - ir : mcache->MB;
+        for (ir = 0; ir < C->rows; ir += mb) {
+            nR = C->rows - ir < mb ? C->rows - ir : mb;
 
             armas_x_submatrix_unsafe(&C0, C, ir, ic, nR, nC);
             armas_x_scale_unsafe(&C0, beta);
