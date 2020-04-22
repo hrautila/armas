@@ -11,6 +11,7 @@
 //! \cond
 #include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <pthread.h>
 //! \endcond
 
@@ -38,7 +39,7 @@
 static
 void *compute_block(void *argptr)
 {
-    armas_x_dense_t C, A, B;
+    armas_x_dense_t C, B;
     struct armas_ac_block *args = (struct armas_ac_block *)argptr;
     struct armas_ac_blas3 *blas = args->u.blas3;
 
@@ -69,10 +70,8 @@ void *compute_block(void *argptr)
     armas_env_t *env = armas_getenv();
     armas_cache_setup2(&cache, cbuf, env->mb, env->nb, env->kb, sizeof(DTYPE));
 
-    /* Index to row/column of symmetric matrix in current block. */
-    int index = blas->C->rows <= blas->C->cols ? args->column : args->row;
     armas_x_mult_sym_unsafe(
-        blas->beta, &C, blas->alpha, &A, &B, blas->flags, index, &cache);
+        blas->beta, &C, blas->alpha, blas->A, &B, blas->flags, 0, &cache);
 
     // Last block is computed in main thread. Do not release thread global resources.
     if (!args->is_last)
@@ -92,19 +91,18 @@ int threaded_mult_sym_recursive(
     pthread_t th;
     struct armas_ac_block args;
 
-    //printf("mult_recursive %d/%d\n", thread, nthreads);
-    if (blas->C->rows <= blas->C->cols) {
-        args.column = armas_ac_block_index(thread, nthreads, blas->C->cols);
-        args.ncolumns =
-            armas_ac_block_index(thread+1, nthreads, blas->C->cols) - args.column;
-        args.row = 0;
-        args.nrows = blas->C->rows;
-    } else {
+    if ((blas->flags & ARMAS_RIGHT) != 0) {
         args.row = armas_ac_block_index(thread, nthreads, blas->C->rows);
         args.nrows =
             armas_ac_block_index(thread+1, nthreads, blas->C->rows) - args.row;
         args.column = 0;
         args.ncolumns = blas->C->cols;
+    } else {
+        args.column = armas_ac_block_index(thread, nthreads, blas->C->cols);
+        args.ncolumns =
+            armas_ac_block_index(thread+1, nthreads, blas->C->cols) - args.column;
+        args.row = 0;
+        args.nrows = blas->C->rows;
     }
     args.u.blas3 = blas;
     args.block_index = thread;
@@ -117,15 +115,14 @@ int threaded_mult_sym_recursive(
         return -args.error;
     }
 
-    //printf("create thread %d\n", thread);
     err = pthread_create(&th, NULL, compute_block, &args);
     if (err) {
         cf->error = -err;
         return -1;
     }
+
     err = threaded_mult_sym_recursive(thread+1, nthreads, blas, cf);
 
-    //printf("wait thread %d\n", thread);
     pthread_join(th, NULL);
     return err;
 }
