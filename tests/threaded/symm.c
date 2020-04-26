@@ -36,16 +36,8 @@ int test_left(int M, int N, int K, int verbose, armas_conf_t *cf)
     armas_x_mcopy(&Bt, &B, ARMAS_TRANS, cf);
 
     armas_x_mult(ZERO, &T, ONE, &A, &B, 0, cf);
-    if (verbose > 2) {
-        MAT_PRINT("A", &A);
-        MAT_PRINT("B", &B);
-    }
 
     armas_x_mult_sym(ZERO, &C, ONE, &A, &B, ARMAS_LEFT|ARMAS_UPPER, cf);
-    if (verbose > 2) {
-        MAT_PRINT("upper(A)*B", &C);
-        MAT_PRINT("A*B", &T);
-    }
     n0 = rel_error(&n1, &C, &T, ARMAS_NORM_ONE, 0, cf);
 
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -55,7 +47,6 @@ int test_left(int M, int N, int K, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-#if 0
     armas_x_mult_sym(ZERO, &C, ONE, &A, &Bt, ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSB, cf);
     n0 = rel_error(&n1, &C, &T, ARMAS_NORM_ONE, ARMAS_NONE, cf);
 
@@ -85,8 +76,8 @@ int test_left(int M, int N, int K, int verbose, armas_conf_t *cf)
         printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
     fails += 1 - ok;
-#endif
 
+    armas_ac_release(ac);
     armas_x_release(&A);
     armas_x_release(&C);
     armas_x_release(&B);
@@ -100,7 +91,11 @@ int test_right(int M, int N, int K, int verbose, armas_conf_t *cf)
 {
     armas_x_dense_t A, B, C, Bt, T;
     int ok, fails = 0;
+    armas_ac_handle_t ac;
     DTYPE n0, n1;
+
+    armas_ac_init(&ac, ARMAS_AC_THREADED);
+    cf->accel = ac;
 
     armas_x_init(&C, M, N);
     armas_x_init(&T, M, N);
@@ -155,6 +150,7 @@ int test_right(int M, int N, int K, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
+    armas_ac_release(ac);
     armas_x_release(&A);
     armas_x_release(&C);
     armas_x_release(&B);
@@ -163,7 +159,6 @@ int test_right(int M, int N, int K, int verbose, armas_conf_t *cf)
 
     return fails;
 }
-
 
 int main(int argc, char **argv)
 {
@@ -216,7 +211,7 @@ int main(int argc, char **argv)
 
 
     fails += test_left(M, N, K, verbose, &conf);
-    // fails += test_right(M, N, K, verbose, &conf);
+    fails += test_right(M, N, K, verbose, &conf);
 
     exit(fails);
 }
