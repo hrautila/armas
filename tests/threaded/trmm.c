@@ -112,6 +112,7 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     armas_x_init(&A, N, N);
     armas_x_init(&At, N, N);
     armas_ac_init(&ac, ARMAS_AC_THREADED);
+    cf->accel = ac;
 
     armas_x_set_values(&X, unitrand, 0);
     armas_x_set_values(&Y, zero, 0);
