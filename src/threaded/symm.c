@@ -43,18 +43,25 @@ void *compute_block(void *argptr)
     struct armas_ac_block *args = (struct armas_ac_block *)argptr;
     struct armas_ac_blas3 *blas = args->u.blas3;
 
-    //printf("compute block: [%d,%d] [%d,%d]\n", args->frow, args->fcol, args->lrow, args->lcol);
-    /*
-     * Slice proper part of argument matrices.
-     */
+    /* Slice proper part of argument matrices. */
     armas_x_submatrix_unsafe(
         &C, blas->C, args->row, args->column, args->nrows, args->ncolumns);
 
-    switch (blas->flags & ARMAS_TRANSB) {
-    case ARMAS_TRANSB:
+    switch (blas->flags & (ARMAS_LEFT|ARMAS_RIGHT|ARMAS_TRANSB)) {
+    case ARMAS_RIGHT|ARMAS_TRANSB:
+        armas_x_submatrix_unsafe(
+            &B, blas->B, 0, args->row, blas->B->rows, args->nrows);
+        break;
+    case ARMAS_RIGHT:
         armas_x_submatrix_unsafe(
             &B, blas->B, args->row, 0, args->nrows, blas->B->cols);
         break;
+    case ARMAS_LEFT|ARMAS_TRANSB:
+    case ARMAS_TRANSB:
+        armas_x_submatrix_unsafe(
+            &B, blas->B, args->column, 0, args->ncolumns, blas->B->cols);
+        break;
+    case ARMAS_LEFT:
     default:
         armas_x_submatrix_unsafe(
             &B, blas->B, 0, args->column, blas->B->rows, args->ncolumns);
@@ -73,7 +80,7 @@ void *compute_block(void *argptr)
     armas_x_mult_sym_unsafe(
         blas->beta, &C, blas->alpha, blas->A, &B, blas->flags, 0, &cache);
 
-    // Last block is computed in main thread. Do not release thread global resources.
+    /* Last block is computed in main thread. Do not release thread global resources. */
     if (!args->is_last)
         armas_cbuf_release_thread_global();
     return (void *)0;
@@ -136,4 +143,6 @@ int armas_ac_threaded_mult_sym(
     int rc = threaded_mult_sym_recursive(0, nproc, args, cf);
     return rc;
 }
+#else
+#warning "Missing defines. No code."
 #endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
