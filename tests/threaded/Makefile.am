@@ -22,7 +22,7 @@ if ENABLE_FLOAT64
 LIBARMAS = $(top_builddir)/src/libarmasd.la
 endif
 
-UNIT_TESTS = gemm symm
+UNIT_TESTS = gemm symm trmm
 
 check_PROGRAMS = $(UNIT_TESTS)
 
@@ -30,8 +30,8 @@ gemm_SOURCES  = gemm.c ../helper.c
 gemm_LDADD    = $(LIBARMAS)
 symm_SOURCES  = symm.c ../helper.c
 symm_LDADD    = $(LIBARMAS)
-#trmm_SOURCES  = trmm.c ../helper.c
-#trmm_LDADD    = $(LIBARMAS)
+trmm_SOURCES  = trmm.c ../helper.c
+trmm_LDADD    = $(LIBARMAS)
 #trsm_SOURCES  = trsm.c ../helper.c
 #trsm_LDADD    = $(LIBARMAS)
 
