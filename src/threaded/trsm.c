@@ -31,82 +31,86 @@
 #include "threaded.h"
 //! \endcond
 
-
 static
-void *threaded_compute_block(void *argptr)
+void *compute_block(void *argptr)
 {
-    armas_x_dense_t A, B;
-    struct threaded_block_args *args = (struct threaded_block_args *)argptr;
+    armas_x_dense_t B;
+    struct armas_ac_block *args = (struct armas_ac_block *)argptr;
     struct armas_ac_blas3 *blas = args->u.blas3;
-    int nrows = args->lrow - args->frow;
-    int ncols = args->lcol - args->fcol;
 
-    //printf("compute block: [%d,%d] [%d,%d]\n", args->frow, args->fcol, args->lrow, args->lcol);
+    /* Slice proper part of argument matrices. */
     switch (blas->flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
     case ARMAS_RIGHT:
-        armas_x_submatrix_unsafe(&B, blas->B, args->fcol, 0, nrows, blas->B->cols);
+        armas_x_submatrix_unsafe(
+            &B, blas->B, args->row, 0, args->nrows, blas->B->cols);
         break;
     case ARMAS_LEFT:
     default:
-        armas_x_submatrix_unsafe(&B, blas->B, 0, args->fcol, blas->B->rows, ncols);
+        armas_x_submatrix_unsafe(
+            &B, blas->B, 0, args->column, blas->B->rows, args->ncolumns);
         break;
     }
-    armas_cbuf_t *cbuf = armas_cbuf_create_thread_global();
+    armas_cbuf_t *cbuf = armas_cbuf_get_thread_global();
+    if (!cbuf) {
+        args->error = ARMAS_EMEMORY;
+        return (void *)0;
+    }
 
     cache_t cache;
     armas_env_t *env = armas_getenv();
     armas_cache_setup2(&cache, cbuf, env->mb, env->nb, env->kb, sizeof(DTYPE));
 
-    armas_x_solve_trm_unsafe(&B, blas->alpha, &A, blas->flags, &cache);
+    armas_x_solve_trm_unsafe(
+        &B, blas->alpha, blas->A, blas->flags, &cache);
 
-    // Last block is computed in main thread. Do not release thread global resources.
-    if (!args->last)
+    if (!args->is_last)
         armas_cbuf_release_thread_global();
     return (void *)0;
 }
 
-
-// Compute recursively in nthreads threads.
 static
-int threaded_solve_trm_recursive(int thread, int nthreads, struct armas_ac_blas3 *blas, armas_conf_t *cf)
+int threaded_solve_trm_recursive(
+    int thread,
+    int nthreads,
+    struct armas_ac_blas3 *blas,
+    armas_conf_t *cf)
 {
-    int first_col, last_col, first_row, last_row, err;
+    int err;
     pthread_t th;
-    struct threaded_block_args args;
+    struct armas_ac_block args;
 
-    //printf("mult_recursive %d/%d\n", thread, nthreads);
     if ((blas->flags & ARMAS_RIGHT) != 0) {
-        first_row = block_index4(thread, nthreads, blas->B->rows);
-        last_row  = block_index4(thread+1, nthreads, blas->B->rows);
-        first_col = 0; last_col = blas->C->cols;
+        args.row = armas_ac_block_index(thread, nthreads, blas->B->rows);
+        args.nrows =
+            armas_ac_block_index(thread+1, nthreads, blas->B->rows) - args.row;
+        args.column = 0;
+        args.ncolumns = blas->B->cols;
     } else {
-        first_col = block_index4(thread, nthreads, blas->B->cols);
-        last_col  = block_index4(thread+1, nthreads, blas->B->cols);
-        first_row = 0; last_row = blas->C->rows;
+        args.column = armas_ac_block_index(thread, nthreads, blas->B->cols);
+        args.ncolumns =
+            armas_ac_block_index(thread+1, nthreads, blas->B->cols) - args.column;
+        args.row = 0;
+        args.nrows = blas->B->rows;
     }
-
-    args.fcol = first_col;
-    args.lcol = last_col;
-    args.frow = first_row;
-    args.lrow = last_row;
+    blas->C = (armas_x_dense_t *)0;
     args.u.blas3 = blas;
-    args.last = thread+1 == nthreads;
+    args.block_index = thread;
+    args.is_last = thread+1 == nthreads;
+    args.error = 0;
 
-    // last block
+    /* last block directly in main thread. */
     if (thread+1 == nthreads) {
-        threaded_compute_block(&args);
-        return 0;
+        compute_block(&args);
+        return -args.error;
     }
 
-    //printf("create thread %d\n", thread);
-    err = pthread_create(&th, NULL, threaded_compute_block, &args);
+    err = pthread_create(&th, NULL, compute_block, &args);
     if (err) {
         cf->error = -err;
         return -1;
     }
     err = threaded_solve_trm_recursive(thread+1, nthreads, blas, cf);
 
-    //printf("wait thread %d\n", thread);
     pthread_join(th, NULL);
     return err;
 }
