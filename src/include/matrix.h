@@ -17,7 +17,7 @@
 #include <stdlib.h>
 /* COMPLEX_H */
 #include "armas.h"
-//#include "dtype.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
