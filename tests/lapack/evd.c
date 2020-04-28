@@ -66,7 +66,7 @@ int test_1(int N, int flags, int verbose)
     }
     n1 = armas_x_mnorm(&A0, ARMAS_NORM_ONE, &conf);
     n1 /= nrm_A;
-    ok = isOK(n1, N);
+    ok = isOK(n1, 100*N);
 
     printf("%s [N=%d, uplo='%s']: A == V*D*V.T\n", PASS(ok), N, uplo);
     if (verbose > 0) {
@@ -113,8 +113,3 @@ int main(int argc, char **argv)
 
     exit(fails);
 }
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
