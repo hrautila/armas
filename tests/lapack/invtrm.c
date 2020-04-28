@@ -11,9 +11,9 @@
 #define NAME "test"
 
 #if FLOAT32
-#define __ERROR 1e-4
+#define ERROR 1e-4
 #else
-#define __ERROR 1e-8
+#define ERROR 1e-8
 #endif
 
 DTYPE unit100(int i, int j)
@@ -44,7 +44,7 @@ int test_equal(int N, int lb, int flags, int verbose)
     armas_x_inverse_trm(&A1, flags, &conf);
     armas_x_inverse_trm(&A1, flags, &conf);
     n0 = rel_error(&n1, &A1, &A0, ARMAS_NORM_INF, 0, &conf);
-    ok = isFINE(n0, N * __ERROR);
+    ok = isFINE(n0, N * ERROR);
     fails += 1 - ok;
     printf("%s: [%c] unblk.(A.-1).-1 == A\n", PASS(ok), uplo);
     if (verbose > 0) {
@@ -55,7 +55,7 @@ int test_equal(int N, int lb, int flags, int verbose)
     armas_x_inverse_trm(&A2, flags, &conf);
     armas_x_inverse_trm(&A2, flags, &conf);
     n0 = rel_error(&n1, &A2, &A0, ARMAS_NORM_INF, 0, &conf);
-    ok = isFINE(n0, N * __ERROR);
+    ok = isFINE(n0, N * ERROR);
     fails += 1 - ok;
     printf("%s: [%c]   blk.(A.-1).-1 == A\n", PASS(ok), uplo);
     if (verbose > 0) {
@@ -98,7 +98,7 @@ int test_ident(int N, int lb, int flags, int verbose)
     // C = A*A.-1
     armas_x_mult(0.0, &C, 1.0, &A0, &A1, 0, &conf);
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_INF, ARMAS_NONE, &conf);
-    ok = isFINE(n0, N * __ERROR);
+    ok = isFINE(n0, 20 * N * ERROR);
     //ok = isOK(n0, N);
     fails += 1 - ok;
     printf("%s: [%c] unblk.A.-1*A == I\n", PASS(ok), uplo);
@@ -111,14 +111,14 @@ int test_ident(int N, int lb, int flags, int verbose)
 
     armas_x_mult(0.0, &C, 1.0, &A0, &A2, 0, &conf);
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_INF, ARMAS_NONE, &conf);
-    ok = isFINE(n0, N * __ERROR);
+    ok = isFINE(n0, 20 * N * ERROR);
     fails += 1 - ok;
     printf("%s: [%c]  blk.A.-1*A == I\n", PASS(ok), uplo);
     if (verbose > 0) {
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
     n0 = rel_error(&n1, &A1, &A2, ARMAS_NORM_INF, ARMAS_NONE, &conf);
-    ok = n0 == 0.0 || isFINE(n0, N * __ERROR);
+    ok = n0 == 0.0 || isFINE(n0, N * ERROR);
     fails += 1 - ok;
     printf("%s: [%c] unblk.A.-1 == blk.A.-1\n", PASS(ok), uplo);
     if (verbose > 0) {
