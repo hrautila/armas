@@ -309,8 +309,8 @@ int build_bkpivot_upper(armas_x_dense_t * AL, armas_x_dense_t * AR,
         armas_x_submatrix(&src, WL, 0, wc - 1, AL->rows, 1);
         armas_x_submatrix(&wkp1, WL, 0, wc, AL->rows, 1);
         armas_x_copy(&wkp1, &src, conf);
-        armas_x_set(&wkp1, -1, 0, armas_x_get(&src, r, 0));
-        armas_x_set(&wkp1, r, 0, armas_x_get(&src, -1, 0));
+        armas_x_set(&wkp1, wkp1.rows - 1, 0, armas_x_get(&src, r, 0));
+        armas_x_set(&wkp1, r, 0, armas_x_get(&src, src.rows - 1, 0));
         *nr = r;
         *np = 1;
         return 1;
@@ -384,15 +384,15 @@ int unblk_bkbounded_upper(armas_x_dense_t * A, armas_x_dense_t * W,
                  * w00 =a11 ==   ----------------
                  *               [-1,r] | [-1,-1]
                  */
-                t1 = armas_x_get(&w00, k, -1);
-                tr = armas_x_get(&w00, r, -1);
-                armas_x_set(&w00, k, -1, tr);
-                armas_x_set(&w00, r, -1, t1);
+                t1 = armas_x_get(&w00, k, w00.cols - 1);
+                tr = armas_x_get(&w00, r, w00.cols - 1);
+                armas_x_set(&w00, k, w00.cols - 1, tr);
+                armas_x_set(&w00, r, w00.cols - 1, t1);
                 // interchange diagonal entries on w00[:,-2]
-                t1 = armas_x_get(&w00, k, -2);
-                tr = armas_x_get(&w00, r, -2);
-                armas_x_set(&w00, k, -2, tr);
-                armas_x_set(&w00, r, -2, t1);
+                t1 = armas_x_get(&w00, k, w00.cols - 2);
+                tr = armas_x_get(&w00, r, w00.cols - 2);
+                armas_x_set(&w00, k, w00.cols - 2, tr);
+                armas_x_set(&w00, r, w00.cols - 2, t1);
             }
         }
         // ---------------------------------------------------------------------

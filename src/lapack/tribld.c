@@ -140,12 +140,12 @@ int armas_x_trdbuild_w(armas_x_dense_t * A,
             armas_x_submatrix(&s, A, 0, j, j, 1);
             armas_x_submatrix(&d, A, 0, j - 1, j, 1);
             armas_x_copy(&d, &s, conf);
-            armas_x_set(A, -1, j - 1, ZERO);
+            armas_x_set(A, A->rows - 1, j - 1, ZERO);
         }
         // zero last column
         armas_x_column(&d, A, A->cols - 1);
         armas_x_scale(&d, ZERO, conf);
-        armas_x_set(&d, -1, 0, ONE);
+        armas_x_set(&d, d.rows - 1, 0, ONE);
 
         armas_x_submatrix(&Qh, A, 0, 0, A->rows - 1, A->rows - 1);
         armas_x_submatrix(&tauh, tau, 0, 0, A->rows - 1, 1);
