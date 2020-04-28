@@ -97,13 +97,13 @@ void mat_continue_3x1to2x1(armas_x_dense_t *AT, armas_x_dense_t *AB,
     int nr1 = A1->rows;
     switch (direction) {
     case ARMAS_PBOTTOM:
-        armas_x_submatrix(AT, A, 0,       0, nr0+nr1, A->cols);
-        armas_x_submatrix(AB, A, nr0+nr1, 0, A->rows-nr0-nr1, A->cols);
+        armas_x_submatrix_unsafe(AT, A, 0,       0, nr0+nr1, A->cols);
+        armas_x_submatrix_unsafe(AB, A, nr0+nr1, 0, A->rows-nr0-nr1, A->cols);
         break;
     case ARMAS_PTOP:
     default:
-        armas_x_submatrix(AT, A, 0, 0,   nr0,  A->cols);
-        armas_x_submatrix(AB, A, nr0, 0, A->rows-nr0, A->cols);
+        armas_x_submatrix_unsafe(AT, A, 0, 0,   nr0,  A->cols);
+        armas_x_submatrix_unsafe(AB, A, nr0, 0, A->rows-nr0, A->cols);
         break;
     }
 }
@@ -124,13 +124,13 @@ void mat_partition_1x2(armas_x_dense_t *AL, armas_x_dense_t *AR,
     }
     switch (side) {
     case ARMAS_PLEFT:
-        armas_x_submatrix(AL, A, 0, 0,  A->rows, nb);
-        armas_x_submatrix(AR, A, 0, nb, A->rows, A->cols-nb);
+        armas_x_submatrix_unsafe(AL, A, 0, 0,  A->rows, nb);
+        armas_x_submatrix_unsafe(AR, A, 0, nb, A->rows, A->cols-nb);
         break;
     case ARMAS_PRIGHT:
     default:
-        armas_x_submatrix(AL, A, 0, 0,  A->rows, A->cols-nb);
-        armas_x_submatrix(AR, A, 0, A->cols-nb,  A->rows, nb);
+        armas_x_submatrix_unsafe(AL, A, 0, 0,  A->rows, A->cols-nb);
+        armas_x_submatrix_unsafe(AR, A, 0, A->cols-nb,  A->rows, nb);
         break;
     }
 }
@@ -153,18 +153,18 @@ void mat_repartition_1x2to1x3(armas_x_dense_t *AL, armas_x_dense_t *A0,
         if (nb > AL->cols) {
             nb = AL->cols;
         }
-        armas_x_submatrix(A0, A, 0, 0, A->rows,  AL->cols-nb);
-        armas_x_submatrix(A1, A, 0, AL->cols-nb, A->rows, nb);
-        armas_x_submatrix(A2, A, 0, AL->cols,    A->rows, A->cols-AL->cols);
+        armas_x_submatrix_unsafe(A0, A, 0, 0, A->rows,  AL->cols-nb);
+        armas_x_submatrix_unsafe(A1, A, 0, AL->cols-nb, A->rows, nb);
+        armas_x_submatrix_unsafe(A2, A, 0, AL->cols,    A->rows, A->cols-AL->cols);
         break;
     case ARMAS_PRIGHT:
     default:
         if (AL->cols + nb > A->cols) {
             nb = A->cols - AL->cols;
         }
-        armas_x_submatrix(A0, A, 0, 0, A->rows, AL->cols);
-        armas_x_submatrix(A1, A, 0, AL->cols,    A->rows, nb);
-        armas_x_submatrix(A2, A, 0, AL->cols+nb, A->rows, A->cols-AL->cols-nb);
+        armas_x_submatrix_unsafe(A0, A, 0, 0, A->rows, AL->cols);
+        armas_x_submatrix_unsafe(A1, A, 0, AL->cols,    A->rows, nb);
+        armas_x_submatrix_unsafe(A2, A, 0, AL->cols+nb, A->rows, A->cols-AL->cols-nb);
         break;
     }
 }
@@ -184,13 +184,13 @@ void mat_continue_1x3to1x2(armas_x_dense_t *AL, armas_x_dense_t *AR,
     int nl;
     switch (direction) {
     case ARMAS_PLEFT:
-        armas_x_submatrix(AL, A, 0, 0, A->rows, A0->cols);
-        armas_x_submatrix(AR, A, 0, A0->cols, A->rows, A->cols-A0->cols);
+        armas_x_submatrix_unsafe(AL, A, 0, 0, A->rows, A0->cols);
+        armas_x_submatrix_unsafe(AR, A, 0, A0->cols, A->rows, A->cols-A0->cols);
         break;
     case ARMAS_PRIGHT:
         nl = A0->cols + A1->cols;
-        armas_x_submatrix(AL, A, 0, 0, A->rows, nl);
-        armas_x_submatrix(AR, A, 0, nl, A->rows, A->cols-nl);
+        armas_x_submatrix_unsafe(AL, A, 0, 0, A->rows, nl);
+        armas_x_submatrix_unsafe(AR, A, 0, nl, A->rows, A->cols-nl);
         break;
     }
 }
@@ -214,18 +214,18 @@ void mat_partition_2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
     case ARMAS_PTOPLEFT:
         armas_x_submatrix_unsafe(ATL, A, 0, 0, mb, nb);
         if (ATR)
-            armas_x_submatrix(ATR, A, 0, nb, mb, A->cols-nb);
+            armas_x_submatrix_unsafe(ATR, A, 0, nb, mb, A->cols-nb);
         if (ABL)
-            armas_x_submatrix(ABL, A, mb, 0, A->rows-mb, nb);
+            armas_x_submatrix_unsafe(ABL, A, mb, 0, A->rows-mb, nb);
         armas_x_submatrix_unsafe(ABR, A, mb, nb, A->rows-mb, A->cols-nb);
         break;
     case ARMAS_PBOTTOMRIGHT:
     default:
-        armas_x_submatrix(ATL, A, 0, 0, A->rows-mb, A->cols-nb);
+        armas_x_submatrix_unsafe(ATL, A, 0, 0, A->rows-mb, A->cols-nb);
         if (ATR)
-            armas_x_submatrix(ATR, A, 0, A->cols-nb, A->rows-mb, nb);
+            armas_x_submatrix_unsafe(ATR, A, 0, A->cols-nb, A->rows-mb, nb);
         if (ABL)
-            armas_x_submatrix(ABL, A, A->rows-mb, 0, mb, A->cols-nb);
+            armas_x_submatrix_unsafe(ABL, A, A->rows-mb, 0, mb, A->cols-nb);
         armas_x_submatrix_unsafe(ABR, A, A->rows-mb, A->cols-nb, mb, nb);
         break;
     }
@@ -260,21 +260,21 @@ void mat_repartition_2x2to3x3(armas_x_dense_t *ATL,
         if (kr + nb > A->rows) {
             nb = A->rows - kr;
         }
-        armas_x_submatrix(A00, A, 0, 0, kr, kc);
+        armas_x_submatrix_unsafe(A00, A, 0, 0, kr, kc);
         if (A01)
-            armas_x_submatrix(A01, A, 0, kc, kr, nb);
+            armas_x_submatrix_unsafe(A01, A, 0, kc, kr, nb);
         if (A02)
-            armas_x_submatrix(A02, A, 0, kc+nb, kr, A->cols-kc-nb);
+            armas_x_submatrix_unsafe(A02, A, 0, kc+nb, kr, A->cols-kc-nb);
         if (A10)
-            armas_x_submatrix(A10, A, kr, 0, nb, kc);
-        armas_x_submatrix(A11, A, kr, kc, nb, nb);
+            armas_x_submatrix_unsafe(A10, A, kr, 0, nb, kc);
+        armas_x_submatrix_unsafe(A11, A, kr, kc, nb, nb);
         if (A12)
-            armas_x_submatrix(A12, A, kr, kc+nb, nb, A->cols-kc-nb);
+            armas_x_submatrix_unsafe(A12, A, kr, kc+nb, nb, A->cols-kc-nb);
         if (A20)
-            armas_x_submatrix(A20, A, kr+nb, 0, A->rows-kr-nb, kc);
+            armas_x_submatrix_unsafe(A20, A, kr+nb, 0, A->rows-kr-nb, kc);
         if (A21)
-            armas_x_submatrix(A21, A, kr+nb, kc, A->rows-kr-nb, nb);
-        armas_x_submatrix(A22, A, kr+nb, kc+nb, A->rows-kr-nb, A->cols-kc-nb);
+            armas_x_submatrix_unsafe(A21, A, kr+nb, kc, A->rows-kr-nb, nb);
+        armas_x_submatrix_unsafe(A22, A, kr+nb, kc+nb, A->rows-kr-nb, A->cols-kc-nb);
         break;
     case ARMAS_PTOPLEFT:
     default:
@@ -283,21 +283,21 @@ void mat_repartition_2x2to3x3(armas_x_dense_t *ATL,
             nb = kc;
         if (nb > kr)
             nb = kr;
-        armas_x_submatrix(A00, A, 0, 0, kr-nb, kc-nb);
+        armas_x_submatrix_unsafe(A00, A, 0, 0, kr-nb, kc-nb);
         if (A01)
-            armas_x_submatrix(A01, A, 0, kc-nb, kr-nb, nb);
+            armas_x_submatrix_unsafe(A01, A, 0, kc-nb, kr-nb, nb);
         if (A02)
-            armas_x_submatrix(A02, A, 0, kc, kr-nb, A->cols-kc);
+            armas_x_submatrix_unsafe(A02, A, 0, kc, kr-nb, A->cols-kc);
         if (A10)
-            armas_x_submatrix(A10, A, kr-nb, 0, nb, kc-nb);
-        armas_x_submatrix(A11, A, kr-nb, kc-nb, nb, nb);
+            armas_x_submatrix_unsafe(A10, A, kr-nb, 0, nb, kc-nb);
+        armas_x_submatrix_unsafe(A11, A, kr-nb, kc-nb, nb, nb);
         if (A12)
-            armas_x_submatrix(A12, A, kr-nb, kc, nb, A->cols-kc);
+            armas_x_submatrix_unsafe(A12, A, kr-nb, kc, nb, A->cols-kc);
         if (A20)
-            armas_x_submatrix(A20, A, kr, 0, A->rows-kr, kc-nb);
+            armas_x_submatrix_unsafe(A20, A, kr, 0, A->rows-kr, kc-nb);
         if (A21)
-            armas_x_submatrix(A21, A, kr, kc-nb, A->rows-kr, nb);
-        armas_x_submatrix(A22, A, kr, kc, A->rows-kr, A->cols-kc);
+            armas_x_submatrix_unsafe(A21, A, kr, kc-nb, A->rows-kr, nb);
+        armas_x_submatrix_unsafe(A22, A, kr, kc, A->rows-kr, A->cols-kc);
         break;
     }
 }
@@ -325,21 +325,21 @@ void mat_continue_3x3to2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
     int kc = A00->cols;
     switch (direction) {
     case ARMAS_PBOTTOMRIGHT:
-        armas_x_submatrix(ATL, A, 0, 0,     kr+mb, kc+mb);
+        armas_x_submatrix_unsafe(ATL, A, 0, 0,     kr+mb, kc+mb);
         if (ATR)
-            armas_x_submatrix(ATR, A, 0, kc+mb, kr+mb, A->cols-kc-mb);
+            armas_x_submatrix_unsafe(ATR, A, 0, kc+mb, kr+mb, A->cols-kc-mb);
         if (ABL)
-            armas_x_submatrix(ABL, A, kr+mb, 0, A->rows-kr-mb, kc+mb);
-        armas_x_submatrix(ABR, A, kr+mb, kc+mb, A->rows-kr-mb, A->cols-kc-mb);
+            armas_x_submatrix_unsafe(ABL, A, kr+mb, 0, A->rows-kr-mb, kc+mb);
+        armas_x_submatrix_unsafe(ABR, A, kr+mb, kc+mb, A->rows-kr-mb, A->cols-kc-mb);
         break;
     case ARMAS_PTOPLEFT:
     default:
-        armas_x_submatrix(ATL, A, 0, 0,  kr, kc);
+        armas_x_submatrix_unsafe(ATL, A, 0, 0,  kr, kc);
         if (ATR)
-            armas_x_submatrix(ATR, A, 0, kc, kr, A->cols-kc);
+            armas_x_submatrix_unsafe(ATR, A, 0, kc, kr, A->cols-kc);
         if (ABL)
-            armas_x_submatrix(ABL, A, kr, 0, A->rows-kr, A->cols-kc);
-        armas_x_submatrix(ABR, A, kr, kc, A->rows-kr, A->cols-kc);
+            armas_x_submatrix_unsafe(ABL, A, kr, 0, A->rows-kr, A->cols-kc);
+        armas_x_submatrix_unsafe(ABR, A, kr, kc, A->rows-kr, A->cols-kc);
         break;
     }
 }
@@ -360,9 +360,9 @@ void mat_merge2x1(armas_x_dense_t *ABLK, armas_x_dense_t *AT, armas_x_dense_t *A
         return;
     }
     if (armas_x_size(AT) == 0) {
-        armas_x_submatrix(ABLK, AB, 0, 0, AB->rows, AB->cols);
+        armas_x_submatrix_unsafe(ABLK, AB, 0, 0, AB->rows, AB->cols);
     } else if (armas_x_size(AB) == 0) {
-        armas_x_submatrix(ABLK, AT, 0, 0, AT->rows, AT->cols);
+        armas_x_submatrix_unsafe(ABLK, AT, 0, 0, AT->rows, AT->cols);
     } else {
         armas_x_make(ABLK, AT->rows+AB->rows, AT->cols, AT->step, AT->elems);
     }
@@ -382,9 +382,9 @@ void mat_merge1x2(armas_x_dense_t *ABLK, armas_x_dense_t *AL, armas_x_dense_t *A
         return;
     }
     if (armas_x_size(AL) == 0) {
-        armas_x_submatrix(ABLK, AR, 0, 0, AR->rows, AR->cols);
+        armas_x_submatrix_unsafe(ABLK, AR, 0, 0, AR->rows, AR->cols);
     } else if (armas_x_size(AR) == 0) {
-        armas_x_submatrix(ABLK, AL, 0, 0, AL->rows, AL->cols);
+        armas_x_submatrix_unsafe(ABLK, AL, 0, 0, AL->rows, AL->cols);
     } else {
         armas_x_make(ABLK, AL->rows, AL->cols+AR->cols, AL->step, AL->elems);
     }
