@@ -91,16 +91,13 @@ static inline
 void compute_delta(armas_x_dense_t * delta, armas_x_dense_t * D, int ik,
                    DTYPE tau)
 {
-    int i, nx, kx, n, k;
-    DTYPE d0, *dp, *dk;
-    dp = armas_x_data(delta);
-    dk = armas_x_data(D);
-    nx = delta->rows == 1 ? delta->step : 1;
-    kx = D->rows == 1 ? D->step : 1;
+    DTYPE d0, d1;
     d0 = armas_x_get_at_unsafe(D, ik);
-    for (i = 0, n = 0, k = 0; i < armas_x_size(D); i++, n += nx, k += kx) {
-        dp[n] = dk[k] - d0 - tau;
+    for (int i = 0; i < armas_x_size(D); i++) {
+        d1 = (armas_x_get_at_unsafe(D, i) - d0) - tau;
+        armas_x_set_at_unsafe(delta, i, d1);
     }
+    armas_x_set_at_unsafe(delta, ik, -tau);
 }
 
 /*
@@ -109,12 +106,10 @@ void compute_delta(armas_x_dense_t * delta, armas_x_dense_t * D, int ik,
 static inline
 void update_delta(armas_x_dense_t * delta, DTYPE eta)
 {
-    int i, ix, n;
-    DTYPE *dp;
-    dp = armas_x_data(delta);
+    int ix;
     ix = delta->rows == 1 ? delta->step : 1;
-    for (i = 0, n = 0; i < armas_x_size(delta); i++, n += ix) {
-        dp[n] = dp[n] - eta;
+    for (int i = 0; i < armas_x_size(delta); i++) {
+        delta->elems[i*ix] -= eta;
     }
 }
 
@@ -329,9 +324,9 @@ int trdsec_root(DTYPE * lambda, armas_x_dense_t * D, armas_x_dense_t * Z,
 {
     int iK, iK1, niter, maxiter, N;
 
-    DTYPE H, dH, G, dG, F, dF, Fa, A, B, C, tau, tau_low, tau_high, eta, eta0,
-        dd, edif;
+    DTYPE F, dF, Fa, A, B, C, tau, tau_low, tau_high, eta, eta0, dd, edif;
     DTYPE delta_k, delta_k1, da_k, da_k1;
+    DTYPE H, dH, G, dG;
 
     N = armas_x_size(D);
     tau = ZERO;
@@ -357,11 +352,13 @@ int trdsec_root(DTYPE * lambda, armas_x_dense_t * D, armas_x_dense_t * Z,
             delta_k = tau;
         }
     }
-
+    // armas_x_dense_t t;
+    // printf("Z    : "); armas_x_printf(stdout, "%e", armas_x_col_as_row(&t, Z));
     eta = ONE;
     eta0 = ONE;
     maxiter = 20;
     for (niter = 0; niter < maxiter; niter++) {
+        // printf("delta:[%d] ", iK); armas_x_printf(stdout, "%e", armas_x_col_as_row(&t, delta));
 
         G = ZERO;
         dG = ZERO;
@@ -372,6 +369,7 @@ int trdsec_root(DTYPE * lambda, armas_x_dense_t * D, armas_x_dense_t * Z,
         F = 1 / rho + G + H;
         dF = dG + dH;
         Fa = 1 / rho + ABS(G + H);
+        // printf("      %d:  F=%e, dF=%e, G=%e, dG=%e, H=%e, dH=%e\n", niter, F, dF, G, dG, H, dH);
 
         da_k = ABS(delta_k);
         da_k1 = ABS(delta_k1);
@@ -704,6 +702,7 @@ int armas_x_trdsec_solve_vec(armas_x_dense_t * y, armas_x_dense_t * v,
         if (trdsec_root(&dlam, d, z, &delta, i, rho) < 0 && err == 0) {
             err = -(i + 1);
         }
+        // printf("i: %d, dlam: %e, isnan: %d\n", i, dlam, isnan(dlam));
         armas_x_set_at_unsafe(y, i, dlam);
     }
     if (err == 0) {
