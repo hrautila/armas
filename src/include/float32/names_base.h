@@ -34,6 +34,8 @@ typedef float ABSTYPE;
 #define COPYSIGN copysignf
 #define POW   powf
 #define EXP   expf
+#define MAX   fmaxf
+#define MIN   fminf
 
 #define SAFEMIN     FLT_MIN
 // machine accurancy as in LAPACK library

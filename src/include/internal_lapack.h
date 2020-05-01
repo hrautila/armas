@@ -67,17 +67,20 @@ long IMIN(long a, long b) {
   return a < b ? a : b;
 }
 
+#ifndef MIN
 static inline
 DTYPE MIN(DTYPE a, DTYPE b)
 {
     return a < b ? a : b;
 }
-
+#endif
+#ifndef MAX
 static inline
 DTYPE MAX(DTYPE a, DTYPE b)
 {
     return a < b ? b : a;
 }
+#endif
 
 // helper functions
 

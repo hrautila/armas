@@ -34,6 +34,8 @@ typedef double ABSTYPE;
 #define COPYSIGN copysign
 #define POW   pow
 #define EXP   exp
+#define MAX   fmax
+#define MIN   fmin
 
 #define SAFEMIN     DBL_MIN
 // machine accurancy as in LAPACK library
