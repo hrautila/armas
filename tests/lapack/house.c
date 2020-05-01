@@ -8,6 +8,7 @@
 
 #include "testing.h"
 
+#define ELIMIT (10*M)
 
 // -----------------------------------------------------------------------------
 
@@ -15,7 +16,7 @@ int test_householder(const char *name, int M,
                      armas_x_dense_t * x, int verbose, int flags,
                      armas_conf_t * cf)
 {
-    armas_x_dense_t y, y1, y2, tau, beta, H, H0, d1, w, w2, z, r;
+    armas_x_dense_t y, y1, y2, tau, beta, H, H0, d1, w, w2, z;
     DTYPE _beta, _tau, n2;
     int ok, fails = 0, sign;
 
@@ -50,7 +51,7 @@ int test_householder(const char *name, int M,
     armas_x_madd(&d1, -ONE, 0, cf);
     // get ||H0 - I||_2, which is relative error
     n2 = armas_x_mnorm(&H0, ARMAS_NORM_INF, cf);
-    ok = isOK(n2, M) || n2 == 0.0;
+    ok = isOK(n2, ELIMIT) || n2 == 0.0;
     printf("%s: H*H == I          : %s [%e]\n", name, PASS(ok), n2);
     fails += (1 - ok);
 
@@ -66,7 +67,7 @@ int test_householder(const char *name, int M,
         sign = ' ';
         n2 = hypot(n2, _beta - armas_x_get(&w, 0, 0)) / ABS(_beta);
     }
-    ok = isOK(n2, M) || n2 == 0.0;
+    ok = isOK(n2, ELIMIT) || n2 == 0.0;
     // check signs of beta vs alpha
     if (flags & ARMAS_NONNEG) {
         if (_beta < 0.0)
@@ -86,7 +87,7 @@ int test_householder(const char *name, int M,
     armas_x_mvmult(0.0, &z, 1.0, &H, &w, 0, cf);
     armas_x_axpy(&z, -1.0, x, cf);
     n2 = armas_x_nrm2(&z, cf) / armas_x_nrm2(x, cf);;
-    ok = isOK(n2, M) || n2 == 0.0;
+    ok = isOK(n2, ELIMIT) || n2 == 0.0;
     printf("%s: H*(H*x) == x      : %s [%e]\n", name, PASS(ok), n2);
     fails += (1 - ok);
 
@@ -226,7 +227,7 @@ int test_hyperbolic(const char *name, int M,
     }
     // get ||H - J||_2, which is relative error
     n2 = armas_x_mnorm(&H, ARMAS_NORM_INF, cf);
-    ok = isOK(n2, M) || n2 == 0.0;
+    ok = isOK(n2, ELIMIT) || n2 == 0.0;
     printf("%s: H*J*H^T == J      : %s [%e]\n", name, PASS(ok), n2);
     fails += (1 - ok);
 
@@ -248,7 +249,7 @@ int test_hyperbolic(const char *name, int M,
         sign = ' ';
         n2 = hypot(n2, _beta - armas_x_get(&w, 0, 0)) / ABS(_beta);
     }
-    ok = isOK(n2, M) || n2 == 0.0;
+    ok = isOK(n2, ELIMIT) || n2 == 0.0;
     if ((flags & ARMAS_NONNEG) && _beta < 0.0) {
         if (verbose) {
             printf("  beta: %9.2e\n", _beta);
@@ -272,7 +273,7 @@ int test_hyperbolic(const char *name, int M,
     armas_x_set(&z, 0, 0, -armas_x_get(&z, 0, 0));
     armas_x_axpy(&z, 1.0, x, cf);
     n2 = armas_x_nrm2(&z, cf) / armas_x_nrm2(x, cf);;
-    ok = isOK(n2, M) || n2 == 0.0;
+    ok = isOK(n2, ELIMIT) || n2 == 0.0;
     printf("%s: H^T*J*H*x == J*x  : %s [%e]\n", name, PASS(ok), n2);
     fails += (1 - ok);
 
