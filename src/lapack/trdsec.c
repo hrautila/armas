@@ -352,13 +352,10 @@ int trdsec_root(DTYPE * lambda, armas_x_dense_t * D, armas_x_dense_t * Z,
             delta_k = tau;
         }
     }
-    // armas_x_dense_t t;
-    // printf("Z    : "); armas_x_printf(stdout, "%e", armas_x_col_as_row(&t, Z));
     eta = ONE;
     eta0 = ONE;
     maxiter = 20;
     for (niter = 0; niter < maxiter; niter++) {
-        // printf("delta:[%d] ", iK); armas_x_printf(stdout, "%e", armas_x_col_as_row(&t, delta));
 
         G = ZERO;
         dG = ZERO;
@@ -369,7 +366,6 @@ int trdsec_root(DTYPE * lambda, armas_x_dense_t * D, armas_x_dense_t * Z,
         F = 1 / rho + G + H;
         dF = dG + dH;
         Fa = 1 / rho + ABS(G + H);
-        // printf("      %d:  F=%e, dF=%e, G=%e, dG=%e, H=%e, dH=%e\n", niter, F, dF, G, dG, H, dH);
 
         da_k = ABS(delta_k);
         da_k1 = ABS(delta_k1);
