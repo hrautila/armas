@@ -39,8 +39,8 @@
  *  b1 = (alpha*b'1 - a10*b0)/a11
  *  b2 = (alpha*b'2 - a20*b0 - a21*b1)/a22
  */
-static inline
-void __trsv_ext_unb_ll(
+static
+void trsv_ext_unb_ll(
     armas_x_dense_t *X,
     armas_x_dense_t *dX,
     const armas_x_dense_t *Ac,
@@ -56,8 +56,8 @@ void __trsv_ext_unb_ll(
     u0 = u0 + alpha * armas_x_get_at_unsafe(dX, 0);
     if (!unit) {
         ak = armas_x_get_unsafe(Ac, 0, 0);
-        approx_twodiv(&s0, &r0, s0, ak);
-        fastsum(&s0, &u0, s0, u0/ak + r0);
+        approx_twodiv(&p0, &r0, s0, ak);
+        fastsum(&s0, &u0, p0, u0/ak + r0);
     }
     armas_x_set_at_unsafe(X,  0, s0);
     armas_x_set_at_unsafe(dX, 0, u0);
@@ -97,8 +97,8 @@ void __trsv_ext_unb_ll(
  *  b1 =          (alpha*b'1 - a21*b2)/a11
  *  b2 =                     alpha*b'2/a22
  */
-static inline
-void __trsv_ext_unb_llt(
+static
+void trsv_ext_unb_llt(
     armas_x_dense_t *X,
     armas_x_dense_t *dX,
     const armas_x_dense_t *Ac,
@@ -113,11 +113,11 @@ void __trsv_ext_unb_llt(
     twoprod(&s0, &u0, s0, alpha);
     u0 = u0 + alpha * armas_x_get_at_unsafe(dX, Ac->cols-1);
     if (!unit) {
-      ak = armas_x_get_unsafe(Ac, Ac->cols-1, Ac->cols-1);
-      approx_twodiv(&p0, &r0, s0, ak);
-      fastsum(&s0, &u0, p0, u0/ak + r0);
+        ak = armas_x_get_unsafe(Ac, Ac->cols - 1, Ac->cols - 1);
+        approx_twodiv(&p0, &r0, s0, ak);
+        fastsum(&s0, &u0, p0, u0 / ak + r0);
     }
-    armas_x_set_at_unsafe(X,  Ac->cols-1, s0);
+    armas_x_set_at_unsafe(X, Ac->cols - 1, s0);
     armas_x_set_at_unsafe(dX, Ac->cols-1, u0);
 
     for (i = Ac->cols-2; i >= 0; --i) {
@@ -154,8 +154,8 @@ void __trsv_ext_unb_llt(
  *    b1 =          (alpha*b'1 - a12*b2)/a11
  *    b2 =                     alpha*b'2/a22
  */
-static inline
-void __trsv_ext_unb_lu(
+static
+void trsv_ext_unb_lu(
     armas_x_dense_t *X,
     armas_x_dense_t *dX,
     const armas_x_dense_t *Ac,
@@ -213,8 +213,8 @@ void __trsv_ext_unb_lu(
  *  b1 = (alpha*b'1 - a01*b0)/a11
  *  b2 = (alpha*b'2 - a02*b0 - a12*b1)/a22
  */
-static inline
-void __trsv_ext_unb_lut(
+static
+void trsv_ext_unb_lut(
     armas_x_dense_t *X,
     armas_x_dense_t *dX,
     const armas_x_dense_t *Ac,
@@ -270,17 +270,17 @@ int armas_x_ext_mvsolve_trm_unsafe(
 
     switch (flags & (ARMAS_TRANS|ARMAS_UPPER|ARMAS_LOWER)){
     case ARMAS_UPPER|ARMAS_TRANS:
-        __trsv_ext_unb_lut(X, dX, A, alpha, unit);
+        trsv_ext_unb_lut(X, dX, A, alpha, unit);
         break;
     case ARMAS_LOWER|ARMAS_TRANS:
-        __trsv_ext_unb_llt(X, dX, A, alpha, unit);
+        trsv_ext_unb_llt(X, dX, A, alpha, unit);
         break;
     case ARMAS_UPPER:
-        __trsv_ext_unb_lu(X, dX, A, alpha, unit);
+        trsv_ext_unb_lu(X, dX, A, alpha, unit);
         break;
     case ARMAS_LOWER:
     default:
-        __trsv_ext_unb_ll(X, dX, A, alpha, unit);
+        trsv_ext_unb_ll(X, dX, A, alpha, unit);
         break;
     }
     return 0;
