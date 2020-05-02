@@ -35,7 +35,7 @@ int check_std_vs_ext(int *nc, const armas_x_dense_t *diff, int trans)
 {
     armas_x_dense_t e1;
     int count = 0, N = armas_x_size(diff);
-    armas_x_subvector(&e1, diff, trans, N-1);
+    armas_x_subvector_unsafe(&e1, diff, trans, N-1);
 
     // |std - ext| >= 0 for all entries
     for (int i = 0; i < N-1; ++i) {
@@ -50,8 +50,7 @@ int check_std_vs_ext(int *nc, const armas_x_dense_t *diff, int trans)
 
 int compute_stats(DTYPE *avg_err, armas_x_dense_t *std, const armas_x_dense_t *ext, int num_eps, armas_conf_t *cf)
 {
-    DTYPE n0, n1;
-    n1 = armas_x_nrm2(ext, cf);
+    DTYPE n0;
     // compute: n0 = sum(|std - ext|)
     armas_x_axpy(std, -1.0, ext, cf);
     n0 = armas_x_asum(std, cf);
