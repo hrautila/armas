@@ -16,7 +16,7 @@
 #define __ARMAS_INLINE extern inline
 #endif
 
-__ARMAS_INLINE
+static inline
 void subpivot(armas_pivot_t *pA, armas_pivot_t *pB, int K, int N)
 {
     pA->npivots = N;
@@ -33,7 +33,7 @@ void subpivot(armas_pivot_t *pA, armas_pivot_t *pB, int K, int N)
  *
  * Parameter nb is initial block size for pT (pTOP) or pB (pBOTTOM).
  */
-__ARMAS_INLINE
+static inline
 void pivot_2x1(armas_pivot_t *pT, armas_pivot_t *pB, armas_pivot_t *P, int nb, int direction)
 {
     switch (direction) {
@@ -60,7 +60,7 @@ void pivot_2x1(armas_pivot_t *pT, armas_pivot_t *pB, armas_pivot_t *P, int nb, i
  *                   p2                     p2
  *
  */
-__ARMAS_INLINE
+static inline
 void pivot_repart_2x1to3x1(
     armas_pivot_t *pT, armas_pivot_t *p0, armas_pivot_t *p1, armas_pivot_t *p2, armas_pivot_t *P, int nb, int direction)
 {
@@ -95,7 +95,7 @@ void pivot_repart_2x1to3x1(
  *                   p2                     p2
  *
  */
-__ARMAS_INLINE
+static inline
 void pivot_cont_3x1to2x1(
     armas_pivot_t *pT, armas_pivot_t *pB, armas_pivot_t *p0, armas_pivot_t *p1, armas_pivot_t *P, int direction)
 {
