@@ -106,6 +106,8 @@
 #define armas_x_mvupdate_trm_unb         armas_d_mvupdate_trm_unb
 #define armas_x_mvupdate_trm_unsafe      armas_d_mvupdate_trm_unsafe
 #define armas_x_mvsolve_trm_unsafe       armas_d_mvsolve_trm_unsafe
+#define armas_x_mvmult_sym_unsafe        armas_d_mvmult_sym_unsafe
+
 
 // unsafe extended precision
 #define armas_x_merge_unsafe             armas_d_merge_unsafe
@@ -137,6 +139,7 @@
 #define armas_x_ext_solve_trm_blk_unsafe armas_d_ext_solve_trm_blk_unsafe
 #define armas_x_ext_solve_trm_unsafe     armas_d_ext_solve_trm_unsafe
 #define armas_x_ext_mult_trm_unsafe      armas_d_ext_mult_trm_unsafe
+#define armas_x_ext_mult_sym_unsafe      armas_d_ext_mult_sym_unsafe
 
 
 #endif  /* __ARMAS_DTYPE_H */

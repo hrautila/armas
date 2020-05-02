@@ -127,6 +127,9 @@ typedef double ABSTYPE;
 #define mat_continue_3x3to2x2     mat_d_continue_2x3to2x2
 #define mat_merge2x1              mat_d_merge2x1
 #define mat_merge1x2              mat_d_merge1x2
+#define vec_partition_2x1         vec_d_partition_2x1
+#define vec_repartition_2x1to3x1  vec_d_repartition_2x1to3x1
+#define vec_continue_3x1to2x1     vec_d_continue_3x1to2x1
 
 #endif  /* NAMES_BASE_H */
 

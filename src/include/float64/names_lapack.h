@@ -39,9 +39,11 @@
 #define armas_x_bksolve                  armas_d_bksolve
 #define armas_x_bksolve_w                armas_d_bksolve_w
 #define armas_x_ldlfactor                armas_d_ldlfactor
+#define armas_x_ldlfactor_np             armas_d_ldlfactor_np
 #define armas_x_ldlfactor_w              armas_d_ldlfactor_w
 #define armas_x_ldlupdate                armas_d_ldlupdate
 #define armas_x_ldlsolve                 armas_d_ldlsolve
+#define armas_x_ldlsolve_np              armas_d_ldlsolve_np
 
 // visible internal functions
 #define armas_x_unblk_bkfactor_lower     armas_d_unblk_bkfactor_lower
@@ -76,6 +78,7 @@
 #define armas_x_apply_householder2x1     armas_d_apply_householder2x1
 #define armas_x_apply_householder1x1     armas_d_apply_householder1x1
 #define armas_x_house                    armas_d_house
+#define armas_x_house_vec                armas_d_house_vec
 #define armas_x_houseapply               armas_d_houseapply
 #define armas_x_houseapply2x1            armas_d_houseapply2x1
 #define armas_x_housemult                armas_d_housemult
