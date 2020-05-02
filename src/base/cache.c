@@ -88,7 +88,7 @@ armas_cbuf_t *armas_cbuf_init(armas_cbuf_t *cbuf, size_t cmem, size_t l1mem)
 /**
  * @brief Create new cache buffer instance.
  */
-armas_cbuf_t *armas_sbuf_new(size_t cmem, size_t l1mem)
+armas_cbuf_t *armas_cbuf_new(size_t cmem, size_t l1mem)
 {
     armas_cbuf_t *cb = calloc(1, sizeof(struct armas_cbuf));
     if (!cb)
