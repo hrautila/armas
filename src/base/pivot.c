@@ -148,19 +148,6 @@ void swap_rows(armas_x_dense_t * A, int src, int dst, armas_conf_t * conf)
     armas_x_swap(&r0, &r1, (armas_conf_t *) 0);
 }
 
-void swap_rows2(armas_x_dense_t * A, int src, int dst, armas_conf_t * conf)
-{
-    armas_x_dense_t r0, r1;
-    if (src == dst || A->cols <= 0)
-        return;
-    if (src >= A->rows || dst >= A->rows)
-        return;
-
-    armas_x_submatrix(&r0, A, src, 0, 1, A->cols);
-    armas_x_submatrix(&r1, A, dst, 0, 1, A->cols);
-    armas_x_swap(&r0, &r1, (armas_conf_t *) 0);
-}
-
 /*
  * Swap columns of matrix
  */
@@ -177,25 +164,6 @@ void swap_cols(armas_x_dense_t * A, int src, int dst, armas_conf_t * conf)
     armas_x_submatrix(&r1, A, 0, dst, A->rows, 1);
     armas_x_swap(&r0, &r1, (armas_conf_t *) 0);
 }
-
-
-#if 0
-static
-void apply_pivots(armas_x_dense_t * A, armas_pivot_t * P, armas_conf_t * conf)
-{
-    int k, n;
-
-    if (A->cols == 0)
-        return;
-
-    for (k = 0; k < P->npivots; k++) {
-        n = P->indexes[k];
-        if (n > 0 && n - 1 != k) {
-            swap_rows(A, n - 1, k, conf);
-        }
-    }
-}
-#endif
 
 /*
  * Apply row pivots forward or backward.

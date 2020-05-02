@@ -142,18 +142,6 @@ int armas_x_bdsvd(armas_x_dense_t * D, armas_x_dense_t * E,
 }
 
 /**
- * @brief Workspace to compute SVD of bidiagonal or bidiagonalizable matrix S.
- * @ingroup lapack
- */
-int armas_x_bdsvd_work(armas_x_dense_t * S, armas_conf_t * conf)
-{
-    if (armas_x_isvector(S)) {
-        return 4 * armas_x_size(S);
-    }
-    return 4 * (S->rows < S->cols ? S->rows : S->cols);
-}
-
-/**
  * @brief Compute SVD of bidiagonal matrix.
  *
  * Computes the singular values and, optionially, the left and/or right
