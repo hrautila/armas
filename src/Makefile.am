@@ -16,9 +16,6 @@ COMMON = \
 	base/cache.c \
 	base/env.c \
 	base/system.c \
-	base/matrix.c \
-	base/matrix_ext.c \
-	base/partition.c \
 	base/pivot.c \
 	base/pivot_ext.c \
 	io/iomm.c \
@@ -28,6 +25,9 @@ COMMON = \
 	io/json_writer.c
 
 BLAS = \
+	base/matrix.c \
+	base/matrix_ext.c \
+	base/partition.c \
 	blas/asum.c \
 	blas/axpy.c \
 	blas/dot.c \
@@ -86,8 +86,10 @@ endif
 
 ACCEL =
 if CONFIG_ACCELERATORS
+COMMON += \
+	base/accel.c
+
 ACCEL += \
-	base/accel.c \
 	threaded/entry.c \
 	threaded/gemm.c \
 	threaded/symm.c \
@@ -209,130 +211,116 @@ COMPAT += \
 	compat/trmm.c \
 	compat/trsm.c \
 	compat/syrk.c \
-	compat/syr2k.c \
-	compat/potrf.c
+	compat/syr2k.c
 endif
 
-##noinst_LTLIBRARIES = libd.la libz.la libx.la libdext.la libdcompat.la
 noinst_LTLIBRARIES =
 
 # common to all
 lib_LTLIBRARIES =
 
-libx_la_SOURCES = $(COMMON)
-BUILT_SOURCES =
+##libx_la_SOURCES = $(COMMON)
+BUILT_SOURCES = armas/armas.h
+
+armas/armas.h: include/armas.h
+	$(top_srcdir)/install-sh $< $@
 
 ## ----------------- double precission -------------------------
 if ENABLE_FLOAT64
 
 lib_LTLIBRARIES += libarmasd.la
-noinst_LTLIBRARIES += libd.la
+noinst_LTLIBRARIES += libx.la libdb.la libda.la libds.la libdc.la
 libarmasd_la_SOURCES =
-libarmasd_la_LIBADD = libd.la
+libarmasd_la_LIBADD = libdb.la libx.la libda.la libds.la libdc.la
+libarmasd_la_LDFLAGS = -version-info 0:0:0
 
+BUILT_SOURCES += armas/ddense.h armas/dsparse.h
 
-# double precision
-libd_la_SOURCES =  \
-	$(COMMON) $(BLAS) $(EBLAS) $(ACCEL) $(COMPAT) $(LAPACK) $(SPARSE)
-libd_la_CPPFLAGS = -DFLOAT64 
+libx_la_SOURCES = $(COMMON)
+libdb_la_SOURCES = $(BLAS) $(EBLAS) $(LAPACK)
+libda_la_SOURCES = $(ACCEL)
+libds_la_SOURCES = $(SPARSE)
+libdc_la_SOURCES = $(COMPAT)
 
-# # sparse double precision
-# libspd_la_SOURCES = $(SPARSE)
-# libspd_la_CPPFLAGS = -DFLOAT64
+libdb_la_CPPFLAGS = -DFLOAT64
+libda_la_CPPFLAGS = -DFLOAT64
+libdc_la_CPPFLAGS = -DFLOAT64
+libds_la_CPPFLAGS = -DFLOAT64
 
-# if CONFIG_EXT_PRECISION
-# # extended precision
-# libdext_la_SOURCES = $(EBLAS)
-# libdext_la_CPPFLAGS = -DFLOAT64 
-# noinst_LTLIBRARIES += libdext.la
-# libarmasd_la_LIBADD += libdext.la
-# endif
+armas/ddense.h: include/matrix.h
+	$(top_srcdir)/src/make-header.sh $< $@ double
 
-# if CONFIG_COMPAT
-# # double precision compability
-# libdcompat_la_SOURCES = $(COMPAT)
-# libdcompat_la_CPPFLAGS = -DFLOAT64 -DCOMPAT
-# noinst_LTLIBRARIES += libdcompat.la
-# libarmasd_la_LIBADD += libdcompat.la
-# endif
-
-#BUILT_SOURCES += armas/dmatrix.h armas/linalgd.h armas/dsparse.h
+armas/dsparse.h: include/sparse.h
+	$(top_srcdir)/src/make-header.sh $< $@ double
 
 endif
 
 ## ----------------- single precission -------------------------
 if ENABLE_FLOAT32
-lib_LTLIBRARIES += libarmass.la
-noinst_LTLIBRARIES += libx.la libs.la 
-libarmass_la_SOURCES =
-libarmass_la_LIBADD = libx.la libs.la
-
-# single precision
-libs_la_SOURCES = $(CORE) $(BLAS1) $(BLAS2) $(BLAS3) $(LAPACK)
-libs_la_CPPFLAGS = -DFLOAT32 
-
-if CONFIG_EXT_PRECISION
-# extended precision
-libsext_la_SOURCES = $(XBLAS1) $(XBLAS2) $(XBLAS3)
-libsext_la_CPPFLAGS = -DFLOAT32
-noinst_LTLIBRARIES += libsext.la
-libarmass_la_LIBADD += libsext.la
-endif
-
-if CONFIG_COMPAT
-# single precision compability
-libscompat_la_SOURCES = $(COMPAT)
-libscompat_la_CPPFLAGS = -DFLOAT32 -DCOMPAT
-noinst_LTLIBRARIES += libscompat.la
-libarmass_la_LIBADD += libscompat.la
-endif
-
-#BUILT_SOURCES += armas/smatrix.h armas/linalgs.h
 
 endif
-
 
 ## ----------------- complex double precission -------------------------
 if ENABLE_COMPLEX128
 
-noinst_LTLIBRARIES += libx.la libz.la
-lib_LTLIBRARIES += libarmasz.la
-
-# complex support
-libz_la_SOURCES = $(COMMON) $(BLAS) $(EBLAS)
-libz_la_CPPFLAGS = -DCOMPLEX128
-
-libarmasz_la_SOURCES = 
-libarmasz_la_LIBADD = libx.la libz.la
-
-
-#BUILT_SOURCES += armas/zmatrix.h armas/libalgz.h
-
 endif
 
-nobase_include_HEADERS = armas/armas.h $(BUILT_SOURCES)
+nobase_include_HEADERS = $(BUILT_SOURCES)
 
 CLEANFILES = $(BUILT_SOURCES)
 
-# armas/smatrix.h: inc/matrix.h
-# 	./make-header.sh $< $@ float
+noinst_HEADERS = \
+	include/partition.h								\
+	include/arm/mult_armneon_f32.h					\
+	include/arm/eftops.h							\
+	include/arm/simd_ops.h							\
+	include/arm/mult_armneon_fma_f32.h				\
+	include/matcpy.h								\
+	include/eft.h									\
+	include/complex32/names_blas.h					\
+	include/complex32/names_base.h					\
+	include/complex32/names_lapack.h				\
+	include/complex64/names_blas.h					\
+	include/complex64/names_base.h					\
+	include/complex64/names_lapack.h				\
+	include/kernel_ext.h							\
+	include/internal_lapack.h						\
+	include/x86_64/mult_sse_c64.h					\
+	include/x86_64/mult_fma_c64.h					\
+	include/x86_64/mult_avx_f32.h					\
+	include/x86_64/mult_fma_f64.h					\
+	include/x86_64/mult_ext_avx_f32.h				\
+	include/x86_64/mult_fma_f32.h					\
+	include/x86_64/mult_fma_c128.h					\
+	include/x86_64/mult_avx_c64.h					\
+	include/x86_64/mult_sse_f64.h					\
+	include/x86_64/eftops.h							\
+	include/x86_64/mult_avx_c128.h					\
+	include/x86_64/mult_sse_f32.h					\
+	include/x86_64/simd_ops.h						\
+	include/x86_64/mult_ext_avx_f64.h				\
+	include/x86_64/mult_avx_f64.h					\
+	include/x86_64/mult_sse_c128.h					\
+	include/simd.h									\
+	include/internal.h								\
+	include/pivot.h									\
+	include/cache.h									\
+	include/float64/names_compat.h					\
+	include/float64/names_blas.h					\
+	include/float64/names_base.h					\
+	include/float64/names_sparse.h					\
+	include/float64/names_lapack.h					\
+	include/compat.h								\
+	include/dlpack.h								\
+	include/dtype.h									\
+	include/nosimd/mult.h							\
+	include/nosimd/mult_ext.h						\
+	include/nosimd/mvec.h							\
+	include/spdefs.h								\
+	include/float32/names_blas.h					\
+	include/float32/names_base.h					\
+	include/float32/names_lapack.h					\
+	include/kernel.h								\
+	include/accel.h
 
-# armas/linalgs.h: inc/linalg.h
-# 	./make-header.sh $< $@ float
 
-# armas/dmatrix.h: inc/matrix.h
-# 	./make-header.sh $< $@ double
-
-# armas/linalgd.h: inc/linalg.h
-# 	./make-header.sh $< $@ double
-
-# armas/dsparse.h: sparse/sparse.h
-# 	./make-header.sh $< $@ double
-
-# # comples types
-
-# armas/zmatrix.h: inc/matrix.h
-# 	./make-header.sh $< $@ zcomplex
-
-
-###	sed 's/armas_x_/armas_d_/g;s/_ARMAS_MAT/_ARMAS_DMAT/;s/DTYPE/double/g;s/ABSTYPE/double/g;s/__ZERO/0.0/g;s:/\* COMPLEX_H \*/::' $< > $@

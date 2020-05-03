@@ -9,22 +9,22 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__asumf) || defined(__cblas_asum)
-#define __ARMAS_PROVIDES 1
+#if defined(blas_asumf) || defined(cblas_asum)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_asum)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__asumf)
-DTYPE __asumf(int *n, DTYPE *X, int *incx)
+#if defined(blas_asumf)
+DTYPE blas_asumf(int *n, DTYPE * X, int *incx)
 {
     armas_conf_t *conf = armas_conf_default();
     armas_x_dense_t x;
@@ -38,8 +38,8 @@ DTYPE __asumf(int *n, DTYPE *X, int *incx)
 }
 #endif
 
-#if defined(__cblas_asum)
-DTYPE __cblas_asum(const int N, DTYPE *X, const int incx)
+#if defined(cblas_asum)
+DTYPE cblas_asum(const int N, DTYPE * X, const int incx)
 {
     armas_conf_t *conf = armas_conf_default();
     armas_x_dense_t x;
@@ -53,10 +53,4 @@ DTYPE __cblas_asum(const int N, DTYPE *X, const int incx)
 }
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif                          /* ARMAS_PROVIDES && ARMAS_REQUIRES */
