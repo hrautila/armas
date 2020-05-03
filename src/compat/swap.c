@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
 // This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -7,24 +7,25 @@
 
 #include "compat.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__swapf) || defined(__cblas_swap)
-#define __ARMAS_PROVIDES 1
+#if defined(blas_swapf) || defined(cblas_swap)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_swap)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
 static
-void __swap_compat(const int N, DTYPE *X, const int incx, DTYPE *Y, const int incy)
+void swap_compat(const int N, DTYPE * X, const int incx, DTYPE * Y,
+                   const int incy)
 {
     armas_conf_t *conf = armas_conf_default();
     armas_x_dense_t y, x;
@@ -44,11 +45,10 @@ void __swap_compat(const int N, DTYPE *X, const int incx, DTYPE *Y, const int in
     } else {
         armas_x_make(&y, 1, N, iy, Y);
     }
-    if (incx*incy > 0) {
+    if (incx * incy > 0) {
         armas_x_swap(&y, &x, conf);
         return;
     }
-
     // if not same sign then iteration direction is different (so clever)
     ix = incx < 0 ? N - 1 : 0;
     iy = incy < 0 ? N - 1 : 0;
@@ -61,25 +61,19 @@ void __swap_compat(const int N, DTYPE *X, const int incx, DTYPE *Y, const int in
     }
 }
 
-#if defined(__swapf)
-void __swapf(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy)
+#if defined(blas_swapf)
+void blas_swapf(int *n, DTYPE * X, int *incx, DTYPE * Y, int *incy)
 {
-    __swap_compat(*n, X, *incx, Y, *incy);
+    swap_compat(*n, X, *incx, Y, *incy);
 }
 #endif
 
-#if defined(__cblas_swap)
-void __cblas_swap(const int N, DTYPE *X, const int incx, DTYPE *Y, const int incy)
+#if defined(cblas_swap)
+void cblas_swap(const int N, DTYPE * X, const int incx, DTYPE * Y,
+                  const int incy)
 {
-    __swap_compat(N, X, incx, Y, incy);
+    swap_compat(N, X, incx, Y, incy);
 }
-
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

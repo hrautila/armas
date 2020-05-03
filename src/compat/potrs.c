@@ -10,21 +10,22 @@
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(__potrsf) || defined(__cblas_potrs) || defined(__lapacke_potrs)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_cholsolve)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
 #if defined(__potrsf)
-void __potrsf(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *ldb,int *info)
+void __potrsf(char *uplo, int *n, int *nrhs, DTYPE * A, int *lda, DTYPE * B,
+              int *ldb, int *info)
 {
     armas_x_dense_t a, b;
     armas_conf_t conf = *armas_conf_default();
@@ -32,20 +33,22 @@ void __potrsf(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *
 
     armas_x_make(&a, *n, *n, *lda, A);
     armas_x_make(&b, *n, *nrhs, *ldb, B);
-    flags = toupper(*uplo) == 'L' | ARMAS_LOWER : ARMAS_UPPER;
+  flags = toupper(*uplo) == 'L' | ARMAS_LOWER:ARMAS_UPPER;
     err = armas_x_cholsolve(&b, &a, flags, &conf);
     *info = err ? -conf.error : 0;
 }
 #endif
 
 #if defined(__cblas_potrs)
-int __cblas_potrs(int order, int uplo, int n, DTYPE *A, int lda, DTYPE *B, int ldb)
+int __cblas_potrs(int order, int uplo, int n, DTYPE * A, int lda, DTYPE * B,
+                  int ldb)
 {
 }
 #endif
 
 #if defined(__lapacke_potrs)
-int __lapacke_potrs(int order, int uplo, int n, int nrhs, DTYPE *A, int lda, DTYPE *B, int ldb)
+int __lapacke_potrs(int order, int uplo, int n, int nrhs, DTYPE * A, int lda,
+                    DTYPE * B, int ldb)
 {
     armas_x_dense_t a, b;
     armas_conf_t conf = *armas_conf_default();
@@ -57,14 +60,14 @@ int __lapacke_potrs(int order, int uplo, int n, int nrhs, DTYPE *A, int lda, DTY
     } else {
         armas_x_make(&a, n, n, lda, A);
         armas_x_make(&b, n, nrhs, ldb, B);
-        flags = toupper(uplo) == 'L' | ARMAS_LOWER : ARMAS_UPPER;
+      flags = toupper(uplo) == 'L' | ARMAS_LOWER:ARMAS_UPPER;
     }
     err = armas_x_cholsolve(&b, &a, flags, &conf);
     return err ? -conf.error : 0;
 }
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
+#endif                          /* ARMAS_PROVIDES && ARMAS_REQUIRES */
 
 
 // Local Variables:

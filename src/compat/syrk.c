@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
 // This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -7,32 +7,32 @@
 
 #include "compat.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__syrkf) || defined(__cblas_syrk)
-#define __ARMAS_PROVIDES 1
+#if defined(blas_syrkf) || defined(cblas_syrk)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_update_sym)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__syrkf)
-void __syrkf(char *uplo, char *trans, int *n, int *k, DTYPE *alpha, DTYPE *A,
-             int *lda, DTYPE *beta, DTYPE *C, int *ldc)
+#if defined(blas_syrkf)
+void blas_syrkf(char *uplo, char *trans, int *n, int *k, DTYPE * alpha,
+                DTYPE * A, int *lda, DTYPE * beta, DTYPE * C, int *ldc)
 {
     armas_conf_t *conf = armas_conf_default();
     armas_x_dense_t c, a;
     int flags = 0;
 
     flags |= toupper(*uplo) == 'L' ? ARMAS_LOWER : ARMAS_UPPER;
-    if (toupper(*trans) == 'T') 
+    if (toupper(*trans) == 'T')
         flags |= ARMAS_TRANS;
 
     armas_x_make(&c, *n, *n, *ldc, C);
@@ -41,15 +41,15 @@ void __syrkf(char *uplo, char *trans, int *n, int *k, DTYPE *alpha, DTYPE *A,
     } else {
         armas_x_make(&a, *n, *k, *lda, A);
     }
-
     armas_x_update_sym(*beta, &c, *alpha, &a, flags, conf);
 }
 #endif
 
-#if defined(__cblas_syrk)
-void __cblas_syrk(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
-                  const enum CBLAS_TRANSPOSE trans, int N, int K, 
-                  DTYPE alpha, DTYPE *A, int lda, DTYPE beta, DTYPE *C, int ldc)
+#if defined(cblas_syrk)
+void cblas_syrk(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
+                const enum CBLAS_TRANSPOSE trans, int N, int K,
+                DTYPE alpha, DTYPE * A, int lda, DTYPE beta, DTYPE * C,
+                int ldc)
 {
     armas_conf_t conf = *armas_conf_default();
     armas_x_dense_t Ca, Aa;
@@ -79,13 +79,6 @@ void __cblas_syrk(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
     armas_x_make(&Ca, N, N, ldc, C);
     armas_x_update_sym(beta, &Ca, alpha, &Aa, flags, conf);
 }
-
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

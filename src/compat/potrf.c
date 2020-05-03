@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,22 +9,22 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__potrff) || defined(__lapacke_potrf_work)
-#define __ARMAS_PROVIDES 1
+#if defined(lapack_potrff) || defined(lapacke_potrf)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_cholfactor)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__potrff)
-void __potrff(char *uplo, int *n, DTYPE *A, int *lda, int *info)
+#if defined(lapack_potrff)
+void lapack_potrff(char *uplo, int *n, DTYPE * A, int *lda, int *info)
 {
     armas_x_dense_t a;
     armas_conf_t conf = *armas_conf_default();
@@ -37,36 +37,21 @@ void __potrff(char *uplo, int *n, DTYPE *A, int *lda, int *info)
 }
 #endif
 
-#if defined(__lapacke_potrf_work)
-int __lapacke_potrf_work(int order, char uplo, int n, DTYPE *A, int lda)
+#if defined(lapacke_potrf)
+int lapacke_potrf(int order, char uplo, int n, DTYPE * A, int lda)
 {
     armas_x_dense_t a;
     armas_conf_t conf = *armas_conf_default();
-    int err, flags = 0;
-    
-    if (order == LAPACK_COL_MAJOR) {
-        flags = toupper(uplo) == 'L' | ARMAS_LOWER : ARMAS_UPPER;
-        armas_x_make(&a, n, n, lda, A);
-        err = armas_x_cholfactor(&a, flags, &conf);
-        return err ? -conf.error : 0;
+    int flags = 0;
+
+    armas_x_make(&a, n, n, lda, A);
+    if (order == LAPACKE_ROW_MAJOR) {
+        flags = uplo == CblasUpper ? ARMAS_LOWER : ARMAS_UPPER;
+    } else {
+        flags = uplo == CblasLower ? ARMAS_LOWER : ARMAS_UPPER;
     }
-    return -1;
+    return armas_x_cholfactor(&a, flags, &conf);
 }
-
-#if defined(__lapacke_potrf)
-int __lapacke_potrf(int order, char uplo, int n, DTYPE *A, int lda)
-{
-    return __lapacke_potrf_work(order, uplo, n, A, lda);
-}
-
 #endif
 
-#endif /* __lapacke_potrf_work */
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

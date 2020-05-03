@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
 // This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -7,24 +7,24 @@
 
 #include "compat.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__getrff)  || defined(__lapacke_getrf)
-#define __ARMAS_PROVIDES 1
+#if defined(blas_getrff)  || defined(lapacke_getrf)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(ENABLE_COMPAT) && defined(armas_x_lufactor)
-#define __ARMAS_REQUIRES 1
+#if defined(armas_x_lufactor)
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__getrff)
-void __getrff(int *m, int *n, DTYPE *A, int *lda, int *ipiv, int *info)
+#if defined(blas_getrff)
+void blas_getrff(int *m, int *n, DTYPE * A, int *lda, int *ipiv, int *info)
 {
     armas_x_dense_t a;
     armas_pivot_t piv;
@@ -38,8 +38,8 @@ void __getrff(int *m, int *n, DTYPE *A, int *lda, int *ipiv, int *info)
 }
 #endif
 
-#if defined(__lapacke_getrf)
-int __lapacke_getrf(int order, int M, int N, DTYPE *A, int lda, int *ipv)
+#if defined(lapacke_getrf)
+int lapacke_getrf(int order, int M, int N, DTYPE * A, int lda, int *ipv)
 {
     armas_x_dense_t Aa;
     armas_pivot_t piv;
@@ -56,10 +56,4 @@ int __lapacke_getrf(int order, int M, int N, DTYPE *A, int lda, int *ipv)
 }
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
