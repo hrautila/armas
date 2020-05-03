@@ -23,7 +23,7 @@ ltmain.sh
 *.in
 
 # build tree
-build
+build*
 # Object files
 *.o
 *.ko
