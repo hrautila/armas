@@ -4,18 +4,46 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "debug program",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/${input:target}",
-            "args": ["10", "9", "4"],
+            "args": ["6", "8", "8"],
             "stopAtEntry": true,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/build",
             "environment": [
                 { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build/src/.libs"}, 
-                { "name": "ARMAS_CONFIG", "value": "4,4,4,4,4,4,y" },
-                { "name": "ARMAS_CACHE", "value": "4096,1024" }
+                // { "name": "ARMAS_CONFIG", "value": "4,4,4,4,4,4,y" },
+                // { "name": "ARMAS_CACHE", "value": "4096,1024" },
+                // { "name": "ARMAS_AC_CONFIG", "value": "40,2" },
+                { "name": "JSON_READ", "value": "tests/lapack/test.json"}
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "debug O3 program",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build.O3/${input:target}",
+            "args": ["6", "8", "8"],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}/build.O3",
+            "environment": [
+                { "name": "LD_LIBRARY_PATH", "value": "${workspaceFolder}/build.O3/src/.libs"}, 
+                // { "name": "ARMAS_CONFIG", "value": "4,4,4,4,4,4,y" },
+                // { "name": "ARMAS_CACHE", "value": "4096,1024" },
+                // { "name": "ARMAS_AC_CONFIG", "value": "40,2" },
+                { "name": "JSON_READ", "value": "tests/lapack/test.json"}
             ],
             "externalConsole": false,
             "MIMode": "gdb",
