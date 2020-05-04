@@ -232,7 +232,7 @@ lib_LTLIBRARIES += libarmasd.la
 noinst_LTLIBRARIES += libx.la libdb.la libda.la libds.la libdc.la
 libarmasd_la_SOURCES =
 libarmasd_la_LIBADD = libdb.la libx.la libda.la libds.la libdc.la
-libarmasd_la_LDFLAGS = -version-info 0:0:0
+libarmasd_la_LDFLAGS = -version-info @SOVERSION@
 
 BUILT_SOURCES += armas/ddense.h armas/dsparse.h
 

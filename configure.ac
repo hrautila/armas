@@ -10,6 +10,9 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
 
+# shared library version number
+AC_SUBST(SOVERSION, [0:0:0])
+
 ## option --enable-plugins
 AC_ARG_ENABLE(accelerators,
    AC_HELP_STRING([--disable-accelerators],[make accelerators (default is yes)]),
