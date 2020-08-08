@@ -19,11 +19,13 @@
 #define ENV_ARMAS_AC_CONFIG "ARMAS_AC_CONFIG"
 #endif
 
-const char *ARMAS_AC_THREADED = "THREADED";
+const char *ARMAS_AC_SIMPLE = "SIMPLE";
 const char *ARMAS_AC_WORKERS = "WORKERS";
+const char *ARMAS_AC_TRANSIENT = "TRANSIENT";
 
 extern int armas_ac_threaded_init(struct armas_ac_vtable **vptr, void **private);
 extern int armas_ac_workers_init(struct armas_ac_vtable **vptr, void **private);
+extern int armas_ac_transient_init(struct armas_ac_vtable **vptr, void **private);
 
 /**
  * @brief Initialize defined accelerator.
@@ -44,17 +46,21 @@ int armas_ac_init(armas_ac_handle_t *handle, const char *name)
         return -ARMAS_EMEMORY;
 
     ac->handle = (void *)0;
-    if (name == ARMAS_AC_THREADED || *name == 'T') {
+    if (name == ARMAS_AC_SIMPLE || toupper(*name) == 'S') {
         if (armas_ac_threaded_init(&ac->vptr, &ac->private) < 0)
             goto error_out;
-    } else  if (name == ARMAS_AC_WORKERS || *name == 'W') {
+    } else  if (name == ARMAS_AC_WORKERS || toupper(*name) == 'W') {
         if (armas_ac_workers_init(&ac->vptr, &ac->private) < 0)
+            goto error_out;
+    } else  if (name == ARMAS_AC_TRANSIENT || toupper(*name) == 'T') {
+        if (armas_ac_transient_init(&ac->vptr, &ac->private) < 0)
             goto error_out;
     }
     *handle = ac;
     return 0;
     // open dynamic library and call init
 error_out:
+    free(ac);
     *handle = (struct armas_accel *)0;
     return -1;
 }
