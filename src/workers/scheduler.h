@@ -13,32 +13,76 @@
 #include <sched.h>
 #include <pthread.h>
 
-#include "sync.h"
+// #include "sync.h"
 
-struct armas_counter;
+struct armas_ac_counter;
+struct armas_ac_scheduler;
 
-struct armas_task {
-    struct armas_task *next;
+struct armas_ac_task {
     unsigned int id;  // task id
     unsigned int wid; // running worker id
     unsigned int wcnt;
-    struct armas_counter *ready;
     void *(*func)(void *);
     void *args;
+    struct armas_ac_counter *ready;
 };
 
 static inline
-void armas_task_init(struct armas_task *task, unsigned int id,
-                     void *(*func)(void *), void *args, struct armas_counter *ready)
+void armas_task_init(struct armas_ac_task *task, unsigned int id,
+                     void *(*func)(void *), void *args, struct armas_ac_counter *ready)
 {
     task->id = id;
     task->wid = 0;
     task->func = func;
     task->args = args;
     task->ready = ready;
-    task->next = (struct armas_task *)0;
 }
 
+struct armas_ac_scheduler_ops {
+    int (*start)(struct armas_ac_scheduler *sc);
+    int (*stop)(struct armas_ac_scheduler *sc);
+    int (*release)(struct armas_ac_scheduler *sc);
+    int (*schedule)(struct armas_ac_scheduler *sc, void *task);
+};
+
+struct armas_ac_scheduler {
+    struct armas_ac_scheduler_ops *vptr;
+};
+
+static inline
+int armas_sched_start(struct armas_ac_scheduler *sc)
+{
+    if (!sc || !sc->vptr->start)
+        return -1;
+    return (sc->vptr->start)(sc);
+}
+
+static inline
+int armas_sched_stop(struct armas_ac_scheduler *sc)
+{
+    if (!sc || !sc->vptr->stop)
+        return -1;
+    return (sc->vptr->stop)(sc);
+}
+
+static inline
+void armas_sched_release(struct armas_ac_scheduler *sc)
+{
+    if (!sc || !sc->vptr->release)
+        return;
+    (sc->vptr->start)(sc);
+}
+
+static inline
+int armas_sched_schedule(struct armas_ac_scheduler *sc, void *task)
+{
+    if (!sc || !sc->vptr->schedule)
+        return -1;
+    return (sc->vptr->schedule)(sc, task);
+}
+
+
+#if 0
 struct armas_taskq {
     struct armas_task **elems;
     unsigned int size;
@@ -178,18 +222,18 @@ void taskq_write(struct armas_taskq *ch, struct armas_task *v)
 
 struct armas_scheduler;
 
-typedef struct armas_worker {
+typedef struct armas_ac_worker {
     unsigned int id;
     int cpuid;
     int running;
-    struct armas_taskq inqueue;
+    struct armas_ac_taskq inqueue;
     pthread_t tid;
     int nsched;
     int nexec;
     size_t cmem;
     size_t l1mem;
-    struct armas_scheduler *sched;
-} armas_worker_t;
+    struct armas_ac_scheduler *sched;
+} armas_ac_worker_t;
 
 typedef struct armas_scheduler {
     struct armas_worker *workers;
@@ -211,5 +255,6 @@ extern void armas_sched_schedule(armas_scheduler_t *S, struct armas_task *T);
 extern void armas_schedule(struct armas_task*T);
 extern struct armas_scheduler *armas_sched_default(void);
 extern int armas_nth_cpu(cpu_set_t *cpus, int n);
+#endif
 
 #endif  /* ARMAS_SCHEDULER_H */

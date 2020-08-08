@@ -1,15 +1,17 @@
 
-// Copyright (c) Harri Rautila, 2012-2014
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
-#if HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-// this is only if thread support requested
+/*
+ *  Here is implementation of a scheduler with static, persistent worker threads.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,12 +24,44 @@
 #include <pthread.h>
 
 #include "armas.h"
+#include "queue.h"
+#include "counter.h"
 #include "scheduler.h"
 #include "workers.h"
 
+
+#define cmpxchg(P, O, N) __sync_val_compare_and_swap((P), (O), (N))
+// atomically decrement/increment value at memory location P and return new value
+#define atomic_dec(P) __sync_sub_and_fetch((P), 1)
+
+typedef struct armas_ac_worker {
+    struct armas_ac_scheduler *sched;
+    struct armas_ac_queue inqueue;
+    unsigned int id;
+    int cpuid;
+    int running;
+    pthread_t tid;
+    int nsched;
+    int nexec;
+    size_t cmem;
+    size_t l1mem;
+} armas_ac_worker_t;
+
+typedef struct armas_ac_sched_workers {
+    struct armas_ac_scheduler sched;
+    struct armas_ac_worker *workers;
+    cpu_set_t cpus;
+    pthread_t tid;
+    unsigned int options;
+    unsigned int nworker;
+    unsigned int rrindex;
+    unsigned int status;
+    unsigned int nsched;
+} armas_scheduler_t;
+
 static inline
 void worker_init(
-    armas_worker_t *W, unsigned long id, int sz, struct armas_scheduler *s)
+    armas_ac_worker_t *W, unsigned long id, unsigned int sz, struct armas_ac_sched_workers *sched)
 {
     W->id = id;
     W->cpuid = -1;
@@ -36,7 +70,7 @@ void worker_init(
     W->tid = 0;
     W->nsched = 0;
     W->nexec = 0;
-    W->sched = s;
+    W->sched = (struct armas_ac_scheduler *)sched;
     W->cmem = 0;
     W->l1mem = 0;
 }
@@ -44,14 +78,14 @@ void worker_init(
 static
 void *worker_thread(void *arg)
 {
-    armas_worker_t *W = (armas_worker_t *)arg;
-    struct armas_task *T;
+    armas_ac_worker_t *W = (armas_ac_worker_t *)arg;
+    struct armas_ac_task *T;
 
     armas_cbuf_create_thread_global();
 
     W->running = 1;
     while (W->running) {
-        taskq_read(&W->inqueue, &T);
+        taskq_read(&W->inqueue, (void **)&T);
         if (!T) {
             continue;
         }
@@ -64,12 +98,8 @@ void *worker_thread(void *arg)
             // run task
             (T->func)(T->args);
             W->nexec++;
-            if (T->next) {
-                armas_sched_schedule(W->sched, T->next);
-                T->next = 0;
-            }
-            // increment ready task counter
-            armas_counter_inc(T->ready);
+            // decrement task counter
+            armas_counter_decrement(T->ready);
         } else {
             // was already reserved, decrement and forget it
             atomic_dec(&T->wcnt);
@@ -80,7 +110,7 @@ void *worker_thread(void *arg)
 }
 
 static
-void worker_start(armas_worker_t *W)
+void worker_start(struct armas_ac_worker *W)
 {
     cpu_set_t cpuset;
     pthread_create(&W->tid, NULL, worker_thread, W);
@@ -121,68 +151,51 @@ int armas_nth_cpu(cpu_set_t *cpus, int n)
     return k == CPU_SETSIZE ? -1 : k;
 }
 
-int armas_sched_conf(armas_scheduler_t *sched, int qlen)
+static
+int sched_workers_start(struct armas_ac_scheduler *sc)
 {
-    int i, last_cpu;
-    struct armas_ac_env *env = armas_ac_getenv();
-
-    sched->workers = calloc(env->max_cores, sizeof(struct armas_worker));
-    if (!sched->workers)
-        return -ARMAS_EMEMORY;
-
-    sched->nworker = env->max_cores;
-    sched->options = env->options;
-    last_cpu = -1;
-
-    for (i = 0; i < sched->nworker; i++) {
-        worker_init(&sched->workers[i], i+1, qlen, sched);
-        // pick up next cpu from list available cpus
-        last_cpu = next_cpu_in_set(&sched->cpus, last_cpu);
-        sched->workers[i].cpuid = last_cpu;
-    }
-    sched->nsched = 0;
-    return 0;
-}
-
-void armas_sched_start(armas_scheduler_t *sched)
-{
-    int i;
-    for (i = 0; i < sched->nworker; i++) {
+    struct armas_ac_sched_workers *sched = (struct armas_ac_sched_workers *)sc;
+    for (int i = 0; i < sched->nworker; i++) {
         worker_start(&sched->workers[i]);
     }
     sched->status = 1;
+    return 0;
 }
 
-void armas_sched_stop(armas_scheduler_t *sched)
+static
+int sched_workers_stop(struct armas_ac_scheduler *sc)
 {
-    int i;
-    for (i = 0; i < sched->nworker; i++) {
+    struct armas_ac_sched_workers *sched = (struct armas_ac_sched_workers *)sc;
+    for (int i = 0; i < sched->nworker; i++) {
         sched->workers[i].running = 0;
         taskq_write(&sched->workers[i].inqueue, NULL);
     }
-    for (i = 0; i < sched->nworker; i++) {
+    for (int i = 0; i < sched->nworker; i++) {
         pthread_join(sched->workers[i].tid, (void **)0);
     }
     sched->status = 0;
+    return 0;
 }
 
-void armas_sched_release(struct armas_scheduler *sched)
+static
+int sched_workers_release(struct armas_ac_scheduler *sc)
 {
+    struct armas_ac_sched_workers *sched = (struct armas_ac_sched_workers *)sc;
     if (!sched || sched->status)
-        return;
-    if (sched->workers) {
-        free(sched->workers);
-        sched->workers = (struct armas_worker *)0;
-    }
-    return;
+        return -1;
+    free(sched);
+    return 0;
 }
 
-void armas_sched_schedule(armas_scheduler_t *sched, struct armas_task *task)
+static
+int sched_workers_schedule(struct armas_ac_scheduler *sc, void *t)
 {
-    int k, j;
+    unsigned int k, j;
+    struct armas_ac_sched_workers *sched = (struct armas_ac_sched_workers *)sc;
+    struct armas_ac_task *task = (struct armas_ac_task *)t;
 
     if (!sched->status) {
-        armas_sched_start(sched);
+        armas_sched_start(sc);
     }
 
     // scheduling ARMAS_SCHED_WORKERS, write directly to worker queues.
@@ -190,7 +203,7 @@ void armas_sched_schedule(armas_scheduler_t *sched, struct armas_task *task)
     if (sched->nworker == 1) {
         task->wcnt = 1;
         taskq_write(&sched->workers[0].inqueue, task);
-        return;
+        return 0;
     }
 
     if (sched->options & ARMAS_OSCHED_TWO) {
@@ -198,7 +211,7 @@ void armas_sched_schedule(armas_scheduler_t *sched, struct armas_task *task)
         if (sched->nworker == 2) {
             taskq_write(&sched->workers[0].inqueue, task);
             taskq_write(&sched->workers[1].inqueue, task);
-            return;
+            return 0;
         }
         if ((sched->options & ARMAS_OSCHED_ROUNDROBIN) != 0) {
             k = sched->rrindex;
@@ -211,7 +224,7 @@ void armas_sched_schedule(armas_scheduler_t *sched, struct armas_task *task)
         }
         taskq_write(&sched->workers[k].inqueue, task);
         taskq_write(&sched->workers[j].inqueue, task);
-        return;
+        return 0;
     }
 
     task->wcnt = 1;
@@ -222,10 +235,44 @@ void armas_sched_schedule(armas_scheduler_t *sched, struct armas_task *task)
         k = lrand48() % sched->nworker;
     }
     taskq_write(&sched->workers[k].inqueue, task);
+    return 0;
 }
-#if 0
-void armas_schedule(struct armas_task *task)
+
+static struct armas_ac_scheduler_ops ops = {
+    .start =  sched_workers_start,
+    .stop = sched_workers_stop,
+    .release = sched_workers_release,
+    .schedule = sched_workers_schedule
+};
+
+int armas_ac_sched_workers_init(struct armas_ac_scheduler **scheduler, int qlen)
 {
-    armas_sched_schedule(armas_sched_default(), task);
+    int last_cpu;
+    unsigned char *buf;
+    struct armas_ac_env *env = armas_ac_getenv();
+
+    size_t nbytes = sizeof(struct armas_ac_sched_workers) +
+         env->max_cores * sizeof(struct armas_ac_worker);
+
+    struct armas_ac_sched_workers *sc = calloc(1, nbytes);
+    if (!sc)
+        return -ARMAS_EMEMORY;
+
+    buf = (unsigned char *)sc;
+    sc->workers = (struct armas_ac_worker *)&buf[sizeof(struct armas_ac_sched_workers)];
+    sc->nworker = env->max_cores;
+    sc->options = env->options;
+    last_cpu = -1;
+
+    for (int i = 0; i < sc->nworker; i++) {
+        worker_init(&sc->workers[i], i+1, qlen, sc);
+        // pick up next cpu from list available cpus
+        last_cpu = next_cpu_in_set(&sc->cpus, last_cpu);
+        sc->workers[i].cpuid = last_cpu;
+    }
+    sc->nsched = 0;
+
+    sc->sched.vptr = &ops;
+    *scheduler = (struct armas_ac_scheduler *)sc;
+    return 0;
 }
-#endif

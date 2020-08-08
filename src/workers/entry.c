@@ -63,7 +63,7 @@ int armas_ac_workers_release(void *private)
     struct armas_ac_workers *config = (struct armas_ac_workers *)private;
     if (!config)
         return 0;
-    armas_sched_stop(&config->sched);
+    armas_sched_stop(config->sched);
     return 0;
 }
 
@@ -89,7 +89,7 @@ int armas_ac_workers_init(struct armas_ac_vtable **vptr, void **private)
     if (!config)
         return -ARMAS_EMEMORY;
 
-    int rc = armas_sched_conf(&config->sched, DEFAULT_QLEN);
+    int rc = armas_ac_sched_workers_init(&config->sched, DEFAULT_QLEN);
     if (rc < 0) {
         free(config);
         return rc;
@@ -99,3 +99,7 @@ int armas_ac_workers_init(struct armas_ac_vtable **vptr, void **private)
     return 0;
 }
 
+int armas_ac_transient_init(struct armas_ac_vtable **vptr, void **private)
+{
+    return -ARMAS_EIMP;
+}
