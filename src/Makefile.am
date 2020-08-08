@@ -96,7 +96,7 @@ ACCEL += \
 	threaded/trmm.c \
 	threaded/trsm.c \
 	workers/entry.c \
-	workers/scheduler.c \
+	workers/workers.c \
 	workers/gemm.c
 endif
 
