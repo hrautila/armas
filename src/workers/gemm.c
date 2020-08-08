@@ -33,6 +33,7 @@
 #include "internal.h"
 #include "accel.h"
 #include "scheduler.h"
+#include "counter.h"
 #include "workers.h"
 //! \endcond
 
@@ -115,7 +116,7 @@ void schedule_blocks(
     struct armas_ac_blas3 *args,
     struct armas_ac_worker_task *tasks,
     int ntask,
-    struct armas_counter *ready,
+    struct armas_ac_counter *ready,
     struct armas_ac_workers *wcf)
 {
     struct armas_ac_block *blkargs;
@@ -132,7 +133,7 @@ void schedule_blocks(
         blkargs->is_last = k + 1 == ntask;
 
         armas_task_init(&tasks[k].task, k, compute_block, blkargs, ready);
-        armas_sched_schedule(&wcf->sched, &tasks[k].task);
+        armas_sched_schedule(wcf->sched, &tasks[k]);
     }
 }
 
@@ -143,7 +144,7 @@ void schedule_tiles(
     int ntask,
     int rtiles,
     int ctiles,
-    struct armas_counter *ready,
+    struct armas_ac_counter *ready,
     struct armas_ac_workers *wcf)
 {
     int k, j, i, cstart, ccount, rstart, rcount;
@@ -170,7 +171,7 @@ void schedule_tiles(
             blkargs->block_index = k;
             blkargs->is_last = k + 1 == ntask;
             armas_task_init(&tasks[k].task, k, compute_block, blkargs, ready);
-            armas_sched_schedule(&wcf->sched, &tasks[k].task);
+            armas_sched_schedule(wcf->sched, &tasks[k]);
             k++;
         }
     }
@@ -184,7 +185,7 @@ int armas_ac_workers_mult(
     int rN, cN;
     size_t ntask;
     struct armas_ac_worker_task *tasks;
-    struct armas_counter ready;
+    struct armas_ac_counter ready;
     struct armas_ac_env *env = armas_ac_getenv();
 
     if (env->options & ARMAS_OBLAS_TILED) {
@@ -201,8 +202,7 @@ int armas_ac_workers_mult(
     if (ntask == 0)
         return -ARMAS_EIMP;
 
-    tasks = (struct armas_ac_worker_task *)
-        calloc(ntask, sizeof(struct armas_ac_worker_task));
+    tasks = (struct armas_ac_worker_task *)calloc(ntask, sizeof(struct armas_ac_worker_task));
     if (!tasks) {
         cf->error = ARMAS_EMEMORY;
         return -ARMAS_EMEMORY;
