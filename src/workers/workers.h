@@ -17,16 +17,13 @@ struct armas_ac_worker_task {
     struct armas_ac_block args;
 };
 
-struct armas_ac_workers {
-    struct armas_ac_scheduler *sched;
-};
-
-extern int armas_ac_workers_mult(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_ac_workers *wcf);
-extern int armas_ac_workers_mult_sym(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_ac_workers *wcf);
-extern int armas_ac_workers_mult_trm(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_ac_workers *wcf);
-extern int armas_ac_workers_solve_trm(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_ac_workers *wcf);
+extern int armas_ac_workers_mult(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_ac_scheduler *scheduler);
+extern int armas_ac_workers_mult_sym(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_ac_scheduler *scheduler);
+extern int armas_ac_workers_mult_trm(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_ac_scheduler *scheduler);
+extern int armas_ac_workers_solve_trm(struct armas_ac_blas3 *args, armas_conf_t *cf, struct armas_ac_scheduler *scheduler);
 
 extern int armas_ac_sched_workers_init(struct armas_ac_scheduler **scheduler, int qlen);
+extern int armas_ac_sched_transient_init(struct armas_ac_scheduler **scheduler, int qlen);
 
 // extern void armas_ac_workers_env(struct armas_workers_env *env);
 
