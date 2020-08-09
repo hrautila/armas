@@ -117,7 +117,7 @@ void schedule_blocks(
     struct armas_ac_worker_task *tasks,
     int ntask,
     struct armas_ac_counter *ready,
-    struct armas_ac_workers *wcf)
+    struct armas_ac_scheduler *scheduler)
 {
     struct armas_ac_block *blkargs;
     int colwise = args->C->cols > args->C->rows;
@@ -133,7 +133,7 @@ void schedule_blocks(
         blkargs->is_last = k + 1 == ntask;
 
         armas_task_init(&tasks[k].task, k, compute_block, blkargs, ready);
-        armas_sched_schedule(wcf->sched, &tasks[k]);
+        armas_sched_schedule(scheduler, &tasks[k]);
     }
 }
 
@@ -145,7 +145,7 @@ void schedule_tiles(
     int rtiles,
     int ctiles,
     struct armas_ac_counter *ready,
-    struct armas_ac_workers *wcf)
+    struct armas_ac_scheduler *scheduler)
 {
     int k, j, i, cstart, ccount, rstart, rcount;
     struct armas_ac_block *blkargs;
@@ -171,7 +171,7 @@ void schedule_tiles(
             blkargs->block_index = k;
             blkargs->is_last = k + 1 == ntask;
             armas_task_init(&tasks[k].task, k, compute_block, blkargs, ready);
-            armas_sched_schedule(wcf->sched, &tasks[k]);
+            armas_sched_schedule(scheduler, &tasks[k]);
             k++;
         }
     }
@@ -180,7 +180,7 @@ void schedule_tiles(
 int armas_ac_workers_mult(
     struct armas_ac_blas3 *args,
     armas_conf_t *cf,
-    struct armas_ac_workers *wcf)
+    struct armas_ac_scheduler *scheduler)
 {
     int rN, cN;
     size_t ntask;
@@ -210,9 +210,9 @@ int armas_ac_workers_mult(
     armas_counter_init(&ready, ntask);
 
     if (env->options & ARMAS_OBLAS_TILED) {
-        schedule_tiles(args, tasks, ntask, rN, cN, &ready, wcf);
+        schedule_tiles(args, tasks, ntask, rN, cN, &ready, scheduler);
     } else {
-        schedule_blocks(args, tasks, ntask, &ready, wcf);
+        schedule_blocks(args, tasks, ntask, &ready, scheduler);
     }
 
     // wait for tasks to finish
