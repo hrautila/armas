@@ -24,8 +24,7 @@ const char *ARMAS_AC_WORKERS = "WORKERS";
 const char *ARMAS_AC_TRANSIENT = "TRANSIENT";
 
 extern int armas_ac_threaded_init(struct armas_ac_vtable **vptr, void **private);
-extern int armas_ac_workers_init(struct armas_ac_vtable **vptr, void **private);
-extern int armas_ac_transient_init(struct armas_ac_vtable **vptr, void **private);
+extern int armas_ac_workers_init(struct armas_ac_vtable **vptr, void **private, int transient);
 
 /**
  * @brief Initialize defined accelerator.
@@ -39,30 +38,36 @@ extern int armas_ac_transient_init(struct armas_ac_vtable **vptr, void **private
 int armas_ac_init(armas_ac_handle_t *handle, const char *name)
 {
     if (!name)
-        return -1;
+        return -ARMAS_EINVAL;
 
     struct armas_accel *ac = calloc(1, sizeof(struct armas_accel));
     if (!ac)
         return -ARMAS_EMEMORY;
 
+    int rc = 0;
     ac->handle = (void *)0;
     if (name == ARMAS_AC_SIMPLE || toupper(*name) == 'S') {
-        if (armas_ac_threaded_init(&ac->vptr, &ac->private) < 0)
+        rc = armas_ac_threaded_init(&ac->vptr, &ac->private);
+        if (rc < 0)
             goto error_out;
-    } else  if (name == ARMAS_AC_WORKERS || toupper(*name) == 'W') {
-        if (armas_ac_workers_init(&ac->vptr, &ac->private) < 0)
+    } else if (name == ARMAS_AC_WORKERS || toupper(*name) == 'W' ||
+               name == ARMAS_AC_TRANSIENT || toupper(*name) == 'T') {
+        int transient = name == ARMAS_AC_TRANSIENT || toupper(*name) == 'T';
+        rc = armas_ac_workers_init(&ac->vptr, &ac->private, transient);
+        if (rc < 0)
             goto error_out;
-    } else  if (name == ARMAS_AC_TRANSIENT || toupper(*name) == 'T') {
-        if (armas_ac_transient_init(&ac->vptr, &ac->private) < 0)
-            goto error_out;
+    } else {
+        // open dynamic library and call init
+        rc = -ARMAS_EIMP;
+        goto error_out;
     }
     *handle = ac;
     return 0;
-    // open dynamic library and call init
+
 error_out:
     free(ac);
     *handle = (struct armas_accel *)0;
-    return -1;
+    return rc;
 }
 
 /**
