@@ -19,9 +19,11 @@ struct armas_ac_queue {
 typedef struct armas_ac_queue armas_ac_queue_t;
 
 static inline
-void taskq_init(struct armas_ac_queue *ch, unsigned int qlen)
+int taskq_init(struct armas_ac_queue *ch, unsigned int qlen)
 {
     ch->items = malloc(qlen * sizeof(void *));
+    if (!ch->items)
+        return -1;
     ch->size = qlen;
     ch->count = 0;
     ch->head = 0;
@@ -29,6 +31,7 @@ void taskq_init(struct armas_ac_queue *ch, unsigned int qlen)
     pthread_mutex_init(&ch->mlock, NULL);
     pthread_cond_init(&ch->empty, NULL);
     pthread_cond_init(&ch->full, NULL);
+    return 0;
 }
 
 static inline
@@ -206,6 +209,7 @@ int taskq_wait_onfull(struct armas_ac_queue *ch, unsigned int usec)
     return rc;
 }
 
+static inline
 void taskq_wait_while_full(struct armas_ac_queue *ch)
 {
     pthread_mutex_lock(&ch->mlock);
