@@ -15,12 +15,18 @@
 # Autotools files
 aclocal.m4
 autom4te.cache
+compile
 config.guess
+config.h.in
 config.sub
 configure
 depcomp
+install-sh
 ltmain.sh
-*.in
+m4
+Makefile.in
+missing
+test-driver
 
 # build tree
 build*
