@@ -182,7 +182,7 @@ int armas_ac_workers_mult(
     armas_conf_t *cf,
     struct armas_ac_scheduler *scheduler)
 {
-    int rN, cN;
+    int rN = 0, cN = 0;
     size_t ntask;
     struct armas_ac_worker_task *tasks;
     struct armas_ac_counter ready;
