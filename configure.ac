@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-
+#
 AC_PREREQ([2.69])
-AC_INIT([Another Rewrite of Matrix Algebra Subroutines], [0.8], [],
-	[armas], [https://github.com/hrautila/armas])
+AC_INIT([Another Rewrite of Matrix Algebra Subroutines], [m4_esyscmd(./package-version.sh)],
+   [harri.rautila@gmail.com], [armas], [https://github.com/hrautila/armas])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -11,7 +11,7 @@ AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
 
 # shared library version number
-AC_SUBST(SOVERSION, [0:0:0])
+AC_SUBST(SOVERSION, [m4_esyscmd(./abi-version.sh -libtool)])
 
 ## option --enable-plugins
 AC_ARG_ENABLE(accelerators,
@@ -70,16 +70,32 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([gettimeofday sqrt])
 
 AS_IF([test "$enable_ext_precision" = "yes"],
-  AC_DEFINE([CONFIG_EXT_PRECISION], [1], [Enable extended precision]), [])
+  [AC_DEFINE([CONFIG_EXT_PRECISION], [1], [Enable extended precision]),
+   AC_DEFINE([CONFIG_OPT_PRECISION],["--enable-ext-precision"], [Config option enable extended precision])], [])
 
 AS_IF([test "$enable_accelerators" = "yes"],
-  AC_DEFINE([CONFIG_ACCELERATORS], [1], [Enable accelerators]), [])
+  [AC_DEFINE([CONFIG_ACCELERATORS], [1], [Enable accelerators]),
+   AC_DEFINE([CONFIG_OPT_ACCELERATOR],["--enable-accelerators"], [Config option enable accelerators])], [])
 
 AS_IF([test "$enable_compat" = "yes"],
-  AC_DEFINE([CONFIG_COMPAT], [1], [Enable compability]), [])
+  [AC_DEFINE([CONFIG_COMPAT], [1], [Enable compability]),
+   AC_DEFINE([CONFIG_OPT_COMPAT],["--enable-compat"], [Config option enable compability functions])], [])
 
 AS_IF([test "$enable_sparse" = "yes"],
-  AC_DEFINE([CONFIG_SPARSE], [1], [Enable sparse methods]), [])
+  [AC_DEFINE([CONFIG_SPARSE], [1], [Enable sparse methods]),
+   AC_DEFINE([CONFIG_OPT_SPARSE],["--enable-sparse"], [Config option enable sparse methods])] , [])
+
+AS_IF([test "$enable_float64" = "yes"],
+  [AC_DEFINE([CONFIG_OPT_FLOAT64], ["--enable-float64"], [Config option enable float64])], [])
+
+AS_IF([test "$enable_float32" = "yes"],
+  [AC_DEFINE([CONFIG_OPT_FLOAT32], ["--enable-float32"], [Config option enable float32])], [])
+
+AS_IF([test "$enable_complex64" = "yes"],
+  [AC_DEFINE([CONFIG_OPT_COMPLEX64], ["--enable-complex64"], [Config option enable complex64])], [])
+
+AS_IF([test "$enable_complex128" = "yes"],
+  [AC_DEFINE([CONFIG_OPT_COMPLEX128], ["--enable-complex128"], [Config option enable complex128])], [])
 
 AM_CONDITIONAL([CONFIG_ACCELERATORS], [test "$enable_accelerators" = "yes"])
 AM_CONDITIONAL([CONFIG_EXT_PRECISION], [test "$enable_ext_precision" = "yes"])
@@ -104,7 +120,7 @@ AC_MSG_NOTICE([CONFIG_SPARSE = $enable_sparse])
 
 AC_CONFIG_FILES([
    Makefile
-	src/Makefile
+   src/Makefile
    tests/Makefile
    tests/blas/Makefile
    tests/eblas/Makefile
