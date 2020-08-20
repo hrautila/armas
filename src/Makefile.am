@@ -14,6 +14,7 @@ AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall $(USE_PTHRE
 COMMON = \
 	base/armas.c \
 	base/cache.c \
+	base/version.c \
 	base/env.c \
 	base/system.c \
 	base/pivot.c \
