@@ -35,6 +35,13 @@
 extern "C" {
 #endif
 
+/*
+ * Libtool version numbering
+ */
+#define ARMAS_ABI_CURRENT 1
+#define ARMAS_ABI_REVISION 0
+#define ARMAS_ABI_AGE 0
+
 /**
  * @brief Operarand flag bits
  */
@@ -242,7 +249,9 @@ typedef struct armas_conf {
 // use default configuration block
 #define ARMAS_CDFLT (armas_conf_t *)0;
 
-
+extern const char *armas_version();
+extern const char *armas_name();
+extern const char **armas_config_options();
 extern armas_conf_t *armas_conf_default();
 extern int armas_last_error();
 extern void armas_init(void);
