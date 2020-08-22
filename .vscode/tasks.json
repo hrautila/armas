@@ -1,0 +1,64 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "debug build library",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/build; make CFLAGS='-g -O0 -DARMAS_WITH_CHECKS=1'",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build library",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/build; make CFLAGS='-O3 -march=native'",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "run checks",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/build; make CFLAGS='-g -O1 -DARMAS_WITH_CHECKS=1' check",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "test"
+        },
+        {
+            "label": "make clean",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/build; make clean",
+            "group": "build"
+        },
+        {
+            "label": "build a programm",
+            "type": "shell",
+            "command": "cd ${workspaceRoot}/build; cd ${input:directory}; make CFLAGS='-g -O0 -DARMAS_WITH_CHECKS=1' ${input:target}",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "target",
+            "type": "promptString",
+            "description": "make target"
+        },
+        {
+            "id": "directory",
+            "type": "promptString",
+            "default": "${relativeFileDirname}",
+            "description": "Directory under build tree"
+        }
+    ]
+}

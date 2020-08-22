@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
 // This file is part of github.com/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -9,22 +9,23 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__posvf) || defined(__cblas_posv)
-#define __ARMAS_PROVIDES 1
+#if defined(lapack_posvf) || defined(lapacke_posv)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_cholfactor) && defined(armas_x_cholsolve)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__posvf)
-void __posvf(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *ldb,int *info)
+#if defined(lapack_posvf)
+void lapack_posvf(char *uplo, int *n, int *nrhs, DTYPE * A, int *lda, DTYPE * B,
+                  int *ldb, int *info)
 {
     armas_x_dense_t a, b;
     armas_conf_t conf = *armas_conf_default();
@@ -40,8 +41,9 @@ void __posvf(char *uplo, int *n, int *nrhs, DTYPE *A, int *lda, DTYPE *B, int *l
 }
 #endif
 
-#if defined(__cblas_posv)
-int __cblas_posv(int order, int uplo, int n, DTYPE *A, int lda, DTYPE *B, int ldb)
+#if defined(lapacke_posv)
+int lapacke_posv(int order, int uplo, int n, DTYPE * A, int lda, DTYPE * B,
+                 int ldb)
 {
     armas_x_dense_t Aa, Ba;
     armas_conf_t conf = *armas_conf_default();
@@ -61,10 +63,4 @@ int __cblas_posv(int order, int uplo, int n, DTYPE *A, int lda, DTYPE *B, int ld
 }
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -14,20 +14,20 @@
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_mult_diag) && defined(armas_x_solve_diag)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_scale)  && defined(armas_x_invscale)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
 //! \cond
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 #include "internal_lapack.h"
 //! \endcond
 
@@ -43,7 +43,8 @@
  * @param conf
  *      Optional blocking configuration
  */
-int armas_x_mult_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D, int flags, armas_conf_t *conf)
+int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
+                      const armas_x_dense_t * D, int flags, armas_conf_t * conf)
 {
     armas_x_dense_t c, d0;
     const armas_x_dense_t *d;
@@ -51,9 +52,9 @@ int armas_x_mult_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D,
 
     if (!conf)
         conf = armas_conf_default();
-    
+
     d = D;
-    if (! armas_x_isvector(D)) {
+    if (!armas_x_isvector(D)) {
         armas_x_diag(&d0, D, 0);
         d = &d0;
     }
@@ -63,23 +64,28 @@ int armas_x_mult_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D,
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         for (k = 0; k < armas_x_size(d); k++) {
-            DTYPE aval = armas_x_get_at_unsafe(A, k)*armas_x_get_at_unsafe(d, k);
-            armas_x_set_at_unsafe(A, k, alpha*aval);
+            DTYPE aval =
+                armas_x_get_at_unsafe(A, k) * armas_x_get_at_unsafe(d, k);
+            armas_x_set_at_unsafe(A, k, alpha * aval);
         }
         return 0;
     }
 
-    switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
+    switch (flags & (ARMAS_LEFT | ARMAS_RIGHT)) {
     case ARMAS_RIGHT:
         if (armas_x_size(d) != A->cols) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         // scale columns; 
         for (k = 0; k < armas_x_size(d); k++) {
             armas_x_column(&c, A, k);
-            armas_x_scale(&c, alpha*armas_x_get_at_unsafe(d, k), conf);
+            armas_x_scale(&c, alpha * armas_x_get_at_unsafe(d, k), conf);
         }
         break;
     case ARMAS_LEFT:
@@ -88,10 +94,12 @@ int armas_x_mult_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D,
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         // scale rows; for each column element-wise multiply of D element
         for (k = 0; k < armas_x_size(d); k++) {
             armas_x_row(&c, A, k);
-            armas_x_scale(&c, alpha*armas_x_get_at_unsafe(d, k), conf);
+            armas_x_scale(&c, alpha * armas_x_get_at_unsafe(d, k), conf);
         }
         break;
     }
@@ -110,7 +118,9 @@ int armas_x_mult_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D,
  * @param conf
  *      Optional blocking configuration
  */
-int armas_x_solve_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D, int flags, armas_conf_t *conf)
+int armas_x_solve_diag(armas_x_dense_t * A, DTYPE alpha,
+                       const armas_x_dense_t * D, int flags,
+                       armas_conf_t * conf)
 {
     armas_x_dense_t c, d0;
     const armas_x_dense_t *d;
@@ -118,9 +128,9 @@ int armas_x_solve_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D
 
     if (!conf)
         conf = armas_conf_default();
-    
+
     d = D;
-    if (! armas_x_isvector(D)) {
+    if (!armas_x_isvector(D)) {
         armas_x_diag(&d0, D, 0);
         d = &d0;
     }
@@ -130,23 +140,29 @@ int armas_x_solve_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         for (k = 0; k < armas_x_size(d); k++) {
-            DTYPE aval = armas_x_get_at_unsafe(A, k)/armas_x_get_at_unsafe(d, k);
-            armas_x_set_at_unsafe(A, k, alpha*aval);
+            DTYPE aval =
+                armas_x_get_at_unsafe(A, k) / armas_x_get_at_unsafe(d, k);
+            armas_x_set_at_unsafe(A, k, alpha * aval);
         }
         return 0;
     }
 
-    switch (flags & (ARMAS_LEFT|ARMAS_RIGHT)) {
+    switch (flags & (ARMAS_LEFT | ARMAS_RIGHT)) {
     case ARMAS_RIGHT:
         if (armas_x_size(d) != A->cols) {
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         // scale columns; 
         for (k = 0; k < armas_x_size(d); k++) {
+            DTYPE aval = alpha * armas_x_get_at_unsafe(d, k);
             armas_x_column(&c, A, k);
-            armas_x_invscale(&c, alpha*armas_x_get_at_unsafe(d, k), conf);
+            armas_x_scale(&c, ONE/aval, conf);
         }
         break;
     case ARMAS_LEFT:
@@ -155,20 +171,18 @@ int armas_x_solve_diag(armas_x_dense_t *A, DTYPE alpha, const armas_x_dense_t *D
             conf->error = ARMAS_ESIZE;
             return -1;
         }
+        if (armas_x_size(A) == 0)
+            return 0;
         // scale rows; for each column element-wise multiply of D element
         for (k = 0; k < armas_x_size(d); k++) {
+            DTYPE aval = alpha * armas_x_get_at_unsafe(d, k);
             armas_x_row(&c, A, k);
-            armas_x_invscale(&c, alpha*armas_x_get_at_unsafe(d, k), conf);
+            armas_x_scale(&c, ONE/aval, conf);
         }
         break;
     }
     return 0;
 }
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
-
+#else
+#warning "Missing defines. No code!"
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

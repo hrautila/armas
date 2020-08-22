@@ -1,31 +1,32 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "compat.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__symmf) || defined(__cblas_symm)
-#define __ARMAS_PROVIDES 1
+#if defined(blas_symmf) || defined(cblas_symm)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_mult_sym)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__symmf)
-void __symmf(char *side, char *uplo, int *m, int *n, DTYPE *alpha, DTYPE *A,
-             int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
+#if defined(blas_symmf)
+void blas_symmf(char *side, char *uplo, int *m, int *n, DTYPE * alpha,
+                DTYPE * A, int *lda, DTYPE * B, int *ldb, DTYPE * beta,
+                DTYPE * C, int *ldc)
 {
     armas_conf_t *conf = armas_conf_default();
     armas_x_dense_t c, a, b;
@@ -51,11 +52,11 @@ void __symmf(char *side, char *uplo, int *m, int *n, DTYPE *alpha, DTYPE *A,
 }
 #endif
 
-#if defined(__cblas_symm)
-void __cblas_symm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,  
-                  const enum CBLAS_UPLO  uplo, int M, int N,
-                  DTYPE alpha, DTYPE *A, int lda, DTYPE *B,  int ldb,
-                  DTYPE beta, DTYPE *C, int ldc)
+#if defined(cblas_symm)
+void cblas_symm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
+                const enum CBLAS_UPLO uplo, int M, int N,
+                DTYPE alpha, DTYPE * A, int lda, DTYPE * B, int ldb,
+                DTYPE beta, DTYPE * C, int ldc)
 {
     armas_conf_t conf = *armas_conf_default();
     armas_x_dense_t Ca, Aa, Ba;
@@ -90,13 +91,6 @@ void __cblas_symm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
     }
     armas_x_mult_sym(beta, &Ca, alpha, &Aa, &Ba, flags, &conf);
 }
-
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

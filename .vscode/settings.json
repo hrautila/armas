@@ -1,0 +1,24 @@
+{
+    "c-cpp-flylint.includePaths": [
+        ".",
+        "${workspaceFolder}/src/include",
+        "${workspaceFolder}",
+        "${workspaceFolder}/tests"
+    ],
+    "C_Cpp.default.includePath": [
+        ".",
+        "${workspaceFolder}/src/include",
+        "${workspaceFolder}",
+        "${workspaceFolder}/tests"
+    ],
+    "C_Cpp.clang_format_style":
+        "{ BasedOnStyle: Google, UseTab: Never, TabWidth: 4, IndentCaseLabels: false, IndentWidth: 4, ColumnLimit: 0, BreakBeforeBraces: Linux}",
+    "C_Cpp.clang_format_fallbackStyle":
+        "{ BasedOnStyle: Google, UseTab: Never, TabWidth: 4, IndentCaseLabels: false, IndentWidth: 4, ColumnLimit: 0, BreakBeforeBraces: Linux}",
+    "c-cpp-flylint.flexelint.enable": false,
+    "c-cpp-flylint.language": "c",
+    "c-cpp-flylint.standard": [
+        "c11"
+    ]
+
+}

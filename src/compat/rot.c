@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2014-2015
+// Copyright (c) Harri Rautila, 2014-2020
 
 // This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -9,25 +9,26 @@
 // givens functions are here
 #include "dlpack.h"
 
-// ------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__rotf) || defined(__rotgf) || defined(__cblas_rot)
-#define __ARMAS_PROVIDES 1
+#if defined(blas_rotf) || defined(blas_rotgf) || defined(cblas_rot)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_gvrotate) && defined(armas_x_gvcompute)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
 
 static
-void __rot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE c, DTYPE s)
+void rot_compat(int N, DTYPE * X, int incx, DTYPE * Y, int incy, DTYPE c,
+                DTYPE s)
 {
     armas_x_dense_t y, x;
     int ix, iy, nx, ny, i;
@@ -53,35 +54,31 @@ void __rot_compat(int N, DTYPE *X, int incx, DTYPE *Y, int incy, DTYPE c, DTYPE 
     ny = iy == 0 ? 1 : -1;
     for (i = 0; i < N; i++, iy += ny, ix += nx) {
         armas_x_gvrotate(&x0, &y0, c, s,
-                         armas_x_get_at_unsafe(&x, ix), armas_x_get_at_unsafe(&y, iy));
+                         armas_x_get_at_unsafe(&x, ix),
+                         armas_x_get_at_unsafe(&y, iy));
         armas_x_set_at_unsafe(&x, ix, x0);
         armas_x_set_at_unsafe(&y, iy, y0);
     }
 }
 
-#if defined(__rotf)
-void __rotf(int *n, DTYPE *X, int *incx, DTYPE *Y, int *incy, DTYPE *c, DTYPE *s)
+#if defined(blas_rotf)
+void blas_rotf(int *n, DTYPE * X, int *incx, DTYPE * Y, int *incy, DTYPE * c,
+            DTYPE * s)
 {
-    __rot_compat(*n, X, *incx, Y, *incy, *c, *s);
+    rot_compat(*n, X, *incx, Y, *incy, *c, *s);
 }
 #endif
 
-#if defined(__rotgf)
-void __rotgf(DTYPE *sa, DTYPE *sb, DTYPE *c, DTYPE *s)
+#if defined(blas_rotgf)
+void blas_rotgf(DTYPE * sa, DTYPE * sb, DTYPE * c, DTYPE * s)
 {
     DTYPE r;
     armas_x_gvcompute(c, s, &r, *sa, *sb);
 }
-#endif // rotg
+#endif
 
-#if defined(COMPAT_CBLAS) && defined(__cblas_rot)
+#if defined(cblas_rot)
 
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -11,21 +11,21 @@
 #include "dtype.h"
 #include "dlpack.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_qdroots) && defined(armas_x_discriminant)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 
 //! \cond
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 //! \endcond
 
 /*
@@ -62,7 +62,7 @@ DTYPE discriminant(DTYPE a, DTYPE b, DTYPE c)
     return y0[0];
 }
 
-#else    // NOT (defined(__x86_64__) && defined(__FMA__))
+#else /* NOT (defined(__x86_64__) && defined(__FMA__)) */
 
 // The PI security parameter in (1) round-off cancelation 
 #define ROUNDOFF_SEC_CONST 3
@@ -75,15 +75,15 @@ DTYPE discriminant(DTYPE a, DTYPE b, DTYPE c)
 /*
  * Break 53 sig. bit DTYPE to two 26 sig. bit parts.
  */
-static inline 
-DTYPE break2(DTYPE *xh, DTYPE *xt, DTYPE x)
+static inline
+DTYPE break2(DTYPE * xh, DTYPE * xt, DTYPE x)
 {
     register DTYPE bigx, y;
     bigx = x * BIG_CONST;
     y = x - bigx;
     *xh = y + bigx;
     *xt = x - (*xh);
-    return y; // don't allow optimizing away
+    return y;                   // don't allow optimizing away
 }
 
 /*
@@ -94,31 +94,34 @@ static
 DTYPE discriminant(DTYPE a, DTYPE b, DTYPE c)
 {
     DTYPE d, e, ah, at, bh, bt, ch, ct, p, q, dp, dq;
-    d = b*b - a*c;
-    e = b*b + a*c;
+    d = b * b - a * c;
+    e = b * b + a * c;
     // good enough ?
-    if (ROUNDOFF_SEC_CONST*__ABS(d) > e)
+    if (ROUNDOFF_SEC_CONST * ABS(d) > e)
         return d;
 
-    p = b*b; q = a*c;
+    p = b * b;
+    q = a * c;
     break2(&ah, &at, a);
     break2(&bh, &bt, b);
     break2(&ch, &ct, c);
 
-    dp = ((bh*bh - p) + 2*bh*bt) + bt*bt;
-    dq = ((ah*ch - q) + (ah*ct + at*ch)) + at*ct;
+    dp = ((bh * bh - p) + 2 * bh * bt) + bt * bt;
+    dq = ((ah * ch - q) + (ah * ct + at * ch)) + at * ct;
     d = (p - q) + (dp - dq);
     return d;
 }
-#endif	// defined(__x86_64__) && defined(__FMA__)
+#endif /* defined(__x86_64__) && defined(__FMA__) */
 
 
 /**
  * @brief Compute roots of quadratic equation.
  *
- * Computes roots of quadratic equation \f$ A*x^2 - 2B*x + C = 0 \f$ with precission as 
- * described in "W. Kahan, On the Cost of Floating-Point Computation Without 
- * Extra-Precise Arithmetic, 2004"
+ * Computes roots of quadratic equation \f$ A*x^2 - 2B*x + C = 0 \f$ with
+ * precission as described in
+ *   W. Kahan,
+ *   On the Cost of Floating-Point Computation Without Extra-Precise Arithmetic
+ *   2004"
  *
  * @param x1, x2 [out]
  *	Computed roots, |x1| >= |x2|
@@ -128,22 +131,23 @@ DTYPE discriminant(DTYPE a, DTYPE b, DTYPE c)
  *	zero if roots are real and non-zero if roots are complex or coincident real.
  *
  * For details see
- *   W. Kahan, On the cost of Floating-Point Computation Without Extra-Precise Arithmetic, 2004
+ *   W. Kahan, 2004
  */
-int armas_x_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c)
+int armas_x_qdroots(DTYPE * x1, DTYPE * x2, DTYPE a, DTYPE b, DTYPE c)
 {
     DTYPE d, r, s, signb;
     d = discriminant(a, b, c);
     if (d < 0.0) {
-        r = b/a;  s = __SQRT(__ABS(d))/a;
-        *x1 = -r/2.0;
-        *x2 = s/2.0;
+        r = b / a;
+        s = SQRT(ABS(d)) / a;
+        *x1 = -r / 2.0;
+        *x2 = s / 2.0;
         return 1;
     }
-    signb = __SIGN(b) ? -1.0 : 1.0;
-    s = __SQRT(d) * (signb + (DTYPE)(b == __ZERO)) + b;
-    *x1 = s/a;
-    *x2 = c/s;
+    signb = SIGN(b) ? -1.0 : 1.0;
+    s = SQRT(d) * (signb + (DTYPE) (b == ZERO)) + b;
+    *x1 = s / a;
+    *x2 = c / s;
     return 0;
 }
 
@@ -158,15 +162,10 @@ int armas_x_qdroots(DTYPE *x1, DTYPE *x2, DTYPE a, DTYPE b, DTYPE c)
  * For details see
  *   W. Kahan, On the Cost of Floating-Point Computation Without Extra-Precise Arithmetic, 2004
  */
-void armas_x_discriminant(DTYPE *dval, DTYPE a, DTYPE b, DTYPE c)
+void armas_x_discriminant(DTYPE * dval, DTYPE a, DTYPE b, DTYPE c)
 {
     *dval = discriminant(a, b, c);
 }
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
-
+#else
+#warning "Missing defines. No code."
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

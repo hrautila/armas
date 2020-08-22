@@ -11,23 +11,23 @@
 #include "dtype.h"
 #include "dlpack.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_bdbuild) && defined(armas_x_bdbuild_w) 
-#define __ARMAS_PROVIDES 1
+#if defined(armas_x_bdbuild) && defined(armas_x_bdbuild_w)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_qrbuild_w) && defined(armas_x_lqbuild_w)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// -----------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// ----------------------------------------------------------------------------
 
 //! \cond
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 #include "internal_lapack.h"
 //! \endcond
 
@@ -58,11 +58,9 @@
  *
  * \ingroup lapack
  */
-int armas_x_bdbuild(armas_x_dense_t *A,
-                    const armas_x_dense_t *tau,
-                    int K,
-                    int flags,
-                    armas_conf_t *conf)
+int armas_x_bdbuild(armas_x_dense_t * A,
+                    const armas_x_dense_t * tau,
+                    int K, int flags, armas_conf_t * conf)
 {
     int err;
     armas_wbuf_t wb = ARMAS_WBNULL;
@@ -72,26 +70,24 @@ int armas_x_bdbuild(armas_x_dense_t *A,
 
     if (armas_x_bdbuild_w(A, tau, K, flags, &wb, conf) < 0)
         return -1;
-    
+
     if (!armas_walloc(&wb, wb.bytes)) {
         conf->error = ARMAS_EMEMORY;
         return -1;
     }
-    
+
     err = armas_x_bdbuild_w(A, tau, K, flags, &wb, conf);
     armas_wrelease(&wb);
     return err;
 }
 
 
-int armas_x_bdbuild_w(armas_x_dense_t *A,
-                      const armas_x_dense_t *tau, 
-                      int K,
-                      int flags,
-                      armas_wbuf_t *wb,
-                      armas_conf_t *conf)
+int armas_x_bdbuild_w(armas_x_dense_t * A,
+                      const armas_x_dense_t * tau,
+                      int K, int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t Qh, Ph, tauh, d, s;   
+    armas_x_dense_t Qh, Ph, tauh, d, s;
+    armas_env_t *env;
     int j, err = 0;
 
     if (!conf)
@@ -99,20 +95,19 @@ int armas_x_bdbuild_w(armas_x_dense_t *A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;       
+        return -1;
     }
-
+    env = armas_getenv();
     if (wb && wb->bytes == 0) {
         // if M >= N then size is f(N), if M < N then size is f(M)
         if (A->rows >= A->cols) {
-            if (conf->lb > 0 && A->cols > conf->lb)
-                wb->bytes = (A->cols * conf->lb) * sizeof(DTYPE);
+            if (env->lb > 0 && A->cols > env->lb)
+                wb->bytes = (A->cols * env->lb) * sizeof(DTYPE);
             else
                 wb->bytes = A->cols * sizeof(DTYPE);
-        }
-        else {
-            if (conf->lb > 0 && A->rows > conf->lb)
-                wb->bytes = (A->rows * conf->lb) * sizeof(DTYPE);
+        } else {
+            if (env->lb > 0 && A->rows > env->lb)
+                wb->bytes = (A->rows * env->lb) * sizeof(DTYPE);
             else
                 wb->bytes = A->rows * sizeof(DTYPE);
         }
@@ -123,7 +118,7 @@ int armas_x_bdbuild_w(armas_x_dense_t *A,
         return 0;
 
     if (A->rows > A->cols || (A->rows == A->cols && !(flags & ARMAS_LOWER))) {
-        switch (flags & (ARMAS_WANTQ|ARMAS_WANTP)) {
+        switch (flags & (ARMAS_WANTQ | ARMAS_WANTP)) {
         case ARMAS_WANTQ:
             armas_x_submatrix(&tauh, tau, 0, 0, A->cols, 1);
             err = armas_x_qrbuild_w(A, &tauh, K, wb, conf);
@@ -131,20 +126,20 @@ int armas_x_bdbuild_w(armas_x_dense_t *A,
         case ARMAS_WANTP:
             // shift P matrix embedded in A down and fill first column and
             // row to unit vectors
-            for (j = A->cols-1; j > 0; j--) {
-                armas_x_submatrix(&s, A, j-1, j, 1, A->cols-j);
-                armas_x_submatrix(&d, A, j,   j, 1, A->cols-j);
+            for (j = A->cols - 1; j > 0; j--) {
+                armas_x_submatrix(&s, A, j - 1, j, 1, A->cols - j);
+                armas_x_submatrix(&d, A, j, j, 1, A->cols - j);
                 armas_x_copy(&d, &s, conf);
-                armas_x_set(A, j, 0, __ZERO);
+                armas_x_set(A, j, 0, ZERO);
             }
             // zero first row
             armas_x_row(&d, A, 0);
-            armas_x_scale(&d, __ZERO, conf);
-            armas_x_set(&d, 0, 0, __ONE);
+            armas_x_scale(&d, ZERO, conf);
+            armas_x_set(&d, 0, 0, ONE);
 
-            armas_x_submatrix(&Ph, A, 1, 1, A->cols-1, A->cols-1);
-            armas_x_submatrix(&tauh, tau, 0, 0, A->cols-1, 1);
-            if (K > A->cols-1 || K < 0)
+            armas_x_submatrix(&Ph, A, 1, 1, A->cols - 1, A->cols - 1);
+            armas_x_submatrix(&tauh, tau, 0, 0, A->cols - 1, 1);
+            if (K > A->cols - 1 || K < 0)
                 K = A->cols - 1;
             err = armas_x_lqbuild_w(&Ph, &tauh, K, wb, conf);
             break;
@@ -156,24 +151,24 @@ int armas_x_bdbuild_w(armas_x_dense_t *A,
     } else {
         // here A->rows < A-cols || (A->rows == A->cols && flags&ARMAS_LOWER)
 
-        switch (flags & (ARMAS_WANTQ|ARMAS_WANTP)) {
+        switch (flags & (ARMAS_WANTQ | ARMAS_WANTP)) {
         case ARMAS_WANTQ:
             // shift Q matrix embedded in A right and fill first column and
             // row to unit vectors
-            for (j = A->rows-1; j > 0; j--) {
-                armas_x_submatrix(&s, A, j, j-1, A->rows-j, 1);
-                armas_x_submatrix(&d, A, j, j,   A->rows-j, 1);
+            for (j = A->rows - 1; j > 0; j--) {
+                armas_x_submatrix(&s, A, j, j - 1, A->rows - j, 1);
+                armas_x_submatrix(&d, A, j, j, A->rows - j, 1);
                 armas_x_copy(&d, &s, conf);
-                armas_x_set(A, 0, j, __ZERO);
+                armas_x_set(A, 0, j, ZERO);
             }
             // zero first column
             armas_x_column(&d, A, 0);
-            armas_x_scale(&d, __ZERO, conf);
-            armas_x_set(&d, 0, 0, __ONE);
+            armas_x_scale(&d, ZERO, conf);
+            armas_x_set(&d, 0, 0, ONE);
 
-            armas_x_submatrix(&Qh, A, 1, 1, A->rows-1, A->rows-1);
-            armas_x_submatrix(&tauh, tau, 0, 0, A->rows-1, 1);
-            if (K > A->rows-1 || K < 0)
+            armas_x_submatrix(&Qh, A, 1, 1, A->rows - 1, A->rows - 1);
+            armas_x_submatrix(&tauh, tau, 0, 0, A->rows - 1, 1);
+            if (K > A->rows - 1 || K < 0)
                 K = A->rows - 1;
             err = armas_x_qrbuild_w(&Qh, &tauh, K, wb, conf);
             break;
@@ -189,12 +184,6 @@ int armas_x_bdbuild_w(armas_x_dense_t *A,
     }
     return err;
 }
-
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
-
+#else
+#warning "Missing defined. No code!"
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

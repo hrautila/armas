@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2016
+// Copyright (c) Harri Rautila, 2016-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -13,22 +13,22 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_trdbisect) 
-#define __ARMAS_PROVIDES 1
+#if defined(armas_x_trdbisect)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_blas) 
-#define __ARMAS_REQUIRES 1
+#if defined(armas_x_blas)
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
 //! \cond
 #include <math.h>
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 #include "internal_lapack.h"
 //! \endcond
 
@@ -76,13 +76,13 @@
  * See (1) 5.3 algorithm 4.
  */
 static
-int __float_count_ieee(armas_x_dense_t *D, armas_x_dense_t *E, DTYPE x)
+int float_count_ieee(armas_x_dense_t * D, armas_x_dense_t * E, DTYPE x)
 {
     int k, count = 0;
-    DTYPE d = __ONE, bim1 = __ZERO;
-    
+    DTYPE d = ONE, bim1 = ZERO;
+
     for (k = 0; k < armas_x_size(D); k++) {
-        d    = (armas_x_get_at_unsafe(D, k) - x) - bim1*bim1/d;
+        d = (armas_x_get_at_unsafe(D, k) - x) - bim1 * bim1 / d;
         bim1 = armas_x_get_at_unsafe(E, k);
         count += signbit(d) ? 1 : 0;
     }
@@ -97,37 +97,39 @@ int __float_count_ieee(armas_x_dense_t *D, armas_x_dense_t *E, DTYPE x)
  *  fudge = 2.1; pivmin = min e(i)^2  ; pivmin = pivmin*safemn
  */
 static
-void __compute_gerschgorin(DTYPE *glow, DTYPE *gup, armas_x_dense_t *D, armas_x_dense_t *E)
+void compute_gerschgorin(DTYPE * glow, DTYPE * gup, armas_x_dense_t * D,
+                           armas_x_dense_t * E)
 {
     int k, n = armas_x_size(D);
     DTYPE gl, gu, di, ei, eim1, t, bnorm, pivmin;
-    ei = __ZERO; pivmin = __ONE;
+    ei = ZERO;
+    pivmin = ONE;
     gl = gu = armas_x_get_at_unsafe(D, 0);
 
-    eim1 = __ZERO;
-    for (k = 0; k < n-1; k++) {
-        di   = armas_x_get_at_unsafe(D, k);
-        ei = __ABS(armas_x_get_at_unsafe(E, k));
+    eim1 = ZERO;
+    for (k = 0; k < n - 1; k++) {
+        di = armas_x_get_at_unsafe(D, k);
+        ei = ABS(armas_x_get_at_unsafe(E, k));
         t = ei + eim1;
         if (gl > di - t)
             gl = di - t;
         if (gu < di + t)
             gu = di + t;
         eim1 = ei;
-        if (ei*ei < pivmin)
-            pivmin = ei*ei;
+        if (ei * ei < pivmin)
+            pivmin = ei * ei;
     }
-    pivmin = __SAFEMIN*pivmin;
-    di  = armas_x_get_at_unsafe(D, n-1);
+    pivmin = SAFEMIN * pivmin;
+    di = armas_x_get_at_unsafe(D, n - 1);
     if (gl > di - ei)
         gl = di - ei;
     if (gu < di + ei)
         gu = di + ei;
 
     // widen the interval to ensure that all eigenvalues are included.
-    bnorm = __ABS(gl) > __ABS(gu) ? __ABS(gl) : __ABS(gu);
-    *glow = gl - bnorm*(n*__EPS)*2.0 - 4.2*pivmin;
-    *gup  = gu + bnorm*(n*__EPS)*2.0 + 2.1*pivmin;
+    bnorm = ABS(gl) > ABS(gu) ? ABS(gl) : ABS(gu);
+    *glow = gl - bnorm * (n * EPS) * 2.0 - 4.2 * pivmin;
+    *gup = gu + bnorm * (n * EPS) * 2.0 + 2.1 * pivmin;
 
 }
 
@@ -153,13 +155,10 @@ void __compute_gerschgorin(DTYPE *glow, DTYPE *gup, armas_x_dense_t *D, armas_x_
  * \retval eigenvalue or NaN
  */
 static
-DTYPE __trd_bisect_one(armas_x_dense_t *D,
-                       armas_x_dense_t *E,
+DTYPE trd_bisect_one(armas_x_dense_t * D,
+                       armas_x_dense_t * E,
                        DTYPE left,
-                       DTYPE right,
-                       int nleft,
-                       int nright,
-                       DTYPE tau)
+                       DTYPE right, int nleft, int nright, DTYPE tau)
 {
     int nl, nr, nmid, working = 1;
     DTYPE mid, eigen;
@@ -168,29 +167,30 @@ DTYPE __trd_bisect_one(armas_x_dense_t *D,
         return NAN;
     }
 
-    nl = __float_count_ieee(D, E, left);
-    nr = __float_count_ieee(D, E, right);
-    if ( nl > nleft || nr < nright) {
+    nl = float_count_ieee(D, E, left);
+    nr = float_count_ieee(D, E, right);
+    if (nl > nleft || nr < nright) {
         return NAN;
     }
-    
+
     for (int count = 0; working; count++) {
         // inside(l, r) (see Assumption 3 in (1))
-        mid = (right + left)/2.0;
+        mid = (right + left) / 2.0;
         if (right - left < tau) {
-            eigen = __MIN(__MAX(mid, left), right);
+            eigen = MIN(MAX(mid, left), right);
             printf("  eigen: %e [%d iterations]\n", eigen, count);
             working = 0;
-        }
-        else {
-            nmid = __float_count_ieee(D, E, mid);
-            nmid = __IMIN(__IMAX(nmid, nleft), nright);
+        } else {
+            nmid = float_count_ieee(D, E, mid);
+            nmid = IMIN(IMAX(nmid, nleft), nright);
             if (nmid > nleft) {
-                right = mid; nright = nmid;
+                right = mid;
+                nright = nmid;
             }
             if (nmid < nright) {
-                left = mid; nleft = nmid; 
-            }                      
+                left = mid;
+                nleft = nmid;
+            }
         }
     }
     return eigen;
@@ -219,11 +219,11 @@ DTYPE __trd_bisect_one(armas_x_dense_t *D,
  * \retval  0  OK
  * \retval <0  Failed to store all requested eigenvalues to result vector
  */
-int armas_x_trdbisect(armas_x_dense_t *Y,
-                      armas_x_dense_t *D,
-                      armas_x_dense_t *E,
-                      const armas_x_eigen_parameter_t *params,
-                      armas_conf_t *conf)
+int armas_x_trdbisect(armas_x_dense_t * Y,
+                      armas_x_dense_t * D,
+                      armas_x_dense_t * E,
+                      const armas_x_eigen_parameter_t * params,
+                      armas_conf_t * conf)
 {
     //armas_x_dense_t Xrow;
     DTYPE gleft, gright, bnorm, tau, eigen;
@@ -232,27 +232,27 @@ int armas_x_trdbisect(armas_x_dense_t *Y,
 
     if (!conf)
         conf = armas_conf_default();
-    
+
     if (armas_x_size(D) == 0 || armas_x_size(E) == 0)
         return 0;
 
-    __compute_gerschgorin(&gleft, &gright, D, E);
-    bnorm = __MAX(__ABS(gleft), __ABS(gright));
+    compute_gerschgorin(&gleft, &gright, D, E);
+    bnorm = MAX(ABS(gleft), ABS(gright));
     tau = params ? params->tau : 0.0;
-    if (tau < bnorm*__EPS) 
-        tau = bnorm*__EPS*2.1;
+    if (tau < bnorm * EPS)
+        tau = bnorm * EPS * 2.1;
 
     if (params && params->ileft != -1 && params->iright != -1) {
         if (params->ileft == 0 && params->iright == 0) {
             // index parameters are zero; eigenvalue range defined.
-            gleft = __MAX(gleft, params->left);
-            gright = __MIN(gright, params->right);
-            nleft = __float_count_ieee(D, E, gleft);
-            nright = __IMAX(0, __float_count_ieee(D, E, gright));
+            gleft = MAX(gleft, params->left);
+            gright = MIN(gright, params->right);
+            nleft = float_count_ieee(D, E, gleft);
+            nright = IMAX(0, float_count_ieee(D, E, gright));
         } else {
             // index range
-            nleft = __IMAX(0, params->ileft);
-            nright = __IMIN(params->iright, armas_x_size(D));
+            nleft = IMAX(0, params->ileft);
+            nright = IMIN(params->iright, armas_x_size(D));
         }
         first = nleft;
         last = nright;
@@ -261,23 +261,17 @@ int armas_x_trdbisect(armas_x_dense_t *Y,
         first = 0;
         last = armas_x_size(D);
     }
-        
+
     for (int k = first; k < last; k++) {
-        eigen = __trd_bisect_one(D, E, gleft, gright, k, k+1, tau);
+        eigen = trd_bisect_one(D, E, gleft, gright, k, k + 1, tau);
         if (isnan(eigen)) {
             return -1;
         }
         armas_x_set_unsafe(Y, k, 0, eigen);
-        gleft = (eigen > __ZERO ? (__ONE - __EPS) : (__ONE + __EPS)) * gleft;
+        gleft = (eigen > ZERO ? (ONE - EPS) : (ONE + EPS)) * gleft;
     }
     return 0;
 }
-
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
-
+#else
+#warning "Missing defines. No code."
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

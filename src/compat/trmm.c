@@ -1,31 +1,31 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "compat.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__trmmf) || defined(__cblas_trmm)
-#define __ARMAS_PROVIDES 1
+#if defined(trmmf) || defined(cblas_trmm)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_mult_trm)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__trmmf)
-void __trmmf(char *side, char *uplo, char *transa, char *diag,int *m, int *n,
-             DTYPE *alpha, DTYPE *A, int *lda, DTYPE *B, int *ldb)
+#if defined(blas_trmmf)
+void blas_trmmf(char *side, char *uplo, char *transa, char *diag, int *m,
+                int *n, DTYPE * alpha, DTYPE * A, int *lda, DTYPE * B, int *ldb)
 {
     armas_conf_t *conf = armas_conf_default();
     armas_x_dense_t a, b;
@@ -46,19 +46,19 @@ void __trmmf(char *side, char *uplo, char *transa, char *diag,int *m, int *n,
     }
     flags |= toupper(*uplo) == 'L' ? ARMAS_LOWER : ARMAS_UPPER;
     if (toupper(*transa) == 'T')
-        flags |=  ARMAS_TRANS;
+        flags |= ARMAS_TRANS;
     if (toupper(*diag) == 'U')
-        flags |=  ARMAS_UNIT;
+        flags |= ARMAS_UNIT;
 
     armas_x_mult_trm(&b, *alpha, &a, flags, conf);
 }
 #endif
 
-#if defined(__cblas_trmm)
-void __cblas_trmm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
-                  const enum CBLAS_UPLO uplo, const enum CBLAS_TRANSPOSE transa,
-                  const enum CBLAS_DIAG diag, int M, int N,
-                  DTYPE alpha, DTYPE *A, int lda, DTYPE *B,  int ldb)
+#if defined(cblas_trmm)
+void cblas_trmm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
+                const enum CBLAS_UPLO uplo, const enum CBLAS_TRANSPOSE transa,
+                const enum CBLAS_DIAG diag, int M, int N,
+                DTYPE alpha, DTYPE * A, int lda, DTYPE * B, int ldb)
 {
     armas_conf_t conf = *armas_conf_default();
     armas_x_dense_t Aa, Ba;
@@ -103,13 +103,6 @@ void __cblas_trmm(const enum CBLAS_ORDER order, const enum CBLAS_SIDE side,
     }
     armas_x_mult_trm(&Ba, alpha, &Aa, flags, &conf);
 }
-
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

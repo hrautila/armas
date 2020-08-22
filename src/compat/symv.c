@@ -1,31 +1,32 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "compat.h"
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__symvf) || defined(__cblas_symv)
-#define __ARMAS_PROVIDES 1
+#if defined(blas_symvf) || defined(cblas_symv)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_mvmult_sym)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__symvf)
-void __symvf(char *uplo, int *n, DTYPE *alpha, DTYPE *A,
-             int *lda, DTYPE *X, int *incx, DTYPE *beta, DTYPE *Y, int *incy)
+#if defined(blas_symvf)
+void blas_symvf(char *uplo, int *n, DTYPE * alpha, DTYPE * A,
+                int *lda, DTYPE * X, int *incx, DTYPE * beta, DTYPE * Y,
+                int *incy)
 {
     armas_conf_t *conf = armas_conf_default();
     armas_x_dense_t y, a, x;
@@ -40,7 +41,7 @@ void __symvf(char *uplo, int *n, DTYPE *alpha, DTYPE *A,
         flags |= ARMAS_UPPER;
         break;
     }
-    
+
     armas_x_make(&a, *n, *n, *lda, A);
     if (*incy == 1) {
         // column vector
@@ -58,10 +59,10 @@ void __symvf(char *uplo, int *n, DTYPE *alpha, DTYPE *A,
 }
 #endif
 
-#if defined(__cblas_symv)
-void __cblas_symv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,  
-                  int N, DTYPE alpha, DTYPE *A, int lda, 
-                  DTYPE *X,  int incx, DTYPE beta, DTYPE *Y, int incy)
+#if defined(cblas_symv)
+void cblas_symv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
+                int N, DTYPE alpha, DTYPE * A, int lda,
+                DTYPE * X, int incx, DTYPE beta, DTYPE * Y, int incy)
 {
     armas_x_dense_t Aa, x, y;
     armas_conf_t conf = *armas_conf_default();
@@ -89,13 +90,6 @@ void __cblas_symv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
     }
     armas_x_mvmult_sym(beta, &y, alpha, &Aa, &x, flags, &conf);
 }
-
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

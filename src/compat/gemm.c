@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012-2015
+// Copyright (c) Harri Rautila, 2012-202020
 
 // This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -9,23 +9,24 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(__gemmf) || defined(__cblas_gemm)
-#define __ARMAS_PROVIDES 1
+#if defined(blas_gemmf) || defined(cblas_gemm)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_mult)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+// -----------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
 
-#if defined(__gemmf)
-void __gemmf(char *transa, char *transb, int *m, int *n, int *k, DTYPE *alpha, DTYPE *A,
-            int *lda, DTYPE *B, int *ldb, DTYPE *beta, DTYPE *C, int *ldc)
+#if defined(blas_gemmf)
+void blas_gemmf(char *transa, char *transb, int *m, int *n, int *k,
+                DTYPE *alpha, DTYPE * A, int *lda, DTYPE * B, int *ldb,
+                DTYPE * beta, DTYPE * C, int *ldc)
 {
     armas_conf_t *conf = armas_conf_default();
     armas_x_dense_t c, a, b;
@@ -35,7 +36,7 @@ void __gemmf(char *transa, char *transb, int *m, int *n, int *k, DTYPE *alpha, D
     armas_x_make(&a, *m, *k, *lda, A);
     armas_x_make(&b, *k, *n, *ldb, B);
 
-    if (toupper(*transa) == 'T') 
+    if (toupper(*transa) == 'T')
         flags |= ARMAS_TRANSA;
     if (toupper(*transb) == 'T')
         flags |= ARMAS_TRANSB;
@@ -44,15 +45,15 @@ void __gemmf(char *transa, char *transb, int *m, int *n, int *k, DTYPE *alpha, D
 }
 #endif
 
-#if defined(__cblas_gemm)
-void __cblas_gemm(int order, int transa,  int transb, int M, int N,
-                  int K, DTYPE alpha, DTYPE *A, int lda, DTYPE *B,  int ldb,
-                  DTYPE beta, DTYPE *C, int ldc)
+#if defined(cblas_gemm)
+void cblas_gemm(int order, int transa, int transb, int M, int N,
+                int K, DTYPE alpha, DTYPE * A, int lda, DTYPE * B, int ldb,
+                DTYPE beta, DTYPE * C, int ldc)
 {
     armas_conf_t conf = *armas_conf_default();
     armas_x_dense_t Ca, Aa, Ba;
     int flags = 0;
-    
+
     switch (order) {
     case CblasColMajor:
         if (transa == CblasTrans) {
@@ -95,10 +96,4 @@ void __cblas_gemm(int order, int transa,  int transb, int M, int N,
 }
 #endif
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

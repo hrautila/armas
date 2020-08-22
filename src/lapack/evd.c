@@ -10,21 +10,21 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_eigen_sym) 
-#define __ARMAS_PROVIDES 1
+#if defined(armas_x_eigen_sym)
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_trdeigen) && defined(armas_x_trdreduce) && defined(armas_x_trdbuild)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
 //! \cond
-#include "internal.h"
 #include "matrix.h"
+#include "internal.h"
 #include "internal_lapack.h"
 //! \endcond
 
@@ -36,8 +36,8 @@
  * \brief Eigenvalues and vectors of 2x2 matrix
  */
 static
-int __eigen_sym_small(armas_x_dense_t *D, armas_x_dense_t *A,
-                      armas_x_dense_t *W, int flags, armas_conf_t *conf)
+int eigen_sym_small(armas_x_dense_t * D, armas_x_dense_t * A,
+                    armas_x_dense_t * W, int flags, armas_conf_t * conf)
 {
     DTYPE d0, b0, d1, e0, e1, cs, sn;
 
@@ -48,15 +48,15 @@ int __eigen_sym_small(armas_x_dense_t *D, armas_x_dense_t *A,
     } else {
         b0 = armas_x_get_unsafe(A, 1, 0);
     }
-    __sym_eigen2x2vec(&e0, &e1, &cs, &sn, d0, b0, d1);
+    armas_x_sym_eigen2x2vec(&e0, &e1, &cs, &sn, d0, b0, d1);
     armas_x_set_at_unsafe(D, 0, e0);
     armas_x_set_at_unsafe(D, 1, e1);
 
     if (flags & ARMAS_WANTV) {
-        armas_x_set_unsafe(A, 0, 0, __ONE);
-        armas_x_set_unsafe(A, 1, 1, __ONE);
-        armas_x_set_unsafe(A, 0, 1, __ZERO);
-        armas_x_set_unsafe(A, 1, 0, __ZERO);
+        armas_x_set_unsafe(A, 0, 0, ONE);
+        armas_x_set_unsafe(A, 1, 1, ONE);
+        armas_x_set_unsafe(A, 0, 1, ZERO);
+        armas_x_set_unsafe(A, 1, 0, ZERO);
         armas_x_gvright(A, cs, sn, 0, 1, 0, A->rows);
     }
     return 0;
@@ -82,20 +82,18 @@ int __eigen_sym_small(armas_x_dense_t *D, armas_x_dense_t *A,
  *
  * \ingroup lapack
  */
-int armas_x_eigen_sym(armas_x_dense_t *D,
-                      armas_x_dense_t *A,
-                      int flags,
-                      armas_conf_t *conf)
+int armas_x_eigen_sym(armas_x_dense_t * D,
+                      armas_x_dense_t * A, int flags, armas_conf_t * conf)
 {
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    
+
     if (!conf)
         conf = armas_conf_default();
 
     if (armas_x_size(A) == 0)
         return 0;
-    
+
     wbs = &wb;
     if (armas_x_eigen_sym_w(D, A, flags, &wb, conf) < 0)
         return -1;
@@ -105,10 +103,9 @@ int armas_x_eigen_sym(armas_x_dense_t *D,
             conf->error = ARMAS_EMEMORY;
             return -1;
         }
-    }
-    else
+    } else
         wbs = ARMAS_NOWORK;
-    
+
     err = armas_x_eigen_sym_w(D, A, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
@@ -138,11 +135,9 @@ int armas_x_eigen_sym(armas_x_dense_t *D,
  *
  * \ingroup lapack
  */
-int armas_x_eigen_sym_w(armas_x_dense_t *D,
-                        armas_x_dense_t *A,
-                        int flags,
-                        armas_wbuf_t *wb,
-                        armas_conf_t *conf)
+int armas_x_eigen_sym_w(armas_x_dense_t * D,
+                        armas_x_dense_t * A,
+                        int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
     armas_x_dense_t sD, sE, E, tau, *vv;
     size_t wsz, wpos, wpt;
@@ -158,16 +153,16 @@ int armas_x_eigen_sym_w(armas_x_dense_t *D,
         return -1;
     }
     N = A->rows;
-    
+
     if (wb && wb->bytes == 0) {
         if (N > 2) {
             if (armas_x_trdreduce_w(A, ARMAS_NIL, flags, wb, conf) < 0)
                 return -1;
-            wb->bytes += 2*N*sizeof(DTYPE);
+            wb->bytes += 2 * N * sizeof(DTYPE);
         }
         return 0;
     }
-    
+
     if (A->rows != A->cols && armas_x_size(D) != A->rows) {
         conf->error = ARMAS_ESIZE;
         return -1;
@@ -175,22 +170,21 @@ int armas_x_eigen_sym_w(armas_x_dense_t *D,
     if (N == 1) {
         armas_x_set_at_unsafe(D, 0, armas_x_get_unsafe(A, 0, 0));
         if (flags & ARMAS_WANTV) {
-            armas_x_set_unsafe(A, 0, 0, __ONE);
+            armas_x_set_unsafe(A, 0, 0, ONE);
         }
         return 0;
     }
     if (N == 2) {
-        __eigen_sym_small(D, A, ARMAS_NIL, flags, conf);
+        eigen_sym_small(D, A, ARMAS_NIL, flags, conf);
         return 0;
     }
 
-    if (!wb || (wsz = armas_wbytes(wb)) < 3*N*sizeof(DTYPE)) {
+    if (!wb || (wsz = armas_wbytes(wb)) < 3 * N * sizeof(DTYPE)) {
         conf->error = ARMAS_EWORK;
         return -1;
     }
-
     // default to lower triangular storage
-    if (!(flags & (ARMAS_UPPER|ARMAS_LOWER)))
+    if (!(flags & (ARMAS_UPPER | ARMAS_LOWER)))
         flags |= ARMAS_LOWER;
 
     wsz /= sizeof(DTYPE);
@@ -198,12 +192,12 @@ int armas_x_eigen_sym_w(armas_x_dense_t *D,
 
     ioff = flags & ARMAS_LOWER ? -1 : 1;
     // sub/super diagonal reservation
-    buf  = (DTYPE *)armas_wreserve(wb, N-1, sizeof(DTYPE));   
-    armas_x_make(&E, N-1, 1, N-1, buf);
+    buf = (DTYPE *) armas_wreserve(wb, N - 1, sizeof(DTYPE));
+    armas_x_make(&E, N - 1, 1, N - 1, buf);
 
     // tau vector reservation; save work buffer position
-    wpt  = armas_wpos(wb);
-    buf  = (DTYPE *)armas_wreserve(wb, N, sizeof(DTYPE));
+    wpt = armas_wpos(wb);
+    buf = (DTYPE *) armas_wreserve(wb, N, sizeof(DTYPE));
     armas_x_make(&tau, N, 1, N, buf);
 
     // reduce to tridiagonal form
@@ -222,7 +216,6 @@ int armas_x_eigen_sym_w(armas_x_dense_t *D,
             return -3;
         vv = A;
     }
-
     // reset reservations workspace
     armas_wsetpos(wb, wpt);
 
@@ -233,8 +226,6 @@ int armas_x_eigen_sym_w(armas_x_dense_t *D,
     armas_wsetpos(wb, wpos);
     return 0;
 }
-
-
 
 /**
  * \brief Compute eigenvalue decomposition of symmetric N-by-N matrix
@@ -261,11 +252,10 @@ int armas_x_eigen_sym_w(armas_x_dense_t *D,
  *
  * \ingroup lapack
  */
-int armas_x_eigen_sym_selected(armas_x_dense_t *D,
-                               armas_x_dense_t *A, 
-                               const armas_x_eigen_parameter_t *params,
-                               int flags,
-                               armas_conf_t *conf)
+int armas_x_eigen_sym_selected(armas_x_dense_t * D,
+                               armas_x_dense_t * A,
+                               const armas_x_eigen_parameter_t * params,
+                               int flags, armas_conf_t * conf)
 {
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
@@ -281,22 +271,18 @@ int armas_x_eigen_sym_selected(armas_x_dense_t *D,
             conf->error = ARMAS_EMEMORY;
             return -1;
         }
-    }
-    else
+    } else
         wbs = ARMAS_NOWORK;
     err = armas_x_eigen_sym_selected_w(D, A, params, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }
 
-
-
-int armas_x_eigen_sym_selected_w(armas_x_dense_t *D,
-                                 armas_x_dense_t *A, 
-                                 const armas_x_eigen_parameter_t *params,
+int armas_x_eigen_sym_selected_w(armas_x_dense_t * D,
+                                 armas_x_dense_t * A,
+                                 const armas_x_eigen_parameter_t * params,
                                  int flags,
-                                 armas_wbuf_t *wb,
-                                 armas_conf_t *conf)
+                                 armas_wbuf_t * wb, armas_conf_t * conf)
 {
     armas_x_dense_t sD, sE, tau;
     size_t wsz, wpos;
@@ -314,7 +300,7 @@ int armas_x_eigen_sym_selected_w(armas_x_dense_t *D,
     if (wb && wb->bytes == 0) {
         if (armas_x_trdreduce_w(A, ARMAS_NIL, flags, wb, conf) < 0)
             return -1;
-        wb->bytes += N*sizeof(DTYPE);
+        wb->bytes += N * sizeof(DTYPE);
         return 0;
     }
 
@@ -323,20 +309,19 @@ int armas_x_eigen_sym_selected_w(armas_x_dense_t *D,
         return -1;
     }
 
-    if (!wb && (wsz = armas_wbytes(wb)) < 2*N*sizeof(DTYPE)) {
+    if (!wb && (wsz = armas_wbytes(wb)) < 2 * N * sizeof(DTYPE)) {
         conf->error = ARMAS_EWORK;
         return -1;
     }
-
     // default to lower triangular storage
-    if (!(flags & (ARMAS_UPPER|ARMAS_LOWER)))
+    if (!(flags & (ARMAS_UPPER | ARMAS_LOWER)))
         flags |= ARMAS_LOWER;
 
     wpos = armas_wpos(wb);
-    
+
     ioff = flags & ARMAS_LOWER ? -1 : 1;
     if (N > 2) {
-        buf = (DTYPE *)armas_wreserve(wb, N, sizeof(DTYPE));
+        buf = (DTYPE *) armas_wreserve(wb, N, sizeof(DTYPE));
         armas_x_make(&tau, N, 1, N, buf);
 
         // reduce to tridiagonal form
@@ -354,14 +339,9 @@ int armas_x_eigen_sym_selected_w(armas_x_dense_t *D,
     // compute selected eigenvalues
     if (armas_x_trdbisect(D, &sD, &sE, params, conf) < 0)
         return -3;
-  
+
     return 0;
 }
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
-
+#else
+#warning "Missing defines. No code."
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

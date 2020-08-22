@@ -1,19 +1,22 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-
+#
 AC_PREREQ([2.69])
-AC_INIT([Another Rewrite of Matrix Algebra Subroutines], [0.5a], [],
-	[armas], [https://github.com/hrautila/armas])
+AC_INIT([Another Rewrite of Matrix Algebra Subroutines], [m4_esyscmd(./package-version.sh)],
+   [harri.rautila@gmail.com], [armas], [https://github.com/hrautila/armas])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
 
-## option --enable-threads
-AC_ARG_ENABLE(threads,
-   AC_HELP_STRING([--disable-threads],[make a threading (default is yes)]),
-      [enable_threads=$enableval], [enable_threads=yes])
+# shared library version number
+AC_SUBST(SOVERSION, [m4_esyscmd(./abi-version.sh -libtool)])
+
+## option --enable-plugins
+AC_ARG_ENABLE(accelerators,
+   AC_HELP_STRING([--disable-accelerators],[make accelerators (default is yes)]),
+      [enable_accelerators=$enableval], [enable_accelerators=yes])
 
 AC_ARG_ENABLE(ext-precision,
    AC_HELP_STRING([--disable-ext-precision], [enable extended precision (default is yes)]),
@@ -41,6 +44,10 @@ AC_ARG_ENABLE(compat,
    AC_HELP_STRING([--enable-compat],[enable Fortan callable compability library (default is no)]),
       [enable_compat=$enableval], [enable_compat=no]) 
 
+AC_ARG_ENABLE(sparse,
+   AC_HELP_STRING([--enable-sparse], [enable sparse iterative methods (default is no)]),
+      [enable_sparse=$enableval], [enable_sparse=no])
+
 # Checks for programs.
 AC_PROG_CC
 ##AC_PROG_RANLIB
@@ -62,53 +69,64 @@ AC_TYPE_UINT64_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([gettimeofday sqrt])
 
-## Threads require linux/futex.h for mutual exclusion primitives
-AS_IF([test "$enable_threads" != "no"],
-  [AC_CHECK_HEADER(linux/futex.h,
-      [enable_threads=yes
-       AC_DEFINE([ENABLE_THREADS], [1], [Enable treaded version])],
-      [enable_threads=no
-       AC_MSG_NOTICE(Creating non-threaded version)])],
-  [:])
-
 AS_IF([test "$enable_ext_precision" = "yes"],
-  AC_DEFINE([EXT_PRECISION], [1], [Enable extended precision]), [])
+  [AC_DEFINE([CONFIG_EXT_PRECISION], [1], [Enable extended precision]),
+   AC_DEFINE([CONFIG_OPT_PRECISION],["--enable-ext-precision"], [Config option enable extended precision])], [])
 
-## extended precision tests need libgmp and libmpfr
-AC_CHECK_HEADERS([gmp.h mpfr.h],
-  [AC_CHECK_LIB([mpfr],[mpfr_init2],
-     [AC_CHECK_LIB([gmp], [__gmp_printf],
-        [have_gmp_and_mpfr=yes], [have_gmp_and_mpfr=no])],
-     [have_gmp_and_mpfr=no])],
-  [have_gmp_and_mpfr=no])
+AS_IF([test "$enable_accelerators" = "yes"],
+  [AC_DEFINE([CONFIG_ACCELERATORS], [1], [Enable accelerators]),
+   AC_DEFINE([CONFIG_OPT_ACCELERATOR],["--enable-accelerators"], [Config option enable accelerators])], [])
 
-## enable threading in Makefile
-AM_CONDITIONAL([ENABLE_THREADS], [test "$enable_threads" = "yes"])
+AS_IF([test "$enable_compat" = "yes"],
+  [AC_DEFINE([CONFIG_COMPAT], [1], [Enable compability]),
+   AC_DEFINE([CONFIG_OPT_COMPAT],["--enable-compat"], [Config option enable compability functions])], [])
+
+AS_IF([test "$enable_sparse" = "yes"],
+  [AC_DEFINE([CONFIG_SPARSE], [1], [Enable sparse methods]),
+   AC_DEFINE([CONFIG_OPT_SPARSE],["--enable-sparse"], [Config option enable sparse methods])] , [])
+
+AS_IF([test "$enable_float64" = "yes"],
+  [AC_DEFINE([CONFIG_OPT_FLOAT64], ["--enable-float64"], [Config option enable float64])], [])
+
+AS_IF([test "$enable_float32" = "yes"],
+  [AC_DEFINE([CONFIG_OPT_FLOAT32], ["--enable-float32"], [Config option enable float32])], [])
+
+AS_IF([test "$enable_complex64" = "yes"],
+  [AC_DEFINE([CONFIG_OPT_COMPLEX64], ["--enable-complex64"], [Config option enable complex64])], [])
+
+AS_IF([test "$enable_complex128" = "yes"],
+  [AC_DEFINE([CONFIG_OPT_COMPLEX128], ["--enable-complex128"], [Config option enable complex128])], [])
+
+AM_CONDITIONAL([CONFIG_ACCELERATORS], [test "$enable_accelerators" = "yes"])
+AM_CONDITIONAL([CONFIG_EXT_PRECISION], [test "$enable_ext_precision" = "yes"])
+AM_CONDITIONAL([CONFIG_COMPAT], [test "$enable_compat" = "yes"])
+AM_CONDITIONAL([CONFIG_SPARSE], [test "$enable_sparse" = "yes"])
 
 ## enable floating point types
 AM_CONDITIONAL([ENABLE_FLOAT64],    [test "$enable_float64" = "yes"])
 AM_CONDITIONAL([ENABLE_FLOAT32],    [test "$enable_float32" = "yes"])
 AM_CONDITIONAL([ENABLE_COMPLEX64],  [test "$enable_complex64" = "yes"])
 AM_CONDITIONAL([ENABLE_COMPLEX128], [test "$enable_complex128" = "yes"])
-AM_CONDITIONAL([ENABLE_EXT_PRECISION], [test "$enable_ext_precision" = "yes"])
-AM_CONDITIONAL([ENABLE_COMPAT],     [test "$enable_compat" = "yes"])
-
-AM_CONDITIONAL([HAVE_GMP_MPFR], [test "$have_gmp_and_mpfr" = "yes"])
 
 ## print out configuration options
-
 AC_MSG_NOTICE([ENABLE_FLOAT32 = $enable_float32])
 AC_MSG_NOTICE([ENABLE_FLOAT64 = $enable_float64])
 AC_MSG_NOTICE([ENABLE_COMPLEX64 = $enable_complex64])
 AC_MSG_NOTICE([ENABLE_COMPLEX128 = $enable_complex128])
-AC_MSG_NOTICE([ENABLE_THREADS = $enable_threads])
-AC_MSG_NOTICE([ENABLE_EXT_PRECISION = $enable_ext_precision])
-AC_MSG_NOTICE([ENABLE_COMPAT = $enable_compat])
-AC_MSG_NOTICE([HAVE_GMP_MPFR = $have_gmp_and_mpfr])
+AC_MSG_NOTICE([CONFIG_ACCELERATORS = $enable_accelerators])
+AC_MSG_NOTICE([CONFIG_EXT_PRECISION = $enable_ext_precision])
+AC_MSG_NOTICE([CONFIG_COMPAT = $enable_compat])
+AC_MSG_NOTICE([CONFIG_SPARSE = $enable_sparse])
 
-AC_CONFIG_FILES([Makefile
-	src/Makefile
-        tests/Makefile
-	tests/unit/Makefile
-	tests/perf/Makefile])
+AC_CONFIG_FILES([
+   Makefile
+   src/Makefile
+   tests/Makefile
+   tests/blas/Makefile
+   tests/eblas/Makefile
+   tests/lapack/Makefile
+   tests/threaded/Makefile
+   tests/workers/Makefile
+])
+
 AC_OUTPUT
