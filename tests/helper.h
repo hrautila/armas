@@ -21,6 +21,7 @@ extern int check(armas_x_dense_t *A, armas_x_dense_t *B, int chkdir, const char 
 extern armas_x_dense_t *col_as_row(armas_x_dense_t *row, armas_x_dense_t *col);
 extern void armas_x_printf_partial(FILE *out, const char *efmt, const armas_x_dense_t *m, int partial);
 
+extern void json_read_write(armas_x_dense_t **Aptr, armas_x_dense_t *A, int flags);
 
 extern int isOK(DTYPE nrm, int N);
 extern int isFINE(DTYPE nrm, DTYPE tol);

@@ -186,6 +186,36 @@ armas_x_dense_t *col_as_row(armas_x_dense_t *row, armas_x_dense_t *col)
   return row;
 }
 
+void json_read_write(armas_x_dense_t **Aptr, armas_x_dense_t *A, int flags)
+{
+    const char *write_name = getenv("JSON_WRITE");
+    if (write_name && A) {
+        FILE *fp = fopen(write_name, "w");
+        if (fp) {
+            armas_d_json_dump(fp, A, flags);
+            fclose(fp);
+        }
+        if (Aptr) {
+            *Aptr = A;
+        }
+        return;
+    }
+
+    const char *read_name = getenv("JSON_READ");
+    if (read_name) {
+        if (Aptr) {
+            FILE *fp = fopen(read_name, "r");
+            if (fp) {
+                armas_d_json_load(Aptr, fp);
+                fclose(fp);
+            }
+        }
+    } else {
+        if (Aptr)
+            *Aptr = A;
+    }
+}
+
 #if !defined(FLOAT32)
 // search from top-left
 void find_from_bottom_right(armas_d_dense_t *a, armas_d_dense_t *b, int *row, int *col)
