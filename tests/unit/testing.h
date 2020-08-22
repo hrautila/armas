@@ -32,6 +32,14 @@
 #define ARMAS_NULL (armas_x_dense_t *)0
 #endif
 
+#define MAT_PRINT(s, A)                         \
+do {                                            \
+    if ((A)->cols < 10) {                       \
+        printf("%s\n", s);                      \
+        armas_x_printf(stdout, "%9.2e", (A));   \
+    }                                           \
+} while (0)
+
 #endif //_UNIT_TESTING_H
 
 // Local Variables:

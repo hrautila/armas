@@ -58,6 +58,63 @@ int test_reduce(int M, int N, int lb, int verbose, int flags)
   return ok;
 }
 
+int test_reduce_file(int M, int N, int lb, int verbose, int flags)
+{
+    armas_x_dense_t A0, A1, tau0, tau1, *Aptr = (armas_x_dense_t *)0;
+    armas_conf_t conf = *armas_conf_default();
+    int ok;
+    char uplo = flags & ARMAS_LOWER ? 'L' : 'U';
+    DTYPE n0, n1;
+
+    armas_x_init(&A0, N, N);
+    armas_x_init(&A1, N, N);
+    armas_x_init(&tau0, N, 1);
+    armas_x_init(&tau1, N, 1);
+
+    char *name = getenv("JSON_READ");
+    if (name) {
+        FILE *fp = fopen(name, "r");
+        armas_x_json_load(&Aptr, fp);
+        fclose(fp);
+
+        // set source data
+        armas_x_mcopy(&A0, Aptr);
+        armas_x_mcopy(&A1, Aptr);
+    } else {
+        // set source data
+        armas_x_set_values(&A0, unitrand, flags);
+        armas_x_mcopy(&A1, &A0);
+    }
+    if (verbose > 1) {
+        if (N < 10) {
+            printf("initial.A:\n");
+            armas_x_printf(stdout, "%9.2e", &A0);
+        }
+    }
+    conf.lb = 0;
+    armas_x_trdreduce(&A0, &tau0, flags, &conf);
+
+    conf.lb = lb;
+    armas_x_trdreduce(&A1, &tau1, flags, &conf);
+
+    n0 = rel_error((DTYPE *)0, &A0,   &A1,   ARMAS_NORM_ONE, ARMAS_NONE, &conf);
+    n1 = rel_error((DTYPE *)0, &tau0, &tau1, ARMAS_NORM_TWO, ARMAS_NONE, &conf);
+    ok = isFINE(n0, N*__ERROR);
+
+    printf("%s: unblk.TRD(A,%c) == blk.TRD(A,%c)\n", PASS(ok), uplo, uplo);
+    if (verbose > 0) {
+        printf("  || error.TRD(A,%c)||: %e [%d]\n", uplo, n0, ndigits(n0));
+        printf("  || error.tau||      : %e [%d]\n", n1, ndigits(n1));
+    }
+    armas_x_release(&A0);
+    armas_x_release(&A1);
+    armas_x_release(&tau0);
+    armas_x_release(&tau1);
+    if (Aptr)
+        armas_x_free(Aptr);
+    return ok;
+}
+
 
 // compute ||A - Q*T*Q.T||
 int test_mult_trd(int M, int N, int lb, int verbose, int flags)
@@ -242,6 +299,8 @@ int main(int argc, char **argv)
 
   int fails = 0;
 
+  test_reduce_file(N, N, LB, verbose, ARMAS_LOWER);
+#if 0
   if (! test_reduce(N, N, LB, verbose, ARMAS_LOWER))
     fails++;
   if (! test_reduce(N, N, LB, verbose, ARMAS_UPPER))
@@ -258,7 +317,7 @@ int main(int argc, char **argv)
     fails++;
   if (! test_build(N, N, LB, N/2, verbose, ARMAS_UPPER))
     fails++;
-
+#endif
   exit(fails);
 }
 

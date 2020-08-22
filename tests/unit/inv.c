@@ -16,6 +16,59 @@
 #define __ERROR 1e-12
 #endif
 
+int test_inverse(int N, int lb, int verbose)
+{
+    armas_x_dense_t A0, A1, W, *Aptr = (armas_x_dense_t *)0;
+    DTYPE n0, n1;
+    int ok, fails = 0;;
+    armas_pivot_t P;
+    armas_conf_t conf = *armas_conf_default();
+
+    armas_x_init(&A0, N, N);
+    armas_x_set_values(&A0, unitrand, 0);
+
+    json_read_write(&Aptr, &A0, 0);
+    if (Aptr) {
+        N = Aptr->rows;
+    }
+    armas_x_init(&A1, N, N);
+    armas_x_init(&W, N, lb == 0 ? 1 : lb);
+    armas_pivot_init(&P, N);
+
+    conf.lb = lb;
+    armas_x_lufactor(Aptr, &P, &conf);
+    armas_x_mcopy(&A1, Aptr);
+
+    conf.lb = 0;
+    armas_x_luinverse(&A1, &P, &conf);
+    if (verbose > 1) {
+        MAT_PRINT("unblk.A^-1", &A1);
+    }
+
+#if 0
+    conf.lb = lb;
+    armas_x_luinverse(&A0, &P, &conf);
+    if (verbose > 1) {
+        MAT_PRINT("blk.A^-1", &A0);
+    }
+
+    n0 = rel_error(&n1, &A1, &A0, ARMAS_NORM_INF, 0, &conf);
+    ok = isFINE(n0, N * ERROR);
+    fails += 1 - ok;
+    printf("%s: unblk.A^-1 == blk.A^-1\n", PASS(ok));
+    if (verbose > 0) {
+        printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
+    }
+#endif
+    if (Aptr && Aptr != &A0)
+        armas_x_free(Aptr);
+    armas_x_release(&A0);
+    armas_x_release(&A1);
+    armas_x_release(&W);
+
+    return fails;
+}
+
 
 int test_equal(int N, int lb, int verbose)
 {
@@ -111,7 +164,7 @@ int main(int argc, char **argv)
     int N = 515;
     int LB = 36;
     int verbose = 1;
-  
+
     while ((opt = getopt(argc, argv, "v")) != -1) {
         switch (opt) {
         case 'v':
@@ -122,9 +175,9 @@ int main(int argc, char **argv)
             exit(1);
         }
     }
-    
+
     if (optind < argc-1) {
-        N = atoi(argv[optind+1]);
+        N = atoi(argv[optind]);
         LB = atoi(argv[optind+1]);
     } else if (optind < argc) {
         N = atoi(argv[optind]);
@@ -132,6 +185,8 @@ int main(int argc, char **argv)
     }
 
     int fails = 0;
+    fails += test_inverse(N, LB, verbose);
+#if 0
     if (test_equal(N, 0, verbose) != 0) 
         fails++;
     if (test_equal(N, LB, verbose) != 0) 
@@ -140,7 +195,7 @@ int main(int argc, char **argv)
         fails++;
     if (test_ident(N, LB, verbose) != 0) 
         fails++;
-    
+#endif
     exit(fails);
 }
 
