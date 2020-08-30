@@ -29,6 +29,7 @@ BLAS = \
 	base/matrix.c \
 	base/matrix_ext.c \
 	base/partition.c \
+	blas/mapply.c \
 	blas/asum.c \
 	blas/axpy.c \
 	blas/dot.c \
