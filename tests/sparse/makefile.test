@@ -1,0 +1,65 @@
+
+CC = gcc
+THREADS = -pthread
+CFLAGS = -g -O0 -ffast-math -fomit-frame-pointer $(THREADS) -I../../src/ -I../../src/inc/ -I../ -I./
+ARCH = -march=native
+
+LIBDIR := ../../src/.libs
+LIB := libarmasd.a 
+
+HELPER = ../helper.c
+
+INCLUDES = ../../src/armas/dmatrix.h ../../src/armas/armas.h ../../src/armas/dsparse.h testing.h
+
+helper.o: $(HELPER)
+	  $(CC) $(CFLAGS) -c -o $@ $<
+	  
+tstmul.o: tstmul.c $(INCLUDES)
+conv.o: conv.c $(INCLUDES)
+sym.o: sym.c $(INCLUDES)
+cg.o: cg.c $(INCLUDES)
+cgnr.o: cgnr.c $(INCLUDES)
+cgne.o: cgne.c $(INCLUDES)
+pcg.o: pcg.c $(INCLUDES)
+gen.o: gen.c $(INCLUDES)
+gmres.o: gmres.c $(INCLUDES)
+pgmres.o: pgmres.c $(INCLUDES)
+cholz.o: cholz.c $(INCLUDES)
+iluz.o: iluz.c $(INCLUDES)
+
+house.o: house.c $(INCLUDES)
+
+house: house.o helper.o
+	$(CC) $(OPT)  -o $@ house.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+conv: conv.o helper.o
+	$(CC) $(OPT)  -o $@ conv.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+cholz: cholz.o helper.o
+	$(CC) $(OPT)  -o $@ cholz.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+iluz: iluz.o helper.o
+	$(CC) $(OPT)  -o $@ iluz.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+gen: gen.o helper.o
+	$(CC) $(OPT)  -o $@ gen.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+gmres: gmres.o helper.o
+	$(CC) $(OPT)  -o $@ gmres.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+pgmres: pgmres.o helper.o
+	$(CC) $(OPT)  -o $@ pgmres.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+trm: trm.o helper.o
+	$(CC) $(OPT)  -o $@ trm.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+sym: sym.o helper.o
+	$(CC) $(OPT)  -o $@ sym.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+cg: cg.o helper.o
+	$(CC) $(OPT)  -o $@ cg.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+cgnr: cgnr.o helper.o
+	$(CC) $(OPT)  -o $@ cgnr.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+cgne: cgne.o helper.o
+	$(CC) $(OPT)  -o $@ cgne.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+pcg: pcg.o helper.o
+	$(CC) $(OPT)  -o $@ pcg.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+tstmul: tstmul.o helper.o
+	$(CC) $(OPT)  -o $@ tstmul.o helper.o -pthread $(LIBDIR)/$(LIB) -lm
+
+
+.PHONY: clean
+clean:
+	rm -f $(TESTS)
+	rm -f *~
