@@ -43,7 +43,7 @@ extern "C" {
 #define ARMAS_ABI_AGE 0
 
 /**
- * @brief Operarand flag bits
+ * @brief Operand flag bits
  */
 enum armas_flags {
     ARMAS_NOTRANS = 0,
@@ -186,8 +186,12 @@ enum armas_json_tokens {
     #define require(x)
 #endif /* ARMAS_WITH_CHECKS */
 
-extern const char *ARMAS_AC_THREADED;
+/* Accelerator with simple recursive scheduling. */
+extern const char *ARMAS_AC_SIMPLE;
+/* Accelerator with persistent worker threads. */
 extern const char *ARMAS_AC_WORKERS;
+/* Accelrator with transient worker threads. */
+extern const char *ARMAS_AC_TRANSIENT;
 
 /**
  * @brief Library configuration block.
@@ -520,6 +524,30 @@ void armas_wrelease(armas_wbuf_t *W)
         free(W->buf);
         W->buf = (char *)0;
         W->bytes = W->offset = 0;
+    }
+}
+
+// @brief Allocate new workspace
+__ARMAS_INLINE
+struct armas_wbuf *armas_wnew(size_t nbytes)
+{
+    struct armas_wbuf *wb = malloc(sizeof(struct armas_wbuf));
+    if (!wb)
+        return wb;
+    if (!armas_walloc(wb, nbytes)) {
+        free(wb);
+        return (struct armas_buf *)0;
+    }
+    return wb;
+}
+
+// @brief Free workspace
+__ARMAS_INLINE
+void armas_wfree(armas_wbuf_t *wb)
+{
+    if (wb) {
+        armas_wrelease(wb);
+        free(wb);
     }
 }
 
