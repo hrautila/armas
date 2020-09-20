@@ -32,11 +32,14 @@ LAPACK functions
    - Givens rotations
    - Random Butterfly transformations
 
-\defgroup matrix Basic matrix operators
-\defgroup blas1 BLAS Level 1 Functions
-\defgroup blas2 BLAS Level 2 Functions
-\defgroup blas3 BLAS Level 3 Functions
-\defgroup lapack LAPACK functions
 
+@defgroup matrix Basic dense matrix operators
+@defgroup blas BLAS functions
+@defgroup blasext BLAS extended precision functions
+@defgroup lapack LAPACK functions
+@defgroup lapackaux Auxiliary Lapack functions
+@defgroup sparse Sparse matrix functions
+@defgroup other Other public functions
+@defgroup private Internal functions
 
 */

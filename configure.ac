@@ -127,6 +127,7 @@ AC_CONFIG_FILES([
    tests/lapack/Makefile
    tests/threaded/Makefile
    tests/workers/Makefile
+   docs/Makefile
 ])
 
 AC_OUTPUT
