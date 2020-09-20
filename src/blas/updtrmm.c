@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013-2015
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -8,19 +8,11 @@
 //! \file
 //! Triangular/trapezoidal matrix rank update
 
-//! \cond
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <math.h>
-#include <string.h>
-#include <assert.h>
-//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_update_trm) // && defined(__update_trm_blk)
+#if defined(armas_x_update_trm)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
@@ -32,10 +24,8 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//! \endcond
 
 /*
  * update diagonal block
@@ -464,7 +454,7 @@ void update_trm_blk(
  * @retval 0  Operation succeeded
  * @retval <0 Failed, conf.error set to actual error code.
  *
- * @ingroup blas3
+ * @ingroup blas
  */
 int armas_x_update_trm(
     DTYPE beta,
@@ -499,7 +489,7 @@ int armas_x_update_trm(
     }
     if (!ok) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     if (conf->optflags & ARMAS_ONAIVE) {
@@ -510,7 +500,7 @@ int armas_x_update_trm(
     armas_cbuf_t cbuf = ARMAS_CBUF_EMPTY;
     if (armas_cbuf_select(&cbuf, conf) < 0) {
         conf->error = ARMAS_EMEMORY;
-        return -1;
+        return -ARMAS_EMEMORY;
     }
 
     cache_t cache;

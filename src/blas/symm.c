@@ -8,11 +8,6 @@
 //! \file
 //! Matrix-matrix multiplication with symmetric matrix
 
-//! \cond
-#include <stdio.h>
-#include <stdlib.h>
-//! \endcond
-
 #include "dtype.h"
 
 // -----------------------------------------------------------------------------
@@ -29,14 +24,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "matcpy.h"
-#ifdef CONFIG_ACCELERATORS
 #include "accel.h"
-#endif /* CONFIG_ACCELERATORS */
-//! \endcond
 
 // C += A*B; A is the diagonal block
 static
@@ -307,7 +298,7 @@ void armas_x_mult_symm_right(
  * @retval   0  Operation succeeded
  * @retval < 0  Failed, conf.error set to actual error code.
  *
- * @ingroup blas3
+ * @ingroup blas
  */
 int armas_x_mult_sym(
     DTYPE beta,

@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -7,11 +7,6 @@
 
 //! \file
 //! Symmetric matrix rank-2 update
-
-//! \cond
-#include <stdio.h>
-#include <stdint.h>
-//! \endcond
 
 #include "dtype.h"
 
@@ -29,11 +24,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "partition.h"
-//! \endcond
 
 /*
  *    a00 a10^T   x0 y0 y1^T   y0 x0 x1^T
@@ -120,9 +113,6 @@ void update_syr2_recursive(
  * If flag *ARMAS_LOWER* (*ARMAR_UPPER*) is set matrix is store in lower (upper) triangular
  * part of A and upper (lower) triangular part is not referenced.
  *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
- *
  * @param[in,out]  A target matrix
  * @param[in]      alpha scalar multiplier
  * @param[in]      X, Y source vector
@@ -132,7 +122,7 @@ void update_syr2_recursive(
  * @retval  0  Success
  * @retval <0  Failed
  *
- * @ingroup blas2
+ * @ingroup blas
  */
 int armas_x_mvupdate2_sym(
     DTYPE beta,
@@ -154,15 +144,15 @@ int armas_x_mvupdate2_sym(
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (!armas_x_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (A->cols != A->rows || ny != nx) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_env_t *env = armas_getenv();

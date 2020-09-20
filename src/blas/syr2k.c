@@ -8,10 +8,6 @@
 //! \file
 //! Symmetric matrix rank-2k update
 
-//! \cond
-#include <stdio.h>
-#include <string.h>
-//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -28,11 +24,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "partition.h"
-//! \endcond
 
 static
 void update_syr2k_unb(
@@ -247,7 +241,7 @@ void update_syr2k_trans_recursive(
  * @retval 0  Operation succeeded
  * @retval <0 Failed, conf.error set to actual error code.
  *
- * @ingroup blas3
+ * @ingroup blas
  */
 int armas_x_update2_sym(
     DTYPE beta,

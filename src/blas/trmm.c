@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -8,11 +8,6 @@
 //! \file
 //! Triangular matrix multiplication
 
-//! \cond
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -31,14 +26,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-#ifdef CONFIG_ACCELERATORS
 #include "accel.h"
-#endif
-//! \endcond
-
 
 /**
  * @brief Triangular matrix-matrix multiply
@@ -56,9 +46,6 @@
  * referenced. Flag bit *ARMAS_UNIT* indicates that matrix A is unit diagonal and the diagonal
  * entries are not accessed.
  *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
- *
  * @param[in,out] B  Result matrix
  * @param[in]   alpha scalar multiplier
  * @param[in]   A Triangular operand matrix
@@ -68,7 +55,7 @@
  * @retval 0  Succeeded
  * @retval <0 Failed, conf.error set to error code.
  *
- * @ingroup blas3
+ * @ingroup blas
  */
 int armas_x_mult_trm(
     armas_x_dense_t *B,

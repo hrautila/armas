@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012-2014
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -7,11 +7,6 @@
 
 //! \file
 //! Matrix-matrix multiplication
-
-//! \cond
-#include <stdlib.h>
-#include <stdint.h>
-//! \endcond
 
 #include "dtype.h"
 
@@ -29,13 +24,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-#ifdef CONFIG_ACCELERATORS
 #include "accel.h"
-#endif /* CONFIG_ACCELERATOR */
-//! \endcond
 
 // ----------------------------------------------------------------------------------------
 // exported public functions
@@ -50,11 +41,6 @@
  *   - \f$ C = alpha \times A B^T + beta \times C \f$  if _ARMAS_TRANSB_ is set
  *   - \f$ C = alpha \times A^T B^T + beta \times C \f$ if _ARMAS_TRANSA_ and _ARMAS_TRANSB_ are set
  *
- * Uses \f$|A|\f$ if flag ARMAS_ABSA set and \f$|B|\f$ if flag ARMAS_ABSB is set.
- *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
- *
  * @param[in,out] C result matrix
  * @param[in] A first operand matrix
  * @param[in] B second operand matrix
@@ -64,9 +50,9 @@
  * @param[in,out] conf environment configuration
  *
  * @retval 0 Operation succeeded
- * @retval -1 Failed, conf.error set to actual error code.
+ * @retval <0 Failed, conf.error set to actual error code.
  *
- * @ingroup blas3
+ * @ingroup blas
  */
 int armas_x_mult(
     DTYPE beta,
