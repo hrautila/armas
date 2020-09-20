@@ -9,11 +9,10 @@
  * Matrix copy operators
  */
 
-//! \cond
 #include <stdio.h>
 
 #include "dtype.h"
-//! \endcond
+
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(armas_x_mcopy) && defined(armas_x_copy)
@@ -72,9 +71,9 @@ void vector_copy(armas_x_dense_t *X,  const armas_x_dense_t *Y, int N)
  * @param[in,out] conf configuration block
  *
  * @retval 0 Ok
- * @retval -1 Failed, conf->error holds error code
+ * @retval < 0 Failed, conf->error holds error code
  *
- * @ingroup blas1
+ * @ingroup blas
  */
 int armas_x_copy(armas_x_dense_t *Y, const armas_x_dense_t *X, armas_conf_t *conf)
 {
@@ -87,7 +86,7 @@ int armas_x_copy(armas_x_dense_t *Y, const armas_x_dense_t *X, armas_conf_t *con
     // only for column or row vectors
     if (!(armas_x_isvector(X) && armas_x_isvector(Y))) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     int N = armas_x_size(X) < armas_x_size(Y) ? armas_x_size(X) : armas_x_size(Y);
 
@@ -110,7 +109,8 @@ int armas_x_copy(armas_x_dense_t *Y, const armas_x_dense_t *X, armas_conf_t *con
  *
  * @retval 0 Success
  * @retval -1 Fail, cf->error holds error code
- * \ingroup matrix
+ * 
+ * @ingroup matrix
  */
 int armas_x_mcopy(armas_x_dense_t *A, const armas_x_dense_t *B, int flags, armas_conf_t *cf)
 {
@@ -122,7 +122,7 @@ int armas_x_mcopy(armas_x_dense_t *A, const armas_x_dense_t *B, int flags, armas
     if (armas_x_isvector(A) && armas_x_isvector(B)) {
         if (armas_x_size(A) != armas_x_size(B)) {
             cf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
         // blas1 vector copy
         vector_copy(A, B, armas_x_size(A));
@@ -138,7 +138,7 @@ int armas_x_mcopy(armas_x_dense_t *A, const armas_x_dense_t *B, int flags, armas
     }
     if (!ok) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     if (flags & ARMAS_TRANS) {

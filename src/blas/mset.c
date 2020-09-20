@@ -9,11 +9,8 @@
  * Matrix set values.
  */
 
-//! \cond
-#include <stdio.h>
-
 #include "dtype.h"
-//! \endcond
+
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(armas_x_set_values) && defined(armas_x_make_trm)
@@ -51,8 +48,8 @@
  *      flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT,ARMAS_SYMM)
  *
  * @returns 0  Succes
- * @returns -1 Failure
- * \ingroup matrix
+ * @returns <0 Failure
+ * @ingroup matrix
  */
 int armas_x_set_values(armas_x_dense_t *A, armas_x_valuefunc_t value, int flags)
 {
@@ -105,34 +102,34 @@ int armas_x_set_values(armas_x_dense_t *A, armas_x_valuefunc_t value, int flags)
  * part to zero. If bit ARMAS_UNIT is set then diagonal element
  * is set to one.
  *
- * @param [in,out] m
+ * @param [in,out] A
  *      On entry, input matrix. On exit triangular matrix.
  * @param [in] flags
  *      flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
  *
- * \ingroup matrix
+ * @ingroup matrix
  */
-void armas_x_make_trm(armas_x_dense_t *m, int flags)
+void armas_x_make_trm(armas_x_dense_t *A, int flags)
 {
     int i, j;
     if (flags & ARMAS_UPPER) {
         // clear lower triangular/trapezoidial part
-        for (j = 0; j < m->cols; j++) {
+        for (j = 0; j < A->cols; j++) {
             if (flags & ARMAS_UNIT)
-                m->elems[j + j*m->step] = ONE;
-            for (i = j+1; i < m->rows; i++) {
-                m->elems[j*m->step+i] = ZERO;
+                armas_x_set_unsafe(A, j, j, ONE);
+            for (i = j+1; i < A->rows; i++) {
+                armas_x_set_unsafe(A, i, j, ZERO);
             }
         }
     }
     else if (flags & ARMAS_LOWER) {
         // clear upper triangular/trapezoidial part
-        for (j = 0; j < m->cols; j++) {
-            for (i = 0; i < m->rows && i < j; i++) {
-                m->elems[i + j*m->step] = ZERO;
+        for (j = 0; j < A->cols; j++) {
+            for (i = 0; i < A->rows && i < j; i++) {
+                armas_x_set_unsafe(A, i, j, ZERO);
             }
-            if (flags & ARMAS_UNIT && j < m->rows)
-                m->elems[j + j*m->step] = ONE;
+            if (flags & ARMAS_UNIT && j < A->rows)
+                armas_x_set_unsafe(A, j, j, ONE);
         }
     }
 }

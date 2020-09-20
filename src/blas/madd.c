@@ -1,19 +1,11 @@
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
-/**
- * \file
- * Matrix copy operators
- */
-
-//! \cond
-#include <stdio.h>
-
 #include "dtype.h"
-//! \endcond
+
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(armas_x_madd)
@@ -61,6 +53,8 @@ void vec_add(armas_x_dense_t *X,  const DTYPE alpha, int N)
 /**
  * @brief Element-wise increment of matrix by real constant.
  *
+ * Computes \f$ A = A + \alpha \f$
+ * 
  * Affected elements are selected with flag bits. If ARMAS_UPPER (ARMAS_LOWER)
  * is set then upper (lower) triangular part is scaled. If bit ARMAS_UNIT
  * is set then diagonal entry is not touched.
@@ -68,7 +62,8 @@ void vec_add(armas_x_dense_t *X,  const DTYPE alpha, int N)
  * @param [in,out] A matrix
  * @param [in] alpha constant
  * @param [in] flags flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
- * \ingroup matrix
+ * 
+ * @ingroup matrix
  */
 int armas_x_madd(armas_x_dense_t *A, DTYPE alpha, int flags, armas_conf_t *cf)
 {
@@ -107,7 +102,7 @@ int armas_x_madd(armas_x_dense_t *A, DTYPE alpha, int flags, armas_conf_t *cf)
     case ARMAS_SYMM:
         if (A->rows != A->cols) {
             cf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
         // fall through to do it.
     default:

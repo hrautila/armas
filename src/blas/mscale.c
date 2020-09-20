@@ -1,4 +1,4 @@
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -9,11 +9,8 @@
  * Matrix copy operators
  */
 
-//! \cond
-#include <stdio.h>
-
 #include "dtype.h"
-//! \endcond
+
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(armas_x_mscale) && defined(armas_x_scale)
@@ -83,9 +80,9 @@ int armas_x_scale_unsafe(armas_x_dense_t *x, DTYPE alpha)
  * @param[in,out] conf configuration block
  *
  * @retval 0 Ok
- * @retval -1 Failed, conf->error holds error code
+ * @retval <0 Failed, conf->error holds error code
  *
- * @ingroup blas1
+ * @ingroup blas
  */
 int armas_x_scale(armas_x_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 {
@@ -94,12 +91,12 @@ int armas_x_scale(armas_x_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 
     if (armas_x_size(x) == 0)
         return 0;
-    
+
     require(x->step >= x->rows);
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
 
     vec_scale(x, alpha, armas_x_size(x));
@@ -109,6 +106,8 @@ int armas_x_scale(armas_x_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
 
 /**
  * @brief Scale matrix by real constant.
+ * 
+ * Computes  \f$ A = \alpha \times A \f$
  *
  * Element wise scaling of matrix element by a constant. Affected
  * elements are selected with flag bits. If ARMAS_UPPER (ARMAS_LOWER)
@@ -122,7 +121,7 @@ int armas_x_scale(armas_x_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
  * @param [in] flags
  *      flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
  *
- * \ingroup matrix
+ * @ingroup matrix
  */
 int armas_x_mscale(armas_x_dense_t *m, const DTYPE alpha, int flags, armas_conf_t *cf)
 {

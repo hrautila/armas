@@ -8,11 +8,8 @@
 //! \file
 //! Matrix element wise addition
 
-//! \cond
-#include <stdio.h>
-
 #include "dtype.h"
-//! \endcond
+
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(armas_x_mplus)
@@ -25,10 +22,8 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//! \endcond
 
 static
 void madd_lower(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
@@ -283,7 +278,9 @@ void madd_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t
  *      Indicator flags for matrix shape, ARMAS_UPPER, ARMAS_LOWER or ARMAS_TRANS
  * @param [in] conf
  *      Configuration block
- * \ingroup matrix
+ * @retval 0 OK
+ * @retval <0 Error
+ * @ingroup matrix
  */
 
 int armas_x_mplus(
@@ -309,12 +306,12 @@ int armas_x_mplus(
     if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
         if (A->rows != B->cols || A->cols != B->rows) {
             cf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
     } else {
         if (A->rows != B->rows || A->cols != B->cols) {
             cf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
     }
 

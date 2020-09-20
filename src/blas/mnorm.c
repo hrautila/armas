@@ -8,9 +8,7 @@
 //! \file
 //! Matrix norm functions
 
-//! \cond
 #include "dtype.h"
-//! \endcond
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
@@ -26,12 +24,8 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//#include "internal_lapack.h"
-//! \endcond
 
 static
 void sum_of_sq(ABSTYPE *ssum, ABSTYPE *scale, armas_x_dense_t *X, ABSTYPE sum, ABSTYPE scl)
@@ -116,16 +110,18 @@ ABSTYPE matrix_norm_inf(const armas_x_dense_t *x, armas_conf_t *conf)
 
 
 /**
- * \brief Compute norm of general matrix A.
+ * @brief Compute norm of general matrix A.
  *
- * \param[in] A
+ * @param[in] A
  *    Input matrix
- * \param[in] which
+ * @param[in] which
  *    Norm to compute, one of ARMAS_NORM_ONE, ARMAS_NORM_TWO, ARMAS_NORM_INF or
  *    ARMAS_NORM_FRB
- * \param[in] conf
+ * @param[in] conf
  *    Optional configuration block
- * \ingroup matrix
+ * @return
+ *    Value of requested norm.
+ * @ingroup matrix
  */
 ABSTYPE armas_x_mnorm(const armas_x_dense_t *A, int which, armas_conf_t *conf)
 {
