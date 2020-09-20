@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013-2015
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -8,10 +8,6 @@
 //! \file
 //! Symmetric matrix rank update
 
-//! \cond
-#include <stdio.h>
-#include <stdint.h>
-//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -28,10 +24,8 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//! \endcond
 
 /**
  * @brief Symmetric matrix rank-1 update.
@@ -52,7 +46,7 @@
  * @retval  0  Success
  * @retval <0  Failed
  *
- * @ingroup blas2
+ * @ingroup blas
  */
 int armas_x_mvupdate_sym(
     DTYPE beta,

@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -7,11 +7,6 @@
 
 //! \file
 //! Triangular multiply
-
-//! \cond
-#include <stdio.h>
-#include <stdint.h>
-//! \endcond
 
 #include "dtype.h"
 
@@ -27,11 +22,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "partition.h"
-//! \endcond
 
 /*
  *  LEFT-UPPER
@@ -203,9 +196,6 @@ void trmv_forward_recursive(
     int min_mvec_size)
 {
     armas_x_dense_t ATL, ATR, ABL, ABR, xT, xB;
-    //armas_x_dense_t x0, x1;
-    //armas_x_dense_t a0, a1;
-    // int N = A->cols;
 
     if (A->cols < min_mvec_size) {
         trmv_unb(X, alpha, A, flags);
@@ -228,25 +218,6 @@ void trmv_forward_recursive(
     }
     // bottom part
     trmv_forward_recursive(&xB, alpha, &ABR, flags, min_mvec_size);
-#if 0
-    // top part
-    armas_x_subvector_unsafe(&x0, X, 0, N/2);
-    armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);
-    trmv_forward_recursive(&x0, &a0, alpha, flags, min_mvec_size);
-
-    // update top with bottom
-    armas_x_subvector_unsafe(&x1, X, N/2, N-N/2);
-    if (flags & ARMAS_UPPER) {
-        armas_x_submatrix_unsafe(&a1, A, 0, N/2, N/2, N-N/2);
-    } else {
-        armas_x_submatrix_unsafe(&a1, A, N/2, 0, N-N/2, N/2);
-    }
-    armas_x_mvmult_unsafe(ONE, &x0, alpha, &a1, &x1, flags);
-
-    // bottom part
-    armas_x_submatrix_unsafe(&a1, A, N/2, N/2, N-N/2, N-N/2);
-    trmv_forward_recursive(&x1, &a1, alpha, flags, min_mvec_size);
-#endif
 }
 
 /*
@@ -267,11 +238,7 @@ void trmv_backward_recursive(
     int min_mvec_size)
 {
     armas_x_dense_t ATL, ATR, ABL, ABR, xT, xB;
-    //armas_x_dense_t x0, x1;
-    //armas_x_dense_t a0, a1;
-    //int N = A->cols;
 
-    //printf("trmv_bk_recursive: N=%d\n", N);
     if (A->cols < min_mvec_size) {
         trmv_unb(X, alpha, A, flags);
         return;
@@ -293,26 +260,6 @@ void trmv_backward_recursive(
     }
     // top part
     trmv_backward_recursive(&xT, alpha, &ATL, flags, min_mvec_size);
-#if 0
-    // bottom part
-    armas_x_subvector_unsafe(&x1, X, N/2, N-N/2);
-    armas_x_submatrix_unsafe(&a1, A, N/2, N/2, N-N/2, N-N/2);
-    trmv_backward_recursive(&x1, &a1, alpha, flags, min_mvec_size);
-
-    // update bottom with top
-    armas_x_subvector_unsafe(&x0, X, 0, N/2);
-    if (flags & ARMAS_UPPER) {
-        armas_x_submatrix_unsafe(&a0, A, 0, N/2, N/2, N-N/2);
-    } else {
-        armas_x_submatrix_unsafe(&a0, A, N/2, 0, N-N/2, N/2);
-    }
-    armas_x_mvmult_unsafe(ONE, &x1, alpha, &a0, &x0, flags);
-
-
-    // top part
-    armas_x_submatrix_unsafe(&a0, A, 0, 0, N/2, N/2);
-    trmv_backward_recursive(&x0, &a0, alpha, flags, min_mvec_size);
-#endif
 }
 
 #if defined(armas_x_mvmult_trm_unsafe)
@@ -350,14 +297,9 @@ void armas_x_mvmult_trm_unsafe(
  * Computes
  *    - \f$ X = alpha \times A X \f$
  *    - \f$ X = alpha \times A^T X  \f$   if *ARMAS_TRANS* set
- *    - \f$ X = alpha \times |A| |X| \f$  if *ARMAS_ABS* set
- *    - \f$ X = alpha \times |A^T| |X| \f$ if *ARMAS_ABS* and *ARMAS_TRANS* set
  *
  * where A is upper (lower) triangular matrix defined with flag bits *ARMAS_UPPER*
  * (*ARMAS_LOWER*).
- *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
  *
  * @param[in,out] X target and source vector
  * @param[in]     alpha scalar multiplier
@@ -368,7 +310,7 @@ void armas_x_mvmult_trm_unsafe(
  * @retval  0  Success
  * @retval <0  Failed
  *
- * @ingroup blas2
+ * @ingroup blas
  */
 int armas_x_mvmult_trm(
     armas_x_dense_t *x,
@@ -387,11 +329,11 @@ int armas_x_mvmult_trm(
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (A->cols != nx || A->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_env_t *env = armas_getenv();

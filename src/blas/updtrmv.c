@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013-2015
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -7,11 +7,6 @@
 
 //! \file
 //! Triangular matrix update
-
-//! \cond
-#include <stdio.h>
-#include <stdint.h>
-//! \endcond
 
 #include "dtype.h"
 
@@ -29,11 +24,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "partition.h"
-//! \endcond
 
 /*
  * Unblocked update of triangular (M == N) and trapezoidial (M != N) matrix.
@@ -130,9 +123,6 @@ void armas_x_mvupdate_trm_unsafe(
  * where A is upper (lower) triangular or trapezoidial matrix as defined with
  * flag bits *ARMAS_UPPER* (*ARMAS_LOWER*).
  *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
- *
  * @param[in,out]  A target matrix
  * @param[in]      alpha scalar multiplier
  * @param[in]      X source vector
@@ -143,7 +133,7 @@ void armas_x_mvupdate_trm_unsafe(
  * @retval  0  Success
  * @retval <0  Failed
  *
- * @ingroup blas2
+ * @ingroup blas
  */
 int armas_x_mvupdate_trm(
     DTYPE beta,
@@ -165,20 +155,19 @@ int armas_x_mvupdate_trm(
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (!armas_x_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
 
     if (A->cols != ny || A->rows != nx) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_env_t *env = armas_getenv();
-    // normal precision here
     switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_ORECURSIVE)) {
     case ARMAS_ORECURSIVE:
         update_trmv_recursive(beta, A, alpha, x, y, flags, env->blas2min);

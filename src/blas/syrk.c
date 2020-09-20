@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013-2015
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -8,9 +8,6 @@
 //! \file
 //! Symmetric matrix rank-k update
 
-//! \cond
-#include <string.h>
-//! \endcond
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -27,9 +24,7 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
-//! \endcond
 
 /**
  * @brief Symmetric matrix rank-k update
@@ -52,7 +47,7 @@
  * @retval 0  Operation succeeded
  * @retval <0 Failed, conf.error set to actual error code.
  *
- * @ingroup blas3
+ * @ingroup blas
  */
 int armas_x_update_sym(
     DTYPE beta,
@@ -80,7 +75,7 @@ int armas_x_update_sym(
     }
     if (!ok) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     int uflags = flags & (ARMAS_UPPER | ARMAS_LOWER);
     uflags |= (flags & ARMAS_TRANS ? ARMAS_TRANSA : ARMAS_TRANSB);

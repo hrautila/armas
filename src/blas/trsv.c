@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -7,11 +7,6 @@
 
 //! \file
 //! Triangular solve
-
-//! \cond
-#include <stdio.h>
-#include <stdint.h>
-//! \endcond
 
 #include "dtype.h"
 
@@ -29,11 +24,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "partition.h"
-//! \endcond
 
 /*
  *  LEFT-UPPER
@@ -359,9 +352,6 @@ void armas_x_mvsolve_trm_unsafe(
  * where A is upper (lower) triangular matrix defined with flag bits *ARMAS_UPPER*
  * (*ARMAS_LOWER*).
  *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
- *
  * @param[in,out] X target and source vector
  * @param[in]     alpha scalar multiplier
  * @param[in]     A matrix
@@ -371,7 +361,7 @@ void armas_x_mvsolve_trm_unsafe(
  * @retval  0 Success
  * @retval <0 Failed
  *
- * @ingroup blas2
+ * @ingroup blas
  */
 int armas_x_mvsolve_trm(
     armas_x_dense_t *x,
@@ -390,15 +380,14 @@ int armas_x_mvsolve_trm(
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (A->cols != nx || A->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_env_t *env = armas_getenv();
-    // normal precision here
     if ((conf->optflags & ARMAS_ONAIVE) || env->blas2min == 0) {
         trsv_unb(x, alpha, A, flags);
         return 0;

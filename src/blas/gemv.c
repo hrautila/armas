@@ -8,11 +8,6 @@
 //! \file
 //! matrix-vector multiplication
 
-//! \cond
-#include <stdio.h>
-#include <stdint.h>
-//! \endcond
-
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -27,12 +22,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "nosimd/mvec.h"
 #include "partition.h"
-//! \endcond
 
 // Y = alpha*A*X + beta*Y for rows R:E, A is M*N and 0 < R < E <= M, Update
 // with S:L columns from A and correspoding elements from X.
@@ -237,7 +230,7 @@ void gemv_recursive(
     gemv_recursive(&yB, alpha, &ABR, &xB, flags, min_mvec_size);
 }
 
-/**
+/*
  * Matrix vector multiply with no bounds check.
  */
 void armas_x_mvmult_unsafe(
@@ -264,11 +257,6 @@ void armas_x_mvmult_unsafe(
  * Computes
  *   - \f$ Y = alpha \times A X + beta \times Y \f$
  *   - \f$ Y = alpha \times A^T X + beta \times Y  \f$   if *ARMAS_TRANS* set
- *   - \f$ Y = alpha \times |A| |X|  + beta \times Y \f$ if *ARMAS_ABS* set
- *   - \f$ Y = alpha \times |A^T| |X| + beta \times Y \f$ if *ARMAS_ABS* and *ARMAS_TRANS* set
- *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
  *
  *  @param[in]      beta scalar
  *  @param[in,out]  Y   target and source vector
@@ -281,7 +269,7 @@ void armas_x_mvmult_unsafe(
  *  @retval  0  Success
  *  @retval <0  Failed
  *
- * @ingroup blas2
+ * @ingroup blas
  */
 int armas_x_mvmult(
     DTYPE beta,
@@ -304,7 +292,7 @@ int armas_x_mvmult(
 
     if (!(armas_x_isvector(x) && armas_x_isvector(y))) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     // check consistency
     switch (flags & ARMAS_TRANS) {
@@ -317,7 +305,7 @@ int armas_x_mvmult(
     }
     if (! ok) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     if (beta != ONE) {

@@ -8,11 +8,6 @@
 //! \file
 //! symmetric matrix - vector multiplication
 
-//! \cond
-#include <stdio.h>
-#include <stdint.h>
-//! \endcond
-
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -29,12 +24,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "partition.h"
-//! \endcond
-
 
 /*
  * Objective: read matrix A in memory order, along columns.
@@ -187,7 +179,7 @@ void armas_x_mvmult_sym_unsafe(
  *  @retval  0  Success
  *  @retval <0  Failed
  *
- * @ingroup blas2
+ * @ingroup blas
  */
 int armas_x_mvmult_sym(
     DTYPE beta,
@@ -210,17 +202,17 @@ int armas_x_mvmult_sym(
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (!armas_x_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
 
     ok = A->cols == A->rows && nx == ny && nx == A->cols;
     if (! ok) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     armas_env_t *env = armas_getenv();
     if (beta != ONE) {

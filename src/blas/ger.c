@@ -8,11 +8,6 @@
 //! \file
 //! Matrix rank update
 
-//! \cond
-#include <stdio.h>
-#include <stdint.h>
-//! \endcond
-
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -27,12 +22,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "partition.h"
-//! \endcond
-
 
 static
 void update4axpy(
@@ -213,11 +205,7 @@ void armas_x_mvupdate_unsafe(
 /**
  * @brief General matrix rank update.
  *
- * Computes
- *   - \f$ A = A + alpha \times X Y^T \f$
- *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
+ * Computes  \f$ A = A + alpha \times X Y^T \f$
  *
  * @param[in,out]  A target matrix
  * @param[in]      X source vector
@@ -225,7 +213,7 @@ void armas_x_mvupdate_unsafe(
  * @param[in]      alpha scalar multiplier
  * @param[in]      conf  configuration block
  *
- * @ingroup blas2
+ * @ingroup blas
  */
 int armas_x_mvupdate(
     DTYPE beta,
@@ -246,15 +234,15 @@ int armas_x_mvupdate(
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (!armas_x_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (A->cols != ny || A->rows != nx) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_env_t *env = armas_getenv();
