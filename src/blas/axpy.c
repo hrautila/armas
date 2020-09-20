@@ -6,11 +6,11 @@
 // any later version. See the COPYING tile included in this archive.
 
 //! \file
-//! Scaled summation
+//! Scaled vector to vector addition.
+//! @addtogroup blas
+//! @{
 
-//! \cond
 #include "dtype.h"
-//! \endcond
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
@@ -24,11 +24,8 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//! \endcond
-
 
 void armas_x_axpby_unsafe(
     DTYPE beta,
@@ -81,9 +78,7 @@ void armas_x_axpby_unsafe(
  * @param[out]    conf configuration block
  *
  * @retval 0 Ok
- * @retval -1 Failed, conf->error holds error code
- *
- * @ingroup blas1
+ * @retval < 0 Failed, conf->error holds error code
  */
 int armas_x_axpby(
     DTYPE beta,
@@ -98,11 +93,11 @@ int armas_x_axpby(
 
     if (!(armas_x_isvector(x) && armas_x_isvector(y))) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (armas_x_size(x) != armas_x_size(y)) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_x_axpby_unsafe(beta, y, alpha, x);
@@ -112,18 +107,13 @@ int armas_x_axpby(
 /**
  * @brief Compute \f$ y = y + alpha*x \f$
  *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
- *
  * @param[in,out] y target and source vector
  * @param[in]     alpha scalar multiplier
  * @param[in]     x source vector
  * @param[out]    conf configuration block
  *
  * @retval 0 Ok
- * @retval -1 Failed, conf->error holds error code
- *
- * @ingroup blas1
+ * @retval < 0 Failed, conf->error holds error code
  */
 int armas_x_axpy(
     armas_x_dense_t *y,
@@ -133,7 +123,7 @@ int armas_x_axpy(
 {
     return armas_x_axpby(ONE, y, alpha, x, conf);
 }
-
+//! @}
 #else
 #warning "Missing defines; no code!"
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

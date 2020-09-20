@@ -22,11 +22,8 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//! \endcond
-
 
 /*
  * Overflow is avoided by summing squares of scaled numbers and
@@ -78,7 +75,8 @@
  * @param[in] x vector
  * @param[in,out] conf configuration block
  *
- * @ingroup blas1
+ * @return Norm of the vector
+ * @ingroup blas
  */
 ABSTYPE armas_x_nrm2(const armas_x_dense_t *x, armas_conf_t *conf)
 {

@@ -22,10 +22,8 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//! \endcond
 
 static
 DTYPE vec_dot(const armas_x_dense_t *X,  const armas_x_dense_t *Y, int N)
@@ -136,7 +134,7 @@ DTYPE armas_x_dot_unsafe(const armas_x_dense_t *x, const armas_x_dense_t *y)
  *
  * @return 0 for success, -1 for error.
  *
- * @ingroup blas1
+ * @ingroup blas
  */
 int armas_x_adot(DTYPE *value, DTYPE alpha, 
         const armas_x_dense_t *x, const armas_x_dense_t *y, armas_conf_t *conf)
@@ -181,7 +179,7 @@ int armas_x_adot(DTYPE *value, DTYPE alpha,
  * @param[in] y vector
  * @param[in] conf configuration block
  *
- * @ingroup blas1
+ * @ingroup blas
  */
 DTYPE armas_x_dot(const armas_x_dense_t *x, const armas_x_dense_t *y, armas_conf_t *conf)
 {

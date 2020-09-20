@@ -22,10 +22,8 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//! \endcond
 
 // return index of max absolute value
 static
@@ -149,7 +147,7 @@ int vec_iamin2(const armas_x_dense_t *X,  int N)
  * @retval >= 0 index of maximum element
  * @retval -1  error, conf->error holds error code
  *
- * @ingroup blas1
+ * @ingroup blas
  */
 int armas_x_iamax(const armas_x_dense_t *x, armas_conf_t *conf)
 {
@@ -159,11 +157,11 @@ int armas_x_iamax(const armas_x_dense_t *x, armas_conf_t *conf)
     // only for column or row vectors
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (armas_x_size(x) == 0) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     return vec_iamax2(x, armas_x_size(x));
 }
@@ -176,8 +174,8 @@ ABSTYPE armas_x_amax(const armas_x_dense_t *x, armas_conf_t *conf)
     if (!conf)
         conf = armas_conf_default();
 
-    int imax = armas_x_iamax(x, conf); //vec_iamax2(x, armas_x_size(x));
-    if (imax != -1) {
+    int imax = armas_x_iamax(x, conf);
+    if (imax >= 0) {
         return ABS(armas_x_get_at_unsafe(x, imax));
     }
     return ZERO;

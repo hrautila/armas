@@ -22,10 +22,8 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//! \endcond
 
 
 static
@@ -86,9 +84,9 @@ void vec_swap(armas_x_dense_t * X, armas_x_dense_t * Y, int N)
  * @param[in,out] conf configuration block
  *
  * @retval 0 Ok
- * @retval -1 Failed, conf->error holds error code
+ * @retval <0 Failed, conf->error holds error code
  *
- * @ingroup blas1
+ * @ingroup blas
  */
 int armas_x_swap(armas_x_dense_t * Y, armas_x_dense_t * X, armas_conf_t * conf)
 {
@@ -98,15 +96,15 @@ int armas_x_swap(armas_x_dense_t * Y, armas_x_dense_t * X, armas_conf_t * conf)
     // only for column or row vectors
     if (X->cols != 1 && X->rows != 1) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (Y->cols != 1 && Y->rows != 1) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (armas_x_size(X) != armas_x_size(Y)) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if (armas_x_size(X) == 0 || armas_x_size(Y) == 0) {
         return 0;

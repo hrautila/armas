@@ -1,12 +1,16 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
-//! \file
-//! Absolute sum
+/**
+ *  @file
+ * Absolute sum
+ * @addtogroup blas
+ * @{
+ */
 
 #include "dtype.h"
 
@@ -22,12 +26,8 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-
-// include conditional code macros
-//! \endcond
 
 // return sum of absolute values
 static
@@ -136,17 +136,10 @@ DTYPE vec_asum_recursive(const armas_x_dense_t *X, int n, int min_mvec)
     return c0 + c1 + c2 + c3;
 }
 
-
-
 /**
  * @brief Compute \f$ \sum_{i=0}^{len(x)-1} |x| \f$
  *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
- *
- * @retval sum of absolute values of x elements
- *
- * @ingroup blas1
+ * @retval Sum of absolute values of x elements
  */
 ABSTYPE armas_x_asum(const armas_x_dense_t *x, armas_conf_t *conf)
 {
@@ -174,3 +167,5 @@ ABSTYPE armas_x_asum(const armas_x_dense_t *x, armas_conf_t *conf)
 #else
 #warning "Missing defines. No code"
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
+
+//! @}
