@@ -5,7 +5,6 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
-//! \cond
 #include "armas.h"
 #include "dtype.h"
 #include "dlpack.h"
@@ -28,7 +27,6 @@
 #include "internal.h"
 #include "internal_lapack.h"
 #include "pivot.h"
-//! \endcond
 
 /*
  * Apply diagonal pivot (row and column swapped) to symmetric matrix blocks.

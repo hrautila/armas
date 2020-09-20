@@ -18,6 +18,13 @@
 
 #include "armas.h"
 
+/**
+ * @file
+ * Environment functions.
+ * @addtogroup other
+ * @{
+ */
+
 #define CMEMSIZE 256*1024L
 #define CMEM_MIN 4096
 #define L1MEM_MIN 1024
@@ -61,8 +68,6 @@ static int armas_x_read_environment = 0;
 #define ENV_ARMAS_DEBUG  "ARMAS_DEBUG"
 #endif
 
-/**
- */
 static
 void armas_read_environment()
 {
@@ -144,18 +149,30 @@ void armas_read_environment()
     armas_x_read_environment = 1;
 }
 
+/**
+ * @brief Get blocking configurations.
+ *
+ * @return Pointer to blocking and memory configuration.
+ */
 struct armas_env *armas_getenv()
 {
     armas_read_environment();
     return &__env_config;
 }
 
+/**
+ * @brief Get default configuration block.
+ *
+ * Library global configuration structure. This is used whenever null pointer to configuration block is
+ * provided as function argument.
+ */
 struct armas_conf *armas_conf_default()
 {
     armas_read_environment();
     return &__default_conf;
 }
 
+//! @}
 #else
 #warning "No active code"
 #endif // __ARMAS_PROVIDES && __ARMAS_REQUIRES

@@ -15,6 +15,13 @@
 #include "armas.h"
 #include "accel.h"
 
+/***
+ * @file
+ * Accelerator API functions.
+ * @addtogroup other
+ * @{
+ */
+
 #ifndef ENV_ARMAS_AC_CONFIG
 #define ENV_ARMAS_AC_CONFIG "ARMAS_AC_CONFIG"
 #endif
@@ -258,3 +265,4 @@ struct armas_ac_env *armas_ac_getenv()
     }
     return &env;
 }
+//! @}

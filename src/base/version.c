@@ -48,7 +48,7 @@ const char *armas_name()
 }
 
 /**
- * @brief Return library configuration options. Last entry is always zero length string.
+ * @brief Return library build configuration options. Last entry is always zero length string.
  */
 const char **armas_config_options()
 {

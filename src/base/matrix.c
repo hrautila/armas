@@ -10,7 +10,6 @@
  * Matrix basic operators
  */
 
-//! \cond
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -30,7 +29,6 @@
 // return byte offset to first CPU cacheline aligned byte.
 #define ALIGNOFFSET(ptr) \
   (((unsigned long)(ptr) & CLMASK) ? CACHELINE-((unsigned long)(ptr) & CLMASK) : 0)
-//! \endcond
 
 // non-inline functions
 

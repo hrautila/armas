@@ -6,9 +6,12 @@
 // any later version. See the COPYING tile included in this archive.
 
 /**
- * \file
+ * @file
  * Cache memory functions.
+ * @addtogroup other
+ * @{
  */
+
 #include <sys/types.h>
 #include <stdint.h>
 #include <assert.h>
@@ -504,3 +507,5 @@ int armas_cbuf_select(armas_cbuf_t *cbuf, armas_conf_t *cf)
     }
     return -1;
 }
+
+//! @}
