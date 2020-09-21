@@ -136,9 +136,9 @@ int armas_x_ext_axpby_dx_unsafe(
  * @param[out]    conf configuration block
  *
  * @retval 0 Ok
- * @retval -1 Failed, conf->error holds error code
+ * @retval <0 Failed, conf->error holds error code
  *
- * @ingroup blas1
+ * @ingroup blasext
  */
 int armas_x_ext_axpby(
     DTYPE beta,

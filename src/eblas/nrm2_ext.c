@@ -1,27 +1,30 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
+//! @cond
 #include "dtype.h"
+//! @endcond
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
-#if defined(armas_x_ex_nrm2) 
-#define __ARMAS_PROVIDES 1
+#if defined(armas_x_ext_nrm2)
+#define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
-
+//! @cond
 #include "internal.h"
 #include "matrix.h"
 #include "eft.h"
+//! @endcond
 
 // return vector norm; naive version
 static inline
@@ -60,16 +63,6 @@ ABSTYPE __vec_nrm2_ext(const mvec_t *X,  int N)
     return __SQRT(s0 + c0 + c1);
 }
 
-/*
- * Nick Higham in Accurrancy and Precision:
- *   For about half of all machine numbers x, value of x^2 either
- *   underflows or overflows
- *
- * Overflow is avoided by summing squares of scaled numbers and
- * then multiplying then with the scaling factor. Following is
- * is by Hammarling and included in BLAS reference libary.
- */
-
 static inline
 ABSTYPE __vec_nrm2_ext_scaled(const mvec_t *X,  int N)
 {
@@ -100,15 +93,15 @@ ABSTYPE __vec_nrm2_ext_scaled(const mvec_t *X,  int N)
     return scale*__SQRT(sum + c);
 }
 
-/**
+/*
  * @brief Norm2 of vector
  *
  * @param[in] x vector
  * @param[in,out] conf configuration block
  *
- * @ingroup xblas1
+ * @ingroup blasext
  */
-ABSTYPE armas_x_ex_nrm2(const armas_x_dense_t *x, armas_conf_t *conf)
+ABSTYPE armas_x_ext_nrm2(const armas_x_dense_t *x, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
@@ -132,10 +125,5 @@ ABSTYPE armas_x_ex_nrm2(const armas_x_dense_t *x, armas_conf_t *conf)
     return __vec_nrm2_ext_scaled(&X, armas_x_size(x));
 }
 
-#endif /* __ARMAS_REQUIRES && __ARMAS_PROVIDES */
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:
+#endif /* ARMAS_REQUIRES && ARMAS_PROVIDES */
 

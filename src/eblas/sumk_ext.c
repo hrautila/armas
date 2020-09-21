@@ -23,7 +23,6 @@
 #include "internal.h"
 #include "eft.h"
 
-
 static
 void ext_sumk(DTYPE *res, const armas_x_dense_t *x, int K)
 {
@@ -59,27 +58,27 @@ void ext_sumk(DTYPE *res, const armas_x_dense_t *x, int K)
  *
  * @retval sum of x elements
  *
- * @ingroup blas1
+ * @ingroup blasext
  */
 DTYPE armas_x_ext_sumk_unsafe(const armas_x_dense_t *X, int K)
 {
-    DTYPE h, l;
-    return h+l;
+    DTYPE res;
+    ext_sum(&res, X, K);
+    return res;
 }
 
-/**
- * @brief Compute alpha*sum(x) or alpha*sum(abs(x)) with extended internal precission
+/*
+ * @brief Compute sum(x) with extended internal precission
  *
  * @param result
  *    On exit, result of the computation.
- * @param alpha
- *    Constant scalar
  * @param X
  *    Vector
- * @param flags
- *    If ARMAS_ABS set the sum of absolute values is computed.
- *
- * @ingroup blas1ext
+ * @param K
+ *    Precission level
+ * @param cf
+  *
+ * @ingroup blasext
  */
 int armas_x_ext_sumk(DTYPE *result, const armas_x_dense_t *X, int K, armas_conf_t *cf)
 {
@@ -89,23 +88,17 @@ int armas_x_ext_sumk(DTYPE *result, const armas_x_dense_t *X, int K, armas_conf_
 
     if (!armas_x_isvector(X)) {
         cf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (!result) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
-
+    ext_sum(result, X, K);
     return 0;
 }
 
 #else
 #warning "Missing defines; no code!"
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
 

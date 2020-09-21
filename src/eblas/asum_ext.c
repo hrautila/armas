@@ -99,12 +99,12 @@ void ext_sum2s(DTYPE *h, DTYPE *l, const armas_x_dense_t *X, int N)
     *l = a0;
 }
 
-/**
+/*
  * @brief Compute sum(x)
  *
  * @retval sum of x elements
  *
- * @ingroup blas1
+ * @ingroup blasext
  */
 DTYPE armas_x_ext_sum_unsafe(const armas_x_dense_t *X)
 {
@@ -116,16 +116,19 @@ DTYPE armas_x_ext_sum_unsafe(const armas_x_dense_t *X)
 /**
  * @brief Compute alpha*sum(x) or alpha*sum(abs(x)) with extended internal precission
  *
- * @param result
+ * @param[out] result
  *    On exit, result of the computation.
- * @param alpha
+ * @param[in] alpha
  *    Constant scalar
- * @param X
+ * @param[in] X
  *    Vector
- * @param flags
+ * @param[in] flags
  *    If ARMAS_ABS set the sum of absolute values is computed.
  *
- * @ingroup blas1ext
+ * @retval 0 Success
+ * @retval < 0 Error
+ *
+ * @ingroup blasext
  */
 int armas_x_ext_sum(DTYPE *result, DTYPE alpha, const armas_x_dense_t *X, int flags, armas_conf_t *cf)
 {
@@ -150,7 +153,7 @@ int armas_x_ext_sum(DTYPE *result, DTYPE alpha, const armas_x_dense_t *X, int fl
 
     if (alpha != ONE) {
         twoprod(result, &q, alpha, h);
-        *result += q + alpha*l;
+        *result = q + alpha*l;
     } else {
         *result = h + l;
     }

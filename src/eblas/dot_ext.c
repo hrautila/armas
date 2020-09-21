@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2014
+// Copyright (c) Harri Rautila, 2014-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -70,6 +70,9 @@ DTYPE armas_x_ext_dot_unsafe(
  * @param x, y
  *    Input vectors
  *
+ * @return Scaled inner product
+ * @ingroup blas1ext
+ *
  */
 void armas_x_ext_adot_unsafe(
     DTYPE *h,
@@ -112,6 +115,9 @@ void armas_x_ext_adot_unsafe(
  * @param x, dx, y
  *    Input vectors
  *
+ * @return Scaled inner product.
+ *
+ * @ingroup blasext
  */
 void armas_x_ext_adot_dx_unsafe(
     DTYPE *h,
@@ -150,14 +156,15 @@ void armas_x_ext_adot_dx_unsafe(
 /**
  * @brief Compute inner product scaled by constant in extended precision.
  *
- * @param result
- *    On exit resul in extended precision.
- * @param alpha
+ * @param[out] result
+ *    On exit inner product.
+ * @param[in] alpha
  *    Scaling constant
- * @param x, y
+ * @param[in] x, y
  *    Input vectors
  *
  * @return Zero on success, -1 on errors.
+ * @ingroup blasext
  */
 int armas_x_ext_adot(
     DTYPE *result,
