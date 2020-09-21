@@ -243,20 +243,21 @@ int __mmread_size(FILE *f, int typecode, int *m, int *n, int *nnz)
 }
 
 /**
- * \brief Load matrix from a matrix market format file
+ * @brief Load matrix from a matrix market format file
  *
- * \param[out] A
+ * @param[out] A
  *    On entry uninitialized matrix. On exit matrix loaded from file.
- * \param[out] flags
+ * @param[out] flags
  *    On exit file storage layout indicators, zero for general matrix, ARMAS_SYMM
  *    for symmetric matrix and only lower triangular part is stored.
- * \param[in] f
+ * @param[in] f
  *    Pointer to opened file. Reading starts at current file location.
  *
- * \returns
+ * @returns
  *    0 on success
  *    <0 on error
- *
+ * 
+ * @ingroup matrix
  */
 int armas_x_mmload(armas_x_dense_t *A, int *flags,  FILE *f)
 {

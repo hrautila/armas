@@ -5,11 +5,7 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
-//! \cond
-#include <stdio.h>
-
 #include "dtype.h"
-//! \endcond
 // ----------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(armas_x_json_write) && defined(armas_x_json_read)
@@ -22,9 +18,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ----------------------------------------------------------------------------
 
-//! \cond
+//! @cond
+#include <stdio.h>
 #include "matrix.h"
-//! \endcond
+//! @endcond
 
 
 #define JSON_ONERROR(func)                        \
@@ -40,7 +37,10 @@
  * @param[in] flags
  *     Serialization control bits.
  *
+ * @retval   0 Success
+ * @retval  <0 Error
  *
+ * @ingroup matrix
  */
 int armas_x_json_write(armas_iostream_t *ios, const armas_x_dense_t *A, int flags)
 {
@@ -127,6 +127,11 @@ enum {
  * TODO: null matrix? is it: null | "{}"? Is it same as {"rows":0, "cols":0,...}
  * Should we return pointer to new matrix? Maybe A is armas_x_dense_t ** and
  * if *A == null we allocate, otherwise we deserialize into provided space.
+ * 
+ * @retval  0  Success
+ * @retval <0  Failure
+ *
+ * @ingroup matrix
  */
 int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
 {
