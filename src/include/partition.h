@@ -16,14 +16,21 @@
 
 #include "matrix.h"
 
-/*
- * Partition p to 2 by 1 blocks.
+//! @addtogroup internal
+//! @{
+
+/**
+ * @brief Partition A to 2 by 1 blocks.
  *
+ *```txt
  *        AT
  *  A --> --
  *        AB
- *
- * Parameter nb is initial block size for AT (PTOP) or AB (PBOTTOM).  
+ *```
+ * @param[out] AT, AB Result blocks
+ * @param[in]  A      Source matrix
+ * @param[in]  nb     Initial block size for AT or AB
+ * @param[in]  side   Starting side, ARMAS_PTOP or ARMAS_PBOTTOM.
  */
 __ARMAS_INLINE
 void mat_partition_2x1(armas_x_dense_t *AT, armas_x_dense_t *AB,
@@ -45,14 +52,20 @@ void mat_partition_2x1(armas_x_dense_t *AT, armas_x_dense_t *AB,
     }
 }
 
-/*
- * Repartition 2 by 1 block to 3 by 1 block.
+/**
+ * @brief Repartition 2 by 1 block to 3 by 1 block.
  *
+ *```txt
  *           AT      A0            AT       A0
  * pBOTTOM: --  --> --   ; pTOP:   --  -->  A1
  *           AB      A1            AB       --
  *                   A2                     A2
- *
+ *```
+ * @param[in]  AT          Top bloack
+ * @param[out] A0, A1, A2  Result blocks
+ * @param[in]  A           Source matrix
+ * @param[in]  nb          Block size for A1
+ * @param[in]  direction   Blocking direction, ARMAS_PTOP or ARMAS_PBOTTOM.
  */
 __ARMAS_INLINE
 void mat_repartition_2x1to3x1(armas_x_dense_t *AT, armas_x_dense_t *A0,
@@ -80,13 +93,19 @@ void mat_repartition_2x1to3x1(armas_x_dense_t *AT, armas_x_dense_t *A0,
     }
 }
 
-/*
- * Continue with 2 by 1 block from 3 by 1 block.
+/**
+ * @brief Continue with 2 by 1 block from 3 by 1 block.
  *
+ *```txt
  *           AT      A0            AT       A0
  * pBOTTOM: --  <--  A1   ; pTOP:   -- <--  --
  *           AB      --            AB       A1
  *                   A2                     A2
+ *```
+ * @param[out] AT, AB      Result blocks
+ * @param[in]  A0, A1      Source blocks
+ * @param[in]  A           Source matrix
+ * @param[in]  direction   Blocking direction, ARMAS_PTOP or ARMAS_PBOTTOM.
  */
 __ARMAS_INLINE
 void mat_continue_3x1to2x1(armas_x_dense_t *AT, armas_x_dense_t *AB,
@@ -108,12 +127,16 @@ void mat_continue_3x1to2x1(armas_x_dense_t *AT, armas_x_dense_t *AB,
     }
 }
 
-/*
- * Partition A to 1 by 2 blocks.
+/**
+ * @brief Partition A to 1 by 2 blocks.
  *
+ *```txt
  *  A -->  AL | AR
- *
- * Parameter nb is initial block size for AL (PLEFT) or AR (PRIGHT).  
+ *```
+ * @param[out] AL, AR Result blocks
+ * @param[in]  A      Source matrix
+ * @param[in]  nb     Initial block size for AL or AR
+ * @param[in]  side   Starting side, ARMAS_PLEFT or ARMAS_PRIGHT
  */
 __ARMAS_INLINE
 void mat_partition_1x2(armas_x_dense_t *AL, armas_x_dense_t *AR,
@@ -135,13 +158,18 @@ void mat_partition_1x2(armas_x_dense_t *AL, armas_x_dense_t *AR,
     }
 }
 
-/*
- * Repartition 1 by 2 blocks to 1 by 3 blocks.
+/**
+ * @brief Repartition 1 by 2 blocks to 1 by 3 blocks.
  *
+ *```txt
  * pRIGHT: AL | AR  -->  A0 | A1 A2
  * pLEFT:  AL | AR  -->  A0 A1 | A2
- *
- * Parameter As is left or right block of original 1x2 block.
+ *```
+ * @param[in]  AL          Left bloack
+ * @param[out] A0, A1, A2  Result blocks
+ * @param[in]  A           Source matrix
+ * @param[in]  nb          Block size for A1
+ * @param[in]  direction   Blocking direction, ARMAS_PLEFT or ARMAS_PRIGHT.
  */
 __ARMAS_INLINE
 void mat_repartition_1x2to1x3(armas_x_dense_t *AL, armas_x_dense_t *A0,
@@ -169,12 +197,17 @@ void mat_repartition_1x2to1x3(armas_x_dense_t *AL, armas_x_dense_t *A0,
     }
 }
 
-/*
- * Repartition 1 by 2 blocks to 1 by 3 blocks.
+/**
+ * @brief Repartition 1 by 2 blocks to 1 by 3 blocks.
  *
+ *```txt
  * pRIGHT: AL | AR  --  A0 A1 | A2
  * pLEFT:  AL | AR  <--  A0 | A1 A2
- *
+ *```
+ * @param[out] AL, AR      Result blocks
+ * @param[in]  A0, A1      Source blocks
+ * @param[in]  A           Source matrix
+ * @param[in]  direction   Blocking direction, ARMAS_PTOP or ARMAS_PBOTTOM.
  */
 __ARMAS_INLINE
 void mat_continue_1x3to1x2(armas_x_dense_t *AL, armas_x_dense_t *AR,
@@ -195,15 +228,21 @@ void mat_continue_1x3to1x2(armas_x_dense_t *AL, armas_x_dense_t *AR,
     }
 }
 
-/*
- * Partition A to 2 by 2 blocks.
+/**
+ * @brief Partition A to 2 by 2 blocks.
  *
+ *```txt
  *           ATL | ATR
  *  A  -->   =========
  *           ABL | ABR
+ *```
+ * @param[out] ATL, ATR, ABL, ABR Result blocks
+ * @param[in]  A      Source matrix
+ * @param[in]  mb     Rows in initial block ATL or ABR
+ * @param[in]  nb     Columns in initial block ATL or ABR
+ * @param[in]  side   Starting side, ARMAS_PTOPLEFT or ARMAS_PBOTTOMRIGHT.
  *
- * Parameter nb is initial block size for ATL in column direction and mb in row direction.
- * ATR and ABL may be nil pointers.
+ * Note: ATR and ABL matrices may be null pointers.
  */
 __ARMAS_INLINE
 void mat_partition_2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
@@ -231,16 +270,25 @@ void mat_partition_2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
     }
 }
 
-/*
- * Repartition 2 by 2 blocks to 3 by 3 blocks.
+/**
+ * @brief Repartition 2 by 2 blocks to 3 by 3 blocks.
  *
+ *```txt
  *                      A00 | A01 : A02
  *   ATL | ATR   nb     ===============
  *   =========   -->    A10 | A11 : A12
  *   ABL | ABR          ---------------
  *                      A20 | A21 : A22
+ *```
+ * @param[in]  ATL           Top block
+ * @param[out] A00, A01, A02 Result block (may be null pointer except A00)
+ * @param[out] A10, A11, A12 Result block (may be null pointer except A11)
+ * @param[out] A20, A21, A22 Result block (may be null pointer except A22)
+ * @param[in]  A             Source matrix
+ * @param[in]  nb            Size of A11
+ * @param[in]  direction     Blocking direction ARMAS_PTOPLEFT or ARMAS_PBOTTOMRIGHT.
  *
- * ATR, ABL, ABR implicitely defined by ATL and A.
+ * Blocks ATR, ABL, ABR implicitely defined by ATL and A.
  * It is valid to have either the strictly upper or lower submatrices as nil values.
  */
 __ARMAS_INLINE
@@ -302,15 +350,22 @@ void mat_repartition_2x2to3x3(armas_x_dense_t *ATL,
     }
 }
 
-/*
- * Redefine 2 by 2 blocks from 3 by 3 partition.
+/**
+ * @brief Redefine 2 by 2 blocks from 3 by 3 partition.
  *
+ *```txt
  *                      A00 : A01 | A02
  *   ATL | ATR   nb     ---------------
  *   =========   <--    A10 : A11 | A12
  *   ABL | ABR          ===============
  *                      A20 : A21 | A22
+ *```
+ * @param[out] ATL, ATR, ABL, ABR Result blocks
+ * @param[in]  A00, A11, A22      Rows in initial block ATL or ABR
+ * @param[in]  A                  Source matrix
+ * @param[in]  direction          ARMAS_PTOPLEFT or ARMAS_PBOTTOMRIGHT.
  *
+ * Note: ATR and ABL matrices may be null pointers.
  * New division of ATL, ATR, ABL, ABR defined by diagonal entries A00, A11, A22
  */
 __ARMAS_INLINE
@@ -344,12 +399,16 @@ void mat_continue_3x3to2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
     }
 }
 
-/*
- * Merge 1 by 1 block from 2 by 1 block.
+/**
+ * @brief Merge 1 by 1 block from 2 by 1 block.
  *
+ *```txt
  *          AT
  * ABKL <-- --
  *          AB
+ *```
+ * @param[out] ABLK   Result block
+ * @param[in]  AT, AB Source blocks
  */
 __ARMAS_INLINE
 void mat_merge2x1(armas_x_dense_t *ABLK, armas_x_dense_t *AT, armas_x_dense_t *AB)
@@ -368,10 +427,14 @@ void mat_merge2x1(armas_x_dense_t *ABLK, armas_x_dense_t *AT, armas_x_dense_t *A
     }
 }
 
-/*
- * Merge 1 by 1 block from 1 by 2 block.
+/**
+ * @brief Merge 1 by 1 block from 1 by 2 block.
  *
+ *```txt
  * ABLK <--  AL | AR
+ *```
+ * @param[out] ABLK   Result block
+ * @param[in]  AL, AR Source blocks
  */
 __ARMAS_INLINE
 void mat_merge1x2(armas_x_dense_t *ABLK, armas_x_dense_t *AL, armas_x_dense_t *AR)
@@ -390,14 +453,18 @@ void mat_merge1x2(armas_x_dense_t *ABLK, armas_x_dense_t *AL, armas_x_dense_t *A
     }
 }
 
-/*
- * Partition p to 2 by 1 blocks.
+/**
+ * @brief Partition x to 2 by 1 blocks.
  *
+ *```txt 
  *        xT
  *  x --> --
  *        xB
- *
- * Parameter nb is initial block size for AT (PTOP) or AB (PBOTTOM).  
+ *```
+ * @param[out] xT, xB Result subvector
+ * @param[in]  x      Source vector
+ * @param[in]  nb     Initial length of xT or xB
+ * @param[in]  side   Starting side, ARMAS_PTOP or ARMAS_PBOTTOM.
  */
 __ARMAS_INLINE
 void vec_partition_2x1(armas_x_dense_t *xT, armas_x_dense_t *xB,
@@ -420,14 +487,20 @@ void vec_partition_2x1(armas_x_dense_t *xT, armas_x_dense_t *xB,
     }
 }
 
-/*
- * Repartition 2 by 1 block to 3 by 1 block.
+/**
+ * @brief Repartition 2 by 1 block to 3 by 1 block.
  *
+ *```txt
  *           xT      x0            xT       x0
  * pBOTTOM: --  --> --   ; pTOP:   --  -->  x1
  *           xB      x1            xB       --
  *                   x2                     x2
- *
+ *```
+ * @param[in]  xT          Top subvector
+ * @param[out] x0, x1, x2  Result subvectors
+ * @param[in]  x           Source vector
+ * @param[in]  nb          Length of x1
+ * @param[in]  direction   Blocking direction, ARMAS_PTOP or ARMAS_PBOTTOM.
  */
 __ARMAS_INLINE
 void vec_repartition_2x1to3x1(armas_x_dense_t *xT, armas_x_dense_t *x0,
@@ -457,13 +530,19 @@ void vec_repartition_2x1to3x1(armas_x_dense_t *xT, armas_x_dense_t *x0,
     }
 }
 
-/*
- * Continue with 2 by 1 block from 3 by 1 block.
+/**
+ * @brief Continue with 2 by 1 block from 3 by 1 block.
  *
+ *```txt
  *           xT      x0            xT       x0
  * pBOTTOM: --  <--  x1   ; pTOP:   -- <--  --
  *           xB      --            xB       x1
  *                   x2                     x2
+ *```
+ * @param[out] xT, xB     Result subvectors
+ * @param[in]  x0, x1     Source subvectors
+ * @param[in]  x          Source vector
+ * @param[in]  direction  Blocking direction, ARMAS_PTOP or ARMAS_PBOTTOM.
  */
 __ARMAS_INLINE
 void vec_continue_3x1to2x1(armas_x_dense_t *xT, armas_x_dense_t *xB,
@@ -485,5 +564,5 @@ void vec_continue_3x1to2x1(armas_x_dense_t *xT, armas_x_dense_t *xB,
         break;
     }
 }
-
+//! @}
 #endif

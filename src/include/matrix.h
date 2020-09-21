@@ -6,7 +6,7 @@
 // any later version. See the COPYING tile included in this archive.
 
 /**
- * \file 
+ * @file 
  * Matrix structure definition and public functions
  */
 
@@ -26,6 +26,8 @@ extern "C" {
 // types are copies of this with explicit element type.
 /**
  * @brief Column major matrix type.
+ *
+ * @ingroup matrix
  */
 typedef struct armas_x_dense {
     DTYPE *elems;  ///< Matrix elements,
@@ -37,7 +39,7 @@ typedef struct armas_x_dense {
 } armas_x_dense_t;
 
 /**
- * \brief Eigenvalue selection parameters
+ * @brief Eigenvalue selection parameters
  */
 typedef struct armas_x_eigen_parameter {
     int ileft;    ///< Start index of half-open interval [ileft, iright)
@@ -47,54 +49,43 @@ typedef struct armas_x_eigen_parameter {
     DTYPE tau;    ///< Requested accurancy; must be > max{|T_i|}*eps
 } armas_x_eigen_parameter_t;
 
-//! \brief Define eigenvalue index range [l, r) with default accuracy
+//! @brief Define eigenvalue index range [l, r) with default accuracy
 #define ARMAS_EIGEN_INT(l, r) \
     &(armas_x_eigen_parameter_t) { (l), (r), 0.0, 0.0, 0.0 }
 
-//! \brief Define eigenvalue value range [low, high) with default accuracy
+//! @brief Define eigenvalue value range [low, high) with default accuracy
 #define ARMAS_EIGEN_VAL(low, high) \
     &(armas_x_eigen_parameter_t) { 0, 0, (low), (high), 0.0 }
 
-//! \brief Define eigenvalue index range [l, r) and accuracy parameter tau
+//! @brief Define eigenvalue index range [l, r) and accuracy parameter tau
 #define ARMAS_EIGEN_INT_TAU(l, r, tau) \
     &(armas_x_eigen_parameter_t) { (l), (r), 0.0, 0.0, tau }
 
-//! \brief Define eigenvalue value range [low, high) and accuracy parameter tau
+//! @brief Define eigenvalue value range [low, high) and accuracy parameter tau
 #define ARMAS_EIGEN_VAL_TAU(low, high, tau) \
     &(armas_x_eigen_parameter_t) { 0, 0, (low), (high), tau }
 
-//! \brief All eigenvalues with default accuracy
+//! @brief All eigenvalues with default accuracy
 #define ARMAS_EIGEN_ALL \
     &(armas_x_eigen_parameter_t) { -1, -1, 0.0, 0.0, 0.0 }
 
-//! \brief All eigenvalues with accuracy parameter
+//! @brief All eigenvalues with accuracy parameter
 #define ARMAS_EIGEN_ALL_TAU(tau) \
     &(armas_x_eigen_parameter_t) { -1, -1, 0.0, 0.0, tau }
 
-// Null matrix
-//#define ARMAS_NULL (armas_x_dense_t *)0
-
-static inline int _M(armas_x_dense_t *A)
-{
-    return A->rows;
-}
-
-static inline int _N(armas_x_dense_t *A)
-{
-    return A->cols;
-}
-
-// function that constants
+//! @brief Function that returns a constants.
 typedef DTYPE (*armas_x_constfunc_t)();
 
-//! Return value for element at [i, j]
+//! @brief Fucntion that returns value for element at [i, j].
 typedef DTYPE (*armas_x_valuefunc_t)(int, int);
 
-//! element wise operator functions, v := oper(x)
+//! @brief Element wise operator function oper(elem)
 typedef DTYPE (*armas_x_operator_t)(DTYPE x);
-//! element wise operator functions, v := oper(x, y)
+
+//! @brief Element wise operator functions, v := oper(x, y)
 typedef DTYPE (*armas_x_operator2_t)(DTYPE x, DTYPE y);
 
+// @cond
 extern armas_x_dense_t *armas_x_init(armas_x_dense_t *m, int r, int c);
 
 extern void armas_x_print(const armas_x_dense_t *m, FILE *out);
@@ -124,6 +115,7 @@ extern int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios);
 extern int armas_x_json_write(armas_iostream_t *ios, const armas_x_dense_t *A, int flags);
 extern int armas_x_json_load(armas_x_dense_t **A, FILE *fp);
 extern int armas_x_json_dump(FILE *fp, const armas_x_dense_t *A, int flags);
+// @endcond
 
 // -------------------------------------------------------------------------------------------
 // inline functions
@@ -132,16 +124,17 @@ extern int armas_x_json_dump(FILE *fp, const armas_x_dense_t *A, int flags);
 #define __ARMAS_INLINE extern inline
 #endif
 
-//! \brief Test if matrix is a vector.
-//! \ingroup matrix
+/*! @addtogroup matrix
+ *  @{
+ */
+//! @brief Test if matrix is a vector.
 __ARMAS_INLINE
 int armas_x_isvector(const armas_x_dense_t *m)
 {
     return m && (m->rows == 1 || m->cols == 1);
 }
 
-//! \brief Get number of elements in matrix.
-//! \ingroup matrix
+//! @brief Get number of elements in matrix.
 __ARMAS_INLINE
 int64_t armas_x_size(const armas_x_dense_t *m)
 {
@@ -162,8 +155,7 @@ int armas_x_index_valid(const armas_x_dense_t *m, int64_t ix)
     return m && (ix >= -armas_x_size(m) && ix < armas_x_size(m));
 }
 
-//! \brief Release matrix allocated space
-//! \ingroup matrix
+//! @brief Release matrix allocated space
 __ARMAS_INLINE
 void armas_x_release(armas_x_dense_t *m)
 {
@@ -178,8 +170,7 @@ void armas_x_release(armas_x_dense_t *m)
     }
 }
 
-//! \brief Allocate a new matrix of size [r, c]
-//! \ingroup matrix
+//! @brief Allocate a new matrix of size [r, c]
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_alloc(int r, int c)
 {
@@ -193,8 +184,7 @@ armas_x_dense_t *armas_x_alloc(int r, int c)
     return armas_x_init(m, r, c);
 }
 
-//! \brief Release matrix and its allocated space
-//! \ingroup matrix
+//! @brief Release matrix and its allocated space
 __ARMAS_INLINE
 void armas_x_free(armas_x_dense_t *m)
 {
@@ -204,10 +194,9 @@ void armas_x_free(armas_x_dense_t *m)
     free(m);
 }
 
-//! \brief Make matrix with provided buffer.
+//! @brief Make matrix with provided buffer.
 //! Make **r-by-c** matrix with stride s from buffer elems. Assumes elems is at least
 //! of size **r*s**.
-//! \ingroup matrix
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_make(armas_x_dense_t *m, int r, int c, int s, DTYPE *elems)
 {
@@ -220,8 +209,7 @@ armas_x_dense_t *armas_x_make(armas_x_dense_t *m, int r, int c, int s, DTYPE *el
     return m;
 }
 
-// \brief Make A a column vector of B; A = B[:, c]
-//! \ingroup matrix
+//! @brief Make A a column vector of B; A = B[:, c]
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_column(armas_x_dense_t *A, const armas_x_dense_t *B, int c)
 {
@@ -253,8 +241,7 @@ armas_x_dense_t *armas_x_column_unsafe(armas_x_dense_t *A, const armas_x_dense_t
     return A;
 }
 
-// \brief Make A a row vector of B; A = B[r, :]
-//! \ingroup matrix
+//! @brief Make A a row vector of B; A = B[r, :]
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_row(armas_x_dense_t *A, const armas_x_dense_t *B, int r)
 {
@@ -286,8 +273,7 @@ armas_x_dense_t *armas_x_row_unsafe(armas_x_dense_t *A, const armas_x_dense_t *B
     return A;
 }
 
-//! \brief Make A a submatrix view of B with spesified row stride.
-//! \ingroup matrix
+//! @brief Make A a submatrix view of B with spesified row stride.
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_submatrix_ext(armas_x_dense_t *A, const armas_x_dense_t *B,
                                        int r, int c, int nr, int nc, int step)
@@ -316,8 +302,7 @@ armas_x_dense_t *armas_x_submatrix_ext(armas_x_dense_t *A, const armas_x_dense_t
     return armas_x_make(A, nr, nc, step, &B->elems[c * B->step + r]);
 }
 
-//! \brief Make A submatrix view of B.
-//! \ingroup matrix
+//! @brief Make A submatrix view of B.
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_submatrix(armas_x_dense_t *A, const armas_x_dense_t *B,
                                    int r, int c, int nr, int nc)
@@ -325,8 +310,7 @@ armas_x_dense_t *armas_x_submatrix(armas_x_dense_t *A, const armas_x_dense_t *B,
     return armas_x_submatrix_ext(A, B, r, c, nr, nc, B->step);
 }
 
-//! \brief Make A submatrix view of B. (Unsafe version without any limit checks.)
-//! \ingroup matrix
+//! @brief Make A submatrix view of B. (Unsafe version without any limit checks.)
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_submatrix_unsafe(armas_x_dense_t *A, const armas_x_dense_t *B,
                                           int r, int c, int nr, int nc)
@@ -334,8 +318,7 @@ armas_x_dense_t *armas_x_submatrix_unsafe(armas_x_dense_t *A, const armas_x_dens
     return armas_x_make(A, nr, nc, B->step, &B->elems[c * B->step + r]);
 }
 
-//! \brief Make X subvector of Y
-//! \ingroup matrix
+//! @brief Make X subvector of Y
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_subvector(armas_x_dense_t *X, const armas_x_dense_t *Y,
                                    int n, int len)
@@ -352,8 +335,7 @@ armas_x_dense_t *armas_x_subvector(armas_x_dense_t *X, const armas_x_dense_t *Y,
     return X;
 }
 
-//! \brief Make X subvector of Y (Unsafe version without any limit checks.)
-//! \ingroup matrix
+//! @brief Make X subvector of Y (Unsafe version without any limit checks.)
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_subvector_unsafe(armas_x_dense_t *X, const armas_x_dense_t *Y,
                                           int n, int len)
@@ -366,8 +348,7 @@ armas_x_dense_t *armas_x_subvector_unsafe(armas_x_dense_t *X, const armas_x_dens
     return X;
 }
 
-//! \brief Make A diagonal row vector of B.
-//! \ingroup matrix
+//! @brief Make A diagonal row vector of B.
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_diag(armas_x_dense_t *A, const armas_x_dense_t *B, int k)
 {
@@ -389,8 +370,7 @@ armas_x_dense_t *armas_x_diag(armas_x_dense_t *A, const armas_x_dense_t *B, int 
     return armas_x_submatrix_ext(A, B, 0, 0, 1, nk, B->step + 1);
 }
 
-//! \brief Make A diagonal row vector of B. (unsafe version).
-//! \ingroup matrix
+//! @brief Make A diagonal row vector of B. (unsafe version).
 __ARMAS_INLINE
 armas_x_dense_t *armas_x_diag_unsafe(armas_x_dense_t *A, const armas_x_dense_t *B, int k)
 {
@@ -412,7 +392,7 @@ armas_x_dense_t *armas_x_diag_unsafe(armas_x_dense_t *A, const armas_x_dense_t *
     return armas_x_make(A, 1, nk, B->step + 1, &B->elems[0]);
 }
 
-//! \brief Get element at `[row, col]`
+//! @brief Get element at `[row, col]`
 __ARMAS_INLINE
 DTYPE armas_x_get(const armas_x_dense_t *m, int row, int col)
 {
@@ -426,8 +406,7 @@ DTYPE armas_x_get(const armas_x_dense_t *m, int row, int col)
     return m->elems[col * m->step + row];
 }
 
-//! \brief Get unsafely element at `[row, col]`
-//! \ingroup matrix
+//! @brief Get unsafely element at `[row, col]`
 __ARMAS_INLINE
 DTYPE armas_x_get_unsafe(const armas_x_dense_t *m, int row, int col)
 {
@@ -435,8 +414,7 @@ DTYPE armas_x_get_unsafe(const armas_x_dense_t *m, int row, int col)
     return m->elems[col * m->step + row];
 }
 
-//! \brief Set element at `[row, col]` to `val`
-//! \ingroup matrix
+//! @brief Set element at `[row, col]` to `val`
 __ARMAS_INLINE
 void armas_x_set(armas_x_dense_t *m, int row, int col, DTYPE val)
 {
@@ -450,8 +428,7 @@ void armas_x_set(armas_x_dense_t *m, int row, int col, DTYPE val)
     m->elems[col * m->step + row] = val;
 }
 
-//! \brief Set element unsafely at `[row, col]` to `val`
-//! \ingroup matrix
+//! @brief Set element unsafely at `[row, col]` to `val`
 __ARMAS_INLINE
 void armas_x_set_unsafe(armas_x_dense_t *m, int row, int col, DTYPE val)
 {
@@ -459,8 +436,7 @@ void armas_x_set_unsafe(armas_x_dense_t *m, int row, int col, DTYPE val)
     m->elems[col * m->step + row] = val;
 }
 
-//! \brief Set element of vector at index `ix` to `val`.
-//! \ingroup matrix
+//! @brief Set element of vector at index `ix` to `val`.
 __ARMAS_INLINE
 void armas_x_set_at(armas_x_dense_t *m, int ix, DTYPE val)
 {
@@ -472,8 +448,7 @@ void armas_x_set_at(armas_x_dense_t *m, int ix, DTYPE val)
     m->elems[armas_x_real_index(m, ix)] = val;
 }
 
-//! \brief Set unsafely element of vector at index `ix` to `val`.
-//! \ingroup matrix
+//! @brief Set unsafely element of vector at index `ix` to `val`.
 __ARMAS_INLINE
 void armas_x_set_at_unsafe(armas_x_dense_t *m, int ix, DTYPE val)
 {
@@ -481,8 +456,7 @@ void armas_x_set_at_unsafe(armas_x_dense_t *m, int ix, DTYPE val)
     m->elems[(m->rows == 1 ? ix * m->step : ix)] = val;
 }
 
-//! \brief Get element of vector at index `ix`.
-//! \ingroup matrix
+//! @brief Get element of vector at index `ix`.
 __ARMAS_INLINE
 DTYPE armas_x_get_at(const armas_x_dense_t *m, int ix)
 {
@@ -494,8 +468,7 @@ DTYPE armas_x_get_at(const armas_x_dense_t *m, int ix)
     return m->elems[armas_x_real_index(m, ix)];
 }
 
-//! \brief Get unsafely element of vector at index `ix`.
-//! \ingroup matrix
+//! @brief Get unsafely element of vector at index `ix`.
 __ARMAS_INLINE
 DTYPE armas_x_get_at_unsafe(const armas_x_dense_t *m, int ix)
 {
@@ -503,6 +476,7 @@ DTYPE armas_x_get_at_unsafe(const armas_x_dense_t *m, int ix)
     return m->elems[(m->rows == 1 ? ix * m->step : ix)];
 }
 
+//! @brief Get index to element at [row, col].
 __ARMAS_INLINE
 int armas_x_index(const armas_x_dense_t *m, int row, int col)
 {
@@ -523,8 +497,7 @@ int armas_x_index_unsafe(const armas_x_dense_t *m, int row, int col)
     return m ? col * m->step + row : 0;
 }
 
-//! \brief Get data buffer
-//! \ingroup matrix
+//! @brief Get data buffer
 __ARMAS_INLINE
 DTYPE *armas_x_data(const armas_x_dense_t *m)
 {
@@ -537,10 +510,11 @@ armas_x_dense_t *armas_x_col_as_row(armas_x_dense_t *row, armas_x_dense_t *col)
     armas_x_make(row, 1, armas_x_size(col), 1, armas_x_data(col));
     return row;
 }
+/*! @} */
 
 // -------------------------------------------------------------------------------------------
 //
-
+/*! @cond */
 #ifndef __ARMAS_LINALG_H
 
 extern int armas_x_scale_plus(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B,
@@ -992,6 +966,7 @@ extern int armas_x_pivot_rows(armas_x_dense_t *A, armas_pivot_t *P, int flags, a
 extern int armas_x_pivot_cols(armas_x_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *cf);
 
 #endif
+/*! @endcond */
 
 #ifdef __cplusplus
 }

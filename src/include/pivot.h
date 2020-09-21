@@ -16,6 +16,9 @@
 #define __ARMAS_INLINE extern inline
 #endif
 
+//! @addtogroup internal
+//! @{
+
 static inline
 void subpivot(armas_pivot_t *pA, armas_pivot_t *pB, int K, int N)
 {
@@ -24,15 +27,19 @@ void subpivot(armas_pivot_t *pA, armas_pivot_t *pB, int K, int N)
     pA->owner = 0;
 }
 
-/*
- * Partition p to 2 by 1 blocks.
+/**
+ * @brief Partition p to 2 by 1 blocks.
  *
+ *```txt
  *        pT
  *  p --> --
  *        pB
- *
- * Parameter nb is initial block size for pT (pTOP) or pB (pBOTTOM).
- */
+ *```
+ * @param[out] pT, pB      Result index vectors
+ * @param[in]  P           Pivot index vector
+ * @param[in]  nb          Initial vector length
+ * @param[in]  side        Start of partitioning ARMAS_PTOP or ARMAS_PBOTTOM
+  */
 static inline
 void pivot_2x1(armas_pivot_t *pT, armas_pivot_t *pB, armas_pivot_t *P, int nb, int direction)
 {
@@ -51,14 +58,20 @@ void pivot_2x1(armas_pivot_t *pT, armas_pivot_t *pB, armas_pivot_t *P, int nb, i
 }
 
 
-/*
- * Repartition 2 by 1 block to 3 by 1 block.
+/**
+ * @brief Repartition 2 by 1 block to 3 by 1 block.
  *
+ *```txt
  *           pT      p0            pT       p0
  * pBOTTOM: --  --> --   ; pTOP:   --  -->  p1
  *           pB      p1            pB       --
  *                   p2                     p2
- *
+ *```
+ * @param[in]  pT            Topmost pivot vector
+ * @param[out] p0, p1, p2    Result pivot subvectors
+ * @param[in]  P             Pivot index vector
+ * @param[in]  nb            Length of p1 subvector
+ * @param[in]  direction     Partitioning direction ARMAS_PTOP or ARMAS_PBOTTOM
  */
 static inline
 void pivot_repart_2x1to3x1(
@@ -86,14 +99,19 @@ void pivot_repart_2x1to3x1(
 }
 
 
-/*
- * Continue with 2 by 1 block from 3 by 1 block.
+/**
+ * @brief Continue with 2 by 1 block from 3 by 1 block.
  *
+ *```txt
  *           pT      p0            pT       p0
  * pBOTTOM: --  <--  p1   ; pTOP:   -- <--  --
  *           pB      --            pB       p1
  *                   p2                     p2
- *
+ *```
+ * @param[out] pT, pB    Result pivot vectors
+ * @param[in]  p0, p1    Pivot subvectors
+ * @param[in]  P         Pivot index vector
+ * @param[in]  direction Partitioning direcion, ARMAS_PTOP or ARMAS_PBOTTOM
  */
 static inline
 void pivot_cont_3x1to2x1(
@@ -112,5 +130,5 @@ void pivot_cont_3x1to2x1(
         break;
     }
 }
-
+//! @}
 #endif /* PIVOT_H */

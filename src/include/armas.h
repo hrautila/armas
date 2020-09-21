@@ -5,13 +5,13 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
-/**
- * \file
- * Type independent defintions.
- */
-
 #ifndef _ARMAS_H_INCLUDED
 #define _ARMAS_H_INCLUDED
+
+/**
+ * @file
+ * Type independent defintions.
+ */
 
 #include <stddef.h>
 #include <stdint.h>
@@ -46,39 +46,39 @@ extern "C" {
  * @brief Operand flag bits
  */
 enum armas_flags {
-    ARMAS_NOTRANS = 0,
+    ARMAS_NOTRANS = 0,             ///< No transponse
     ARMAS_NULL = 0,
     ARMAS_NONE = 0,
     ARMAS_ANY = 0,
-    ARMAS_LOWER = 0x1,             ///< lower triangular matrix
-    ARMAS_UPPER = 0x2,             ///< upper triangular matrix
-    ARMAS_SYMM = 0x4,              ///< symmetric matrix
-    ARMAS_HERM = 0x8,              ///< hermitian matrix
-    ARMAS_UNIT = 0x10,             ///< unit diagonal matrix
-    ARMAS_LEFT = 0x20,             ///< multiplicaton from left
-    ARMAS_RIGHT = 0x40,            ///< multiplicaton from right
-    ARMAS_TRANSA = 0x80,           ///< operand A is transposed
-    ARMAS_TRANSB = 0x100,          ///< operand B is transposed
-    ARMAS_TRANS = ARMAS_TRANSA,    ///< matrix operand is transposed
-    ARMAS_CTRANSA = 0x200,         ///< operand A is conjugate transposed
-    ARMAS_CTRANSB = 0x400,         ///< operand B is conjugate transposed
-    ARMAS_CTRANS = ARMAS_CTRANSA,  ///< matrix operand is conjugate transposed
-    ARMAS_MULTQ = 0x800,           ///< multiply with Q in bidiagonal
-    ARMAS_MULTP = 0x1000,          ///< multiply with P in bidiagonal
-    ARMAS_WANTQ = 0x2000,          ///< build the Q matrix in bidiagonal
-    ARMAS_WANTP = 0x4000,          ///< build the P matrix in bidiagonal
-    ARMAS_WANTU = 0x8000,          ///< generate left eigenvectors
-    ARMAS_WANTV = 0x10000,         ///< generate right eigenvectors
-    ARMAS_FORWARD = 0x20000,       ///< apply forward
-    ARMAS_BACKWARD = 0x40000,      ///< apply backward
-    ARMAS_ABSA = 0x80000,          ///< compute with |A|
-    ARMAS_ABSB = 0x100000,         ///< compute with |B|
-    ARMAS_ABS = ARMAS_ABSA,        ///< compute with |x|
-    ARMAS_CONJA = 0x200000,        ///< conjugate matrix A
-    ARMAS_CONJB = 0x400000,        ///< conjugate matrix B
-    ARMAS_CONJ = ARMAS_CONJA,      ///< conjugate
-    ARMAS_HHNEGATIVE = 0x800000,   ///< compute Householder for [-beta; 0]
-    ARMAS_NONNEG = 0x1000000       ///< request non-negative result (householder)
+    ARMAS_LOWER = 0x1,             ///< Lower triangular matrix
+    ARMAS_UPPER = 0x2,             ///< Upper triangular matrix
+    ARMAS_SYMM = 0x4,              ///< Symmetric matrix
+    ARMAS_HERM = 0x8,              ///< Hermitian matrix
+    ARMAS_UNIT = 0x10,             ///< Unit diagonal matrix
+    ARMAS_LEFT = 0x20,             ///< Multiplicaton from left
+    ARMAS_RIGHT = 0x40,            ///< Multiplicaton from right
+    ARMAS_TRANSA = 0x80,           ///< Operand A is transposed
+    ARMAS_TRANSB = 0x100,          ///< Operand B is transposed
+    ARMAS_TRANS = ARMAS_TRANSA,    ///< Matrix operand is transposed
+    ARMAS_CTRANSA = 0x200,         ///< Operand A is conjugate transposed
+    ARMAS_CTRANSB = 0x400,         ///< Operand B is conjugate transposed
+    ARMAS_CTRANS = ARMAS_CTRANSA,  ///< Matrix operand is conjugate transposed
+    ARMAS_MULTQ = 0x800,           ///< Multiply with Q in bidiagonal
+    ARMAS_MULTP = 0x1000,          ///< Multiply with P in bidiagonal
+    ARMAS_WANTQ = 0x2000,          ///< Build the Q matrix in bidiagonal
+    ARMAS_WANTP = 0x4000,          ///< Build the P matrix in bidiagonal
+    ARMAS_WANTU = 0x8000,          ///< Generate left eigenvectors
+    ARMAS_WANTV = 0x10000,         ///< Generate right eigenvectors
+    ARMAS_FORWARD = 0x20000,       ///< Apply forward
+    ARMAS_BACKWARD = 0x40000,      ///< Apply backward
+    ARMAS_ABSA = 0x80000,          ///< Compute with |A|
+    ARMAS_ABSB = 0x100000,         ///< Compute with |B|
+    ARMAS_ABS = ARMAS_ABSA,        ///< Compute with |x|
+    ARMAS_CONJA = 0x200000,        ///< Conjugate matrix A
+    ARMAS_CONJB = 0x400000,        ///< Conjugate matrix B
+    ARMAS_CONJ = ARMAS_CONJA,      ///< Conjugate
+    ARMAS_HHNEGATIVE = 0x800000,   ///< Compute Householder for [-beta; 0]
+    ARMAS_NONNEG = 0x1000000       ///< Request non-negative result (householder)
 };
 
 /**
@@ -129,15 +129,15 @@ enum armas_opts {
  * @brief Error codes
  */
 enum armas_errors {
-    ARMAS_ESIZE = 1,         ///< operand size mismatch
-    ARMAS_ENEED_VECTOR = 2,  ///< vector operand required
-    ARMAS_EINVAL = 3,        ///< invalid parameter
-    ARMAS_EIMP = 4,          ///< not implemented
-    ARMAS_EWORK = 5,         ///< workspace too small
-    ARMAS_ESINGULAR = 6,     ///< singular matrix
-    ARMAS_ENEGATIVE = 7,     ///< negative value on diagonal
-    ARMAS_EMEMORY = 8,       ///< memory allocation failed
-    ARMAS_ECONVERGE = 9      ///< algorithm does not converge
+    ARMAS_ESIZE = 1,         ///< Operand size mismatch
+    ARMAS_ENEED_VECTOR = 2,  ///< Vector operand required
+    ARMAS_EINVAL = 3,        ///< Invalid parameter
+    ARMAS_EIMP = 4,          ///< Not implemented
+    ARMAS_EWORK = 5,         ///< Workspace too small
+    ARMAS_ESINGULAR = 6,     ///< Singular matrix
+    ARMAS_ENEGATIVE = 7,     ///< Negative value on diagonal
+    ARMAS_EMEMORY = 8,       ///< Memory allocation failed
+    ARMAS_ECONVERGE = 9      ///< Algorithm does not converge
 };
 
 enum armas_norms {
@@ -164,8 +164,8 @@ enum armas_mmbits {
 };
 
 /**
-   * @brief JSON parser tokens excluding simple tokens '{', '}', '[', ']', ':', ','
-   */
+ * @brief JSON parser tokens excluding simple tokens '{', '}', '[', ']', ':', ','
+ */
 enum armas_json_tokens {
     ARMAS_JSON_STRING = 0x7fffff,
     ARMAS_JSON_INT,
@@ -186,6 +186,9 @@ enum armas_json_tokens {
     #define require(x)
 #endif /* ARMAS_WITH_CHECKS */
 
+//! @addtogroup other
+//! @{
+
 /* Accelerator with simple recursive scheduling. */
 extern const char *ARMAS_AC_SIMPLE;
 /* Accelerator with persistent worker threads. */
@@ -197,15 +200,15 @@ extern const char *ARMAS_AC_TRANSIENT;
  * @brief Library configuration block.
  */
 typedef struct armas_env {
-    int mb;        ///< block size relative to result matrix rows (blas3)
-    int nb;        ///< block size relative to result matrix cols (blas3)
-    int kb;        ///< block size relative to operand matrix common dimension (blas3)
-    int lb;        ///< block size for blocked algorithms (lapack)
+    int mb;        ///< Block size relative to result matrix rows (blas3)
+    int nb;        ///< Block size relative to result matrix cols (blas3)
+    int kb;        ///< Block size relative to operand matrix common dimension (blas3)
+    int lb;        ///< Block size for blocked algorithms (lapack)
     int blas1min;  ///< Blas1 functions minimum length for recursive implementation.
     int blas2min;  ///< Blas2: minimum size of dimension to use recursive implementation.
-    size_t cmem;   ///< sizeof of internal per-thread cache
-    size_t l1mem;  ///< sizeof of L1 memory
-    int fixed;     ///< if non-zero, then mb,nb,kb set to fixed values.
+    size_t cmem;   ///< Sizeof of internal per-thread cache
+    size_t l1mem;  ///< Sizeof of L1 memory
+    int fixed;     ///< Ff non-zero, then mb,nb,kb set to fixed values.
 } armas_env_t;
 
 /// @brief Get global blocking configuration
@@ -216,11 +219,11 @@ armas_env_t *armas_getenv();
  */
 typedef struct armas_cbuf {
     char *data;         ///< CPU cache-line aligned buffer address
-    size_t len;         ///< aligned buffer size
-    void *__unaligned;  ///< allocated memory block
-    size_t __nbytes;    ///< size of allocated block
-    size_t cmem;        ///< requested cache size (L2/L3)
-    size_t l1mem;       ///< configured innermost cache size (L1)
+    size_t len;         ///< Aligned buffer size
+    void *__unaligned;  ///< Allocated memory block
+    size_t __nbytes;    ///< Size of allocated block
+    size_t cmem;        ///< Requested cache size (L2/L3)
+    size_t l1mem;       ///< Configured innermost cache size (L1)
 } armas_cbuf_t;
 
 #define ARMAS_CBUF_EMPTY \
@@ -236,12 +239,12 @@ typedef void *armas_ac_handle_t;
  * @brief Configuration parameters
  */
 typedef struct armas_conf {
-    int error;                ///< last error
-    int optflags;             ///< config options
-    int tolmult;              ///< tolerance multiplier, used tolerance is tolmult*EPSILON
-    struct armas_wbuf *work;  ///< user defined space for cache buffer
-    armas_ac_handle_t accel;
-    // -- parameters for iterative methods
+    int error;                ///< Last error
+    int optflags;             ///< Config options (see: enum armas_opts)
+    int tolmult;              ///< Tolerance multiplier, used tolerance is tolmult*EPSILON
+    struct armas_wbuf *work;  ///< User defined space for cache buffer
+    armas_ac_handle_t accel;  ///< Accelerator handle
+    /** Parameters for iterative methods. */
     int maxiter;      ///< Max iterations allowed
     int gmres_m;      ///< Number of columns in GMRES
     int numiters;     ///< Number of iterations used (output)
@@ -276,65 +279,78 @@ extern void armas_cbuf_release_thread_global();
 extern int armas_cbuf_select(armas_cbuf_t *cbuf, armas_conf_t *cf);
 
 /**
- * @brief I/O stream functions
+ * @brief I/O stream virtual functions
  */
 typedef struct armas_iostream_vtable {
-    int (*get_char)(void *stream);
-    void (*unget_char)(void *stream, int c);
-    int (*put_char)(void *stream, int c);
+    int (*get_char)(void *stream);             ///< Get one chracter from stream
+    void (*unget_char)(void *stream, int c);   ///< Unget character received from stream back to the stream
+    int (*put_char)(void *stream, int c);      ///< Put character to stream
 } armas_iostream_vtable_t;
 
 /**
  * @brief Very simple I/O stream
  */
-typedef struct armas_iostream {
-    void *uptr;
-    armas_iostream_vtable_t *vt;
-} armas_iostream_t;
+struct armas_iostream {
+    void *stream;                     ///< Private stream
+    armas_iostream_vtable_t *vt;      ///< IOStream virtual function table
+};
+typedef struct armas_iostream armas_iostream_t;
 
 /**
  * @brief Initialize I/O stream
+ *
+ * @param[in, out] stream
+ *    On entry uninitialized iostream structure. On exit initialized stream.
+ * @param[in] vt
+ *    Virtual function table
+ * @param[in] stream
+ *    Private stream pointer that is provided as first parameter to virtual table functions.
  */
 __ARMAS_INLINE
-void armas_iostream_init(armas_iostream_t *iostream, armas_iostream_vtable_t *vt, void *ptr)
+void armas_ios_init(armas_iostream_t *ios, armas_iostream_vtable_t *vt, void *stream)
 {
-    if (iostream) {
-        iostream->uptr = ptr;
-        iostream->vt = vt;
+    if (ios) {
+        ios->stream = stream;
+        ios->vt = vt;
     }
 }
 
 /**
  * @brief Get character from input stream
+ *
+ * @retval >= 0 Retrieved character
+ * @retval < 0  Error
  */
 __ARMAS_INLINE
-int armas_getchar(armas_iostream_t *stream)
+int armas_ios_getchar(armas_iostream_t *ios)
 {
-    if (!stream)
+    if (!ios)
         return -1;
-    return stream->vt->get_char(stream->uptr);
+    return ios->vt->get_char(ios->stream);
 }
 
 /**
  * @brief Put character back to input stream
  */
 __ARMAS_INLINE
-void armas_ungetchar(armas_iostream_t *stream, int c)
+void armas_ios_ungetchar(armas_iostream_t *ios, int c)
 {
-    if (!stream)
+    if (!ios)
         return;
-    stream->vt->unget_char(stream->uptr, c);
+    ios->vt->unget_char(ios->stream, c);
 }
 
 /**
  * @brief Put character to output stream
+ *
+ * @retval < 0 Error
  */
 __ARMAS_INLINE
-int armas_putchar(armas_iostream_t *stream, int c)
+int armas_ios_putchar(armas_iostream_t *ios, int c)
 {
-    if (!stream)
+    if (!ios)
         return -1;
-    return stream->vt->put_char(stream->uptr, c);
+    return ios->vt->put_char(ios->stream, c);
 }
 
 extern int armas_json_read_token(char *iobuf, size_t len, armas_iostream_t *ios);
@@ -492,12 +508,12 @@ extern void armas_pivot_printf(FILE *out, const char *fmt, const armas_pivot_t *
 // workspace
 
 /**
- * \brief Workspace buffer
+ * @brief Workspace buffer
  */
 typedef struct armas_wbuf {
-    char *buf;
-    size_t bytes;
-    size_t offset;
+    char *buf;            ///< Workspace data
+    size_t bytes;         ///< Size of buffer in bytes
+    size_t offset;        ///< Start of the free space
 } armas_wbuf_t;
 
 #define ARMAS_WBNULL \
@@ -507,7 +523,7 @@ typedef struct armas_wbuf {
 #define __align64(n) (((n) + 7) & ~0x7)
 #define __nbits_aligned8(n) (((n) + 7) >> 3)
 
-// \brief Allocate nbytes of workspace
+/** @brief Allocate nbytes of workspace. */
 __ARMAS_INLINE
 armas_wbuf_t *armas_walloc(armas_wbuf_t *W, size_t nbytes)
 {
@@ -516,7 +532,7 @@ armas_wbuf_t *armas_walloc(armas_wbuf_t *W, size_t nbytes)
     W->offset = 0;
     return W->buf ? W : (armas_wbuf_t *)0;
 }
-// \brief Release workspace allocation
+/** @brief Release workspace allocation. */
 __ARMAS_INLINE
 void armas_wrelease(armas_wbuf_t *W)
 {
@@ -527,7 +543,7 @@ void armas_wrelease(armas_wbuf_t *W)
     }
 }
 
-// @brief Allocate new workspace
+/** @brief Allocate new workspace */
 __ARMAS_INLINE
 struct armas_wbuf *armas_wnew(size_t nbytes)
 {
@@ -536,12 +552,12 @@ struct armas_wbuf *armas_wnew(size_t nbytes)
         return wb;
     if (!armas_walloc(wb, nbytes)) {
         free(wb);
-        return (struct armas_buf *)0;
+        return (struct armas_wbuf *)0;
     }
     return wb;
 }
 
-// @brief Free workspace
+/** @brief Free workspace. */
 __ARMAS_INLINE
 void armas_wfree(armas_wbuf_t *wb)
 {
@@ -551,7 +567,7 @@ void armas_wfree(armas_wbuf_t *wb)
     }
 }
 
-// \brief Reserve nbytes from workspace (aligned to 64bit access)
+/** @brief Reserve nbytes from workspace (aligned to 64bit access). */
 __ARMAS_INLINE
 void *armas_wreserve_bytes(armas_wbuf_t *W, size_t nbytes)
 {
@@ -563,7 +579,7 @@ void *armas_wreserve_bytes(armas_wbuf_t *W, size_t nbytes)
     return (void *)r;
 }
 
-// \brief Reserve space for count number of elements of size 'sz'
+/** @brief Reserve space for count number of elements of size 'sz' */
 __ARMAS_INLINE
 void *armas_wreserve(armas_wbuf_t *W, size_t count, size_t sz)
 {
@@ -577,14 +593,14 @@ void *armas_wreserve_bits(armas_wbuf_t *W, size_t count)
     return armas_wreserve_bytes(W, bc);
 }
 
-// \brief Reset work space reservations
+/** @brief Reset work space reservations. */
 __ARMAS_INLINE
 void armas_wreset(armas_wbuf_t *W)
 {
     W->offset = 0;
 }
 
-// \brief Zero workspace, at most n bytes or all (n == 0)
+/**  @brief Zero workspace, at most n bytes or all (n == 0). */
 __ARMAS_INLINE
 void armas_wzero(armas_wbuf_t *W, size_t n)
 {
@@ -622,5 +638,6 @@ void armas_wsetpos(armas_wbuf_t *W, size_t pos)
 #ifdef __cplusplus
 }
 #endif
+//! @}
 
 #endif /* ARMAS_H_INCLUDED */
