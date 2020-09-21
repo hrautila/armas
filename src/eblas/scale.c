@@ -1,11 +1,10 @@
 
-// Copyright (c) Harri Rautila, 2015
+// Copyright (c) Harri Rautila, 2015-2020
 
 // This file is part of github.com/hrautila/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
-#include <stdio.h>
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------

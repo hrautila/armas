@@ -5,9 +5,6 @@
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
-#include <stdio.h>
-#include <stdint.h>
-
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
@@ -51,7 +48,7 @@ int armas_x_ext_mvupdate_unsafe(
 }
 
 /**
- * @brief General matrix rank update.
+ * @brief General matrix rank update in extended precision.
  *
  * Computes
  *   - \f$ A = beta * A + alpha \times X Y^T \f$
@@ -63,7 +60,7 @@ int armas_x_ext_mvupdate_unsafe(
  * @param[in]      Y source vector
  * @param[in]      conf  configuration block
  *
- * @ingroup blas2
+ * @ingroup blasext
  */
 int armas_x_ext_mvupdate(
     DTYPE beta,
@@ -84,15 +81,15 @@ int armas_x_ext_mvupdate(
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (!armas_x_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (A->cols != ny || A->rows != nx) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_x_ext_mvupdate_unsafe(beta, A, alpha, x, y);

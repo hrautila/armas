@@ -1,12 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2012-2015
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
-
-#include <stdio.h>
-#include <stdint.h>
 
 #include "dtype.h"
 
@@ -84,7 +81,7 @@ int armas_x_ext_mvupdate_trm_unsafe(
  * @retval  0  Success
  * @retval <0  Failed
  *
- * @ingroup blas2
+ * @ingroup blasext
  */
 int armas_x_ext_mvupdate_sym(
   DTYPE beta,
@@ -117,9 +114,4 @@ int armas_x_ext_mvupdate_sym(
 
 #else
 #warning "Missing defines. No code!"
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

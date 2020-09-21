@@ -1,12 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2012-2015
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
-
-#include <stdio.h>
-#include <stdint.h>
 
 #include "dtype.h"
 
@@ -214,6 +211,29 @@ int armas_x_ext_mvmult_trm_unsafe(
     return 0;
 }
 
+/**
+ * @brief Triangular matrix-vector multiply in extended precision
+ *
+ * Computes
+ *    - \f$ X = alpha \times A X \f$
+ *    - \f$ X = alpha \times A^T X  \f$   if *ARMAS_TRANS* set
+ *    - \f$ X = alpha \times |A| |X| \f$  if *ARMAS_ABS* set
+ *    - \f$ X = alpha \times |A^T| |X| \f$ if *ARMAS_ABS* and *ARMAS_TRANS* set
+ *
+ * where A is upper (lower) triangular matrix defined with flag bits *ARMAS_UPPER*
+ * (*ARMAS_LOWER*).
+ *
+ * @param[in,out] X target and source vector
+ * @param[in]     alpha scalar multiplier
+ * @param[in]     A matrix
+ * @param[in]     flags operand flags
+ * @param[in]     conf  configuration block
+ *
+ * @retval  0  Success
+ * @retval <0  Failed
+ *
+ * @ingroup blasext
+ */
 int armas_x_ext_mvmult_trm(
     armas_x_dense_t *x,
     DTYPE alpha,
@@ -231,11 +251,11 @@ int armas_x_ext_mvmult_trm(
 
     if (!armas_x_isvector(x)) {
         cf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (A->cols != nx || A->rows != A->cols) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     armas_x_ext_mvmult_trm_unsafe(x, alpha, A, flags);
     return 0;

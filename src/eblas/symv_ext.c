@@ -1,29 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2012-2015
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
-
-#if HAVE_CONFIG
-#include "config.h"
-#endif
-
-#include <stdio.h>
-#include <stdint.h>
 
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_ext_mvmult_sym_unsafe) && defined(armas_x_ext_mvmult_sym)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -129,16 +122,13 @@ int armas_x_ext_mvmult_sym_unsafe(
 
 
 /**
- * @brief Symmetric matrix-vector multiply.
+ * @brief Symmetric matrix-vector multiply in extended precission.
  *
  * Computes
  *    - \f$ Y = alpha \times A X + beta \times Y \f$
  *
  * Matrix A elements are stored on lower (upper) triangular part of the matrix
  * if flag bit *ARMAS_LOWER* (*ARMAS_UPPER*) is set.
- *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
  *
  *  @param[in]      beta scalar
  *  @param[in,out]  Y   target and source vector
@@ -151,7 +141,7 @@ int armas_x_ext_mvmult_sym_unsafe(
  *  @retval  0  Success
  *  @retval <0  Failed
  *
- * @ingroup blas2
+ * @ingroup blasext
  */
 int armas_x_ext_mvmult_sym(
     DTYPE beta,
@@ -174,28 +164,21 @@ int armas_x_ext_mvmult_sym(
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (!armas_x_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
 
     ok = A->cols == A->rows && nx == ny && nx == A->cols;
     if (! ok) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     armas_x_ext_mvmult_sym_unsafe(beta, y, alpha, A, x, flags);
     return 0;
 }
-
-
 #else
 #warning "Missing defines. No code!"
-
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

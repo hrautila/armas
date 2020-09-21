@@ -1,16 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2012-2015
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
-
-#if HAVE_CONFIG
-#include "config.h"
-#endif
-
-#include <stdio.h>
-#include <stdint.h>
 
 #include "dtype.h"
 
@@ -107,7 +100,24 @@ void armas_x_ext_mvmult_dx_unsafe(
 }
 
 /**
+* @brief General matrix-vector multiply with extended precision
  *
+ * Computes
+ *   - \f$ Y = alpha \times A X + beta \times Y \f$
+ *   - \f$ Y = alpha \times A^T X + beta \times Y  \f$   if *ARMAS_TRANS* set
+ *
+ *  @param[in]      beta scalar
+ *  @param[in,out]  Y   target and source vector
+ *  @param[in]      alpha scalar
+ *  @param[in]      A   source operand matrix
+ *  @param[in]      X   source operand vector
+ *  @param[in]      flags  flag bits
+ *  @param[in]      conf   configuration block
+ *
+ *  @retval  0  Success
+ *  @retval <0  Failed
+ *
+ * @ingroup blasext
  */
 int armas_x_ext_mvmult(
     DTYPE beta,
@@ -130,7 +140,7 @@ int armas_x_ext_mvmult(
 
     if (!(armas_x_isvector(x) && armas_x_isvector(y))) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     // check consistency
     switch (flags & ARMAS_TRANS) {
@@ -143,7 +153,7 @@ int armas_x_ext_mvmult(
     }
     if (! ok) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_x_ext_mvmult_unsafe(beta, y, alpha, A, x, flags);
@@ -152,4 +162,4 @@ int armas_x_ext_mvmult(
 
 #else
 #warning "Missing defines. No code!"
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

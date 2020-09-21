@@ -1,12 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2012-2019
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
-
-#include <stdio.h>
-#include <stdint.h>
 
 #include "dtype.h"
 
@@ -123,7 +120,7 @@ int armas_x_ext_mvupdate2_sym_unsafe(
  * @retval  0  Success
  * @retval <0  Failed
  *
- * @ingroup blas2
+ * @ingroup blasext
  */
 int armas_x_ext_mvupdate2_sym(
     DTYPE beta,
@@ -145,15 +142,15 @@ int armas_x_ext_mvupdate2_sym(
 
     if (!armas_x_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (!armas_x_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (A->cols != A->rows || ny != nx) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_x_ext_mvupdate2_sym_unsafe(beta, A, alpha, x, y, flags);
@@ -162,9 +159,4 @@ int armas_x_ext_mvupdate2_sym(
 
 #else
 #warning "Missing defines. No code!"
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
-
-// Local Variables:
-// c-basic-offset: 4
-// indent-tabs-mode: nil
-// End:
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

@@ -1,13 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
-
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
 
 #include "dtype.h"
 
@@ -286,6 +282,28 @@ int armas_x_ext_mvsolve_trm_unsafe(
     return 0;
 }
 
+/**
+  * @brief Triangular matrix-vector solve in extended precision
+ *
+ * Computes
+ *    - \f$ X = alpha \times A^{-1} X \f$
+ *    - \f$ X = alpha \times A^{-T} X \f$  if *ARMAS_TRANS* set
+ *
+ * where A is upper (lower) triangular matrix defined with flag bits *ARMAS_UPPER*
+ * (*ARMAS_LOWER*).
+ *
+ * @param[in,out] X Target and source vector
+ * @param[in]     alpha Scalar multiplier
+ * @param[in]     A Matrix
+ * @param[in]     flags Operand flags
+ * @param[in]     wb  Working space for intermediate results.
+ * @param[in]     cf  Configuration block
+ *
+ * @retval  0 Success
+ * @retval <0 Failed
+ *
+ * @ingroup blasext
+ */
 int armas_x_ext_mvsolve_trm_w(
     armas_x_dense_t *x,
     DTYPE alpha,
@@ -301,11 +319,11 @@ int armas_x_ext_mvsolve_trm_w(
     int N = armas_x_size(x);
     if (!armas_x_isvector(x)) {
         cf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (A->cols != N || A->cols != A->rows) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if (wb && wb->bytes == 0) {
         wb->bytes = sizeof(DTYPE) * N;
@@ -313,13 +331,20 @@ int armas_x_ext_mvsolve_trm_w(
     }
     if (armas_wbytes(wb) < sizeof(DTYPE)*N) {
         cf->error = ARMAS_EMEMORY;
-        return -1;
+        return -ARMAS_EMEMORY;
     }
     armas_x_make(&dX, A->cols, 1, A->cols, (DTYPE *)armas_wptr(wb));
     armas_x_ext_mvsolve_trm_unsafe(x, &dX, alpha, A, flags);
     return 0;
 }
 
+/**
+ * @brief Triangular matrix-vector solve in extended precision
+ *
+ * Convenience function to call solver without explicit workspace.
+ *
+ * @ingroup blasext
+ */
 int armas_x_ext_mvsolve_trm(
     armas_x_dense_t *x,
     DTYPE alpha,
@@ -335,7 +360,7 @@ int armas_x_ext_mvsolve_trm(
 
     if (!armas_walloc(&wb, A->cols*sizeof(DTYPE))) {
         cf->error = ARMAS_EMEMORY;
-        return -1;
+        return -ARMAS_EMEMORY;
     }
     err = armas_x_ext_mvsolve_trm_w(x, alpha, A, flags, &wb, cf);
     armas_wrelease(&wb);
