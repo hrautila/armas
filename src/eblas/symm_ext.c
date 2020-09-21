@@ -8,11 +8,6 @@
 //! \file
 //! Matrix-matrix multiplication with symmetric matrix
 
-//! \cond
-#include <stdio.h>
-#include <stdlib.h>
-//! \endcond
-
 #include "dtype.h"
 
 // -----------------------------------------------------------------------------
@@ -29,15 +24,11 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "matcpy.h"
 #include "kernel_ext.h"
-#ifdef CONFIG_ACCELERATORS
 #include "accel.h"
-#endif /* CONFIG_ACCELERATORS */
-//! \endcond
 
 // C += A*B; A is the diagonal block
 static
@@ -288,7 +279,7 @@ void armas_x_ext_mult_symm_right(
 }
 
 /**
- * @brief Symmetric matrix-matrix multiplication
+ * @brief Symmetric matrix-matrix multiplication in extended precision.
  *
  * If flag *ARMAS_LEFT* is set computes
  *   - \f$ C = alpha \times A B + beta \times C \f$
@@ -301,9 +292,6 @@ void armas_x_ext_mult_symm_right(
  * Matrix A elements are stored on lower (upper) triangular part of the matrix
  * if flag bit *ARMAS_LOWER* (*ARMAS_UPPER*) is set.
  *
- * If option *ARMAS_OEXTPREC* is set in *conf.optflags* then computations
- * are executed in extended precision.
- *
  * @param[in] beta scalar constant
  * @param[in,out] C result matrix
  * @param[in] alpha scalar constant
@@ -315,7 +303,7 @@ void armas_x_ext_mult_symm_right(
  * @retval   0  Operation succeeded
  * @retval < 0  Failed, conf.error set to actual error code.
  *
- * @ingroup blas3
+ * @ingroup blasext
  */
 int armas_x_ext_mult_sym(
     DTYPE beta,

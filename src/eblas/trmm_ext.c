@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2015
+// Copyright (c) Harri Rautila, 2015-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -19,11 +19,6 @@
 // compile if type dependent public function names defined
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
 
 #include "matrix.h"
 #include "internal.h"
@@ -723,6 +718,33 @@ void armas_x_ext_mult_trm_unsafe(
     }
 }
 
+/**
+ * @brief Triangular matrix-matrix multiply in extended precision.
+ *
+ * If flag bit *ARMAS_LEFT* is set then computes 
+ *    - \f$ B = alpha \times A B \f$
+ *    - \f$ B = alpha \times A^T B  \f$ if *ARMAS_TRANS* set
+ *
+ * If flag bit *ARMAS_RIGHT* is set then computes
+ *    - \f$ B = alpha \times B A \f$
+ *    - \f$ B = alpha \times B A^T \f$ if *ARMAS_TRANS*  set
+ *
+ * The matrix A is upper (lower) triangular matrix if *ARMAS_UPPER* (*ARMAS_LOWER*) is
+ * set. If matrix A is upper (lowert) then the strictly lower (upper) part is not
+ * referenced. Flag bit *ARMAS_UNIT* indicates that matrix A is unit diagonal and the diagonal
+ * entries are not accessed.
+ *
+ * @param[in,out] B  Result matrix
+ * @param[in]   alpha scalar multiplier
+ * @param[in]   A Triangular operand matrix
+ * @param[in]   flags option bits
+ * @param[in,out] conf environment configuration
+ *
+ * @retval 0  Succeeded
+ * @retval <0 Failed, conf.error set to error code.
+ *
+ * @ingroup blasext
+ */
 int armas_x_ext_mult_trm(
     armas_x_dense_t *B,
     DTYPE alpha,
@@ -749,13 +771,13 @@ int armas_x_ext_mult_trm(
     }
     if (! ok) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_cbuf_t cbuf = ARMAS_CBUF_EMPTY;
     if (armas_cbuf_select(&cbuf, cf) < 0) {
         cf->error = ARMAS_EMEMORY;
-        return -1;
+        return -ARMAS_EMEMORY;
     }
 
     cache_t cache;

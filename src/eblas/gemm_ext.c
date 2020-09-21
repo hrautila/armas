@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012-2014
+// Copyright (c) Harri Rautila, 2012-2020
 
 // This file is part of github.com/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -8,31 +8,24 @@
 //! \file
 //! Matrix-matrix multiplication
 
-//! \cond
-#include <stdlib.h>
-#include <stdint.h>
-//! \endcond
-
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
 // this file provides following type independet functions
 #if defined(armas_x_ext_mult)
-#define __ARMAS_PROVIDES 1
+#define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #if defined(armas_x_ext_mult_kernel)
-#define __ARMAS_REQUIRES 1
+#define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(__ARMAS_PROVIDES) && defined(__ARMAS_REQUIRES)
+#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//! \endcond
 
 // ----------------------------------------------------------------------------------------
 // exported public functions
@@ -55,9 +48,9 @@
  * @param[in,out] conf environment configuration
  *
  * @retval 0 Operation succeeded
- * @retval -1 Failed, conf.error set to actual error code.
+ * @retval <0 Failed, conf.error set to actual error code.
  *
- * @ingroup blas3
+ * @ingroup blasext
  */
 int armas_x_ext_mult(
     DTYPE beta,
@@ -97,14 +90,14 @@ int armas_x_ext_mult(
     }
     if (! ok) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_cbuf_t cbuf = ARMAS_CBUF_EMPTY;
     cache_t cache;
     if (armas_cbuf_select(&cbuf, conf) < 0) {
         conf->error = ARMAS_EMEMORY;
-        return -1;
+        return -ARMAS_EMEMORY;
     }
     armas_cache_setup(&cache, &cbuf, 3, sizeof(DTYPE));
 
@@ -114,4 +107,4 @@ int armas_x_ext_mult(
     return 0;
 }
 
-#endif /* __ARMAS_PROVIDES && __ARMAS_REQUIRES */
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

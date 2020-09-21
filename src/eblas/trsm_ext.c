@@ -1,15 +1,9 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <math.h>
 
 #include "dtype.h"
 
@@ -738,9 +732,33 @@ void armas_x_ext_solve_trm_blk_unsafe(
     }
 }
 
-#if 1
 /**
  * @brief Solve \$f X = A^-1*B \$f in extended precision.
+ * 
+  * If flag bit *ARMAS_LEFT* is set then computes
+ *    - \f$ B = alpha \times A^{-1} B \f$
+ *    - \f$ B = alpha \times A^{-T} B \f$ if *ARMAS_TRANS* set
+ *
+ * If flag bit *ARMAS_RIGHT* is set then computes
+ *    - \f$ B = alpha \times B A^{-1} \f$
+ *    - \f$ B = alpha \times B A^{-T} \f$ if *ARMAS_TRANS* set
+ *
+ * The matrix A is upper (lower) triangular matrix if *ARMAS_UPPER* (*ARMAS_LOWER*) is
+ * set. If matrix A is upper (lower) then the strictly lower (upper) part is not
+ * referenced. Flag bit *ARMAS_UNIT* indicates that matrix A is unit diagonal and the diagonal
+ * elements are not accessed.
+ *
+ * @param[in,out] B  Result matrix
+ * @param[in]   alpha Scalar multiplier
+ * @param[in]   A Triangular operand matrix
+ * @param[in]   flags Option bits
+ * @param[in]    wb  Working space for intermediate results.
+ * @param[in,out] conf environment configuration
+ *
+ * @retval 0 Succeeded
+ * @retval <0 Failed, *conf.error* set to error code.
+ *
+ * @ingroup blasext
  */
 int armas_x_ext_solve_trm_w(
     armas_x_dense_t *B,
@@ -770,11 +788,11 @@ int armas_x_ext_solve_trm_w(
     }
     if (! ok) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if (!wb) {
         cf->error = ARMAS_EMEMORY;
-        return -1;
+        return -ARMAS_EMEMORY;
     }
 
     armas_cbuf_t cbuf = ARMAS_CBUF_EMPTY;
@@ -793,7 +811,7 @@ int armas_x_ext_solve_trm_w(
     int ncol = wb->bytes/(A->rows*sizeof(DTYPE));
     if (ncol < 4) {
         cf->error = ARMAS_EMEMORY;
-        return -1;
+        return -ARMAS_EMEMORY;
     }
     if (ncol > cache.NB)
         ncol = cache.NB;
@@ -804,6 +822,10 @@ int armas_x_ext_solve_trm_w(
 
 /**
  * @brief Solve \$f X = A^-1*B \$f in extended precision.
+ *
+ * Convinience function for calling solver without explicit working space.
+ *
+ * @ingroup @blasext
  */
 int armas_x_ext_solve_trm(
     armas_x_dense_t *B,
@@ -817,18 +839,17 @@ int armas_x_ext_solve_trm(
 
     if (!cf)
         cf = armas_conf_default();
-    if (armas_x_ext_solve_trm_w(B, alpha, A, flags,&wb, cf) < 0) {
-        return -1;
+    if ((err = armas_x_ext_solve_trm_w(B, alpha, A, flags,&wb, cf)) < 0) {
+        return err;
     }
     if (!armas_walloc(&wb, wb.bytes)) {
         cf->error = ARMAS_EMEMORY;
-        return -1;
+        return -ARMAS_EMEMORY;
     }
     err = armas_x_ext_solve_trm_w(B, alpha, A, flags, &wb, cf);
     armas_wrelease(&wb);
     return err;
 }
-#endif
 
 #else
 #warning "Missing defines! No code!"
