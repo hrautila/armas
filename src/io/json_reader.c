@@ -102,7 +102,7 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
     bp = buf;
     for (;;) {
         /* */
-        c = armas_getchar(reader);
+        c = armas_ios_getchar(reader);
         if (c < 0) {
             switch (state) {
             case JSON_STATE_NUMBER:
@@ -199,7 +199,7 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
             case '\n':
             case '\r':
             case '\t':
-                armas_ungetchar(reader, c);
+                armas_ios_ungetchar(reader, c);
                 *bp = '\0';
                 //return is_frac ? ARMAS_JSON_NUMBER : ARMAS_JSON_INT;
 		return ARMAS_JSON_NUMBER;
@@ -254,7 +254,7 @@ int armas_json_read_token(char *buf, size_t len, armas_iostream_t *reader)
             case '\n':
             case '\r':
             case '\t':
-                armas_ungetchar(reader, c);
+                armas_ios_ungetchar(reader, c);
                 *bp = '\0';
                 return ARMAS_JSON_NUMBER;
             default:

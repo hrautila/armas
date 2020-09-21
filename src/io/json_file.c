@@ -7,9 +7,9 @@
 
 //! \cond
 #include <stdio.h>
+//! \endcond
 
 #include "dtype.h"
-//! \endcond
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
 #if defined(armas_x_json_load)
@@ -67,21 +67,30 @@ armas_iostream_vtable_t file_vtable = (armas_iostream_vtable_t){
  *  current position. On exit stream is positioned at first character of JSON 
  *  serialization of matrix.
  *
+ * @ingroup matrix
  */
 int armas_x_json_load(armas_x_dense_t **A, FILE *fp)
 {
     armas_iostream_t reader;
 
-    armas_iostream_init(&reader, &file_vtable, fp);
+    armas_ios_init(&reader, &file_vtable, fp);
     return armas_x_json_read(A, &reader);
 }
 
-
+/**
+ * @brief Serialize matrix in JSON format to file stream.
+ *
+ * @param [out] fp Open file stream
+ * @param [in]  A Matrix to serialize
+ * @param [in]  flags Matrix shape flags
+ *
+ * @ingroup matrix
+ */
 int armas_x_json_dump(FILE *fp, const armas_x_dense_t *A, int flags)
 {
     armas_iostream_t writer;
 
-    armas_iostream_init(&writer, &file_vtable, fp);
+    armas_ios_init(&writer, &file_vtable, fp);
     return armas_x_json_write(&writer, A, flags);
 }
 #else

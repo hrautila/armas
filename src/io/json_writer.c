@@ -31,48 +31,48 @@ int armas_json_write_token(int token, const void *ptr, size_t len, armas_iostrea
     case ']':
     case ':':
     case ',':
-        JSON_ONERROR(armas_putchar(writer, token));
+        JSON_ONERROR(armas_ios_putchar(writer, token));
         break;
     case ARMAS_JSON_STRING:
         cp = (char *)ptr;
-        armas_putchar(writer, '"');
+        armas_ios_putchar(writer, '"');
         for (int k = 0; *cp && k < len; k++, cp++) {
             switch (*cp) {
             case '\t':
-                JSON_ONERROR(armas_putchar(writer, '\\'));
-                JSON_ONERROR(armas_putchar(writer, 't'));
+                JSON_ONERROR(armas_ios_putchar(writer, '\\'));
+                JSON_ONERROR(armas_ios_putchar(writer, 't'));
                 break;
             case '\r':
-                JSON_ONERROR(armas_putchar(writer, '\\'));
-                JSON_ONERROR(armas_putchar(writer, 'r'));
+                JSON_ONERROR(armas_ios_putchar(writer, '\\'));
+                JSON_ONERROR(armas_ios_putchar(writer, 'r'));
                 break;
             case '\n':
-                JSON_ONERROR(armas_putchar(writer, '\\'));
-                JSON_ONERROR(armas_putchar(writer, 'n'));
+                JSON_ONERROR(armas_ios_putchar(writer, '\\'));
+                JSON_ONERROR(armas_ios_putchar(writer, 'n'));
                 break;
             case '\b':
-                JSON_ONERROR(armas_putchar(writer, '\\'));
-                JSON_ONERROR(armas_putchar(writer, 'b'));
+                JSON_ONERROR(armas_ios_putchar(writer, '\\'));
+                JSON_ONERROR(armas_ios_putchar(writer, 'b'));
                 break;
             case '\\':
-                JSON_ONERROR(armas_putchar(writer, '\\'));
-                JSON_ONERROR(armas_putchar(writer, '\\'));
+                JSON_ONERROR(armas_ios_putchar(writer, '\\'));
+                JSON_ONERROR(armas_ios_putchar(writer, '\\'));
                 break;
             case '/':
-                JSON_ONERROR(armas_putchar(writer, '\\'));
-                JSON_ONERROR(armas_putchar(writer, '/'));
+                JSON_ONERROR(armas_ios_putchar(writer, '\\'));
+                JSON_ONERROR(armas_ios_putchar(writer, '/'));
                 break;
             case '"':
-                JSON_ONERROR(armas_putchar(writer, '\\'));
-                JSON_ONERROR(armas_putchar(writer, '"'));
+                JSON_ONERROR(armas_ios_putchar(writer, '\\'));
+                JSON_ONERROR(armas_ios_putchar(writer, '"'));
                 break;
             default:
                 if (!iscntrl(*cp))
-                    JSON_ONERROR(armas_putchar(writer, *cp));
+                    JSON_ONERROR(armas_ios_putchar(writer, *cp));
                 break;
             }
         }
-        JSON_ONERROR(armas_putchar(writer, '"'));
+        JSON_ONERROR(armas_ios_putchar(writer, '"'));
         break;
     case ARMAS_JSON_INT:
         if (len == sizeof(int)) {
@@ -81,7 +81,7 @@ int armas_json_write_token(int token, const void *ptr, size_t len, armas_iostrea
             n = snprintf(buf, sizeof(buf), "%ld", *((long *)ptr));
         }
         for (int k = 0; k < n; k++)
-            JSON_ONERROR(armas_putchar(writer, buf[k]));
+            JSON_ONERROR(armas_ios_putchar(writer, buf[k]));
         break;
     case ARMAS_JSON_NUMBER:
         if (len == sizeof(double)) {
@@ -93,27 +93,27 @@ int armas_json_write_token(int token, const void *ptr, size_t len, armas_iostrea
         if (isfinite(v)) {
             n = snprintf(buf, sizeof(buf), numformat, v);
             for (int k = 0; k < n; k++)
-                JSON_ONERROR(armas_putchar(writer, buf[k]));
+                JSON_ONERROR(armas_ios_putchar(writer, buf[k]));
         }
         break;
     case ARMAS_JSON_TRUE:
-        JSON_ONERROR(armas_putchar(writer, 't'));
-        JSON_ONERROR(armas_putchar(writer, 'r'));
-        JSON_ONERROR(armas_putchar(writer, 'u'));
-        JSON_ONERROR(armas_putchar(writer, 'e'));
+        JSON_ONERROR(armas_ios_putchar(writer, 't'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'r'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'u'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'e'));
         break;
     case ARMAS_JSON_FALSE:
-        JSON_ONERROR(armas_putchar(writer, 'f'));
-        JSON_ONERROR(armas_putchar(writer, 'a'));
-        JSON_ONERROR(armas_putchar(writer, 'l'));
-        JSON_ONERROR(armas_putchar(writer, 's'));
-        JSON_ONERROR(armas_putchar(writer, 'e'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'f'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'a'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'l'));
+        JSON_ONERROR(armas_ios_putchar(writer, 's'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'e'));
         break;
     case ARMAS_JSON_NULL:
-        JSON_ONERROR(armas_putchar(writer, 'n'));
-        JSON_ONERROR(armas_putchar(writer, 'u'));
-        JSON_ONERROR(armas_putchar(writer, 'l'));
-        JSON_ONERROR(armas_putchar(writer, 'l'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'n'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'u'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'l'));
+        JSON_ONERROR(armas_ios_putchar(writer, 'l'));
         break;
     default:
         break;
