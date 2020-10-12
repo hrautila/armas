@@ -292,7 +292,7 @@ int armas_x_ext_mvsolve_trm_unsafe(
  * where A is upper (lower) triangular matrix defined with flag bits *ARMAS_UPPER*
  * (*ARMAS_LOWER*).
  *
- * @param[in,out] X Target and source vector
+ * @param[in,out] x Target and source vector
  * @param[in]     alpha Scalar multiplier
  * @param[in]     A Matrix
  * @param[in]     flags Operand flags

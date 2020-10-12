@@ -66,15 +66,16 @@ int armas_x_ext_mvupdate_trm_unsafe(
  * @brief Symmetric matrix rank-1 update in extended precision..
  *
  * Computes
- *    - \f$ A = A + alpha \times X X^T \f$
+ *    \f$ A = beta \times A + alpha \times x x^T \f$
  *
  * where A is symmetric matrix stored in lower (upper) triangular part of matrix A.
  * If flag *ARMAS_LOWER* (*ARMAR_UPPER*) is set matrix is store in lower (upper) triangular
  * part of A and upper (lower) triangular part is not referenced.
  *
+ * @param[in]      beta scalar multiplier
  * @param[in,out]  A target matrix
  * @param[in]      alpha scalar multiplier
- * @param[in]      X source vector
+ * @param[in]      x source vector
  * @param[in]      flags flag bits
  * @param[in]      conf configuration block
  *

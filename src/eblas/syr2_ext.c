@@ -113,7 +113,7 @@ int armas_x_ext_mvupdate2_sym_unsafe(
  * @param[in]      beta scalar
  * @param[in,out]  A target matrix
  * @param[in]      alpha scalar multiplier
- * @param[in]      X, Y source vector
+ * @param[in]      x, y source vector
  * @param[in]      flags flag bits
  * @param[in]      conf configuration block
  *

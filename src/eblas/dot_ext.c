@@ -123,16 +123,16 @@ void armas_x_ext_adot_dx_unsafe(
     DTYPE *h,
     DTYPE *l,
     DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *dX,
-    const armas_x_dense_t *Y)
+    const armas_x_dense_t *x,
+    const armas_x_dense_t *dx,
+    const armas_x_dense_t *y)
 {
     register int i;
     DTYPE s, c, z, p, r, q;
-    int xinc =   X->rows == 1 ? X->step : 1;
-    int dxinc = dX->rows == 1 ? dX->step : 1;
-    int yinc =   Y->rows == 1 ? Y->step : 1;
-    int N = armas_x_size(X);
+    int xinc =   x->rows == 1 ? x->step : 1;
+    int dxinc = dx->rows == 1 ? dx->step : 1;
+    int yinc =   y->rows == 1 ? y->step : 1;
+    int N = armas_x_size(x);
 
     if (alpha == ZERO) {
         return;
@@ -141,8 +141,8 @@ void armas_x_ext_adot_dx_unsafe(
     s = c = ZERO;
     // (x + dx) * y == h + (p + dx*y); h + p = x * y;
     for (i = 0; i < N; ++i) {
-        twoprod(&p, &q, X->elems[(i+0)*xinc], Y->elems[(i+0)*yinc]);
-        r = dX->elems[i*dxinc]*Y->elems[i*yinc];
+        twoprod(&p, &q, x->elems[(i+0)*xinc], y->elems[(i+0)*yinc]);
+        r = dx->elems[i*dxinc]*y->elems[i*yinc];
         twosum(&s, &z, s, p);
         c += z + q + r;
     }
@@ -162,6 +162,8 @@ void armas_x_ext_adot_dx_unsafe(
  *    Scaling constant
  * @param[in] x, y
  *    Input vectors
+ * @param[in,out] cf
+ *    Configuration block
  *
  * @return Zero on success, -1 on errors.
  * @ingroup blasext

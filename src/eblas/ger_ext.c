@@ -56,8 +56,8 @@ int armas_x_ext_mvupdate_unsafe(
  * @param[in]      beta scalar multiplier
  * @param[in,out]  A target matrix
  * @param[in]      alpha scalar multiplier
- * @param[in]      X source vector
- * @param[in]      Y source vector
+ * @param[in]      x source vector
+ * @param[in]      y source vector
  * @param[in]      conf  configuration block
  *
  * @ingroup blasext

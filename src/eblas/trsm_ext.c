@@ -753,7 +753,7 @@ void armas_x_ext_solve_trm_blk_unsafe(
  * @param[in]   A Triangular operand matrix
  * @param[in]   flags Option bits
  * @param[in]    wb  Working space for intermediate results.
- * @param[in,out] conf environment configuration
+ * @param[in,out] cf environment configuration
  *
  * @retval 0 Succeeded
  * @retval <0 Failed, *conf.error* set to error code.

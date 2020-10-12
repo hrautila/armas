@@ -738,7 +738,7 @@ void armas_x_ext_mult_trm_unsafe(
  * @param[in]   alpha scalar multiplier
  * @param[in]   A Triangular operand matrix
  * @param[in]   flags option bits
- * @param[in,out] conf environment configuration
+ * @param[in,out] cf environment configuration
  *
  * @retval 0  Succeeded
  * @retval <0 Failed, conf.error set to error code.

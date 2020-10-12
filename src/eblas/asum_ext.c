@@ -124,6 +124,8 @@ DTYPE armas_x_ext_sum_unsafe(const armas_x_dense_t *X)
  *    Vector
  * @param[in] flags
  *    If ARMAS_ABS set the sum of absolute values is computed.
+ * @param[in,out] cf
+ *    Configuration block.
  *
  * @retval 0 Success
  * @retval < 0 Error
@@ -138,11 +140,11 @@ int armas_x_ext_sum(DTYPE *result, DTYPE alpha, const armas_x_dense_t *X, int fl
 
     if (!armas_x_isvector(X)) {
         cf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (!result) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     if (flags & ARMAS_ABS) {

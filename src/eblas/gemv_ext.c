@@ -107,10 +107,10 @@ void armas_x_ext_mvmult_dx_unsafe(
  *   - \f$ Y = alpha \times A^T X + beta \times Y  \f$   if *ARMAS_TRANS* set
  *
  *  @param[in]      beta scalar
- *  @param[in,out]  Y   target and source vector
+ *  @param[in,out]  y   target and source vector
  *  @param[in]      alpha scalar
  *  @param[in]      A   source operand matrix
- *  @param[in]      X   source operand vector
+ *  @param[in]      x   source operand vector
  *  @param[in]      flags  flag bits
  *  @param[in]      conf   configuration block
  *
