@@ -31,24 +31,25 @@
 #include "sparse.h"
 
 /**
- * \brief Initializes sparse matrix using provided memory block
+ * @brief Initializes sparse matrix using provided memory block
  *
- * \param[in,out] 
+ * @param[in,out] A
  *     On entry uninitialized matrix, on exit initialized sparse matrix.
- * \param[in] rows, cols
+ * @param[in] rows, cols
  *     Matrix dimensions.
- * \param[in] nnz
+ * @param[in] nnz
  *     Number of non-zero entries matrix will hold.
- * \param[in] storage
+ * @param[in] storage
  *     Sparse storage scheme, SPARSE_CSC for column compressed, SPARSE_CSR for row compressed
  *     or SPARSE_COO for coordinate list storage.
- * \param[in] data
+ * @param[in] data
  *     Pointer to memory block
- * \param[in] dlen
+ * @param[in] dlen
  *     Length of memory block in bytes
  * 
- * \return
- *     0 if ok, otherwise -1
+ * @retval  0  Success
+ * @retval <0  Failure
+ * @ingroup sparse
  */
 int armassp_x_make(armas_x_sparse_t * A, int rows, int cols, int nnz,
                    armassp_type_enum storage, void *data, size_t dlen)
@@ -79,20 +80,21 @@ int armassp_x_make(armas_x_sparse_t * A, int rows, int cols, int nnz,
 }
 
 /**
- * \brief Initializes sparse matrix
+ * @brief Initializes sparse matrix
  *
- * \param[in,out] 
+ * @param[in,out] A
  *     On entry uninitialized matrix, on exit initialized matrix with proper space allocations.
- * \param[in] rows, cols
+ * @param[in] rows, cols
  *     Matrix dimensions.
- * \param[in] nnz
+ * @param[in] nnz
  *     Number of non-zero entries matrix will hold.
- * \param[in] storage
+ * @param[in] storage
  *     Sparse storage scheme, SPARSE_CSC for column compressed, SPARSE_CSR for row compressed
  *     or SPARSE_COO for coordinate list storage.
- * 
- * \return
+ *
+ * @return
  *     Pointer to initialized matrix. Null if initialization failed.
+ * @ingroup sparse
  */
 armas_x_sparse_t *armassp_x_init(armas_x_sparse_t * A, int rows, int cols,
                                  int nnz, armassp_type_enum storage)
@@ -120,7 +122,8 @@ armas_x_sparse_t *armassp_x_new(int rows, int cols, int nnz,
 }
 
 /**
- * \brief Resize sparse matrix.
+ * @brief Resize sparse matrix.
+ * @ingroup sparse
  */
 int armassp_x_resize(armas_x_sparse_t * A, int newsize)
 {
@@ -139,7 +142,8 @@ int armassp_x_resize(armas_x_sparse_t * A, int newsize)
 }
 
 /**
- * \brief Append element to sparse coo matrix.
+ * @brief Append element to sparse coo matrix.
+ * @ingroup sparse
  */
 int armassp_x_append(armas_x_sparse_t * A, int m, int n, DTYPE v)
 {
@@ -159,6 +163,8 @@ int armassp_x_append(armas_x_sparse_t * A, int m, int n, DTYPE v)
 
 #if defined(armassp_x_hasdiag)
 /**
+ * @brief Test if matrix has proper diagonal.
+ * @ingroup sparse
  */
 int armassp_x_hasdiag(const armas_x_sparse_t * A, int diag)
 {
@@ -214,25 +220,7 @@ int armassp_x_hasdiag(const armas_x_sparse_t * A, int diag)
     }
     return nc == 0;
 }
-#endif                          // defined(armassp_x_hasdiag)
-
-#if 0
-/**
- * \brief Allocate space for sparse accumulator
- *
- * \param[out] spa
- *    On entry uninitialized sparse structure, on exit initialized sparse accumulator.
- *
- * \param[in] nnz
- *   Allocation size for accumulator.
- *
- * \return pointer to initialized accumulator or null.
- */
-armas_x_sparse_t *armassp_x_accum_alloc(armas_x_sparse_t * spa, int nnz)
-{
-    return armassp_x_init(spa, nnz, 1, nnz, ARMASSP_CSC);
-}
-#endif
+#endif    // defined(armassp_x_hasdiag)
 
 #else
 #warning "Missing defines. No code"

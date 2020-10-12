@@ -426,12 +426,32 @@ int check_params(armas_x_dense_t * x,
 
 
 /**
- * \brief Solve unsymmetric linear system A*x = b with GMRES algorithm
+ * @brief Solve unsymmetric linear system A*x = b with GMRES algorithm
+ *
+ * @param[out] x
+ *   On exit solution to the system.
+ * @param[in]  A
+ *   Sparse matrix.
+ * @param[in]  b
+ *   Dense vector.
+ * @param[in,out] wb
+ *   Workspace. If *wb.bytes* is zero then size of required workspace is calculated
+ *   and returned immediately.
+ * @param[in,out] cf
+ *   Configuration block. On exit *cf.numiters* holds number of iterations and
+ *   *cf.residual* the final error residual.
+ *
+ * For details see: Yousef Saad, *Iterative Methods for Sparse Linear System*, 2nd Edition
+ * sections 6.5 and algorithm 6.9.
+ *
+ * @retval  0  Success
+ * @retval <0 Failure
+ * @ingroup sparse
  */
 int armassp_x_gmres_w(armas_x_dense_t * x,
                       const armas_x_sparse_t * A,
                       const armas_x_dense_t * b,
-                      armas_wbuf_t * W, armas_conf_t * cf)
+                      armas_wbuf_t * wb, armas_conf_t * cf)
 {
     if (!cf)
         cf = armas_conf_default();
@@ -439,9 +459,9 @@ int armassp_x_gmres_w(armas_x_dense_t * x,
     int n = A->rows;
     int m = cf->gmres_m > 0 ? cf->gmres_m : GMRES_M;
 
-    if (W && W->bytes == 0) {
+    if (wb && wb->bytes == 0) {
         // get working size
-        W->bytes = GMRES_WSIZE(n, m);
+        wb->bytes = GMRES_WSIZE(n, m);
         return 0;
     }
     if (!check_params(x, A, b)) {
@@ -456,14 +476,16 @@ int armassp_x_gmres_w(armas_x_dense_t * x,
     }
     int maxiter = cf->maxiter > 0 ? cf->maxiter : 5 * A->rows;
     DTYPE res = ZERO;
-    int niter = gmres_hh_loop_fused(x, A, b, maxiter, me, &res, W, cf);
+    int niter = gmres_hh_loop_fused(x, A, b, maxiter, me, &res, wb, cf);
     cf->residual = res;
     cf->numiters = niter;
     return 0;
 }
 
 /**
- * \brief Solve unsymmetric linear system A*x = b with GMRES algorithm
+ * @brief Solve unsymmetric linear system A*x = b with GMRES algorithm
+ * @see armassp_x_gmres_w
+ * @ingroup sparse
  */
 int armassp_x_gmres(armas_x_dense_t * x,
                     const armas_x_sparse_t * A,

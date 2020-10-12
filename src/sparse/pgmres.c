@@ -231,21 +231,21 @@ int check_params(const armas_x_dense_t * x,
 
 
 /**
- * \brief Solve unsymmetric linear system A*x = b with right preconditioned GMRES algorithm and explicit workspace
+ * @brief Solve unsymmetric linear system A*x = b with right preconditioned GMRES algorithm.
  *
- * \param [in,out] x
+ * @param [in,out] x
  *    On entry, initial guess for solution. On exit solution the linear system.
- * \param [in] A
+ * @param [in] A
  *    Sparse coefficients of the linear system.
- * \param [in] b
+ * @param [in] b
  *    Dense vector
- * \param [in] M
+ * @param [in] M
  *    Preconditioner for unsymmetic linear system. See armassp_init_iluz for
  *    an ILU(0)  preconditioner.
- * \param [in,out] W
+ * @param [in,out] W
  *    Workspace buffer. If workspace size (W.bytes) is zero, then required
  *    workspace is calculated and returned in W.bytes.
- * \param [in,out] cf
+ * @param [in,out] cf
  *    Configuration block - iteration parameters `gmres_m`, `maxiters`,
  *   `stop` and `smult`. Number of iterations  used is returned in `numiters`
  *    and error residual in `residual`.
@@ -256,9 +256,11 @@ int check_params(const armas_x_dense_t * x,
  *  of `smult`*||b - Ax_0||_2.
  *
  *  For detailts see:
- *   Youssef Saad,
- *    Iterative Methods for Sparse Linear Systems, 2nd Edition, section 9.3
+ *  Youssef Saad, *Iterative Methods for Sparse Linear Systems, 2nd Edition*, section 9.3
  *
+ * @retval  0  Succress
+ * @retval <0  Failure
+ * @ingroup sparse
  */
 int armassp_x_pgmres_w(armas_x_dense_t * x,
                        const armas_x_sparse_t * A,
@@ -344,25 +346,9 @@ int armassp_x_pgmres_w(armas_x_dense_t * x,
 }
 
 /**
- * \brief Solve unsymmetric linear system A*x = b with right preconditioned GMRES algorithm
- *
- * \param [in,out] x
- *    On entry, initial guess for solution. On exit solution the linear system.
- * \param [in] A
- *    Sparse coefficients of the linear system.
- * \param [in] b
- *    Dense vector
- * \param [in] M
- *    Preconditioner for unsymmetic linear system. See armassp_init_iluz for
- *    an ILU(0)  preconditioner.
- * \param [in,out] cf
- *    Configuration block - iteration parameters gmres_m, maxiters, stop
- *     and smult
- *
- *  For detailts see:
- *    Youssef Saad,
- *    Iterative Methods for Sparse Linear Systems, 2nd Edition, section 9.3
- *
+ * @brief Solve unsymmetric linear system A*x = b with right preconditioned GMRES algorithm
+ * @see armassp_x_pgmres_w
+ * @ingroup sparse
  */
 int armassp_x_pgmres(armas_x_dense_t * x,       /*  */
                      const armas_x_sparse_t * A,

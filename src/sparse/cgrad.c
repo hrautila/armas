@@ -65,26 +65,46 @@ int check_parms(const armas_x_dense_t * x,
 }
 
 /**
- * \brief Solve PSD system \$ x = A^-1*b \$ with conjugate gradient method.
+ * @brief Solve  \f$ x = A^-1*b \f$ with conjugate gradient method.
  *
- * \param [in,out] x
+ * @param [in,out] x
  *    On entry, initial value of x. On exit solution to linear system.
- * \param [in] A
+ * @param [in] A
  *    Sparse symmetric and positive semi-definite matrix in CSR or CSC storage
  *    format. Only lower or upper triangular elements are access.
- * \param [in] b
+ * @param [in] b
  *    Initial vector b
- * \param [in] flags
+ * @param [in] flags
  *    Indicator bits. If ARMAS_LOWER (ARMAS_UPPER) is set then A is a lowet
  *    (upper) triangular matrix.
- * \param [in] W
- *    Workspace for intermediate results. If W.bytes is zero then workspace
+ * @param [in] W
+ *    Workspace for intermediate results. If *W.bytes* is zero then workspace
  *    size is computed and control returned immediately to caller.
- * \param [in,out] cf
+ * @param [in,out] cf
  *    Configuration parameters. See below for discussion.
  *
- *  Stopping criterias
+ * Solves a symmetric positive definite system with conjugate gradient method.
  *
+ * Interation stops when maximum iteration count is reseached or residual
+ * error goes below stopping criteria. Absolute stopping criteria is used
+ * if *cf.stop* is non-zero positive number otherwise relative error is used.
+ * If *cf.smult* is non-zero positive number the stopping criteria is
+ * \f$ smult * {\Vert r_0 \Vert}_2 \f$ otherwise value
+ * \f$ \epsilon {\Vert r_0 \Vert}_2 \f$ is used.
+ *
+ * Residual on iterattion k is \f$ r_k = b - A x_k \f$ and residual error
+ * \f$ \sqrt {\Vert r_0 \Vert}_2 \f$.
+ *
+ * The maximum iteration count is *cf.maxiter* or \f$ 4 N(A) \f$ where N(A) is
+ * dimension of A matrix.
+ *
+ * On exit *cf.numiters* holds the number of iterations and *cf.residual* holds
+ * the final residual error.
+ *
+ * @retval  0  Success
+ * @retval <0  Failure
+ *
+ * @ingroup sparse
  */
 int armassp_x_cgrad_w(armas_x_dense_t * x,
                       const armas_x_sparse_t * A,
@@ -100,7 +120,7 @@ int armassp_x_cgrad_w(armas_x_dense_t * x,
 
     if (!A) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (W && W->bytes == 0) {
         // get working size;
@@ -112,11 +132,11 @@ int armassp_x_cgrad_w(armas_x_dense_t * x,
 
     if (check_parms(x, A, b) == 0) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (armas_wbytes(W) < CGRAD_WSIZE(A->rows)) {
         cf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // -------------------------------------------------------------------------
     size_t pos = armas_wpos(W);
@@ -174,13 +194,14 @@ int armassp_x_cgrad_w(armas_x_dense_t * x,
     cf->residual = (double) SQRT(dot_r1);
 
     armas_wsetpos(W, pos);
-    return 0;
+    return niter >= maxiter ? -ARMAS_ECONVERGE : 0;
 }
 
 /**
- * \brief Solve SPD system \$ x = A^-1*b \$ with conjugate gradient method.
+ * @brief Solve PSD system \$ x = A^-1*b \$ with conjugate gradient method.
  *
- *  See armassp_x_cgrad_w() for details.
+ * @see armassp_x_cgrad_w
+ * @ingroup sparse
  */
 int armassp_x_cgrad(armas_x_dense_t * x,
                     const armas_x_sparse_t * A,
@@ -194,18 +215,17 @@ int armassp_x_cgrad(armas_x_dense_t * x,
 
     if (!check_parms(x, A, b)) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (A->rows == 0 || A->cols == 0)
         return 0;
 
-    if (armassp_x_cgrad_w(x, A, b, flags, &W, cf) < 0) {
-        cf->error = ARMAS_EWORK;
-        return -1;
+    if ((stat = armassp_x_cgrad_w(x, A, b, flags, &W, cf)) < 0) {
+        return stat;
     }
     if (!armas_walloc(&W, W.bytes)) {
         cf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     stat = armassp_x_cgrad_w(x, A, b, flags, &W, cf);
 

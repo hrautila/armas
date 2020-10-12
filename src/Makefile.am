@@ -268,6 +268,8 @@ if ENABLE_COMPLEX128
 
 endif
 
+includes: $(BUILT_SOURCES)
+
 nobase_include_HEADERS = $(BUILT_SOURCES)
 
 CLEANFILES = $(BUILT_SOURCES)

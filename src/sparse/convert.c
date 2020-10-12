@@ -26,7 +26,7 @@
 #include "sparse.h"
 #include "splocal.h"
 
-/**
+/*
  * \brief Convert from row compressed storage column compressed storage. 
  *
  * Runtime O(nnz).
@@ -77,8 +77,7 @@ armas_x_sparse_t *csr_to_csc(armas_x_sparse_t * A,
     return A;
 }
 
-/**
- *
+/*
  * Runtime O(nnz).
  */
 static
@@ -207,22 +206,22 @@ void csr_convert(armas_x_sparse_t * A, const armas_x_sparse_t * B)
 }
 
 /**
- *  \brief Convert source matrix to defined compressed format
+ *  @brief Convert source matrix to defined compressed format
  * 
- *  \param[out] A
+ *  @param[out] A
  *      Target matrix,  if nnz(A) is less than nnz(B) then error is returned. Otherwise
  *      source matrix is converted to defined format.
- *  \param[in] B
+ *  @param[in] B
  *      Source matrix.
- *  \param[in] target
+ *  @param[in] target
  *      Result matrix compressed storage format (column or row)
  *
- *  \return
+ *  @return
  *      Pointer to target matrix or null if no conversion happened.
+ *  @ingroup sparse
  */
-armas_x_sparse_t *armassp_x_convert_to(armas_x_sparse_t * A,
-                                       const armas_x_sparse_t * B,
-                                       armassp_type_enum target)
+armas_x_sparse_t *armassp_x_convert_to(
+    armas_x_sparse_t * A, const armas_x_sparse_t * B, armassp_type_enum target)
 {
     if (!B)
         return (armas_x_sparse_t *) 0;
@@ -232,15 +231,15 @@ armas_x_sparse_t *armassp_x_convert_to(armas_x_sparse_t * A,
         return (armas_x_sparse_t *) 0;
 
     // test for space
-    if (!sp_test_alloc(A, B->rows, B->cols, B->nnz, target)) {
+    if (!armassp_test_alloc(A, B->rows, B->cols, B->nnz, target)) {
         return (armas_x_sparse_t *) 0;
     }
     // test structure
-    if (!sp_test_structure(A, B->rows, B->cols, B->nnz, target)) {
+    if (!armassp_test_structure(A, B->rows, B->cols, B->nnz, target)) {
         return (armas_x_sparse_t *) 0;
     }
     // init internal arrays
-    sp_init_arrays(A, B->rows, B->cols, B->nnz, target);
+    armassp_init_arrays(A, B->rows, B->cols, B->nnz, target);
 
     switch (B->kind) {
     case ARMASSP_COO:
@@ -266,13 +265,16 @@ armas_x_sparse_t *armassp_x_convert_to(armas_x_sparse_t * A,
 }
 
 /**
- * \brief Create new column compressed matrix from uncompressed matrix.
+ * @brief Create new column compressed matrix from uncompressed matrix.
  *
- * \param[in] B
+ * @param[in] B
  *    Input matrix
+ * @param[in] target
+ *    Storage format.
  *
- * \return
+ * @return
  *    New matrix in request storage format
+ * @ingroup sparse
  */
 armas_x_sparse_t *armassp_x_convert(const armas_x_sparse_t * B,
                                     armassp_type_enum target)
@@ -282,15 +284,16 @@ armas_x_sparse_t *armassp_x_convert(const armas_x_sparse_t * B,
 }
 
 /**
- * \brief Transpose compressed storage matrix
+ * @brief Transpose compressed storage matrix
  *
- * \param[in,out] A
+ * @param[in,out] A
  *    On entry sparse matrix with allocated space. On exit transpose of B
- * \param[in] B
+ * @param[in] B
  *    Input matrix
  *
- * \return
+ * @return
  *    Pointer to target matrix or null if no transpose happened.
+ * @ingroup sparse
  */
 armas_x_sparse_t *armassp_x_transpose_to(armas_x_sparse_t * A,
                                          const armas_x_sparse_t * B)

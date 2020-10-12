@@ -70,25 +70,59 @@ int check_parms(const armas_x_dense_t * x,
 
 
 /**
- * \brief Solve under-determined system Ax = b
+ * @brief Solve under-determined system \f$ Ax = b \f$
  *
  * System
- *   \$   x = A^Tu, AA^Tu = b \$
+ *   \f$   x = A^Tu, AA^Tu = b \f$
  *
  * of equations can be used to solve under-determined systems, i.e.,
  * those systems  involving rectangular matrices of size m × n, with m < n.
  * Assume that m ≤ n and that A has full rank. If x_∗ is some solution to
- * the underdetermined system Ax = b. Then \$ AA^Tu = b \$ represents
+ * the underdetermined system Ax = b. Then \f$ AA^Tu = b \f$ represents
  * the normal equations for the least-squares problem
  *
- *    minimize || x_* - A^Tu ||_2
+ *   \f$ minimize {\Vert {x_* - A^T u} \Vert}_2 \f$
  *
- * For details see (1) 8.1 and 8.3
+ * For details see: Yousef Saad, *Iterative Methods for Sparse Linear System*, 2nd Edition
+ * sections 8.1 and 8.3
+ *
+ * @param[out] x
+ *   On exit solution to the system.
+ * @param[in]  A
+ *   Sparse matrix.
+ * @param[in]  b
+ *   Dense vector.
+ * @param[in,out] wb
+ *   Workspace. If *W.bytes* is zero then size of required workspace is calculated
+ *   and returned immediately.
+ * @param[in,out] cf
+ *   Configuration block. On exit *cf.numiters* holds number of iterations and
+ *   *cf.residual* the final error residual.
+ *
+ * Interation stops when maximum iteration count is reseached or residual
+ * error goes below stopping criteria. Absolute stopping criteria is used
+ * if *cf.stop* is non-zero positive number otherwise relative error is used.
+ * If *cf.smult* is non-zero positive number the stopping criteria is
+ * \f$ smult * {\Vert r_0 \Vert}_2 \f$ otherwise value
+ * \f$ \epsilon {\Vert r_0 \Vert}_2 \f$ is used.
+ *
+ * Residual on iterattion k is \f$ r_k = b - A x_k \f$ and residual error
+ * \f$ \sqrt {\Vert r_0 \Vert}_2 \f$.
+ *
+ * The maximum iteration count is *cf.maxiter* or \f$ 2 M(A) \f$ where M(A) is
+ * row count of A matrix.
+ *
+ * On exit *cf.numiters* holds the number of iterations and *cf.residual* holds
+ * the final residual error.
+ *
+ * @retval  0  Succes
+ * @retval <0  Failure
+ * @ingroup sparse
  */
 int armassp_x_cgne_w(armas_x_dense_t * x,
                      const armas_x_sparse_t * A,
                      const armas_x_dense_t * b,
-                     armas_wbuf_t * W, armas_conf_t * cf)
+                     armas_wbuf_t * wb, armas_conf_t * cf)
 {
     DTYPE dot_r, dot_p, alpha, beta, dot_r1, *t, rstop, rmult;
     armas_x_dense_t p, Ap, r;
@@ -99,12 +133,12 @@ int armassp_x_cgne_w(armas_x_dense_t * x,
 
     if (!A) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
-    if (W && W->bytes == 0) {
+    if (wb && wb->bytes == 0) {
         // get working size;
-        W->bytes = CGNE_WSIZE(A->rows, A->cols);
+        wb->bytes = CGNE_WSIZE(A->rows, A->cols);
         return 0;
     }
 
@@ -113,15 +147,15 @@ int armassp_x_cgne_w(armas_x_dense_t * x,
 
     if (check_parms(x, A, b) == 0) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     if (armas_wbytes(W) < CGNE_WSIZE(A->rows, A->cols)) {
         cf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // -------------------------------------------------------------------------
-    size_t pos = armas_wpos(W);
+    size_t pos = armas_wpos(wb);
 
     maxiter = cf->maxiter > 0 ? cf->maxiter : 2 * A->rows;
     rstop = cf->stop != ZERO ? (DTYPE) cf->stop : ZERO;
@@ -131,7 +165,7 @@ int armassp_x_cgne_w(armas_x_dense_t * x,
     n = A->cols;
 
     // r0 = b - A*x
-    t = armas_wreserve(W, m, sizeof(DTYPE));
+    t = armas_wreserve(wb, m, sizeof(DTYPE));
     armas_x_make(&r, m, 1, m, t);
     armas_x_mcopy(&r, b, 0, cf);
     armassp_x_mvmult(ONE, &r, -ONE, A, x, 0, cf);
@@ -142,12 +176,12 @@ int armassp_x_cgne_w(armas_x_dense_t * x,
         rstop *= rstop;
 
     // p0 = A^T*r0
-    t = armas_wreserve(W, n, sizeof(DTYPE));
+    t = armas_wreserve(wb, n, sizeof(DTYPE));
     armas_x_make(&p, n, 1, n, t);
     armassp_x_mvmult(ZERO, &p, ONE, A, &r, ARMAS_TRANS, cf);
 
     // Ap
-    t = armas_wreserve(W, m, sizeof(DTYPE));
+    t = armas_wreserve(wb, m, sizeof(DTYPE));
     armas_x_make(&Ap, m, 1, m, t);
 
     // -------------------------------------------------------------------------
@@ -177,10 +211,15 @@ int armassp_x_cgne_w(armas_x_dense_t * x,
     cf->numiters = niter;
     cf->residual = (double) SQRT(dot_r1);
 
-    armas_wsetpos(W, pos);
-    return 0;
+    armas_wsetpos(wb, pos);
+    return niter >= maxiter ? -ARMAS_ECONVERGE : 0;
 }
 
+/**
+ * @brief Solve under-determined system \f$ Ax = b \f$
+ * @see armassp_x_cgne_w
+ * @ingroup sparse
+ */
 int armassp_x_cgne(armas_x_dense_t * x,
                    const armas_x_sparse_t * A,
                    const armas_x_dense_t * b, armas_conf_t * cf)

@@ -180,40 +180,53 @@ void add_csc_nt(armas_x_sparse_t * C,
     C->nptr = A->cols;
 }
 
-/** 
+/**
+ * @brief Compute \f$ C = \alpha * A + \beta * B \f$
  *
+ * @param[out] C
+ * @param[in]  alpha
+ * @param[in]  A
+ * @param[in]  beta
+ * @param[in]  B
+ * @param[in]  bits
+ * @param[in,out] wb
+ * @param[in]  cf
+ *
+ * @retval  0  Success
+ * @retval <0  Failure
+ * @ingroup sparse
  */
 int armassp_x_addto_w(armas_x_sparse_t * C,
                       DTYPE alpha,
                       const armas_x_sparse_t * A,
                       DTYPE beta,
                       const armas_x_sparse_t * B,
-                      int bits, armas_wbuf_t * work, armas_conf_t * cf)
+                      int bits, armas_wbuf_t * wb, armas_conf_t * cf)
 {
     if (!A || !B)
         return 0;
 
     if (A->kind != B->kind) {
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (A->rows != B->rows || A->cols != B->cols) {
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
-    if (work && work->bytes == 0) {
-        work->bytes = armas_x_accum_need(C);
+    if (wb && wb->bytes == 0) {
+        wb->bytes = armas_x_accum_need(C);
         return 0;
     }
-    if (armas_wbytes(work) < armas_x_accum_need(C)) {
+    if (armas_wbytes(wb) < armas_x_accum_need(C)) {
         cf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     armas_x_accum_t spa;
-    // get current position in work space
-    size_t pos = armas_wpos(work);
+    // get current position in wb space
+    size_t pos = armas_wpos(wb);
     // make sparse accumulator 
     armas_x_accum_make(&spa, armas_x_accum_dim(C),
-                       armas_wptr(work), armas_wbytes(work));
+                       armas_wptr(wb), armas_wbytes(wb));
 
     switch (bits & (ARMAS_TRANSA | ARMAS_TRANSB)) {
     case ARMAS_TRANSB:
@@ -237,13 +250,16 @@ int armassp_x_addto_w(armas_x_sparse_t * C,
         }
         break;
     }
-    // release used workspace
-    armas_wsetpos(work, pos);
+    // release used wbspace
+    armas_wsetpos(wb, pos);
     return 0;
 }
 
-/** 
+/**
+ * @brief Compute \f$ \alpha * A + \beta * B \f$
  *
+ * @return Pointer to new sparse matrix or null pointer on error.
+ * @ingroup sparse
  */
 armas_x_sparse_t *armassp_x_add(DTYPE alpha,
                                 const armas_x_sparse_t * A,

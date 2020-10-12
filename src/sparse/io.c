@@ -82,7 +82,7 @@ char *strlower(char *s)
  *  banner row:
  *  %%Matrixmarket matrix|image array|coordinate real|complex|integer  <empty>|symmetric|hermitian
  */
-
+static
 int armasio_mmread_banner(FILE * f, int *typecode)
 {
     char iob[512];
@@ -147,6 +147,7 @@ int armasio_mmread_banner(FILE * f, int *typecode)
  * size row:
  * nrows ncols number-of-non-zeros|<empty>
  */
+static
 int armasio_mmread_size(FILE * f, int typecode, int *m, int *n, int *nnz)
 {
     char *iob = (char *) 0;
@@ -176,6 +177,14 @@ int armasio_mmread_size(FILE * f, int typecode, int *m, int *n, int *nnz)
     return 0;
 }
 
+/**
+ * @brief Load sparse matrix from matrix market file.
+ *
+ * Only matrix market coordinate list storage scheme is supported.
+ *
+ * @return Pointer to loaded sparse matrix or null pointer.
+ * @ingroup sparse
+ */
 armas_x_sparse_t *armassp_x_mmload(int *typecode, FILE * f)
 {
     int tc;
@@ -227,6 +236,23 @@ armas_x_sparse_t *armassp_x_mmload(int *typecode, FILE * f)
     return A;
 }
 
+/**
+ * @brief Serialize sparse matrix to matrix market file.
+ *
+ * Only matrix market coordinate list storage scheme is supported.
+ *
+ * @param[in,out] f
+ *   Open file.
+ * @param[in] A
+ *   Sparse matrix in compressed column/row or coordinate list storage
+ *   format.
+ * @param[in] flags
+ *   If *ARMAS_MM_SYMMETRIC* then matrix market banner reports as
+ *   symmetric matrix.
+ *
+ * @return Number of bytes writen.
+ * @ingroup sparse
+ */
 int armassp_x_mmdump(FILE * f, const armas_x_sparse_t * A, int flags)
 {
     int n;
@@ -310,6 +336,10 @@ void armassp_x_pprintf(FILE * f, const armas_x_sparse_t * A)
 #endif
 
 #if defined(armassp_x_iprintf)
+/**
+ * @brief Print compressed column or row structure to file.
+ * @ingroup sparse
+ */
 void armassp_x_iprintf(FILE * f, const armas_x_sparse_t * A)
 {
     if (A->kind == ARMASSP_COO)

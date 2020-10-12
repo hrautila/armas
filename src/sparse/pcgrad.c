@@ -85,7 +85,36 @@ int check_parms(const armas_x_dense_t * x,
 
 
 /**
- * \brief Solve x = A^-1*b by conjugate gradient method
+ * @brief Solve x = A^-1*b by conjugate gradient method with preconditioner.
+ *
+ * @param [in,out] x
+ *    On entry, initial value of x. On exit solution to linear system.
+ * @param [in] A
+ *    Sparse symmetric and positive semi-definite matrix in CSR or CSC storage
+ *    format. Only lower or upper triangular elements are access.
+ * @param [in] b
+ *    Initial vector b
+ * @param [in] M
+ *    Preconditioner.
+ * @param [in] flags
+ *    Indicator bits. If ARMAS_LOWER (ARMAS_UPPER) is set then A is a lowet
+ *    (upper) triangular matrix.
+ * @param [in] W
+ *    Workspace for intermediate results. If *W.bytes* is zero then workspace
+ *    size is computed and control returned immediately to caller.
+ * @param [in,out] cf
+ *    Configuration parameters. See below for discussion.
+ *
+ * For details see: Yousef Saad, *Iterative Methods for Sparse Linear System*, 2nd Edition
+ * section 9.1
+ *
+ * On exit *cf.numiters* holds the number of iterations and *cf.residual* holds
+ * the final residual error.
+ *
+ * @retval  0  Success
+ * @retval <0  Failure
+ *
+ * @ingroup sparse
  */
 int armassp_x_pcgrad_w(armas_x_dense_t * x,
                        const armas_x_sparse_t * A,
@@ -185,7 +214,11 @@ int armassp_x_pcgrad_w(armas_x_dense_t * x,
     return 0;
 }
 
-
+/**
+ * @brief Solve x = A^-1*b by conjugate gradient method with preconditioner.
+ * @see armassp_x_pcgrad_w
+ * @ingroup sparse
+ */
 int armassp_x_pcgrad(armas_x_dense_t * x,
                      const armas_x_sparse_t * A,
                      const armas_x_dense_t * b,

@@ -181,7 +181,24 @@ int csr_mvsolve_lt(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
 }
 
 /**
- * \brief Solve op(A)*x = alpha*b
+ * @brief Solve \f$ A^{-1} x = \alpha b \f$ or \f$ A^{-T} x = \alpha b \f$
+ *
+ * @param[in,out] x
+ *   On entry the vector b, on exit result vector x.
+ * @param[in] alpha
+ *   Coefficient
+ * @param[in] A
+ *   Upper or lower triangular matrix A in column or row compressed storage format,
+ *   per column rows or per row columns are sorted in ascending order.
+ * @param[in] flags
+ *   For lower (upper) triangular matrix A set to ARMAS_LOWER (ARMAS_UPPER).
+ *   If ARMAS_TRANS is  set then use transpose of A.
+ * @param[in] cf
+ *   Configuration block.
+ *
+ * @retval  0  Success
+ * @retval <0  Failure
+ * @ingroup sparse
  */
 int armassp_x_mvsolve_trm(armas_x_dense_t * x, DTYPE alpha,
                           const armas_x_sparse_t * A, int flags,
@@ -191,13 +208,13 @@ int armassp_x_mvsolve_trm(armas_x_dense_t * x, DTYPE alpha,
         cf = armas_conf_default();
 
     if (A->kind != ARMASSP_CSC && A->kind != ARMASSP_CSR) {
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     int ok = (flags & ARMAS_TRANS) == 0
         ? armas_x_size(x) == A->cols : armas_x_size(x) == A->rows;
     if (!ok) {
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     int unit = (flags & ARMAS_UNIT) != 0 ? 1 : 0;

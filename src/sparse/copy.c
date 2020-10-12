@@ -22,6 +22,11 @@
 #include "matrix.h"
 #include "sparse.h"
 
+/**
+ * @brief Make A = B
+ * @return Pointer to A if success otherwise null pointer.
+ * @ingroup sparse
+ */
 armas_x_sparse_t *armassp_x_copy_to(armas_x_sparse_t * A,
                                     const armas_x_sparse_t * B)
 {
@@ -57,6 +62,11 @@ armas_x_sparse_t *armassp_x_copy_to(armas_x_sparse_t * A,
     return A;
 }
 
+/**
+ * @brief Create copy of matrix.
+ * @return Pointer to new matrix if success otherwise null pointer.
+ * @ingroup sparse
+ */
 armas_x_sparse_t *armassp_x_mkcopy(const armas_x_sparse_t * B)
 {
     armas_x_sparse_t *A = armassp_x_new(B->rows, B->cols, B->nnz, B->kind);

@@ -35,6 +35,10 @@ static inline void armas_x_accum_init(armas_x_accum_t * acc, int n, void *ptr)
     acc->tail = 0;
 }
 
+/**
+ * @brief Use provided buffer space as accumulator.
+ * @ingroup sparse
+ */
 size_t armas_x_accum_make(armas_x_accum_t * acc, int n, void *ptr, size_t len)
 {
     size_t nb = armas_x_accum_bytes(n);
@@ -44,6 +48,10 @@ size_t armas_x_accum_make(armas_x_accum_t * acc, int n, void *ptr, size_t len)
     return nb;
 }
 
+/**
+ * @brief Allocate resources for accumulator of order n.
+ * @ingroup sparse
+ */
 int armas_x_accum_allocate(armas_x_accum_t * acc, int n)
 {
     // single block of n DTYPE and 2*n ints
@@ -55,6 +63,10 @@ int armas_x_accum_allocate(armas_x_accum_t * acc, int n)
     return 0;
 }
 
+/**
+ * @brief Release accumulator resources.
+ * @ingroup sparse
+ */
 void armas_x_accum_release(armas_x_accum_t * acc)
 {
     if (!acc)
@@ -77,14 +89,20 @@ void addpos(armas_x_accum_t * acc, int index, DTYPE value, int mark)
     }
 }
 
-// \brief add value to accumulator position
+/**
+ * @brief Add value to accumulator position
+ * @ingroup sparse
+ */
 void armas_x_accum_addpos(armas_x_accum_t * acc,
                           int index, DTYPE value, int mark)
 {
     addpos(acc, index, value, mark);
 }
 
-// accumulate acc = acc + beta*x[:]
+/**
+ * @brief accumulate acc = acc + beta*x[:]
+ * @ingroup sparse
+ */
 void armas_x_accum_scatter(armas_x_accum_t * acc,
                            const armas_x_spvec_t * x, DTYPE beta, int mark)
 {
@@ -100,6 +118,10 @@ void armas_x_accum_scatter(armas_x_accum_t * acc,
     }
 }
 
+/**
+ * @brief Update accumulator with sparse \f$ x^T y \f$
+ * @ingroup sparse
+ */
 void armas_x_accum_dot(armas_x_accum_t * acc,
                        int k,
                        const armas_x_spvec_t * x,
@@ -127,6 +149,10 @@ void armas_x_accum_dot(armas_x_accum_t * acc,
     addpos(acc, k, v, mark);
 }
 
+/**
+ * @brief Update matrix from accumulator.
+ * @ingroup sparse
+ */
 void armas_x_accum_gather(armas_x_sparse_t * C,
                           DTYPE alpha, armas_x_accum_t * acc, int ik, int maxnz)
 {
@@ -142,6 +168,10 @@ void armas_x_accum_gather(armas_x_sparse_t * C,
     }
 }
 
+/**
+ * @brief Unmark accumulator elements.
+ * @ingroup sparse
+ */
 void armas_x_accum_clear(armas_x_accum_t * acc)
 {
     for (int i = 0; i < acc->nz; acc->mark[i++] = -1);

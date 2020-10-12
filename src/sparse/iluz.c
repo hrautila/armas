@@ -160,6 +160,19 @@ int precond_ilu(armas_x_dense_t * z,
     return 0;
 }
 
+/**
+ * @brief Create incomplete LU preconditioner.
+ *
+ * @param[in,out] P
+ *   On entry uninitialized preconditioner. On exit initialized preconditioner
+ *   for matrix.
+ * @param[in] A
+ *   Sparse matrix. On exit preconditioned matrix.
+ *
+ * For details see: Saad, *Iterative Methods for Sparse Linear Systems*, 2nd Ed.
+ *
+ * @retval  0  Success
+ */
 int armassp_x_init_iluz(armassp_x_precond_t * P, armas_x_sparse_t * A)
 {
     int stat = armassp_x_iluz(A);

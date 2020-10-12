@@ -159,8 +159,25 @@ int csc_mvmult_usym(DTYPE beta, DTYPE * y, DTYPE alpha,
 }
 
 /**
- * \brief Compute y = beta*y + alpha*A*x or y = beta*y + alpha*A^T*x
+ * @brief Compute y = beta*y + alpha*A*x or y = beta*y + alpha*A^T*x
  *
+ * @param[in] beta
+ *   Scalar.
+ * @param[in,out] y
+ *   Dense result vector.
+ * @param[in] alpha
+ *   Scalar
+ * @param[in] A
+ *   Sparse symmetric matrix in CSC or CSR storage scheme.
+ * @param[in] x
+ *   Dense vector.
+ * @param[in] flags
+ *   *ARMAS_LOWER* or *ARMAS_UPPER*
+ * @param[in] cf
+ *   Configuration block.
+ *
+ * @retval  0  Success
+ * @retval <0  Failure
  */
 int armassp_x_mvmult_sym(DTYPE beta, armas_x_dense_t * y,
                          DTYPE alpha, const armas_x_sparse_t * A,
@@ -172,7 +189,7 @@ int armassp_x_mvmult_sym(DTYPE beta, armas_x_dense_t * y,
 
     if (A->kind != ARMASSP_CSC && A->kind != ARMASSP_CSR) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     int ok = (flags & ARMAS_TRANS) == 0
@@ -182,7 +199,7 @@ int armassp_x_mvmult_sym(DTYPE beta, armas_x_dense_t * y,
 
     if (!ok) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     DTYPE *yd = armas_x_data(y);
     DTYPE *xd = armas_x_data(x);
@@ -204,7 +221,7 @@ int armassp_x_mvmult_sym(DTYPE beta, armas_x_dense_t * y,
         }
         break;
     }
-    return -1;
+    return -ARMAS_EINVAL;
 }
 #else
 #warning "Missing defines. No code!"

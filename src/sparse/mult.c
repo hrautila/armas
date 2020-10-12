@@ -133,8 +133,7 @@ int mult_csr_tt(armas_x_sparse_t * C,
     for (i = 0; i < C->rows; i++) {
         for (j = 0; j < C->cols; j++) {
             // get column j from B;
-            for (p1 = armassp_x_index(B, j); p1 < armassp_x_index(B, j + 1);
-                 p1++) {
+            for (p1 = armassp_x_index(B, j); p1 < armassp_x_index(B, j + 1); p1++) {
                 k = armassp_x_at(B, p1);
                 // test if A[i,k] non-zero
                 if ((p0 = armassp_x_nz(A, k, i)) < 0)
@@ -255,8 +254,7 @@ int mult_csc_tt(armas_x_sparse_t * C,
     for (i = 0; i < C->rows; i++) {
         for (j = 0; j < C->cols; j++) {
             // get column j from A;
-            for (p1 = armassp_x_index(A, j); p1 < armassp_x_index(A, j + 1);
-                 p1++) {
+            for (p1 = armassp_x_index(A, j); p1 < armassp_x_index(A, j + 1); p1++) {
                 k = armassp_x_at(A, p1);
                 // test if A[i,k] non-zero
                 if ((p0 = armassp_x_nz(B, k, i)) < 0)
@@ -282,7 +280,28 @@ size_t armassp_x_mult_nnz(const armas_x_sparse_t * A,
 }
 
 /**
- * \brief Compute \$ C = alpha*op(A)*op(B) \$
+ * @brief Compute \f$ C = alpha*op(A)*op(B) \f$
+ *
+ * @param[in,out]  C
+ *   On entry result matrix with proper space allocation. On exit the
+ *   result matrix.
+ * @param[in] alpha
+ *   Scalar
+ * @param[in] A
+ *   First operand. Same sparse type as B, CSC or CSR.
+ * @param[in] B
+ *   Second operand. Same sparse type as A, CSC or CSR.
+ * @param[in] flags
+ *   Operator flags, *ARMAS_TRANSA*, *ARMAS_TRANSB*
+ * @param[in] w
+ *   Workspace. If wb.bytes is zero then required workspace is
+ *   calculated and immediately returned.
+ * @param[in,out] cf
+ *   Configuration block.
+ *
+ * @retval  0  Success
+ * @retval <0  Failure
+ * @ingroup sparse
  */
 int armassp_x_multto_w(armas_x_sparse_t * C,
                        DTYPE alpha,
@@ -373,6 +392,24 @@ int armassp_x_multto_w(armas_x_sparse_t * C,
     return stat;
 }
 
+/**
+ * @brief Compute \f$ \alpha * op(A) * op(B) \f$
+ *
+ * @param[in] alpha
+ *   Scalar
+ * @param[in] A
+ *   First operand. Same sparse type as B, CSC or CSR.
+ * @param[in] B
+ *   Second operand. Same sparse type as A, CSC or CSR.
+ * @param[in] flags
+ *   Operator flags, *ARMAS_TRANSA*, *ARMAS_TRANSB*
+ * @param[in,out] cf
+ *   Configuration block.
+ *
+ * @return  Allocated new result matrix or null pointer.
+ * @ingroup sparse
+ *
+ */
 armas_x_sparse_t *armassp_x_mult(DTYPE alpha,
                                  const armas_x_sparse_t * A,
                                  const armas_x_sparse_t * B,

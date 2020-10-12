@@ -67,10 +67,43 @@ int check_parms(const armas_x_dense_t * x,
 }
 
 /**
- * \brief Solve least-squares problem \$ min ||b - Ax||_2
+ * @brief Solve least-squares problem \f$ min {\Vert {b - Ax}}_2 \f$
  *
+ * For details see: Yousef Saad, *Iterative Methods for Sparse Linear System*, 2nd Edition
+ * sections 8.1 and 8.3
  *
- * For details see (1) 8.1 and 8.3
+ * @param[out] x
+ *   On exit solution to the system.
+ * @param[in]  A
+ *   Sparse matrix.
+ * @param[in]  b
+ *   Dense vector.
+ * @param[in,out] W
+ *   Workspace. If *wb.bytes* is zero then size of required workspace is calculated
+ *   and returned immediately.
+ * @param[in,out] cf
+ *   Configuration block. On exit *cf.numiters* holds number of iterations and
+ *   *cf.residual* the final error residual.
+ *
+ * Interation stops when maximum iteration count is reseached or residual
+ * error goes below stopping criteria. Absolute stopping criteria is used
+ * if *cf.stop* is non-zero positive number otherwise relative error is used.
+ * If *cf.smult* is non-zero positive number the stopping criteria is
+ * \f$ smult * {\Vert r_0 \Vert}_2 \f$ otherwise value
+ * \f$ \epsilon {\Vert r_0 \Vert}_2 \f$ is used.
+ *
+ * Residual on iterattion k is \f$ r_k = b - A x_k \f$ and residual error
+ * \f$ \sqrt {\Vert r_0 \Vert}_2 \f$.
+ *
+ * The maximum iteration count is *cf.maxiter* or \f$ 2 M(A) \f$ where M(A) is
+ * row count of A matrix.
+ *
+ * On exit *cf.numiters* holds the number of iterations and *cf.residual* holds
+ * the final residual error.
+ *
+ * @retval  0  Succes
+ * @retval <0  Failure
+ * @ingroup sparse
  */
 int armassp_x_cgnr_w(armas_x_dense_t * x,
                      const armas_x_sparse_t * A,
@@ -86,7 +119,7 @@ int armassp_x_cgnr_w(armas_x_dense_t * x,
 
     if (!A) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (W && W->bytes == 0) {
         // get working size;
@@ -98,11 +131,11 @@ int armassp_x_cgnr_w(armas_x_dense_t * x,
 
     if (check_parms(x, A, b) == 0) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (armas_wbytes(W) < CGNR_WSIZE(A->rows, A->cols)) {
         cf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
 
     size_t pos = armas_wpos(W);
@@ -165,13 +198,18 @@ int armassp_x_cgnr_w(armas_x_dense_t * x,
         armas_x_axpby(beta, &p, ONE, &z, cf);
     }
 
-    cf->numiters = n;
+    cf->numiters = niter;
     cf->residual = (double) SQRT(dot_z1);
 
     armas_wsetpos(W, pos);
-    return 0;
+    return niter >= maxiter ? -ARMAS_ECONVERGE : 0;
 }
 
+/**
+ * @brief Solve least-squares problem \f$ min ||b - Ax||_2 \f$
+ * @see armassp_x_cgnr_w
+ * @ingroup sparse
+ */
 int armassp_x_cgnr(armas_x_dense_t * x,
                    const armas_x_sparse_t * A,
                    const armas_x_dense_t * b, armas_conf_t * cf)
