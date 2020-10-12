@@ -811,70 +811,9 @@ int blk_bdreduce_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
 /**
  * @brief Bidiagonal reduction of general matrix
  *
- * Reduce a general M-by-N matrix A to upper or lower bidiagonal form B
- * by an ortogonal transformation \f$ A = QBP^T \f$,  \f$ B = Q^TAP \f$
+ * @see armas_x_bdreduce_w
  *
- *
- * @param[in,out]  A
- *     On entry, the real M-by-N matrix. On exit the upper/lower
- *     bidiagonal matrix and ortogonal matrices Q and P.
- *
- * @param[out]  tauq
- *    Scalar factors for elementary reflector forming the
- *    ortogonal matrix Q.
- *
- * @param[out]  taup
- *    Scalar factors for elementary reflector forming the
- *    ortogonal matrix P.
- *
- * @param[out]  W
- *     Workspace needed for reduction.
- *
- * @param[in,out]  conf
- *     Configuration options.
- *
- *
- * #### Details
- *
- * Matrices Q and P are products of elementary reflectors \f$ H_k \f$ and \f$ G_k \f$
- *
- * If M > N:
- *   \f$  Q = H_1 H_2 ... H_N \f$  and \f$ P = G_1 G_2 ... G_{N-1} \f$
- *
- * where \f$ H_k = 1 - tauq*u*u^T \f$ and \f$ G_k = 1 - taup*v*v^T \f$
- *
- * Elementary reflector \f$ H_k \f$ are stored on columns of A below the
- * diagonal with implicit unit value on diagonal entry. Vector 'tauq` holds
- * corresponding scalar factors. Reflector \f$ G_k \f$ are stored on rows
- * of A right of first superdiagonal with implicit unit value on superdiagonal.
- * Corresponding scalar factors are stored on vector `taup`.
- * 
- * If M < N:
- *  \f$ Q = H_1 H_2 ...H_{N-1} \f$  and \f$ P = G_1 G_2 ... G_N \f$
- *
- * where \f$ H_k = 1 - tauq*u*u^T \f$ and \f$ G_k = 1 - taup*v*v^T \f$
- *
- * Elementary reflector \f$ H_k \f$ are stored on columns of A below the first
- * sub diagonal with implicit unit value on sub diagonal entry. Vector `tauq`
- * holds corresponding  scalar factors. Reflector \f$ G_k \f$ are stored on
- * rows of A right of diagonal with implicit unit value on superdiagonal.
- * Corresponding scalar factors are stored on vector `taup`.
- *
- * Contents of matrix A after reductions are as follows.
- *
- *      M = 6 and N = 5:                  M = 5 and N = 6:
- *
- *      (  d   e   v1  v1  v1 )           (  d   v1  v1  v1  v1  v1 )
- *      (  u1  d   e   v2  v2 )           (  e   d   v2  v2  v2  v2 )
- *      (  u1  u2  d   e   v3 )           (  u1  e   d   v3  v3  v3 )
- *      (  u1  u2  u3  d   e  )           (  u1  u2  e   d   v4  v4 )
- *      (  u1  u2  u3  u4  d  )           (  u1  u2  u3  e   d   v5 )
- *      (  u1  u2  u3  u4  u5 )
- *
- *  G.Van Zee, R. van de Geijn, 
- *       Algorithms for Reducing a Matrix to Condensed Form
- *       2010, Flame working note #53 
- * \ingroup lapack
+ * @ingroup lapack
  */
 int armas_x_bdreduce(armas_x_dense_t * A,
                      armas_x_dense_t * tauq,
@@ -886,8 +825,8 @@ int armas_x_bdreduce(armas_x_dense_t * A,
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_bdreduce_w(A, tauq, taup, &wb, conf) < 0)
-        return -1;
+    if ((err = armas_x_bdreduce_w(A, tauq, taup, &wb, conf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
@@ -912,24 +851,69 @@ int armas_x_bdreduce(armas_x_dense_t * A,
  *
  *
  * @param[in,out]  A
- *     On entry, the real M-by-N matrix. On exit the upper/lower
- *     bidiagonal matrix and ortogonal matrices Q and P.
+ *    On entry, the real M-by-N matrix. On exit the upper/lower
+ *    bidiagonal matrix and ortogonal matrices Q and P.
  *
  * @param[out]  tauq
- *    Scalar factors for elementary reflector forming the
- *    ortogonal matrix Q.
+ *   Scalar factors for elementary reflector forming the
+ *   ortogonal matrix Q.
  *
  * @param[out]  taup
- *    Scalar factors for elementary reflector forming the
- *    ortogonal matrix P.
+ *   Scalar factors for elementary reflector forming the
+ *   ortogonal matrix P.
  *
- * @param[out]  wb
- *     Workspace needed for reduction.
+ * @param[in,out]  wb
+ *    Workspace needed for reduction. If wb.bytes == 0 on entry then size of
+ *    needed workspace is computed and returned immediately in wb.bytes.
  *
  * @param[in,out]  conf
- *     Configuration options.
+ *    Configuration options.
  *
- * See armas_x_bdreduce().
+ * Matrices Q and P are products of elementary reflectors \f$ H_k \f$ and \f$ G_k \f$
+ *
+ * If M > N then
+ *
+ *   \f$  Q = H_1 H_2 ... H_N \f$  and \f$ P = G_1 G_2 ... G_{N-1} \f$
+ *
+ * where
+ *
+ *   \f$ H_k = 1 - tauq_k*u_k*u_k^T \f$ and \f$ G_k = 1 - taup_k*v_k*v_k^T \f$
+ *
+ * Elementary reflector \f$ H_k \f$ are stored on columns of A below the
+ * diagonal with implicit unit value on diagonal entry. Vector 'tauq` holds
+ * corresponding scalar factors. Reflector \f$ G_k \f$ are stored on rows
+ * of A right of first superdiagonal with implicit unit value on superdiagonal.
+ * Corresponding scalar factors are stored on vector `taup`.
+ *
+ * If M < N then
+ *
+ *  \f$ Q = H_1 H_2 ...H_{N-1} \f$  and \f$ P = G_1 G_2 ... G_N \f$
+ *
+ * where
+ *
+ *  \f$ H_k = 1 - tauq_k*u_k*u_k^T \f$ and \f$ G_k = 1 - taup_k*v_k*v_k^T \f$
+ *
+ * Elementary reflector \f$ H_k \f$ are stored on columns of A below the first
+ * sub diagonal with implicit unit value on sub diagonal entry. Vector `tauq`
+ * holds corresponding  scalar factors. Reflector \f$ G_k \f$ are stored on
+ * rows of A right of diagonal with implicit unit value on superdiagonal.
+ * Corresponding scalar factors are stored on vector `taup`.
+ *
+ * Contents of matrix A after reductions are as follows.
+ *```txt
+ *      M = 6 and N = 5:                  M = 5 and N = 6:
+ *
+ *      (  d   e   v1  v1  v1 )           (  d   v1  v1  v1  v1  v1 )
+ *      (  u1  d   e   v2  v2 )           (  e   d   v2  v2  v2  v2 )
+ *      (  u1  u2  d   e   v3 )           (  u1  e   d   v3  v3  v3 )
+ *      (  u1  u2  u3  d   e  )           (  u1  u2  e   d   v4  v4 )
+ *      (  u1  u2  u3  u4  d  )           (  u1  u2  u3  e   d   v5 )
+ *      (  u1  u2  u3  u4  u5 )
+ *```
+ *
+ * G.Van Zee, R. van de Geijn,
+ *       _Algorithms for Reducing a Matrix to Condensed Form_
+ *       2010, Flame working note #53
  *
  * @ingroup lapack
  */
@@ -950,7 +934,7 @@ int armas_x_bdreduce_w(armas_x_dense_t * A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (wb && wb->bytes == 0) {
@@ -965,7 +949,7 @@ int armas_x_bdreduce_w(armas_x_dense_t * A,
     wsmin = (A->cols + A->rows) * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace
     if (lb > 0 && A->rows > lb && A->cols > lb) {

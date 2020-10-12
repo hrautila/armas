@@ -360,44 +360,10 @@ int blk_rqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
 
 
 /**
- * Multiply and replace C with Q*C or Q.T*C where Q is a real orthogonal matrix
- * defined as the product of k elementary reflectors.
+ * @brief Multiply with orthogonal Q matrix of RQ factorization
  *
- *    \f$ Q = H_1 H_2 ...H_k \f$
- *
- * as returned by rqfactor().
- *
- * \param[in,out] C
- *     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
- *     N-by-M matrix.  On exit C is overwritten by Q*C or Q.T*C.
- *     If bit RIGHT is set then C is  overwritten by C*Q or C*Q.T
- *
- * \param[in] A
- *     RQ factorization as returned by rqfactor() where the upper
- *     trapezoidal part holds the elementary reflectors.
- *
- * \param[in] tau
- *    The scalar factors of the elementary reflectors.
- *
- * \param[in] flags
- *    Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT* and *ARMAS_TRANS*
- *
- * \param[in,out] conf
- *    Configuration options.
- *
- * \retval  0 Succes
- * \retval -1 Failure, `conf.error` holds error code
- *
- * Compatible with lapack.DORMRQ
- *
- * #### Notes
- *   m(A) is number of elementary reflectors == A.rows
- *   n(A) is the order of the Q matrix == A.cols
- *
- * \cond
- *   LEFT : m(C) == m(A)
- *   RIGHT: n(C) == m(A)
- * \endcond
+ * @see armas_x_rqmult_w
+ * @ingroup lapack
  */
 int armas_x_rqmult(armas_x_dense_t * C,
                    const armas_x_dense_t * A,
@@ -425,14 +391,14 @@ int armas_x_rqmult(armas_x_dense_t * C,
 }
 
 /**
- * @brief Multiply with orthogonal Q matrix 
+ * @brief Multiply with orthogonal Q matrix of RQ factorization
  *
  * Multiply and replace C with Q*C or Q.T*C where Q is a real orthogonal matrix
  * defined as the product of k elementary reflectors.
  *
  *    \f$ Q = H_1 H_2 ...H_k \f$
  *
- * as returned by rqfactor().
+ * as returned by armas_x_rqfactor_w().
  *
  * @param[in,out] C
  *     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
@@ -440,7 +406,7 @@ int armas_x_rqmult(armas_x_dense_t * C,
  *     If bit RIGHT is set then C is  overwritten by C*Q or C*Q.T
  *
  * @param[in] A
- *     RQ factorization as returned by rqfactor() where the upper
+ *     RQ factorization as returned by armas_x_rqfactor_w() where the upper
  *     trapezoidal part holds the elementary reflectors.
  *
  * @param[in] tau
@@ -451,19 +417,16 @@ int armas_x_rqmult(armas_x_dense_t * C,
  *    *ARMAS_RIGHT* for multiplication from right and *ARMAS_TRANS* for transpose of Q.
  *
  * @param  wb
- *    Workspace buffer needed for computation. To compute size of the required space call 
- *    the function with workspace bytes set to zero. Size of workspace is returned in 
- *    `wb.bytes` and no other computation or parameter size checking is done and function
- *    returns with success.
+ *    Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *    immediately.
  *
  * @param[in,out] conf
- *    Configuration options. Field LB defines block sized. If it is zero
- *    unblocked invocation is assumed.
+ *    Configuration options.
  *
  * @retval  0 Succes
- * @retval -1 Failure, `conf.error` holds error code
+ * @retval <0 Failure, `conf.error` holds error code
  *
- *  Last error codes returned
+ * Last error codes returned
  *   - `ARMAS_ESIZE`  if n(C) != n(A) for C*op(Q) or m(C) != n(A)
  *                    for op(Q)*C, len(tau) != m(A)
  *   - `ARMAS_EINVAL` C or A or tau is null pointer
@@ -471,21 +434,12 @@ int armas_x_rqmult(armas_x_dense_t * C,
  *
  * Compatible with lapack.DORMRQ
  *
- * #### Notes
+ * Notes
  *
- *   m(A) is number of elementary reflectors == A.rows
- *   n(A) is the order of the Q matrix == A.cols
+ *  m(A) is number of elementary reflectors == A.rows
+ *  n(A) is the order of the Q matrix == A.cols
  *
- * Workspace size as number of elements:
- *
- *   if LEFT and env.lb > 0 and n(C) > env.lb
- *      then       (n(C) + lb)*lb elements
- *      otherwise  n(C) elements
- *
- *   if RIGHT and env.lb > 0 and m(C) > env.lb
- *      then       (m(C) + lb)*lb elements
- *      otherwise  m(C) elements
- *
+ * @ingroup lapack
  * \cond
  *   LEFT : m(C) == n(A)
  *   RIGHT: n(C) == n(A)

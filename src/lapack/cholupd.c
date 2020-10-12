@@ -25,13 +25,11 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 
 #include "sym.h"
-//! \endcond
 
 #define MAX_ITERS 5
 
@@ -136,7 +134,7 @@ int unblk_cholupdate_upper(armas_x_dense_t * A, armas_x_dense_t * X,
 /**
  * @brief Rank update of unpivoted Cholesky factorization
  *
- * Computes Chol(A + x*x^T) = LL^T + xx^T or U^TU + xx^T
+ * Computes \f$ Chol(A + x*x^T) = LL^T + xx^T \f$ or \f$ U^TU + xx^T \f$
  *
  * @param[in,out] A
  *    On entry, original factorization. On exit, updated factorization.
@@ -148,8 +146,9 @@ int unblk_cholupdate_upper(armas_x_dense_t * A, armas_x_dense_t * X,
  * @param[in,out] conf
  *    Configuration block.
  *
- * @retval  0 ok
- * @retval -1 error
+ * @retval  0 Success
+ * @retval <0 Failure
+ * @ingroup lapack
  */
 int armas_x_cholupdate(armas_x_dense_t * A, armas_x_dense_t * X, int flags,
                        armas_conf_t * conf)

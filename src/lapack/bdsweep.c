@@ -44,13 +44,13 @@
  * @brief Bidiagonal top to bottom QR sweep.
  *
  * @param D [in,out]
- *      Diagonal elements
+ *      Diagonal elements.
  * @param E [in,out]
- *      Off-diagonal elements
+ *      Off-diagonal elements.
  * @param Cr, Sr, Cl, Sl [out]
- *      Saved plane rotations
+ *      Saved plane rotations.  Accessed only if rotations are saved.
  * @param f0, g0 [in]
- *      Initial plane rotation parameters
+ *      Initial plane rotation parameters.
  * @param saves [in]
  *      If set then rotation are saved.
  * @return
@@ -58,7 +58,7 @@
  *
  * Assume: len(D)-1 == len(E)
  *
- * @ingroup lapackaux internal
+ * @ingroup lapackaux
  */
 int armas_x_bd_qrsweep(armas_x_dense_t * D, armas_x_dense_t * E,
                        armas_x_dense_t * Cr, armas_x_dense_t * Sr,
@@ -112,14 +112,27 @@ int armas_x_bd_qrsweep(armas_x_dense_t * D, armas_x_dense_t * E,
     }
     // e[-1] = f
     armas_x_set_at_unsafe(E, N - 2, f);
-    //return k > 0 ? k+1 : 0;
     return N - 1;
 }
 
 /**
  * @brief Implicit zero shift QR sweep.
  *
+ * @param D [in,out]
+ *      Diagonal elements
+ * @param E [in,out]
+ *      Off-diagonal elements
+ * @param Cr, Sr, Cl, Sl [out]
+ *      Saved plane rotations. Accessed only if rotations are saved.
+ * @param saves [in]
+ *      If set then rotation are saved.
+ * @return
+ *      Number of rotations performed (N-2)
+ *
+ * Assume: len(D)-1 == len(E).
  * As described in Demmel-Kahan, 1990.
+ *
+ * @ingroup lapackaux
  */
 int armas_x_bd_qrzero(armas_x_dense_t * D, armas_x_dense_t * E,
                       armas_x_dense_t * Cr, armas_x_dense_t * Sr,
@@ -152,7 +165,6 @@ int armas_x_bd_qrzero(armas_x_dense_t * D, armas_x_dense_t * E,
     d2 = cosr * d2;
     armas_x_set_at_unsafe(D, N - 1, d2 * cosl);
     armas_x_set_at_unsafe(E, N - 2, d2 * sinl);
-    //return k > 0 ? k+1 : 0;
     return N - 1;
 }
 
@@ -164,7 +176,7 @@ int armas_x_bd_qrzero(armas_x_dense_t * D, armas_x_dense_t * E,
  * @param E [in,out]
  *      Off-diagonal elements
  * @param Cr, Sr, Cl, Sl [out]
- *      Saved plane rotations
+ *      Saved plane rotations. Accessed only if rotations are saved.
  * @param f0, g0 [in]
  *      Initial plane rotation parameters
  * @param saves [in]
@@ -174,7 +186,7 @@ int armas_x_bd_qrzero(armas_x_dense_t * D, armas_x_dense_t * E,
  *
  * Assume: len(D)-1 == len(E)
  *
- * @ingroup lapackaux internal
+ * @ingroup lapackaux
  */
 int armas_x_bd_qlsweep(armas_x_dense_t * D, armas_x_dense_t * E,
                        armas_x_dense_t * Cr, armas_x_dense_t * Sr,
@@ -226,7 +238,6 @@ int armas_x_bd_qlsweep(armas_x_dense_t * D, armas_x_dense_t * E,
         }
     }
     armas_x_set_at_unsafe(E, 0, f);
-    //return n > 0 ? N : 0;
     return N - 1;
 }
 
@@ -234,7 +245,20 @@ int armas_x_bd_qlsweep(armas_x_dense_t * D, armas_x_dense_t * E,
 /**
  * @brief Implicit zero shift QL sweep.
  *
+ * @param D [in,out]
+ *      Diagonal elements
+ * @param E [in,out]
+ *      Off-diagonal elements
+ * @param Cr, Sr, Cl, Sl [out]
+ *      Saved plane rotations. Accessed only if rotations are saved.
+ * @param saves [in]
+ *      If set then rotation are saved.
+ * @return
+ *      Number of rotations performed (N-2)
+ *
  * As described in Demmel-Kahan, 1990.
+ *
+ * @ingroup lapackaux
  */
 int armas_x_bd_qlzero(armas_x_dense_t * D, armas_x_dense_t * E,
                       armas_x_dense_t * Cr, armas_x_dense_t * Sr,
@@ -266,7 +290,6 @@ int armas_x_bd_qlzero(armas_x_dense_t * D, armas_x_dense_t * E,
     d2 = cosr * armas_x_get_at_unsafe(D, 0);
     armas_x_set_at_unsafe(D, 0, d2 * cosl);
     armas_x_set_at_unsafe(E, 0, d2 * sinl);
-    //return n > 0 ? N : 0;
     return N - 1;
 }
 

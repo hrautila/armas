@@ -26,12 +26,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "auxiliary.h"
-//! \endcond
 
 /*
  * \brief Rotate lower bidiagonal matrix to upper bidiagonal matrix.
@@ -75,42 +73,11 @@ void bdmake_upper(armas_x_dense_t * D, armas_x_dense_t * E,
 }
 
 /**
- * \brief Compute SVD of bidiagonal matrix.
+ * @brief Compute SVD of bidiagonal matrix.
  *
- * Computes the singular values and, optionially, the left and/or right
- * singular vectors from the SVD of a N-by-N upper or lower bidiagonal
- * matrix. The SVD of B has the form
+ * @see armas_x_bdsvd_w
  *
- *   \f$ B = U S V^T \f$
- *
- * where S is the diagonal matrix with singular values, U is an orthogonal
- * matrix of left singular vectors, and \f$ V^T \f$ is an orthogonal matrix of
- * right singular vectors. If singular vectors are requested they must be
- * initialized either to unit diagonal matrix or some other orthogonal matrices.
- *
- * \param[in,out] D
- *      On entry, the diagonal elements of B. On exit, the singular values
- *      of B in decreasing order.
- * \param[in] E
- *      On entry, the offdiagonal elements of B. On exit, E is destroyed.
- * \param[in,out] U
- *      On entry, initial orthogonal matrix of left singular vectors. On exit,
- *      updated left singular vectors.
- * \param[in,out] V
- *      On entry, initial orthogonal matrix of right singular vectors. On exit,
- *      updated right singular vectors.
- * \param[in] flags
- *      Indicators, *ARMAS_WANTU*, *ARMAS_WANTV*. Use *ARMAS_FORWARD* to force
- *      implicit QR-iteration only in forward direction from top to bottom.
- * \param[in,out] conf
- *      Configuration block.
- *
- * Singular values are computed with Demmel-Kahan implicit QR algorithm to
- * high relative accuracy. Tolerance used is conf.tolmult*EPSILON. If absolute
- * tolerance is needed, conf.optflags bit ARMAS_ABSTOL flag must be set.
- *
- * Corresponds to lapack.xBDSQR
- * \ingroup lapack
+ * @ingroup lapack
  */
 int armas_x_bdsvd(armas_x_dense_t * D, armas_x_dense_t * E,
                   armas_x_dense_t * U, armas_x_dense_t * V,
@@ -169,7 +136,7 @@ int armas_x_bdsvd(armas_x_dense_t * D, armas_x_dense_t * E,
  * @param[in] flags
  *      Indicators, *ARMAS_WANTU*, *ARMAS_WANTV*. Use *ARMAS_FORWARD* to force
  *      implicit QR-iteration only in forward direction from top to bottom.
- * @param[out] W
+ * @param[in,out] wb
  *      Workspace of size 4*N elements if eigenvectors needed.
  * @param[in,out] conf
  *      Configuration block.
@@ -179,7 +146,7 @@ int armas_x_bdsvd(armas_x_dense_t * D, armas_x_dense_t * E,
  * tolerance is needed, conf.optflags bit ARMAS_ABSTOL flag must be set.
  *
  * Corresponds to lapack.xBDSQR
- * \ingroup lapack
+ * @ingroup lapack
  */
 int armas_x_bdsvd_w(armas_x_dense_t * D,
                     armas_x_dense_t * E,
@@ -196,7 +163,7 @@ int armas_x_bdsvd_w(armas_x_dense_t * D,
 
     if (!D) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     uuvv = (flags & (ARMAS_WANTU | ARMAS_WANTV)) != 0;
@@ -211,40 +178,40 @@ int armas_x_bdsvd_w(armas_x_dense_t * D,
     // check for sizes
     if (!(armas_x_isvector(D) && armas_x_isvector(E))) {
         conf->error = ARMAS_ENEED_VECTOR;
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     if (flags & ARMAS_WANTU) {
         if (!U) {
             conf->error = ARMAS_EINVAL;
-            return -1;
+            return -ARMAS_EINVAL;
         }
         // U columns need to be at least N
         if (U->cols < N) {
             conf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
         uu = U;
     }
     if (flags & ARMAS_WANTV) {
         if (!V) {
             conf->error = ARMAS_EINVAL;
-            return -1;
+            return -ARMAS_EINVAL;
         }
         // V rows need to be at least N
         if (V->rows < N) {
             conf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
         vv = V;
     }
     if (armas_x_size(E) != N - 1) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if ((uu || vv) && armas_wbytes(wb) < 4 * N * sizeof(DTYPE)) {
         // if eigenvectors needed then must have workspace
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
 
     if (uu || vv) {

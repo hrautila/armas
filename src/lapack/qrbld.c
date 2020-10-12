@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -26,12 +26,10 @@
 // -----------------------------------------------------------------------------
 
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "partition.h"
-//! \endcond
 
 #ifndef ARMAS_BLOCKING_MIN
 #define ARMAS_BLOCKING_MIN 32
@@ -206,27 +204,10 @@ int blk_qrbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
 
 
 /**
- * \brief Generate the orthogonal matrix Q
+ * @brief Generate the orthogonal matrix Q
  *
- * Generate the M by N matrix Q with orthogonal columns which
- * are defined as the first N columns of the product of K first elementary
- * reflectors.
- *
- * \param[in,out]  A
- *   On entry, the elementary reflectors as returned by qrfactor().
- *   stored below diagonal of the M by N matrix A.
- *   On exit, the orthogonal matrix Q
- * \param[in]  tau
- *   Scalar coefficents of elementary reflectors
- * \param[out]   W
- *    Workspace
- * \param[in]  K
- *    The number of elementary reflectors whose product define the matrix Q
- * \param[in,out] conf
- *    Blocking configuration
- *
- * Compatible with lapackd.ORGQR.
- * \ingroup lapack
+ * @see armas_x_qrbuild_w
+ * @ingroup lapack
  */
 int armas_x_qrbuild(armas_x_dense_t * A,
                     const armas_x_dense_t * tau, int K, armas_conf_t * cf)
@@ -234,21 +215,23 @@ int armas_x_qrbuild(armas_x_dense_t * A,
     if (!cf)
         cf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_qrbuild_w(A, tau, K, &wb, cf) < 0)
-        return -1;
+    if ((err = armas_x_qrbuild_w(A, tau, K, &wb, cf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             cf->error = ARMAS_EMEMORY;
-            return -1;
+            return -ARMAS_EMEMORY;
         }
     } else
         wbs = ARMAS_NOWORK;
-    int stat = armas_x_qrbuild_w(A, tau, K, wbs, cf);
+
+    err = armas_x_qrbuild_w(A, tau, K, wbs, cf);
     armas_wrelease(&wb);
-    return stat;
+    return err;
 }
 
 
@@ -268,26 +251,24 @@ int armas_x_qrbuild(armas_x_dense_t * A,
  *   Scalar coefficents of elementary reflectors
  *
  * @param[in]  K
- *    The number of elementary reflectors whose product define the matrix Q
+ *   The number of elementary reflectors whose product define the matrix Q
  *
  * @param[in]  wb
- *    Workspace buffer needed for computation. To compute size of the required space call 
- *    the function with workspace bytes set to zero. Size of workspace is returned in 
- *    `wb.bytes` and no other computation or parameter size checking is done and function
- *    returns with success.
+ *   Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *   immediately.
  *
  * @param[in,out] conf
- *    Configuration options.
+ *   Configuration options.
  *
- *  @retval 0  success
- *  @retval -1 error and `conf.error` set to last error
+ *  @retval  0 Success
+ *  @retval <0 Failure, `conf.error` set to last error
  *
  *  Last error codes returned
  *   - `ARMAS_EINVAL` A or tau is null pointer
  *   - `ARMAS_EWORK`  if no workspace or it is less than required for unblocked computation
  *
  * Compatible with lapackd.ORGQR.
- * \ingroup lapack
+ * @ingroup lapack
  */
 int armas_x_qrbuild_w(armas_x_dense_t * A,
                       const armas_x_dense_t * tau,
@@ -304,7 +285,7 @@ int armas_x_qrbuild_w(armas_x_dense_t * A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (wb && wb->bytes == 0) {
@@ -317,14 +298,14 @@ int armas_x_qrbuild_w(armas_x_dense_t * A,
 
     if (!tau) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     lb = env->lb;
     wsmin = A->cols * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace
     if (lb > 0 && A->cols > lb) {

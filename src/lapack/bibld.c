@@ -25,38 +25,15 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
-//! \endcond
 
 /**
- * \brief Generate orthogonal matrix Q or P
+ * @brief Generate orthogonal matrix Q or P
  *
- * Generate one of the orthogonal matrices  Q or \f$ P^T \f$ determined by bdreduce() when
- * reducing a real matrix A to bidiagonal form. Q and \f$ P^T \f$ are defined as products
- * elementary reflectors \f$ H_i \f$ or \f$ G_i \f$ respectively.
- *
- * Orthogonal matrix Q is generated if flag *ARMSA_WANTQ* is set. And matrix P respectively
- * of flag *ARMAS_WANTP* is set.
- *
- * \param[in,out] A
- *   On entry the bidiagonal reduction as returned by bdreduce(). On exit the requested
- *   orthogonal matrix defined as the product of K first elementary reflectors.
- * \param[in] tau
- *   Scalar coefficients of the elementary reflectors.
- * \param[in] K
- *   Number elementary reflectors used to generate orthogonal matrix. \f$ 0 < K <= n(A) \f$
- * \param[in] flags
- *   Indicator flags, *ARMAS_WANTQ* or *ARMAS_WANTP*.
- * \param[in,out] conf
- *   Blocking configuration
- *
- * \retval 0 Success
- * \retval -1 fail, `conf.error` set to error code.
- *
- * \ingroup lapack
+ * @see armas_x_bdbuild_w
+ * @ingroup lapack
  */
 int armas_x_bdbuild(armas_x_dense_t * A,
                     const armas_x_dense_t * tau,
@@ -68,8 +45,8 @@ int armas_x_bdbuild(armas_x_dense_t * A,
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_bdbuild_w(A, tau, K, flags, &wb, conf) < 0)
-        return -1;
+    if ((err = armas_x_bdbuild_w(A, tau, K, flags, &wb, conf)) < 0)
+        return err;
 
     if (!armas_walloc(&wb, wb.bytes)) {
         conf->error = ARMAS_EMEMORY;
@@ -81,7 +58,36 @@ int armas_x_bdbuild(armas_x_dense_t * A,
     return err;
 }
 
-
+/**
+ * @brief Generate orthogonal matrix Q or P
+ *
+ * Generate one of the orthogonal matrices  Q or \f$ P^T \f$ determined by bdreduce() when
+ * reducing a real matrix A to bidiagonal form. Q and \f$ P^T \f$ are defined as products
+ * elementary reflectors \f$ H_i \f$ or \f$ G_i \f$ respectively.
+ *
+ * Orthogonal matrix Q is generated if flag *ARMSA_WANTQ* is set. And matrix P respectively
+ * of flag *ARMAS_WANTP* is set.
+ *
+ * @param[in,out] A
+ *   On entry the bidiagonal reduction as returned by bdreduce(). On exit the requested
+ *   orthogonal matrix defined as the product of K first elementary reflectors.
+ * @param[in] tau
+ *   Scalar coefficients of the elementary reflectors.
+ * @param[in] K
+ *   Number elementary reflectors used to generate orthogonal matrix. \f$ 0 < K <= n(A) \f$
+ * @param[in] flags
+ *   Indicator flags, *ARMAS_WANTQ* or *ARMAS_WANTP*.
+ * @param[in,out] wb
+ *   Workspace. If wb.bytes == 0 on entry then size of workspace is computed and returned
+ *   immediately.
+ * @param[in,out] conf
+ *   Blocking configuration
+ *
+ * @retval 0 Success
+ * @retval <0 Fail
+ *
+ * @ingroup lapack
+ */
 int armas_x_bdbuild_w(armas_x_dense_t * A,
                       const armas_x_dense_t * tau,
                       int K, int flags, armas_wbuf_t * wb, armas_conf_t * conf)
@@ -95,7 +101,7 @@ int armas_x_bdbuild_w(armas_x_dense_t * A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (wb && wb->bytes == 0) {
@@ -145,7 +151,7 @@ int armas_x_bdbuild_w(armas_x_dense_t * A,
             break;
         default:
             conf->error = ARMAS_EINVAL;
-            err = -1;
+            err = -ARMAS_EINVAL;
             break;
         }
     } else {
@@ -178,7 +184,7 @@ int armas_x_bdbuild_w(armas_x_dense_t * A,
             break;
         default:
             conf->error = ARMAS_EINVAL;
-            err = -1;
+            err = -ARMAS_EINVAL;
             break;
         }
     }

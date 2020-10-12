@@ -231,31 +231,7 @@ int armas_x_cholsolve_pv(armas_x_dense_t * B, armas_x_dense_t * A,
 /**
  * @brief Cholesky factorization
  *
- * Compute the Cholesky factorization of a symmetric positive definite
- * N-by-N matrix A.
- *
- * @param[in,out] A
- *      On entry, the symmetric matrix A. If *ARMAS_UPPER* is set the upper
- *      triangular part of A contains the upper triangular part of the
- *      matrix A, and strictly lower part A is not referenced. If
- *      *ARMAS_LOWER* is set the lower triangular part of A contains
- *      the lower triangular part of the matrix A. Likewise, the strictly
- *       upper part of A is not referenced. On exit, factor U or L from the
- *      Cholesky factorization \f$ A = U^T U \f$ or \f$ A = L L^T \f$
- * @param[in] W
- *      Workspace for pivoting factorization.
- * @param[out] P
- *      Optional pivot array. If non null then pivoting factorization
- *      is computed.
- * @param[in] flags
- *      The matrix structure indicator, *ARMAS_UPPER* for upper tridiagonal and
- *      *ARMAS_LOWER* for lower tridiagonal matrix.
- * @param[in,out] cf
- *      Configuration parameters.
- * @retval  0 Success
- * @retval -1 Error, `conf.error` holds error code
- *
- * Compatible with lapack.DPOTRF
+ * @see armas_x_cholfactor_w
  * @ingroup lapack
  */
 int armas_x_cholfactor(armas_x_dense_t * A,
@@ -269,12 +245,12 @@ int armas_x_cholfactor(armas_x_dense_t * A,
 
     if (!A) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (P != ARMAS_NOPIVOT) {
         if (!armas_walloc(&wb, A->cols * sizeof(DTYPE))) {
             cf->error = ARMAS_EMEMORY;
-            return -1;
+            return -ARMAS_EMEMORY;
         }
         err = armas_x_cholfactor_w(A, P, flags, &wb, cf);
         armas_wrelease(&wb);
@@ -286,11 +262,22 @@ int armas_x_cholfactor(armas_x_dense_t * A,
 }
 
 /**
- * @brief Cholesky factorization
+ * @brief Non pivoting Cholesky factorization
  *
  * Compute the Cholesky factorization of a symmetric positive definite
  * N-by-N matrix A.
  *
+ * @param[in, out] A
+ *   On entry symmetric posivitive definite matrix. On exit Cholesky
+ *   factorization of matrix.
+ * @param[in] flags
+ *   Matrix structure indicator *ARMAS_LOWER* or *ARMAS_UPPER*
+ * @param[in,out] cf
+ *   Configuration block
+ * @retval  0 Success
+ * @retval <0 Failure
+ *
+ * @ingroup lapack
  */
 int armas_x_cholesky(armas_x_dense_t * A, int flags, armas_conf_t * cf)
 {
@@ -299,11 +286,10 @@ int armas_x_cholesky(armas_x_dense_t * A, int flags, armas_conf_t * cf)
 
     if (!A) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     return armas_x_cholfactor_w(A, ARMAS_NOPIVOT, flags, ARMAS_NOWORK, cf);
 }
-
 
 /**
  * @brief Cholesky factorization
@@ -328,13 +314,13 @@ int armas_x_cholesky(armas_x_dense_t * A, int flags, armas_conf_t * cf)
  * @param[in,out] wb
  *      Workspace for pivoting factorization. If wb.bytes is zero then work
  *      buffer size is returned in wb.bytes.
- * @param[in,out] conf
+ * @param[in,out] cf
  *      Optional blocking configuration. If not provided default blocking
  *      configuration  will be used.
  *
  * @retval  0 Success; If pivoting factorized then result matrix is full rank.
  * @retval >0 Success with pivoting factorization, matrix rank returned.
- * @retval -1 Error, `conf.error` holds error code
+ * @retval <0 Failure, _conf.error_ holds error code
  *
  * Pivoting factorization is computed of P is not ARMAS_NOPIVOT. Pivoting
  * factorization needs workspace of size N elements for blocked version.
@@ -342,10 +328,10 @@ int armas_x_cholesky(armas_x_dense_t * A, int flags, armas_conf_t * cf)
  * algorithm is used.
  *
  * Factorization stops when diagonal element goes small enough.
- * Default value for stopping criteria is \$ max |diag(A)|*N*epsilon \$
- * If value of absolute stopping criteria `conf.stop` is non-zero then it is
- * used. Otherwise if `conf.smult` (relative stopping criterion multiplier) is
- * non-zero then stopping criteria is set to \$ max |diag(A)|*smult \$.
+ * Default value for stopping criteria is \f$ max |diag(A)|*N*epsilon \f$
+ * If value of absolute stopping criteria _conf.stop_ is non-zero then it is
+ * used. Otherwise if _conf.smult_ (relative stopping criterion multiplier) is
+ * non-zero then stopping criteria is set to \f$ max |diag(A)|*smult \f$.
  *
  * Pivoting factorization returns zero if result matrix is full rank.
  * Return value greater than zero is rank of result matrix.
@@ -365,7 +351,7 @@ int armas_x_cholfactor_w(armas_x_dense_t * A, armas_pivot_t * P,
 
     if (!A) {
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (P != ARMAS_NOPIVOT) {
@@ -389,7 +375,7 @@ int armas_x_cholfactor_w(armas_x_dense_t * A, armas_pivot_t * P,
 
     if (A->rows != A->cols) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     if (env->lb == 0 || A->cols <= env->lb) {
@@ -427,7 +413,7 @@ int armas_x_cholfactor_w(armas_x_dense_t * A, armas_pivot_t * P,
  * @param[in] flags
  *      Indicator of which factor is stored in A. If *ARMAS_UPPER*
  *       (*ARMAS_LOWER) then upper (lower) triangle of A is stored.
- * @param[in,out] conf
+ * @param[in,out] cf
  *       Optional blocking configuration.
  *
  * @retval  0 Succes

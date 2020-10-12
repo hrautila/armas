@@ -22,12 +22,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "partition.h"
-//! \endcond
 
 #ifndef ARMAS_BLOCKING_MIN
 #define ARMAS_BLOCKING_MIN 32
@@ -548,39 +546,9 @@ int blk_trdreduce_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
 }
 
 /**
- * \brief Reduce symmetric matrix to tridiagonal form by similiarity transformation A = QTQ^T
- *
- * \param[in,out]  A
- *      On entry, symmetric matrix with elemets stored in upper (lower) triangular
- *      part. On exit, diagonal and first super (sub) diagonals hold matrix T.
- *      The upper (lower) triangular part above (below) first super(sub)diagonal
- *      is used to store orthogonal matrix Q.
- *
- * \param[out] tauq
- *      Scalar coefficients of elementary reflectors.
- *
- * \param[in] flags
- *      ARMAS_LOWER or ARMAS_UPPER
- *
- * \param[in] confs
- *      Optional blocking configuration
- *
- * If LOWER, then the matrix Q is represented as product of elementary reflectors
- *
- *   \f$ Q = H_1 H_2...H_{n-1}. \f$
- *
- * If UPPER, then the matrix Q is represented as product 
- * 
- *   \f$ Q = H_{n-1}...H_2 H_1,  H_k = I - tau*v_k*v_k^T. \f$
- *
- * The contents of A on exit is as follow for N = 5.
- *
- *    LOWER                    UPPER
- *     ( d  .  .  .  . )         ( d  e  v3 v2 v1 )
- *     ( e  d  .  .  . )         ( .  d  e  v2 v1 )
- *     ( v1 e  d  .  . )         ( .  .  d  e  v1 )
- *     ( v1 v2 e  d  . )         ( .  .  .  d  e  )
- *     ( v1 v2 v3 e  d )         ( .  .  .  .  d  )
+ * @brief Reduce symmetric matrix to tridiagonal form.
+ * @see armas_x_trdreduce_w
+ * @ingroup lapack
  */
 int armas_x_trdreduce(armas_x_dense_t * A,
                       armas_x_dense_t * tauq, int flags, armas_conf_t * conf)
@@ -607,55 +575,58 @@ int armas_x_trdreduce(armas_x_dense_t * A,
 }
 
 /**
- * @brief Reduce symmetric matrix to tridiagonal form by similiarity transformation A = QTQ^T
+ * @brief Reduce symmetric matrix to tridiagonal form.
+ *
+ * Reduces symmetric matrix to tridiagonal form by similiarity transformation
+ * \f$ A = QTQ^T \f$
  *
  * @param[in,out]  A
- *      On entry, symmetric matrix with elemets stored in upper (lower) triangular
- *      part. On exit, diagonal and first super (sub) diagonals hold matrix T.
- *      The upper (lower) triangular part above (below) first super(sub)diagonal
- *      is used to store orthogonal matrix Q.
+ *   On entry, symmetric matrix with elemets stored in upper (lower) triangular
+ *   part. On exit, diagonal and first super (sub) diagonals hold matrix T.
+ *   The upper (lower) triangular part above (below) first super(sub)diagonal
+ *   is used to store orthogonal matrix Q.
  *
  * @param[out] tauq
- *      Scalar coefficients of elementary reflectors.
+ *   Scalar coefficients of elementary reflectors.
  *
  * @param[in] flags
- *      ARMAS_LOWER or ARMAS_UPPER
+ *   ARMAS_LOWER or ARMAS_UPPER
  *
- * @param[in] wb
- *     Workspace buffer needed for computation. To compute size of the required space call 
- *     the function with workspace bytes set to zero. Size of workspace is returned in 
- *     `wb.bytes` and no other computation or parameter size checking is done and function
- *     returns with success.
+ * @param[in,out] wb
+ *  Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *  immediately.
  *
- * @param[in] confs
- *      Optional blocking configuration
+ * @param[in] conf
+ *   Optional blocking configuration
  *
- *  @retval 0  success
- *  @retval -1 error and `conf.error` set to last error
+ *  @retval 0  Success
+ *  @retval <0 Error and `conf.error` set to last error
  *
  *  Last error codes returned
  *   - `ARMAS_ESIZE`  if n(C) != m(A) for C*op(Q) or m(C) != m(A) for op(Q)*C
  *   - `ARMAS_EINVAL` C or A or tau is null pointer
  *   - `ARMAS_EWORK`  if workspace is less than required for unblocked computation
  *
- * #### Additional information
+ * Additional information
  *
  * If LOWER, then the matrix Q is represented as product of elementary reflectors
  *
  *   \f$ Q = H_1 H_2...H_{n-1}. \f$
  *
  * If UPPER, then the matrix Q is represented as product 
- * 
+ *
  *   \f$ Q = H_{n-1}...H_2 H_1,  H_k = I - tau*v_k*v_k^T. \f$
  *
  * The contents of A on exit is as follow for N = 5.
- *
+ *```txt
  *    LOWER                    UPPER
  *     ( d  .  .  .  . )         ( d  e  v3 v2 v1 )
  *     ( e  d  .  .  . )         ( .  d  e  v2 v1 )
  *     ( v1 e  d  .  . )         ( .  .  d  e  v1 )
  *     ( v1 v2 e  d  . )         ( .  .  .  d  e  )
  *     ( v1 v2 v3 e  d )         ( .  .  .  .  d  )
+ *```
+ * @ingroup lapack
  */
 int armas_x_trdreduce_w(armas_x_dense_t * A,
                         armas_x_dense_t * tauq,
@@ -672,7 +643,7 @@ int armas_x_trdreduce_w(armas_x_dense_t * A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (wb && wb->bytes == 0) {
@@ -685,17 +656,17 @@ int armas_x_trdreduce_w(armas_x_dense_t * A,
 
     if (A->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if (!armas_x_isvector(tauq) && armas_x_size(tauq) != A->cols) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     wsmin = A->cols * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor to workspace
     lb = env->lb;

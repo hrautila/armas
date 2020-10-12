@@ -17,7 +17,7 @@
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_scale)  && defined(armas_x_invscale)
+#if defined(armas_x_scale)
 #define ARMAS_REQUIRES 1
 #endif
 
@@ -25,23 +25,28 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
-//! \endcond
 
 /**
  * @brief Compute \f$ A = alpha*A*diag(D) \f$ or \f$ A = alpha*diag(D)*A \f$
  *
  * @param A
  *      Target matrix or vector.
+ * @param alpha
+ *      Scalar.
  * @param D
  *      Diagonal vector or square matrix
  * @param flags
  *      Flag bits, ARMAS_LEFT or ARMAS_RIGHT
  * @param conf
  *      Optional blocking configuration
+ *
+ * @retval 0 Success
+ * @retval <0 Failure
+ *
+ * @ingroup lapack
  */
 int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
                       const armas_x_dense_t * D, int flags, armas_conf_t * conf)
@@ -62,7 +67,7 @@ int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
     if (armas_x_isvector(A)) {
         if (armas_x_size(d) != armas_x_size(A)) {
             conf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
         if (armas_x_size(A) == 0)
             return 0;
@@ -78,7 +83,7 @@ int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
     case ARMAS_RIGHT:
         if (armas_x_size(d) != A->cols) {
             conf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
         if (armas_x_size(A) == 0)
             return 0;
@@ -92,7 +97,7 @@ int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
     default:
         if (armas_x_size(d) != A->rows) {
             conf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
         if (armas_x_size(A) == 0)
             return 0;
@@ -107,16 +112,23 @@ int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
 }
 
 /**
- * @brief Compute \f$ A = alpha*A*diag(D)^-1 \f$ or \f$ A = alpha*diag(D)^-1*A \f$
+ * @brief Compute \f$ A = alpha*A*diag(D)^{-1} \f$ or \f$ A = alpha*diag(D)^{-1}*A \f$
  *
  * @param A
  *      Target matrix or vector.
+ * @param alpha
+ *      Scalar.
  * @param D
  *      Diagonal vector or square matrix
  * @param flags
  *      Flag bits, ARMAS_LEFT or ARMAS_RIGHT
  * @param conf
  *      Optional blocking configuration
+ *
+ * @retval 0 Success
+ * @retval <0 Failure
+ *
+ * @ingroup lapack
  */
 int armas_x_solve_diag(armas_x_dense_t * A, DTYPE alpha,
                        const armas_x_dense_t * D, int flags,
@@ -138,7 +150,7 @@ int armas_x_solve_diag(armas_x_dense_t * A, DTYPE alpha,
     if (armas_x_isvector(A)) {
         if (armas_x_size(d) != armas_x_size(A)) {
             conf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
         if (armas_x_size(A) == 0)
             return 0;
@@ -154,7 +166,7 @@ int armas_x_solve_diag(armas_x_dense_t * A, DTYPE alpha,
     case ARMAS_RIGHT:
         if (armas_x_size(d) != A->cols) {
             conf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
         if (armas_x_size(A) == 0)
             return 0;
@@ -169,7 +181,7 @@ int armas_x_solve_diag(armas_x_dense_t * A, DTYPE alpha,
     default:
         if (armas_x_size(d) != A->rows) {
             conf->error = ARMAS_ESIZE;
-            return -1;
+            return -ARMAS_ESIZE;
         }
         if (armas_x_size(A) == 0)
             return 0;

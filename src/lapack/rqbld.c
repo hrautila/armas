@@ -25,11 +25,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
-//! \endcond
 
 #ifndef ARMAS_BLOCKING_MIN
 #define ARMAS_BLOCKING_MIN 32
@@ -175,34 +173,10 @@ int blk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
 }
 
 /**
- * \brief Generate the orthogonal Q matrix of RQ factorization
+ * @brief Generate the orthogonal Q matrix of RQ factorization
  *
- * Generates the M by N matrix Q with orthonormal rows which
- * are defined as the last M rows of the product of K elementary
- * reflectors of order N.
- *
- *   \f$ Q = H_0 H_1...H_{k-1} , 0 < k < M, H_i = I - tau*v*v^T \f$
- *
- * \param[in,out]  A
- *     On entry, the elementary reflectors as returned by rqfactor().
- *     On exit, the orthogonal matrix Q
- *
- * \param[in]  tau
- *    Scalar coefficents of elementary reflectors
- *
- * \param[out]  W
- *      Workspace
- *
- * \param[in]  K
- *     The number of elementary reflector whose product define the matrix Q
- *
- * \param[in,out] conf
- *     Optional blocking configuration.
- *
- * \retval  0 Succes
- * \retval -1 Failure, `conf.error` holds error code.
- *
- * Compatible with lapackd.ORGRQ.
+ * @see armas_x_rqbuild_w
+ * @ingroup lapack
  */
 int armas_x_rqbuild(armas_x_dense_t * A,
                     const armas_x_dense_t * tau, int K, armas_conf_t * cf)
@@ -210,25 +184,57 @@ int armas_x_rqbuild(armas_x_dense_t * A,
     if (!cf)
         cf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_rqbuild_w(A, tau, K, &wb, cf) < 0)
-        return -1;
+    if ((err = armas_x_rqbuild_w(A, tau, K, &wb, cf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             cf->error = ARMAS_EMEMORY;
-            return -1;
+            return -ARMAS_EMEMORY;
         }
     } else
         wbs = ARMAS_NOWORK;
 
-    int stat = armas_x_rqbuild_w(A, tau, K, wbs, cf);
+    err = armas_x_rqbuild_w(A, tau, K, wbs, cf);
     armas_wrelease(&wb);
-    return stat;
+    return err;
 }
 
 
+/**
+ * @brief Generate the orthogonal Q matrix of RQ factorization
+ *
+ * Generates the M by N matrix Q with orthonormal rows which
+ * are defined as the last M rows of the product of K elementary
+ * reflectors of order N.
+ *
+ *   \f$ Q = H_0 H_1...H_{k-1} , 0 < k < M, H_i = I - tau*v*v^T \f$
+ *
+ * @param[in,out]  A
+ *     On entry, the elementary reflectors as returned by rqfactor().
+ *     On exit, the orthogonal matrix Q
+ *
+ * @param[in]  tau
+ *    Scalar coefficents of elementary reflectors
+ *
+ * @param[in]  K
+ *     The number of elementary reflector whose product define the matrix Q
+ *
+ * @param[out]  wb
+ *      Workspace
+ *
+ * @param[in,out] conf
+ *     Optional blocking configuration.
+ *
+ * @retval  0 Succes
+ * @retval <0 Failure, `conf.error` holds error code.
+ *
+ * Compatible with lapackd.ORGRQ.
+ * @ingroup lapack
+ */
 int armas_x_rqbuild_w(armas_x_dense_t * A,
                       const armas_x_dense_t * tau,
                       int K, armas_wbuf_t * wb, armas_conf_t * conf)
@@ -244,7 +250,7 @@ int armas_x_rqbuild_w(armas_x_dense_t * A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (wb && wb->bytes == 0) {
@@ -257,18 +263,18 @@ int armas_x_rqbuild_w(armas_x_dense_t * A,
 
     if (!tau) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (armas_x_size(tau) != A->rows) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     lb = env->lb;
     wsmin = A->rows * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace
     //wsneed = (lb > 0 && A->rows > lb ? A->rows * lb : A->rows) * sizeof(DTYPE);

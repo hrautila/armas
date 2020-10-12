@@ -37,41 +37,10 @@ int ws_lqsolve(int M, int N, int lb)
 }
 
 /**
- * \brief Solve a system of linear equations
+ * @brief Solve a system of linear equations
  *
- * Solve a system of linear equations A*X = B with general M-by-N (M < N)
- * matrix A using the LQ factorization computed by lqfactor().
- *
- * If *ARMAS_TRANS is set:
- *   find the minimum norm solution of an overdetermined system \f$ A^T X = B \f$
- *   i.e \f$ min ||X|| s.t A^T X = B \f$
- *
- * Otherwise:
- *   find the least squares solution of an overdetermined system, i.e.,
- *   solve the least squares problem: \f$ min || B - A X || \f$
- *
- * \param[in,out] B
- *     On entry, the right hand side N-by-P matrix B.
- *     On exit, the solution matrix X.
- *
- * \param[in] A
- *     The elements on and below the diagonal contain the min(M,N)-by-N lower
- *     trapezoidal matrix `L`. The elements right the diagonal with the vector `tau`, 
- *     represent the ortogonal matrix Q as product of elementary reflectors.
- *     Matrix `A` and `tau` are as returned by lqfactor()
- *
- * \param[in] tau
- *   The vector of N scalar coefficients that together with triuu(A) define
- *   the ortogonal matrix Q as \f$ Q = H_1 H_2...H_{N-1} \f$
- *
- * \param[in] flags 
- *    Indicator flags, *ARMAS_TRANS*
- *
- * \param[in,out] conf
- *     Optinal blocking configuration. If not given default will be used. Unblocked
- *     invocation is indicated with conf.lb == 0.
- *
- * Compatible with lapack.GELS (the m >= n part)
+ * @see armas_x_lqsolve_w
+ * @ingroup lapack
  */
 int armas_x_lqsolve(armas_x_dense_t * B,
                     const armas_x_dense_t * A,
@@ -80,29 +49,30 @@ int armas_x_lqsolve(armas_x_dense_t * B,
     if (!cf)
         cf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_lqsolve_w(B, A, tau, flags, &wb, cf) < 0)
-        return -1;
+    if ((err = armas_x_lqsolve_w(B, A, tau, flags, &wb, cf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             cf->error = ARMAS_EMEMORY;
-            return -1;
+            return -ARMAS_EMEMORY;
         }
     } else
         wbs = ARMAS_NOWORK;
-    int stat = armas_x_lqsolve_w(B, A, tau, flags, wbs, cf);
-    armas_wrelease(&wb);
-    return stat;
-}
 
+    err = armas_x_lqsolve_w(B, A, tau, flags, wbs, cf);
+    armas_wrelease(&wb);
+    return err;
+}
 
 /**
  * @brief Solve a system of linear equations
  *
  * Solve a system of linear equations A*X = B with general M-by-N (M < N)
- * matrix A using the LQ factorization computed by lqfactor().
+ * matrix A using the LQ factorization computed by armas_x_lqfactor_w().
  *
  * If *ARMAS_TRANS is set:
  *   find the minimum norm solution of an overdetermined system \f$ A^T X = B \f$
@@ -130,15 +100,17 @@ int armas_x_lqsolve(armas_x_dense_t * B,
  *    Indicator flags, *ARMAS_TRANS*
  *
  * @param[out] wb
- *     Workspace, size as for armas_x_lqmult_w()
+ *    Workspace. If *wb.bytes* is zero then the size of required workspace is
+ *    computed and returned immediately.
  *
  * @param[in,out] conf
  *     Configuration options.
  *
  * @retval  0  Success
- * @retval -1  Error, last error in conf.error.
+ * @retval <0  Error, last error in conf.error.
  *
  * Compatible with lapack.GELS (the m >= n part)
+ * @ingroup lapack
  */
 int armas_x_lqsolve_w(armas_x_dense_t * B,
                       const armas_x_dense_t * A,
@@ -153,7 +125,7 @@ int armas_x_lqsolve_w(armas_x_dense_t * B,
 
     if (!B || !A || !tau) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (wb && wb->bytes == 0) {
         return armas_x_lqmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
@@ -161,13 +133,13 @@ int armas_x_lqsolve_w(armas_x_dense_t * B,
 
     if (B->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     wsmin = B->rows * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     armas_x_submatrix(&L, A, 0, 0, A->rows, A->rows);
     armas_x_submatrix(&BL, B, 0, 0, A->rows, B->cols);

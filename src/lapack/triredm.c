@@ -22,36 +22,19 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "partition.h"
-//! \endcond
 
 #ifndef ARMAS_BLOCKING_MIN
 #define ARMAS_BLOCKING_MIN 32
 #endif
 
-
 /**
- * \brief Multiply matrix C with orthogonal matrix Q.
- *
- * \param[in,out] C
- *    On entry matrix C. On exit product of C and orthogonal matrix Q.
- * \param[in] A
- *    Orthogonal matrix A as elementary reflectors saved in upper (lower) triangular
- *    part of A. See trdreduce().
- * \param[in] tau
- *    Scalar coeffients of elementary reflectors.
- * \param[in] flags
- *    Indicator flags, combination of *ARMAS_LOWER*, *ARMAS_UPPER*, *ARMAS_LEFT*,
- *    *ARMAS_RIGHT* and *ARMAS_TRANS*.
- * \param[in] conf
- *    Blocking configuration
- *
- * \retval 0 Sucess
- * \retval -1 Error
+ * @brief Multiply matrix C with orthogonal matrix Q.
+ * @see armas_x_trdmult_w
+ * @ingroup lapack
  */
 int armas_x_trdmult(armas_x_dense_t * C,
                     const armas_x_dense_t * A,
@@ -92,12 +75,14 @@ int armas_x_trdmult(armas_x_dense_t * C,
  *    Indicator flags, combination of *ARMAS_LOWER*, *ARMAS_UPPER*, *ARMAS_LEFT*,
  *    *ARMAS_RIGHT* and *ARMAS_TRANS*.
  * @param[out] wb
- *    Workspace
+ *    Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *    immediately.
  * @param[in] conf
- *    Blocking configuration
+ *    Configuration block.
  *
- * \retval 0 Sucess
- * \retval -1 Error
+ * @retval 0  Sucess
+ * @retval <0 Error
+ * @ingroup lapack
  */
 int armas_x_trdmult_w(armas_x_dense_t * C,
                       const armas_x_dense_t * A,
@@ -160,9 +145,6 @@ int armas_x_trdmult_w(armas_x_dense_t * C,
     }
     return err;
 }
-
-#endif                          /* ARMAS_PROVIDES && ARMAS_REQUIRES */
-
-// Local Variables:
-// indent-tabs-mode: nil
-// End:
+#else
+#warning "Missing defines. No code!"
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

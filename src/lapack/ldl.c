@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2016
+// Copyright (c) Harri Rautila, 2016-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -228,8 +228,8 @@ int blk_ldlnp_upper(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
 }
 
 
-/**
- * \brief Compute non-pivoting LDLT factoring of symmetric matrix
+/*
+ * @brief Compute non-pivoting LDLT factoring of symmetric matrix
  *
  * @param A
  *   On entry symmetric matrix store on lower (upper) triangular part. On exit
@@ -243,8 +243,8 @@ int blk_ldlnp_upper(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
  * @param conf
  *   Configuration block
  *
- * @retval 0  ok
- * @retval -1 error
+ * @retval  0  ok
+ * @retval <0 error
  */
 int ldlfactor_np(armas_x_dense_t * A, armas_x_dense_t * W, int flags,
                  armas_conf_t * conf)
@@ -256,7 +256,7 @@ int ldlfactor_np(armas_x_dense_t * A, armas_x_dense_t * W, int flags,
 
     if (A->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     env = armas_getenv();
     lb = env->lb;
@@ -286,20 +286,20 @@ int ldlfactor_np(armas_x_dense_t * A, armas_x_dense_t * W, int flags,
 }
 
 #if defined(ldlsolve_np)
-/**
- * \brief Solve X = A*B or X = A.T*B where A is symmetric matrix
+/*
+ * @brief Solve X = A*B or X = A.T*B where A is symmetric matrix
  *
- * \param[in,out] B
+ * @param[in,out] B
  *    On entry, input values. On exit, the solutions matrix
- * \param[in] A
+ * @param[in] A
  *    The LDL.T (UDU.T) factorized symmetric matrix
- * \param[in] flags
+ * @param[in] flags
  *    Indicator flags, lower (ARMAS_LOWER) or upper (ARMAS_UPPER) triangular matrix
- * \param[in,out] conf
+ * @param[in,out] conf
  *    Configuration block.
- *  
- * \retval  0 ok
- * \retval -1 error
+ *
+ * @retval  0 ok
+ * @retval <0 error
  */
 int ldlsolve_np(armas_x_dense_t * B, const armas_x_dense_t * A, int flags,
                 armas_conf_t * conf)
@@ -312,7 +312,7 @@ int ldlsolve_np(armas_x_dense_t * B, const armas_x_dense_t * A, int flags,
 
     if (A->rows != A->cols || A->cols != B->rows) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     if (flags & ARMAS_TRANS) {

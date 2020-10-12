@@ -25,6 +25,26 @@
 #include "internal_lapack.h"
 
 
+/**
+ * @brief Tridiagonal bottom to top QL sweep.
+ *
+ * @param [in,out] D
+ *      Diagonal elements.
+ * @param [in,out] E
+ *      Off-diagonal elements.
+ * @param  [out] Cr, Sr
+ *      Saved plane rotations.  Accessed only if rotations are saved.
+ * @param[in] f0, g0
+ *      Initial plane rotation parameters.
+ * @param[in] saves
+ *      If set then rotation are saved.
+ * @return
+ *      Number of rotations performed (N-2)
+ *
+ * Assume: len(D)-1 == len(E)
+ *
+ * @ingroup lapackaux
+ */
 int armas_x_trd_qlsweep(armas_x_dense_t * D, armas_x_dense_t * E,
                         armas_x_dense_t * Cr, armas_x_dense_t * Sr, DTYPE f0,
                         DTYPE g0, int saves)
@@ -84,6 +104,26 @@ int armas_x_trd_qlsweep(armas_x_dense_t * D, armas_x_dense_t * E,
  *     1st  2nd
  */
 
+/**
+ * @brief Tridiagonal top to bottom QR sweep.
+ *
+ * @param [in,out] D
+ *      Diagonal elements.
+ * @param [in,out] E
+ *      Off-diagonal elements.
+ * @param [out] Cr, Sr
+ *      Saved plane rotations.  Accessed only if rotations are saved.
+ * @param [in] f0, g0
+ *      Initial plane rotation parameters.
+ * @param [in] saves
+ *      If set then rotation are saved.
+ * @return
+ *      Number of rotations performed (N-2)
+ *
+ * Assume: len(D)-1 == len(E)
+ *
+ * @ingroup lapackaux
+ */
 int armas_x_trd_qrsweep(armas_x_dense_t * D, armas_x_dense_t * E,
                         armas_x_dense_t * Cr, armas_x_dense_t * Sr, DTYPE f0,
                         DTYPE g0, int saves)

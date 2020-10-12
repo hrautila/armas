@@ -23,10 +23,8 @@
 // -----------------------------------------------------------------------------
 
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
-//! \endcond
 
 
 /*
@@ -53,40 +51,44 @@ static inline double sqrt_x2my2(double x, double y)
 }
 
 
-/*
+/**
+ * @brief Generate hyperbolic reflector H
+ *
  * Generates a hyperbolic real elementary reflector H of order n, such that
  *
- *       H x = +/- beta e_0,  H*J*H^T = J
+ *    \f$  H x = +/- beta \times e_0,  H*J*H^T = J \f$
  *
  * where J is (1,n-1) signature matrix and x is an n-element real vector.
  * H is represented in the form
  *
- *       H = I - tau*J*v*v^T
+ *    \f$   H = I - tau*J*v*v^T \f$
  *
- * where tau is a real scalar and v is a real n-element vector such that v_0 = 1.0
+ * where tau is a real scalar and v is a real n-element vector such that
+ * \f$ v_0 = 1.0 \f$
  *
  * Depending on flag bits generates H such that,
- *   flags == 0
- *     Hx = beta e_0, beta in R
- *   flags == ARMAS_NONNEG
- *     Hx = beta e_0, beta >= 0.0
- *   flags == ARMAS_HHNEGATIVE
- *     Hx == -beta e_0, beta in R
- *   flags == ARMAS_HHNEGATIVE|ARMAS_NONNEG
- *     Hx == -beta e_0, beta >= 0.0
  *
- *  \param [in,out] a11
+ * |   Flags                        |  Reflector                                  |
+ * | ------------------------------:| :------------------------------------------ |
+ * |                            0   | \f$ Hx == beta \times e_0, beta \in R \f$   |
+ * |                   ARMAS_NONNEG | \f$ Hx == beta \times e_0, beta >= 0.0 \f$  |
+ * |               ARMAS_HHNEGATIVE | \f$ Hx == -beta \times e_0, beta \in R \f$  |
+ * |  ARMAS_HHNEGATIVE\|ARMAS_NONNEG| \f$ Hx == -beta \times e_0, beta >= 0.0 \f$ |
+ *
+ *  @param [in,out] a11
  *     On entry first element of x-vector. On exit value of beta.
- *  \param [in,out] x
+ *  @param [in,out] x
  *     On entry elements 1:n-1 of x. On exit elements 1:n-1 of vector v.
- *  \param [out] tau
+ *  @param [out] tau
  *     On exit value scalar tau in singleton matrix.
- *  \param [in] flags
+ *  @param [in] flags
  *     Flag bits ARMAS_NONNEG, ARMAS_HHNEGATIVE
- *  \param [in] conf
+ *  @param [in] cf
  *     Configuration block.
  *
- *  \retval 0 
+ *  @retval 0 Sucess
+ *  @retval <0 Failure
+ *  @ingroup lapack
  */
 int armas_x_hhouse(armas_x_dense_t * a11, armas_x_dense_t * x,
                    armas_x_dense_t * tau, int flags, armas_conf_t * cf)
@@ -104,7 +106,7 @@ int armas_x_hhouse(armas_x_dense_t * a11, armas_x_dense_t * x,
     if (ABS(alpha) < normx) {
         // alpha^2 - normx^2 < 0; sqrt not defined
         cf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (normx == 0.0) {
         armas_x_set(tau, 0, 0, 0.0);
@@ -177,28 +179,34 @@ int armas_x_hhouse(armas_x_dense_t * a11, armas_x_dense_t * x,
     return 0;
 }
 
-/*
+/**
+ * @brief Apply hyperbolic reflector H
+ *
  * Applies a real elementary reflector H to a real m by n matrix A,
- * from either the left or the right. 
+ * from either the left or the right.
  *
- *    A = H*A or A = A*H
+ *    \f$ A = H A \f$ or \f$ A = A H \f$
  *
- *  \param [in] tau
+ *  @param [in] tau
  *     Householder scalar
- *  \param [in] v
- *     Reflector vector 
- *  \param [in,out] a1
+ *  @param [in] v
+ *     Reflector vector
+ *  @param [in,out] a1
  *     On entry top row of m by n matrix A. On exit transformed values.
- *  \param [in,out] A2
+ *  @param [in,out] A2
  *     On entry rows 2:m-1 of m by n matrix A. On exit transformed values
- *  \param [out] w
+ *  @param [out] w
  *     Workspace of size vector a1.
- *  \param [in] flags
- *     Flag bits ARMAS_LEFT or ARMAS_RIGHT
- *  \param [in] conf
+ *  @param [in] flags
+ *     Flag bits *ARMAS_LEFT* or *ARMAS_RIGHT*
+ *  @param [in] cf
  *     Configration block
  *
  * If tau = 0, then H is taken to be the I identity matrix.
+ *
+ * @retval  0 Success
+ * @retval <0 Failure
+ * @ingroup lapack
  *
  * Notes:
  *    A is ( a1 )   a1 := a1 - w1
@@ -217,7 +225,7 @@ int armas_x_hhouse_apply(armas_x_dense_t * tau, armas_x_dense_t * v,
         cf = armas_conf_default();
     if (armas_x_size(w) < armas_x_size(a1)) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     armas_x_make(&w1, armas_x_size(a1), 1, armas_x_size(a1), armas_x_data(w));
 

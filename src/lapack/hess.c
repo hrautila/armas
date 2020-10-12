@@ -24,12 +24,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "partition.h"
-//! \endcond
 
 #ifndef ARMAS_NIL
 #define ARMAS_NIL (armas_x_dense_t *)0
@@ -430,28 +428,10 @@ int blk_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * tau,
 }
 
 /**
- * \brief Hessenberg reduction of general matrix
+ * @brief Hessenberg reduction of general matrix.
  *
- * Reduce general matrix A to upper Hessenberg form H by similiarity
- * transformation \f$ H = Q^T A Q \f$.
- *
- * \param[in,out] A
- *    On entry, the general matrix A. On exit, the elements on and
- *    above the first subdiagonal contain the reduced matrix H.
- *    The elements below the first subdiagonal with the vector tau
- *    represent the ortogonal matrix A as product of elementary reflectors.
- *
- * \param[out] tau  
- *    On exit, the scalar factors of the elementary reflectors.
- *
- * \param[in,out] conf
- *    The blocking configration. 
- * 
- * \retval 0 Succes
- * \retval -1 Failure, conf.error set to error code
- *
- * Compatible with lapack.DGEHRD.
- * \ingroup lapack
+ * @see armas_x_hessreduce_w
+ * @ingroup lapack
  */
 int armas_x_hessreduce(armas_x_dense_t * A,
                        armas_x_dense_t * tau, armas_conf_t * conf)
@@ -495,13 +475,14 @@ int armas_x_hessreduce(armas_x_dense_t * A,
  *    On exit, the scalar factors of the elementary reflectors.
  *
  * @param wb
- *    Work buffer.
+ *    Workspace. If wb.bytes is zero then required workspace size is
+ *    computed and returned immediately.
  *
  * @param[in,out] conf
  *    Configration options.
  *
- * @retval 0 Succes
- * @retval -1 Failure, conf.error set to error code
+ * @retval 0  Success
+ * @retval <0 Failure, conf.error set to error code
  *
  * Compatible with lapack.DGEHRD.
  * @ingroup lapack
@@ -534,18 +515,18 @@ int armas_x_hessreduce_w(armas_x_dense_t * A,
 
     if (A->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if (!armas_x_isvector(tau) || armas_x_size(tau) != A->rows - 1) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     lb = env->lb;
     wsmin = A->rows * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace
     if (lb > 0 && A->rows > lb) {

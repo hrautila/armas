@@ -312,24 +312,30 @@ int rbt_recursive_right(armas_x_dense_t * A, armas_x_dense_t * R, int flags,
 /**
  * @brief Multiply matrix A with a partial recursive butterfly matrix R.
  *
- * Computes A = R*A, A = R.T*A, A = A*R or A = A*R.T where R is a partial 
+ * Computes \f$ A = R*A, A = R^T*A, A = A*R or A = A*R^T \f$ where R is a partial
  * recursive butterfly matrix of depth d.
  *
  * Butterfly matrix of size N is defined as matrix
- *
- *   B<n> = 1/sqrt(2) * (R0  R1)  where R0 and R1 is diagonal N/2 matrix.
- *                      (R0 -R1)
+ * \f[
+ *   B<n> = 1/\sqrt 2 * \begin{pmatrix}
+ *                       R0 & R1 \\
+ *                       R0 * -R1
+ *                      \end{pmatrix}
+ * \f]
+ * where R0 and R1 is diagonal N/2 matrix.
  *
  * Partial recursive butterfly matrix U<n,d> of depth d is product of sequence
  *
- *  U<n,d> = B<n/k>*...B<n/2>*B<n>   where k = 2^(d-1).
+ * \f$ U<n,d> = B<n/k>*...B<n/2>*B<n>   where k = 2^{d-1}. \f$
  *
  * Each element in the sequence is NxN direct sum of k N/k butterfly matrices.
  * Matrix B<n/2> is then NxN direct sum of two N/2 butterfly matrices as below.
- *
- *  B<n/2>  = (B0<n/2>    0   )
- *            (  0     B1<n/2>)
- *
+ * \f[
+ *  B<n/2> = \begin{pmatrix}
+ *              B0<n/2> &  0 \\
+ *              0       & B1<n/2>
+ *            \end{pmatrix}
+ * \f]
  *  @param[in,out] A
  *     On entry the original matrix. On exit the updated matrix.
  *  @param[in] R
@@ -337,12 +343,13 @@ int rbt_recursive_right(armas_x_dense_t * A, armas_x_dense_t * R, int flags,
  *     each column of R. Column k of R stores the butterfly matrix at level
  *     N/(R.cols-k)
  *  @param[in] flags
- *     Operator flags, valid bits ARMAS_LEFT, ARMAS_RIGHT, ARMAS_TRANS.
+ *     Operator flags, valid bits *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*.
  *  @param[in,out] conf
  *     Configuration block, on error conf.error is set.
- * 
- *  @return 
- *     0 for success, -1 for error.
+ *
+ *  @retval  0 Success
+ *  @retval <0 Failure
+ *  @ingroup lapack
  */
 int armas_x_mult_rbt(armas_x_dense_t * A, armas_x_dense_t * R, int flags,
                      armas_conf_t * conf)
@@ -363,7 +370,7 @@ int armas_x_mult_rbt(armas_x_dense_t * A, armas_x_dense_t * R, int flags,
     }
     if (!ok) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if (flags & ARMAS_RIGHT) {
         rbt_recursive_right(A, R, flags, conf);
@@ -382,7 +389,7 @@ int armas_x_mult_rbt(armas_x_dense_t * A, armas_x_dense_t * R, int flags,
  *    @param[in] N
  *      Size of matrix
  *    @param[in] depth
- *      Depth of recursive butterfly. 
+ *      Depth of recursive butterfly.
  */
 int armas_x_size_rbt(int *fact, int N, int depth)
 {
@@ -397,8 +404,13 @@ int armas_x_size_rbt(int *fact, int N, int depth)
     return Nd;
 }
 
-/*
- * From: Baboulin, Randomization 
+/**
+ * @brief Generate random butterfly matrix
+ *
+ * @param[out] R
+ *    On exit generated butterfly matrix.
+ *
+ * (From: Baboulin, Randomization)
  */
 void armas_x_gen_rbt(armas_x_dense_t * R)
 {

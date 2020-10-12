@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -22,11 +22,9 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
-//! \endcond
 
 #ifndef ARMAS_NIL
 #define ARMAS_NIL (armas_x_dense_t *)0
@@ -63,24 +61,10 @@ int eigen_sym_small(armas_x_dense_t * D, armas_x_dense_t * A,
 }
 
 /**
- * \brief Compute eigenvalue decomposition of symmetric N-by-N matrix
+ * @brief Compute eigenvalue decomposition of symmetric N-by-N matrix
  *
- * Compute eigenvalue decomposition of symmetric N-by-N matrix
- *
- * \param[out] D
- *      Eigenvalues of A in increasing order
- * \param[in,out] A
- *      On entry, symmetric matrix stored in lower or upper triangular part.
- *      On exit, eigenvector if requested, otherwise contents are destroyd.
- * \param[in] flags
- *      Flag bits, set ARMAS_UPPER (ARMAS_LOWER) if upper (lower) triangular storage
- *      is used. If eigenvectors wanted, set ARMAS_WANTV.
- * \param[in] conf
- *      Optional configuration block, if NULL then default configuration used. 
- * \retval  0 Success
- * \retval -1 Error, `conf.error` holds error code.
- *
- * \ingroup lapack
+ * @see armas_x_eigen_sym_w
+ * @ingroup lapack
  */
 int armas_x_eigen_sym(armas_x_dense_t * D,
                       armas_x_dense_t * A, int flags, armas_conf_t * conf)
@@ -95,13 +79,13 @@ int armas_x_eigen_sym(armas_x_dense_t * D,
         return 0;
 
     wbs = &wb;
-    if (armas_x_eigen_sym_w(D, A, flags, &wb, conf) < 0)
-        return -1;
+    if ((err = armas_x_eigen_sym_w(D, A, flags, &wb, conf)) < 0)
+        return err;
 
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             conf->error = ARMAS_EMEMORY;
-            return -1;
+            return -ARMAS_EMEMORY;
         }
     } else
         wbs = ARMAS_NOWORK;
@@ -113,27 +97,27 @@ int armas_x_eigen_sym(armas_x_dense_t * D,
 
 
 /**
- * \brief Compute eigenvalue decomposition of symmetric N-by-N matrix
+ * @brief Compute eigenvalue decomposition of symmetric N-by-N matrix
  *
  * Compute eigenvalue decomposition of symmetric N-by-N matrix
  *
- * \param[out] D
+ * @param[out] D
  *      On exit, eigenvalues of A in increasing order
- * \param[in,out] A
+ * @param[in,out] A
  *      On entry, symmetric matrix stored in lower or upper triangular part.
  *      On exit, eigenvectors of A if requested, otherwise contents are destroyd.
- * \param[in] flags
+ * @param[in] flags
  *      Flag bits, set ARMAS_UPPER (ARMAS_LOWER) if upper (lower) triangular storage
  *      is used. If eigenvectors wanted, set ARMAS_WANTV.
- * \param[in] wb
+ * @param[in] wb
  *      Workspace, size at least 3*N
- * \param[in] conf
+ * @param[in] conf
  *      Optional configuration block, if NULL then default configuration used. 
  *
- * \retval  0 Success
- * \retval -1 Error, `conf.error` holds error code.
+ * @retval  0 Success
+ * @retval <0 Error, _conf.error_ holds error code.
  *
- * \ingroup lapack
+ * @ingroup lapack
  */
 int armas_x_eigen_sym_w(armas_x_dense_t * D,
                         armas_x_dense_t * A,
@@ -150,7 +134,7 @@ int armas_x_eigen_sym_w(armas_x_dense_t * D,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     N = A->rows;
 
@@ -165,7 +149,7 @@ int armas_x_eigen_sym_w(armas_x_dense_t * D,
 
     if (A->rows != A->cols && armas_x_size(D) != A->rows) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if (N == 1) {
         armas_x_set_at_unsafe(D, 0, armas_x_get_unsafe(A, 0, 0));
@@ -181,7 +165,7 @@ int armas_x_eigen_sym_w(armas_x_dense_t * D,
 
     if (!wb || (wsz = armas_wbytes(wb)) < 3 * N * sizeof(DTYPE)) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // default to lower triangular storage
     if (!(flags & (ARMAS_UPPER | ARMAS_LOWER)))
@@ -228,29 +212,10 @@ int armas_x_eigen_sym_w(armas_x_dense_t * D,
 }
 
 /**
- * \brief Compute eigenvalue decomposition of symmetric N-by-N matrix
+ * @brief Compute selected eigenvalues of symmetric matrix.
  *
- * Compute selected eigenvalue of symmetric N-by-N matrix with bisection algorightm.
- *
- * \param[out] D
- *      Requested eigenvalues in increasing order
- * \param[in,out] A
- *      On entry, symmetric matrix stored in lower or upper triangular part.
- *      On exit, matrix reduced to tridiagonal form.
- * \param[in] flags
- *      Flag bits, set ARMAS_UPPER (ARMAS_LOWER) if upper (lower) triangular storage
- *      is used. If eigenvectors wanted, set ARMAS_WANTV.
- * \param[in] params
- *      Requested eigenvalue intervals, defined with macros ARMAS_EIGEN_INT and ARMAS_EIGEN_VAL.
- * \param[in] conf
- *      Optional configuration block, if NULL then default configuration used. 
- *
- * \retval  0 Success
- * \retval -1 Error, `conf.error` holds error code.
- * \retval -2 Tridiagonal reduction failed.
- * \retval -3 Not all eigenvalues for interval returned
- *
- * \ingroup lapack
+ * @see armas_x_eigen_sym_selected_w
+ * @ingroup lapack
  */
 int armas_x_eigen_sym_selected(armas_x_dense_t * D,
                                armas_x_dense_t * A,
@@ -278,6 +243,33 @@ int armas_x_eigen_sym_selected(armas_x_dense_t * D,
     return err;
 }
 
+/**
+ * @brief Compute eigenvalues of symmetric N-by-N matrix
+ *
+ * Compute selected eigenvalue of symmetric N-by-N matrix with bisection algorightm.
+ *
+ * @param[out] D
+ *      Requested eigenvalues in increasing order
+ * @param[in,out] A
+ *      On entry, symmetric matrix stored in lower or upper triangular part.
+ *      On exit, matrix reduced to tridiagonal form.
+ * @param[in] params
+ *      Requested eigenvalue intervals, defined with macros *ARMAS_EIGEN_INT* and *ARMAS_EIGEN_VAL*.
+ * @param[in] flags
+ *      Flag bits, set *ARMAS_UPPER* (*ARMAS_LOWER*) if upper (lower) triangular storage
+ *      is used. If eigenvectors wanted, set *ARMAS_WANTV*.
+ * @param[in,out] wb
+ *      Workspace buffer. If non null and *wb.bytes* is zero then size (bytes)
+ *      of workspace is calculated, saved into *wb.bytes* and function
+ *      returns immediately with success.
+ * @param[in] conf
+ *      Optional configuration block, if NULL then default configuration used.
+ *
+ * @retval  0 Success
+ * @retval <0 Error
+ *
+ * @ingroup lapack
+ */
 int armas_x_eigen_sym_selected_w(armas_x_dense_t * D,
                                  armas_x_dense_t * A,
                                  const armas_x_eigen_parameter_t * params,
@@ -287,7 +279,7 @@ int armas_x_eigen_sym_selected_w(armas_x_dense_t * D,
     armas_x_dense_t sD, sE, tau;
     size_t wsz, wpos;
     DTYPE *buf;
-    int ioff, N;
+    int ioff, N, err;
 
     if (!conf)
         conf = armas_conf_default();
@@ -298,20 +290,20 @@ int armas_x_eigen_sym_selected_w(armas_x_dense_t * D,
     }
     N = A->rows;
     if (wb && wb->bytes == 0) {
-        if (armas_x_trdreduce_w(A, ARMAS_NIL, flags, wb, conf) < 0)
-            return -1;
+        if ((err = armas_x_trdreduce_w(A, ARMAS_NIL, flags, wb, conf)) < 0)
+            return err;
         wb->bytes += N * sizeof(DTYPE);
         return 0;
     }
 
     if (A->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     if (!wb && (wsz = armas_wbytes(wb)) < 2 * N * sizeof(DTYPE)) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // default to lower triangular storage
     if (!(flags & (ARMAS_UPPER | ARMAS_LOWER)))
@@ -325,9 +317,9 @@ int armas_x_eigen_sym_selected_w(armas_x_dense_t * D,
         armas_x_make(&tau, N, 1, N, buf);
 
         // reduce to tridiagonal form
-        if (armas_x_trdreduce_w(A, &tau, flags, wb, conf) < 0) {
+        if ((err = armas_x_trdreduce_w(A, &tau, flags, wb, conf)) < 0) {
             armas_wsetpos(wb, wpos);
-            return -2;
+            return err;
         }
 
     }
@@ -337,8 +329,8 @@ int armas_x_eigen_sym_selected_w(armas_x_dense_t * D,
     armas_x_diag(&sE, A, ioff);
 
     // compute selected eigenvalues
-    if (armas_x_trdbisect(D, &sD, &sE, params, conf) < 0)
-        return -3;
+    if ((err =armas_x_trdbisect(D, &sD, &sE, params, conf)) < 0)
+        return err;
 
     return 0;
 }

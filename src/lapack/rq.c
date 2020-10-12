@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -25,12 +25,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "partition.h"
-//! \endcond
 
 #ifndef ARMAS_BLOCKING_MIN
 #define ARMAS_BLOCKING_MIN 32
@@ -50,10 +48,6 @@
  *
  * $Q_1$
  */
-static inline int __ws_rqfactor(int M, int N, int lb)
-{
-    return lb > 0 ? lb * M : M;
-}
 
 /*
  * Unblocked factorization.
@@ -363,42 +357,10 @@ int armas_x_rqreflector(armas_x_dense_t * T, armas_x_dense_t * A,
 }
 
 /**
- * \brief Compute RQ factorization of a M-by-N matrix A
+ * @brief Compute RQ factorization of a M-by-N matrix A
  *
- * \param[in,out] A
- *    On entry, the M-by-N matrix A, M <= N. On exit, upper triangular matrix R
- *    and the orthogonal matrix Q as product of elementary reflectors.
- *
- * \param[out] tau
- *    On exit, the scalar factors of the elemenentary reflectors.
- *
- * \param[out]  W
- *    Workspace, M-by-nb matrix used for work space in blocked invocations.
- *
- * \param[in,out] conf
- *    The configuration options.
- *
- * \retval  0 Success
- * \retval -1 Error.
- *
- * #### Additional information
- *
- * Ortogonal matrix Q is product of elementary reflectors H(k)
- *
- *   \f$ Q = H_0 H-1,...,H_{K-1} \f$ , where \f$ K = \min M N \f$
- *
- * Elementary reflector H(k) is stored on first N-M+k elements of row k of A.
- * with implicit unit value on element N-M+k entry. The vector TAU holds scalar
- * factors of the elementary reflectors.
- *
- * Contents of matrix A after factorization is as follow:
- *
- *      ( v0 v0 r  r  r  r )  M=4, N=6
- *      ( v1 v1 v1 r  r  r )  r  is element of R
- *      ( v2 v2 v2 v2 r  r )  vk is element of H(k)
- *      ( v3 v3 v3 v3 v3 r )  
- *
- * rqfactor() is compatible with lapack.DGERQF
+ * @see armas_x_rqfactor_w
+ * @ingroup lapack
  */
 int armas_x_rqfactor(armas_x_dense_t * A,
                      armas_x_dense_t * tau, armas_conf_t * cf)
@@ -406,9 +368,10 @@ int armas_x_rqfactor(armas_x_dense_t * A,
     if (!cf)
         cf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_rqfactor_w(A, tau, &wb, cf) < 0)
-        return -1;
+    if ((err = armas_x_rqfactor_w(A, tau, &wb, cf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
@@ -419,11 +382,51 @@ int armas_x_rqfactor(armas_x_dense_t * A,
     } else
         wbs = ARMAS_NOWORK;
 
-    int stat = armas_x_rqfactor_w(A, tau, wbs, cf);
+    err = armas_x_rqfactor_w(A, tau, wbs, cf);
     armas_wrelease(&wb);
-    return stat;
+    return err;
 }
 
+/**
+ * @brief Compute RQ factorization of a M-by-N matrix A
+ *
+ * @param[in,out] A
+ *    On entry, the M-by-N matrix A, M <= N. On exit, upper triangular matrix R
+ *    and the orthogonal matrix Q as product of elementary reflectors.
+ *
+ * @param[out] tau
+ *    On exit, the scalar factors of the elemenentary reflectors.
+ *
+ * @param[out]  wb
+ *    Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *    immediately.
+ *
+ * @param[in,out] conf
+ *    The configuration options.
+ *
+ * @retval  0 Success
+ * @retval <0 Error.
+ *
+ * Additional information
+ *
+ * Ortogonal matrix Q is product of elementary reflectors H(k)
+ *
+ *   \f$ Q = H_0 H-1,...,H_{K-1} \f$ , where \f$ K = \min M N \f$
+ *
+ * Elementary reflector H(k) is stored on first N-M+k elements of row k of A.
+ * with implicit unit value on element N-M+k entry. The vector *tau* holds scalar
+ * factors of the elementary reflectors.
+ *
+ * Contents of matrix A after factorization is as follow:
+ *```txt
+ *      ( v0 v0 r  r  r  r )  M=4, N=6
+ *      ( v1 v1 v1 r  r  r )  r  is element of R
+ *      ( v2 v2 v2 v2 r  r )  vk is element of H(k)
+ *      ( v3 v3 v3 v3 v3 r )
+ *```
+ * Compatible with lapack.DGERQF
+ * @ingroup lapack
+ */
 int armas_x_rqfactor_w(armas_x_dense_t * A,
                        armas_x_dense_t * tau,
                        armas_wbuf_t * wb, armas_conf_t * conf)
@@ -439,7 +442,7 @@ int armas_x_rqfactor_w(armas_x_dense_t * A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (wb && wb->bytes == 0) {
@@ -452,18 +455,18 @@ int armas_x_rqfactor_w(armas_x_dense_t * A,
     // must have: M <= N
     if (A->rows > A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if (!armas_x_isvector(tau) || armas_x_size(tau) != A->rows) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     lb = env->lb;
     wsmin = A->rows * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace
     wsneed = (lb > 0 ? A->rows * lb : A->rows) * sizeof(DTYPE);

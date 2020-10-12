@@ -27,12 +27,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "pivot.h"
-//! \endcond
 
 static
 int unblk_lufactor_nopiv(armas_x_dense_t * A, armas_conf_t * conf)
@@ -269,25 +267,26 @@ int blk_lufactor(armas_x_dense_t * A, armas_pivot_t * P, int lb,
 
 
 /**
- * \brief LU factorization of a general MxN matrix
+ * @brief LU factorization of a general MxN matrix
  *
  * Compute an LU factorization of a general M-by-N matrix using
  * partial pivoting with row interchanges.
  *
- * \param[in,out]  A
+ * @param[in,out]  A
  *      On entry, the M-by-N matrix to be factored. On exit the factors
  *      L and U from factorization A = P*L*U, the unit diagonal elements
  *      of L are not stored.
- * \param[out]  P
+ * @param[out]  P
  *      On exit the pivot indices. If `null` then factorization computed without
  *      pivoting.
- * \param[in,out]  conf
+ * @param[in,out]  cf
  *      Blocking configuration.
  *
- * \retval 0  success 
- * \retval -1 error and `conf.error` holds last error code.
+ * @retval  0 Success
+ * @retval <0 Failure, `conf.error` holds last error code.
  *
  * Compatible with lapack.xGETRF
+ * @ingroup lapack
  */
 int armas_x_lufactor(armas_x_dense_t * A, armas_pivot_t * P,
                      armas_conf_t * cf)
@@ -314,30 +313,31 @@ int armas_x_lufactor(armas_x_dense_t * A, armas_pivot_t * P,
 }
 
 /**
- * \brief Solves system of linear equations
+ * @brief Solves system of linear equations
  *
  * Solve a system of linear equations \f$ AX = B \f$ or \f$ A^TX = B \f$
  * with general N-by-N* matrix A using the LU factorization computed
- * by `lufactor()`.
+ * by armas_x_lufactor().
  *
- * \param[in,out] B
+ * @param[in,out] B
  *      On entry, the right hand side matrix B. On exit, the solution matrix X.
- * \param[in] A
+ * @param[in] A
  *      The factor L and U from the factorization A = P*L*U as computed
  *      by `lufactor()`.
- * \param[in] P
+ * @param[in] P
  *      The pivot indices from `lufactor()`, if NULL then no pivoting applied
  *      to matrix B.
- * \param[in] flags
+ * @param[in] flags
  *      The indicator of the form of the system of equations.
  *      If *ARMAS_TRANS*  set then system is transposed.
- * \param[in,out] conf
+ * @param[in,out] cf
  *      Blocking configuration
  *
- * \retval 0  success
- * \retval -1 error and `conf.error` holds last error code.
+ * @retval  0 Success
+ * @retval <0 Failure, `conf.error` holds last error code.
  *
  * Compatible with lapack.DGETRS.
+ * @ingroup lapack
  */
 int armas_x_lusolve(armas_x_dense_t * B, armas_x_dense_t * A,
                     armas_pivot_t * P, int flags, armas_conf_t * cf)
@@ -349,7 +349,7 @@ int armas_x_lusolve(armas_x_dense_t * B, armas_x_dense_t * A,
     ok = B->rows == A->cols && A->rows == A->cols;
     if (!ok) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if (P) {
         // pivots; apply to B.

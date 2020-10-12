@@ -536,12 +536,12 @@ int armas_x_cholfactor_pv(armas_x_dense_t * A, armas_x_dense_t * W,
 
     if (A->rows != A->cols) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     if (A->rows != armas_pivot_size(P)) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     env = armas_getenv();
@@ -579,21 +579,23 @@ int armas_x_cholfactor_pv(armas_x_dense_t * A, armas_x_dense_t * W,
     return nrank == A->cols ? 0 : nrank;
 }
 
-
 /**
- * \brief Solve X = A*B or X = A.T*B where A is symmetric matrix
+ * @brief Solve X = A*B or X = A.T*B where A is symmetric matrix
  *
- * \param[in,out] B
+ * @param[in,out] B
  *    On entry, input values. On exit, the solutions matrix
- * \param[in] A
+ * @param[in] A
  *    The LDL.T (UDU.T) factorized symmetric matrix
- * \param[in] flags
+ * @param[in] P
+ *    Pivot vector from factorization.
+ * @param[in] flags
  *    Indicator flags, lower (ARMAS_LOWER) or upper (ARMAS_UPPER) triangular matrix
- * \param[in,out] conf
+ * @param[in,out] cf
  *    Configuration block.
  *
- * \retval  0 ok
- * \retval -1 error
+ * @retval  0 Success
+ * @retval <0 Failure
+ * @ingroup lapack
  */
 int armas_x_cholsolve_pv(armas_x_dense_t * B, armas_x_dense_t * A,
                          armas_pivot_t * P, int flags, armas_conf_t * cf)
@@ -608,14 +610,9 @@ int armas_x_cholsolve_pv(armas_x_dense_t * B, armas_x_dense_t * A,
 
     if (A->rows != A->cols || A->cols != B->rows) {
         cf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
-#if 0
-    if (B->rows != P->npivots) {
-        cf->error = ARMAS_ESIZE;
-        return -1;
-    }
-#endif
+
     pivot1_dir = ARMAS_PIVOT_FORWARD;
     pivot2_dir = ARMAS_PIVOT_BACKWARD;
 
@@ -654,6 +651,6 @@ int armas_x_cholsolve_pv(armas_x_dense_t * B, armas_x_dense_t * A,
 
     return 0;
 }
-
-
-#endif                          /* ARMAS_PROVIDES && ARMAS_REQUIRES */
+#else
+#warning "Missing defines. No code."
+#endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

@@ -27,6 +27,9 @@
 #include "internal.h"
 #include "internal_lapack.h"
 
+//! @addtogroup lapackaux
+//! @{
+
 /*
  * NOTES:
  *
@@ -86,16 +89,16 @@
  *  mostly copy of DLAS2.
  */
 
-/*
- * \brief Compute SVD of 2x2 bidiagonal matrix
+/**
+ * @brief Compute SVD of 2x2 bidiagonal matrix
  *
- * \param smin [out]
+ * @param smin [out]
  *      Smaller of the computed singular values
- * \param smax [out]
+ * @param smax [out]
  *      Larger of the computed singular values
- * \param f, g, h [in]
+ * @param f, g, h [in]
  *      Bidiagonal matrix entries
- * \return
+ * @return
  *      Value of the smaller singular value.
  */
 DTYPE armas_x_bdsvd2x2(DTYPE * smin, DTYPE * smax, DTYPE f, DTYPE g, DTYPE h)
@@ -159,23 +162,23 @@ static inline DTYPE sign(DTYPE a, DTYPE b)
 #define TWO 2.0
 #endif
 
-/*
- * \brief Compute singular values and vectors of bidiagonal 2x2 matrix.
+/**
+ * @brief Compute singular values and vectors of bidiagonal 2x2 matrix.
  *
  * Computes singular values and vectors such that following holds.
- *
+ *```txt
  *    (  cosl sinl ) ( f  g ) ( cosr -sinr ) = ( ssmax   0   )
  *    ( -sinl cosl ) ( 0  h ) ( sinr  cosr )   (   0   ssmin )
- *
- * \param[out] ssmin
+ *```
+ * @param[out] ssmin
  *      On return abs(ssmin) is the smaller singular value
- * \param[out] ssmax
+ * @param[out] ssmax
  *      On return abs(ssmax) is the larger singular value
- * \param[out] cosl, sinl
+ * @param[out] cosl, sinl
  *      The vector (cosl, sinl) is the unit left singular vector for abs(ssmax).
- * \param[out] cosr, sinr
+ * @param[out] cosr, sinr
  *      The vector (cosr, sinr) is the unit right singular vector for abs(ssmin).
- * \param[in] f, g, h
+ * @param[in] f, g, h
  *      Elements of the upper bidiagonal matrix.
  *
  * Compatible with LAPACK xLASV2.
@@ -317,6 +320,12 @@ void armas_x_bdsvd2x2_vec(DTYPE * ssmin, DTYPE * ssmax, DTYPE * cosl,
  * z1 = Zt/2
  * z2 = 2*(a*c - b*b)/Zt
  */
+/**
+ * @brief Compute eigenvalues of 2x2 symmetric matrix.
+ *
+ * @param[out]  z1, z2  Eigenvalues
+ * @param[in]   a, b, c Matrix values, a and c on diagonal and b off-diagonal
+ */
 void armas_x_sym_eigen2x2(DTYPE * z1, DTYPE * z2, DTYPE a, DTYPE b, DTYPE c)
 {
     DTYPE T, b2a, amca, Zt, acmax, acmin;
@@ -350,6 +359,14 @@ void armas_x_sym_eigen2x2(DTYPE * z1, DTYPE * z2, DTYPE a, DTYPE b, DTYPE c)
  *  => x0 = 1/ht
  *     x1 = (z1 - a)/(ht*b)
  */
+/**
+ * @brief Compute eigenvalues and eigenvector of symmetric 2x2 matrix.
+ *
+ * @param[out] z1, z2  Eigenvalues
+ * @param[out] cs, sn  Eigenvector items
+ * @param[in]  a, b, c Matrix entries, a and c on diagonal, b off-diagonal
+ *
+ */
 void armas_x_sym_eigen2x2vec(DTYPE * z1, DTYPE * z2, DTYPE * cs,
                              DTYPE * sn, DTYPE a, DTYPE b, DTYPE c)
 {
@@ -373,7 +390,7 @@ void armas_x_sym_eigen2x2vec(DTYPE * z1, DTYPE * z2, DTYPE * cs,
     *cs = 1.0 / ht;
     *sn = (*z1 - a) / (b * ht);
 }
-
+//! @}
 #else
 #warning "Missing defines. No code!"
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

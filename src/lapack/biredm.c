@@ -34,48 +34,11 @@
 #define ARMAS_BLOCKING_MIN 32
 #endif
 
-
-/*
- * Multiply and replace C with product of C and Q or P where Q and P are real orthogonal
- * matrices defined as the product of k elementary reflectors.
+/**
+ * @brief Multiply matrix with orthogonal matrices Q or P.
  *
- *    Q = H(1) H(2) . . . H(k)   and   P = G(1) G(2). . . G(k)
- *
- * as returned by bdreduce().
- *
- * Arguments:
- *  C     On entry, the M-by-N matrix C or if flag bit RIGHT is set then N-by-M matrix
- *        On exit C is overwritten by Q*C or Q.T*C. If bit RIGHT is set then C is
- *        overwritten by C*Q or C*Q.T
- *
- *  A     Bidiagonal reduction as returned by bdreduce() where the lower trapezoidal
- *        part, on and below first subdiagonal, holds the product Q. The upper
- *        trapezoidal part holds the product P.
- *
- *  tau   The scalar factors of the elementary reflectors. If flag MULTQ is set then holds
- *        scalar factors for Q. If flag MULTP is set then holds scalar factors for P.
- *        Expected to be column vector is size min(M(A), N(A)).
- *
- *  bits  Indicators, valid bits LEFT, RIGHT, TRANS, MULTQ, MULTP
- *
- *
- * Additional information
- *
- *   Order N(Q) of orthogonal matrix Q is M(A) if M >= N and M(A)-1 if M < N
- *   The order N(P) of the orthogonal  matrix P is N(A)-1 if M >=N and N(A) if M < N. 
- *
- *        flags              result
- *        ------------------------------------------
- *        MULTQ,LEFT         C = Q*C     m(A) == m(C)
- *        MULTQ,TRANS,LEFT   C = Q.T*C   m(A) == m(C)
- *        MULTQ,RIGHT        C = C*Q     n(C) == m(A)
- *        MULTQ,TRANS,RIGHT  C = C*Q.T   n(C) == m(A)
- *        MULTP,LEFT         C = P*C     n(A) == m(C)
- *        MULTP,TRANS,LEFT   C = P.T*C   n(A) == m(C)
- *        MULTP,RIGHT        C = C*P     n(C) == n(A)
- *        MULTP,TRANS,RIGHT  C = C*P.T   n(C) == n(A)
- *
- * \ingroup lapack
+ * @see armas_x_bdmult_w
+ * @ingroup lapack
  */
 int armas_x_bdmult(armas_x_dense_t * C,
                    const armas_x_dense_t * A,
@@ -104,6 +67,61 @@ int armas_x_bdmult(armas_x_dense_t * C,
     return err;
 }
 
+/**
+ * @brief Multiply matrix with orthogonal matrices Q or P.
+ *
+ * Multiply and replace C with product of C and Q or P where Q and P are real orthogonal
+ * matrices defined as the product of k elementary reflectors.
+ *
+ *   \f$ Q = H(1) H(2) . . . H(k) \f$  and \f$  P = G(1) G(2). . . G(k) \f$
+ *
+ * as returned by armas_x_bdreduce_w().
+ *
+ * @param[in,out] C
+ *    On entry, the M-by-N matrix C or if flag bit RIGHT is set then N-by-M matrix
+ *    On exit C is overwritten by Q*C or Q.T*C. If bit RIGHT is set then C is
+ *    overwritten by C*Q or C*Q.T
+ *
+ * @param[in] A
+ *    Bidiagonal reduction as returned by bdreduce() where the lower trapezoidal
+ *    part, on and below first subdiagonal, holds the product Q. The upper
+ *    trapezoidal part holds the product P.
+ *
+ * @param[in] tau
+ *    The scalar factors of the elementary reflectors. If flag MULTQ is set then holds
+ *    scalar factors for Q. If flag MULTP is set then holds scalar factors for P.
+ *    Expected to be column vector is size min(M(A), N(A)).
+ *
+ * @param[in] flags
+ *    Indicators, valid bits ARMAS_LEFT, ARMAS_RIGHT, ARMAS_TRANS, ARMAS_MULTQ, ARMAS_MULTP
+ *
+ * @param[in,out] wb
+ *    Workspace. If wb.bytes == 0 on entry required workspace size is returned immediately
+ *    in wb.bytes.
+ *
+ * @param[in,out] conf
+ *
+ * @retval 0  Success
+ * @retval <0 Failure
+ *
+ * @details Additional information
+ *
+ *   Order N(Q) of orthogonal matrix Q is M(A) if M >= N and M(A)-1 if M < N
+ *   The order N(P) of the orthogonal  matrix P is N(A)-1 if M >=N and N(A) if M < N.
+ *
+ *        flags              result
+ *        ------------------------------------------
+ *        MULTQ,LEFT         C = Q*C     m(A) == m(C)
+ *        MULTQ,TRANS,LEFT   C = Q.T*C   m(A) == m(C)
+ *        MULTQ,RIGHT        C = C*Q     n(C) == m(A)
+ *        MULTQ,TRANS,RIGHT  C = C*Q.T   n(C) == m(A)
+ *        MULTP,LEFT         C = P*C     n(A) == m(C)
+ *        MULTP,TRANS,LEFT   C = P.T*C   n(A) == m(C)
+ *        MULTP,RIGHT        C = C*P     n(C) == n(A)
+ *        MULTP,TRANS,RIGHT  C = C*P.T   n(C) == n(A)
+ *
+ * @ingroup lapack
+ */
 int armas_x_bdmult_w(armas_x_dense_t * C,
                      const armas_x_dense_t * A,
                      const armas_x_dense_t * tau,
@@ -117,7 +135,7 @@ int armas_x_bdmult_w(armas_x_dense_t * C,
 
     if (!C) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     if (wb && wb->bytes == 0) {
@@ -164,7 +182,7 @@ int armas_x_bdmult_w(armas_x_dense_t * C,
             break;
         default:
             conf->error = ARMAS_EINVAL;
-            return -1;
+            return -ARMAS_EINVAL;
         }
     } else {
         // M < N
@@ -185,7 +203,7 @@ int armas_x_bdmult_w(armas_x_dense_t * C,
             break;
         default:
             conf->error = ARMAS_EINVAL;
-            return -1;
+            return -ARMAS_EINVAL;
         }
     }
     return err;

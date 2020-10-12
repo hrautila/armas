@@ -25,12 +25,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-//! \cond
 #include <math.h>
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
-//! \endcond
 
 /*
  * Reference:
@@ -178,7 +176,7 @@ DTYPE trd_bisect_one(armas_x_dense_t * D,
         mid = (right + left) / 2.0;
         if (right - left < tau) {
             eigen = MIN(MAX(mid, left), right);
-            printf("  eigen: %e [%d iterations]\n", eigen, count);
+            // printf("  eigen: %e [%d iterations]\n", eigen, count);
             working = 0;
         } else {
             nmid = float_count_ieee(D, E, mid);
@@ -198,26 +196,27 @@ DTYPE trd_bisect_one(armas_x_dense_t * D,
 
 
 /**
- * \brief Compute selected eigenvalues of symmetric tridiagonal matrix T
+ * @brief Compute selected eigenvalues of symmetric tridiagonal matrix T
  *
  * Computes all or selected eigenvalues of symmetric tridiagonal matrix to desired accuracy
  * by bisection algorightm. Eigenvalue selection by half-open index or value range. Use 
  * macros ARMAS_EIGEN_INT to define index range [left, right) and macro ARMAS_EIGEN_VAL
  * to define value range [low, high). 
  *
- * \param[out] Y
+ * @param[out] Y
  *      Computed eigenvalues sorted to increasing order.
- * \param[in] D
+ * @param[in] D
  *      Diagonal elements of tridiagonal matrix T
- * \param[in] E
+ * @param[in] E
  *      Off-diagonal elements of matrix T
- * \param[in] params
+ * @param[in] params
  *      Eigenvalue selection parameters. If null pointer then all eigenvalues are computed.
- * \param[in] conf
+ * @param[in] conf
  *      Configuration block
  *
- * \retval  0  OK
- * \retval <0  Failed to store all requested eigenvalues to result vector
+ * @retval  0  OK
+ * @retval <0  Failed to store all requested eigenvalues to result vector
+ * @ingroup lapack
  */
 int armas_x_trdbisect(armas_x_dense_t * Y,
                       armas_x_dense_t * D,

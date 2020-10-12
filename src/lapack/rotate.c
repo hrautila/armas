@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -27,11 +27,11 @@
 #include "gvrot.h"
 
 /**
- * \brief Compute Givens rotation.
+ * @brief Compute Givens rotation.
  *
  * Compatible to blas.DROTG and lapack.DLARTG.
  *
- * \ingroup lapack givens
+ * @ingroup lapack
  */
 void armas_x_gvcompute(DTYPE * c, DTYPE * s, DTYPE * r, DTYPE a, DTYPE b)
 {
@@ -39,17 +39,17 @@ void armas_x_gvcompute(DTYPE * c, DTYPE * s, DTYPE * r, DTYPE a, DTYPE b)
 }
 
 /**
- * \brief Apply Givens rotation.
+ * @brief Apply Givens rotation.
  *
  * Computes
- *
+ *```txt
  *     ( v0 )  = G(c, s) * ( y0 )  or ( v0 v1 ) = ( y0 y1 ) * G(c, s)
  *     ( v1 )              ( y1 )
  *
  *     G(c, s) = ( c  s )  => ( v0 ) = ( c*y0 + s*y1 )
  *               (-s  c )     ( v1 )   ( c*y1 - s*y0 )
- *
- * \ingroup lapack givens
+ *```
+ * @ingroup lapack
  */
 void armas_x_gvrotate(DTYPE * v0, DTYPE * v1,
                       DTYPE cos, DTYPE sin, DTYPE y0, DTYPE y1)

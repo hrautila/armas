@@ -184,28 +184,10 @@ int blk_lqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
 }
 
 /**
- * \brief Generate orthogonal Q matrix of LQ factorization
+ * @brief Generate orthogonal Q matrix of LQ factorization
  *
- * Generate the M by N matrix Q with orthogonal rows which
- * are defined as the first M rows of the product of K first elementary
- * reflectors.
- *
- * \param[in,out]  A
- *     On entry, the elementary reflectors as returned by DecomposeLQ().
- *     stored right of diagonal of the M by N matrix A.
- *     On exit, the orthogonal matrix Q
- *
- * \param[in]  tau
- *     Scalar coefficents of elementary reflectors
- *
- * \param[in]  K
- *     The number of elementary reflector whose product define the matrix Q
- *
- * \param[in,out]  conf
- *     Optional blocking configuration.
- *
- * Compatible with lapackd.ORGLQ.
- * \ingroup lapack
+ * @see armas_x_lqbuild_w
+ * @ingroup lapack
  */
 int armas_x_lqbuild(armas_x_dense_t * A,
                     const armas_x_dense_t * tau, int K, armas_conf_t * cf)
@@ -248,20 +230,20 @@ int armas_x_lqbuild(armas_x_dense_t * A,
  * @param[in]  tau
  *     Scalar coefficents of elementary reflectors
  *
+ * @param[in]  K
+ *     The number of elementary reflector whose product define the matrix Q
+ *
  * @param[out]  wb
  *    Workspace buffer needed for computation. To compute size of the required space call 
  *    the function with workspace bytes set to zero. Size of workspace is returned in 
  *    `wb.bytes` and no other computation or parameter size checking is done and function
  *    returns with success.
  *
- * @param[in]  K
- *     The number of elementary reflector whose product define the matrix Q
- *
  * @param[in,out]  conf
  *     Optional blocking configuration.
  *
- *  @retval 0  success
- *  @retval -1 error and `conf.error` set to last error
+ *  @retval  0  Success
+ *  @retval <0  Failure and `conf.error` set to last error
  *
  *  Last error codes returned
  *   - `ARMAS_EINVAL` A or tau is null pointer
@@ -285,7 +267,7 @@ int armas_x_lqbuild_w(armas_x_dense_t * A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (wb && wb->bytes == 0) {
@@ -298,14 +280,14 @@ int armas_x_lqbuild_w(armas_x_dense_t * A,
 
     if (!tau) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     lb = env->lb;
     wsmin = A->rows * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace
     if (lb > 0 && A->rows > lb) {

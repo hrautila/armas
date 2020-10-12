@@ -27,11 +27,9 @@
 // -----------------------------------------------------------------------------
 
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
-//! \endcond
 
 static inline
 int crossover(int N1, int N2)
@@ -66,10 +64,10 @@ int armas_x_svd_small(armas_x_dense_t * S, armas_x_dense_t * U,
     armas_x_make(&tau, K, 1, K, buf);
     if (M >= N) {
         if (armas_x_qrfactor_w(A, &tau, wb, conf) != 0)
-            return -2;
+            return -ARMAS_ESVD_FACT;
     } else {
         if (armas_x_lqfactor_w(A, &tau, wb, conf) != 0)
-            return -2;
+            return -ARMAS_ESVD_FACT;
     }
 
     if (M == 1 || N == 1) {
@@ -88,7 +86,7 @@ int armas_x_svd_small(armas_x_dense_t * S, armas_x_dense_t * U,
                     armas_x_set_values(U, zeros, ARMAS_SYMM | ARMAS_UNIT);
                     err = armas_x_qrmult_w(U, A, &tau, ARMAS_RIGHT, wb, conf);
                     if (err < 0)
-                        return -3;
+                        return -ARMAS_ESVD_LEFT;
                 }
             } else {
                 // U is 1-by-1
@@ -105,7 +103,7 @@ int armas_x_svd_small(armas_x_dense_t * S, armas_x_dense_t * U,
                     armas_x_set_values(V, zeros, ARMAS_SYMM | ARMAS_UNIT);
                     err = armas_x_lqmult_w(V, A, &tau, ARMAS_RIGHT, wb, conf);
                     if (err < 0)
-                        return -3;
+                        return -ARMAS_ESVD_RIGHT;
                 }
             } else {
                 // V is 1-by-1
@@ -141,13 +139,13 @@ int armas_x_svd_small(armas_x_dense_t * S, armas_x_dense_t * U,
                 armas_x_mcopy(U, A, 0, conf);
                 err = armas_x_qrbuild_w(U, &tau, N, wb, conf);
                 if (err < 0)
-                    return -3;
+                    return -ARMAS_ESVD_LEFT;
             } else {
                 // U is M-by-M
                 armas_x_set_values(U, zeros, ARMAS_SYMM | ARMAS_UNIT);
                 err = armas_x_qrmult_w(U, A, &tau, ARMAS_RIGHT, wb, conf);
                 if (err < 0)
-                    return -3;
+                    return -ARMAS_ESVD_LEFT;
             }
             armas_x_gvright(U, cosl, sinl, 0, 1, 0, M);
         } else {
@@ -164,13 +162,13 @@ int armas_x_svd_small(armas_x_dense_t * S, armas_x_dense_t * U,
                 armas_x_mcopy(V, A, 0, conf);
                 err = armas_x_lqbuild_w(V, &tau, M, wb, conf);
                 if (err < 0)
-                    return -4;
+                    return -ARMAS_ESVD_RIGHT;
             } else {
                 // V is N-by-N
                 armas_x_set_values(V, zeros, ARMAS_SYMM | ARMAS_UNIT);
                 err = armas_x_lqmult_w(V, A, &tau, ARMAS_RIGHT, wb, conf);
                 if (err < 0)
-                    return -3;
+                    return -ARMAS_ESVD_RIGHT;
             }
             armas_x_gvleft(V, cosl, sinl, 0, 1, 0, N);
         } else {
@@ -223,7 +221,7 @@ int armas_x_svd_tall(armas_x_dense_t * S, armas_x_dense_t * U,
     if (flags & (ARMAS_WANTU | ARMAS_WANTV)) {
         if (armas_wbytes(wb) < 4 * N * sizeof(DTYPE)) {
             conf->error = ARMAS_EWORK;
-            return -1;
+            return -ARMAS_EWORK;
         }
     }
 
@@ -241,7 +239,7 @@ int armas_x_svd_tall(armas_x_dense_t * S, armas_x_dense_t * U,
 
     // standard case, M > N but not too much
     if (armas_x_bdreduce_w(A, &tauq, &taup, wb, conf) != 0)
-        return -2;
+        return -ARMAS_ESVD_FACT;
 
     // setup diagonals
     armas_x_diag(&sD, A, 0);
@@ -254,15 +252,13 @@ int armas_x_svd_tall(armas_x_dense_t * S, armas_x_dense_t * U,
             // U is M-by-N
             armas_x_mcopy(U, A, 0,  conf);
             armas_x_make_trm(U, ARMAS_LOWER);
-            if (armas_x_bdbuild_w(U, &tauq, U->cols, ARMAS_WANTQ, wb, conf) !=
-                0)
-                return -3;
+            if (armas_x_bdbuild_w(U, &tauq, U->cols, ARMAS_WANTQ, wb, conf) < 0)
+                return -ARMAS_ESVD_LEFT;
         } else {
-            // U is M-by-M; 
+            // U is M-by-M;
             armas_x_set_values(U, zeros, ARMAS_SYMM | ARMAS_UNIT);
-            if (armas_x_bdmult_w
-                (U, A, &tauq, ARMAS_MULTQ | ARMAS_RIGHT, wb, conf) != 0)
-                return -3;
+            if (armas_x_bdmult_w(U, A, &tauq, ARMAS_MULTQ | ARMAS_RIGHT, wb, conf) < 0)
+                return -ARMAS_ESVD_LEFT;
         }
         uu = U;
     }
@@ -272,32 +268,32 @@ int armas_x_svd_tall(armas_x_dense_t * S, armas_x_dense_t * U,
         armas_x_submatrix(&R, A, 0, 0, N, N);
         armas_x_mcopy(V, &R, 0, conf);
         armas_x_make_trm(V, ARMAS_UPPER);
-        if (armas_x_bdbuild_w(V, &taup, V->rows, ARMAS_WANTP, wb, conf) != 0)
-            return -4;
+        if (armas_x_bdbuild_w(V, &taup, V->rows, ARMAS_WANTP, wb, conf) < 0)
+            return -ARMAS_ESVD_RIGHT;
         vv = V;
     }
     // run bidiagonal SVD
-    if (armas_x_bdsvd_w(S, &sE, uu, vv, flags | ARMAS_UPPER, wb, conf) != 0)
-        return -5;
+    if (armas_x_bdsvd_w(S, &sE, uu, vv, flags | ARMAS_UPPER, wb, conf) < 0)
+        return -ARMAS_ESVD_EIGEN;
 
     // we are done
     return 0;
 
   do_m_much_bigger:
     // here M >> N, first QR factor 
-    if (armas_x_qrfactor_w(A, &tauq, wb, conf) != 0)
-        return -2;
+    if (armas_x_qrfactor_w(A, &tauq, wb, conf) < 0)
+        return -ARMAS_ESVD_FACT;
 
     if (flags & ARMAS_WANTU) {
         if (U->cols == A->cols) {
             armas_x_mcopy(U, A, 0, conf);
-            if (armas_x_qrbuild_w(U, &tauq, U->cols, wb, conf) != 0)
-                return -3;
+            if (armas_x_qrbuild_w(U, &tauq, U->cols, wb, conf) < 0)
+                return -ARMAS_ESVD_LEFT;
         } else {
             // U is M-by-M
             armas_x_set_values(U, zeros, ARMAS_SYMM | ARMAS_UNIT);
-            if (armas_x_qrmult_w(U, A, &tauq, ARMAS_RIGHT, wb, conf) != 0)
-                return -3;
+            if (armas_x_qrmult_w(U, A, &tauq, ARMAS_RIGHT, wb, conf) < 0)
+                return -ARMAS_ESVD_LEFT;
         }
         uu = U;
     }
@@ -306,21 +302,20 @@ int armas_x_svd_tall(armas_x_dense_t * S, armas_x_dense_t * U,
     armas_x_submatrix(&R, A, 0, 0, N, N);
 
     // run bidiagonal reduce on R
-    if (armas_x_bdreduce_w(&R, &tauq, &taup, wb, conf) != 0)
-        return -2;
+    if (armas_x_bdreduce_w(&R, &tauq, &taup, wb, conf) < 0)
+        return -ARMAS_ESVD_FACT;
 
     if (flags & ARMAS_WANTU) {
         armas_x_submatrix(&Un, U, 0, 0, M, N);
-        if (armas_x_bdmult_w
-            (&Un, &R, &tauq, ARMAS_MULTQ | ARMAS_RIGHT, wb, conf) != 0)
-            return -3;
+        if (armas_x_bdmult_w(&Un, &R, &tauq, ARMAS_MULTQ | ARMAS_RIGHT, wb, conf) < 0)
+            return -ARMAS_ESVD_LEFT;
     }
 
     if (flags & ARMAS_WANTV) {
         armas_x_mcopy(V, &R, 0, conf);
         armas_x_make_trm(V, ARMAS_UPPER);
-        if (armas_x_bdbuild_w(V, &taup, V->rows, ARMAS_WANTP, wb, conf) != 0)
-            return -4;
+        if (armas_x_bdbuild_w(V, &taup, V->rows, ARMAS_WANTP, wb, conf) < 0)
+            return -ARMAS_ESVD_RIGHT;
         vv = V;
     }
     // setup diagonals
@@ -331,8 +326,8 @@ int armas_x_svd_tall(armas_x_dense_t * S, armas_x_dense_t * U,
     armas_wsetpos(wb, wsz);
 
     // run bidiagonal SVD
-    if (armas_x_bdsvd_w(S, &sE, uu, vv, flags | ARMAS_UPPER, wb, conf) != 0)
-        return -5;
+    if (armas_x_bdsvd_w(S, &sE, uu, vv, flags | ARMAS_UPPER, wb, conf) < 0)
+        return -ARMAS_ESVD_EIGEN;
 
     return 0;
 }
@@ -355,7 +350,7 @@ int armas_x_svd_wide(armas_x_dense_t * S, armas_x_dense_t * U,
     if (flags & (ARMAS_WANTU | ARMAS_WANTV)) {
         if (armas_wbytes(wb) < 4 * M * sizeof(DTYPE)) {
             conf->error = ARMAS_EWORK;
-            return -1;
+            return -ARMAS_EWORK;
         }
     }
 
@@ -373,7 +368,7 @@ int armas_x_svd_wide(armas_x_dense_t * S, armas_x_dense_t * U,
     // standard case, M < N but not too much
     err = armas_x_bdreduce_w(A, &tauq, &taup, wb, conf);
     if (err < 0)
-        return -2;
+        return -ARMAS_ESVD_FACT;
 
     // copy diagonals
     armas_x_diag(&sD, A, 0);
@@ -388,7 +383,7 @@ int armas_x_svd_wide(armas_x_dense_t * S, armas_x_dense_t * U,
         err = armas_x_bdbuild_w(U, &tauq, U->rows,
                                 ARMAS_WANTQ | ARMAS_LOWER, wb, conf);
         if (err < 0)
-            return -3;
+            return -ARMAS_ESVD_LEFT;
         uu = U;
     }
     // generate right vectors
@@ -398,22 +393,22 @@ int armas_x_svd_wide(armas_x_dense_t * S, armas_x_dense_t * U,
             armas_x_mcopy(V, A, 0, conf);
             err = armas_x_bdbuild_w(V, &taup, V->rows, ARMAS_WANTP, wb, conf);
             if ( err < 0)
-                return -4;
+                return -ARMAS_ESVD_RIGHT;
         } else {
             // V is N-by-N
             armas_x_set_values(V, zeros, ARMAS_SYMM | ARMAS_UNIT);
             err = armas_x_bdmult_w(V, A, &taup, 
                             ARMAS_MULTP | ARMAS_LEFT | ARMAS_TRANS, wb, conf);
             if ( err < 0)
-                return -4;
+                return -ARMAS_ESVD_RIGHT;
         }
         vv = V;
     }
 
     armas_wsetpos(wb, wsz);
     // run bidiagonal SVD
-    if (armas_x_bdsvd_w(S, &sE, uu, vv, flags | ARMAS_LOWER, wb, conf) != 0)
-        return -5;
+    if (armas_x_bdsvd_w(S, &sE, uu, vv, flags | ARMAS_LOWER, wb, conf) < 0)
+        return -ARMAS_ESVD_EIGEN;
 
     // we are done
     return 0;
@@ -422,7 +417,7 @@ int armas_x_svd_wide(armas_x_dense_t * S, armas_x_dense_t * U,
     // here M << N, first LQ factor 
     err = armas_x_lqfactor_w(A, &taup, wb, conf);
     if ( err < 0)
-        return -2;
+        return -ARMAS_ESVD_FACT;
 
     // generate right vectors
     if (flags & ARMAS_WANTV) {
@@ -431,13 +426,13 @@ int armas_x_svd_wide(armas_x_dense_t * S, armas_x_dense_t * U,
             armas_x_mcopy(V, A, 0, conf);
             err = armas_x_lqbuild_w(V, &taup, M, wb, conf);
             if (err < 0)
-                return -4;
+                return -ARMAS_ESVD_RIGHT;
         } else {
             // V is N-by-N
             armas_x_set_values(V, zeros, ARMAS_SYMM | ARMAS_UNIT);
             err = armas_x_lqmult_w(V, A, &taup, ARMAS_RIGHT, wb, conf);
             if (err < 0)
-                return -4;
+                return -ARMAS_ESVD_RIGHT;
         }
         vv = V;
     }
@@ -456,21 +451,21 @@ int armas_x_svd_wide(armas_x_dense_t * S, armas_x_dense_t * U,
     // run bidiagonal reduce on L; n(L) == m(L) then UPPER bidiagonal reduction
     err = armas_x_bdreduce_w(&L, &tauq, &taup, wb, conf);
     if (err < 0)
-        return -2;
+        return -ARMAS_ESVD_FACT;
 
     if (flags & ARMAS_WANTV) {
         armas_x_submatrix(&Vm, V, 0, 0, M, N);
         err = armas_x_bdmult_w(&Vm, &L, &taup,
-                ARMAS_MULTP | ARMAS_LEFT | ARMAS_TRANS, wb, conf);
+                               ARMAS_MULTP | ARMAS_LEFT | ARMAS_TRANS, wb, conf);
         if (err < 0)
-            return -4;
+            return -ARMAS_ESVD_RIGHT;
     }
     // generate left vectors
     if (flags & ARMAS_WANTU) {
         armas_x_mcopy(U, &L, 0, conf);
         err = armas_x_bdbuild_w(U, &tauq, U->rows, ARMAS_WANTQ, wb, conf);
         if (err < 0)
-            return -3;
+            return -ARMAS_ESVD_LEFT;
         uu = U;
     }
 
@@ -484,42 +479,15 @@ int armas_x_svd_wide(armas_x_dense_t * S, armas_x_dense_t * U,
     // run bidiagonal SVD
     err = armas_x_bdsvd_w(S, &sE, uu, vv, flags | ARMAS_UPPER, wb, conf);
     if (err < 0)
-        return -5;
+        return -ARMAS_ESVD_EIGEN;
 
     return 0;
 }
 
 /**
- * \brief Compute singular value and optionally singular vectors of a general matrix.
- *
- * \param[out] S
- *      Singular values
- * \param[out] U
- *      Left singular vectors, M-by-N or M-by-M matrix. Not used if ARMAS_WANTU is not set.
- * \param[out] V
- *      Right singular vectors, M-by-N or N-by-N matrix. Not used if ARMAS_WANTV is not set.
- * \param[in,out] A
- *      On entry, general M-by-N matrix which singular values are computed. On exit, contents
- *      are destroyed.
- * \param[in] flags
- *      Option bits, left singular vectors computed if ARMAS_WANTU set. Right vectors
- *      computed if ARMAS_WANTV is set.
- * \param[in] conf
- *      Configuration block. Member .error set if if error returned.
- *
- * If M >= N then left singular vector matrix U is either M-by-N or M-by-M and right singular
- * vector matrix is always N-by-N matrix. If M < N matrix U is always M-by-M and right singular
- * vector matrix is either M-by-N or N-by-N matrix.
- *
- * \return
- *      Zero for success, negative error indicator if failure.
- *
- * Error returns (< 0)
- *  -1  Generic error, size or such
- *  -2  Error on factorization or bidiagonal reduction
- *  -3  Error on left eigenvector (U) computation
- *  -4  Error on right eigenvector (V) computation
- *  -5  Error on bidiagonal singular value computation
+ * @brief Compute singular value and optionally singular vectors of a general matrix.
+ * @see armas_x_svd_w
+ * @ingroup lapack
  */
 int armas_x_svd(armas_x_dense_t * S, armas_x_dense_t * U, armas_x_dense_t * V,
                 armas_x_dense_t * A, int flags, armas_conf_t * conf)
@@ -530,9 +498,9 @@ int armas_x_svd(armas_x_dense_t * S, armas_x_dense_t * U, armas_x_dense_t * V,
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_svd_w(S, U, V, A, flags, &wb, conf) < 0) {
+    if ((err = armas_x_svd_w(S, U, V, A, flags, &wb, conf)) < 0) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return err;
     }
     if (wb.bytes > 0 && wb.bytes <= ARMAS_MAX_ONSTACK_WSPACE) {
         char b[ARMAS_MAX_ONSTACK_WSPACE];
@@ -561,38 +529,41 @@ int armas_x_svd(armas_x_dense_t * S, armas_x_dense_t * U, armas_x_dense_t * V,
 
 
 /**
- * \brief Compute singular value decomposition and optionally singular vectors of a general matrix.
+ * @brief Compute singular value decomposition and optionally singular vectors of a general matrix.
  *
- * \param[out] S
+ * @param[out] S
  *      Singular values
- * \param[out] U
+ * @param[out] U
  *      Left singular vectors, M-by-N or M-by-M matrix. Not used if ARMAS_WANTU is not set.
- * \param[out] V
+ * @param[out] V
  *      Right singular vectors, M-by-N or N-by-N matrix. Not used if ARMAS_WANTV is not set.
- * \param[in,out] A
+ * @param[in,out] A
  *      On entry, general M-by-N matrix which singular values are computed. On exit, contents
  *      are destroyed.
- * \param[in] flags
+ * @param[in] flags
  *      Option bits, left singular vectors computed if ARMAS_WANTU set. Right vectors
  *      computed if ARMAS_WANTV is set.
- * \param[in] wb
+ * @param[in] wb
  *      Workspace.
- * \param[in] conf
+ * @param[in] conf
  *      Configuration block. Member .error set if if error returned.
  *
  * If M >= N then left singular vector matrix U is either M-by-N or M-by-M and right singular
  * vector matrix is always N-by-N matrix. If M < N matrix U is always M-by-M and right singular
  * vector matrix is either M-by-N or N-by-N matrix.
  *
- * \return
- *      Zero for success, negative error indicator if failure.
+ * @return
+ *   Zero for success, negative error indicator if failure.
  *
  * Error returns (< 0)
- *  -1  Generic error, size or such
- *  -2  Error on factorization or bidiagonal reduction
- *  -3  Error on left eigenvector (U) computation
- *  -4  Error on right eigenvector (V) computation
- *  -5  Error on bidiagonal singular value computation
+ *  -ARMAS_EINVAL     Invalid parameter value
+ *  -ARMAS_ESIZE      Parameter sizes not correct
+ *  -ARMAS_EWORK      Workspace too small
+ *  -ARMAS_ESVD_FACT  Error on factorization or bidiagonal reduction
+ *  -ARMAS_ESVD_LEFT  Error on left eigenvector (U) computation
+ *  -ARMAS_ESVD_RIGHT Error on right eigenvector (V) computation
+ *  -ARMAS_ESVD_EIGEN Error on bidiagonal singular value computation
+ * @ingroup lapack
  */
 int armas_x_svd_w(armas_x_dense_t * S,
                   armas_x_dense_t * U,
@@ -609,7 +580,7 @@ int armas_x_svd_w(armas_x_dense_t * S,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     tall = A->rows >= A->cols;
@@ -626,15 +597,15 @@ int armas_x_svd_w(armas_x_dense_t * S,
 
     if (tall && armas_x_size(S) < A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     } else if (!tall && armas_x_size(S) < A->rows) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     if (!wb) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
 
     if (flags & ARMAS_WANTU) {
@@ -647,17 +618,17 @@ int armas_x_svd_w(armas_x_dense_t * S,
             if (U->rows != A->rows
                 || (U->cols != A->rows && U->cols != A->cols)) {
                 conf->error = ARMAS_ESIZE;
-                return -1;
+                return -ARMAS_ESIZE;
             }
         } else {
             if (U->rows != A->rows) {
                 conf->error = ARMAS_ESIZE;
-                return -1;
+                return -ARMAS_ESIZE;
             }
             // U is square if M < N
             if (U->rows != U->cols) {
                 conf->error = ARMAS_ESIZE;
-                return -1;
+                return -ARMAS_ESIZE;
             }
         }
 
@@ -665,24 +636,24 @@ int armas_x_svd_w(armas_x_dense_t * S,
     if (flags & ARMAS_WANTV) {
         if (!V) {
             conf->error = ARMAS_EINVAL;
-            return -1;
+            return -ARMAS_EINVAL;
         }
         if (tall) {
             if (V->cols != A->cols) {
                 conf->error = ARMAS_ESIZE;
-                return -1;
+                return -ARMAS_ESIZE;
             }
             // V is square if M > N
             if (V->rows != V->cols) {
                 conf->error = ARMAS_ESIZE;
-                return -1;
+                return -ARMAS_ESIZE;
             }
         } else {
             // if wide then V must be either M-by-N or N-by-N
             if (V->cols != A->cols
                 || (V->rows != A->cols && V->rows != A->rows)) {
                 conf->error = ARMAS_ESIZE;
-                return -1;
+                return -ARMAS_ESIZE;
             }
         }
     }

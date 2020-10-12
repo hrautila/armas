@@ -26,29 +26,14 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
-//! \endcond
 
 /**
  * @brief Generate orthogonal matrix Q for tridiagonally reduced matrix.
- *
- * @param A [in,out]
- *    On entry tridiagonal reduction as returned by trdreduce(). On exit
- *    the orthogonal matrix Q.
- * @param tau [in]
- *    Scalar coefficients of the elementary reflectors.
- * @param K  [in]
- *    Number of elementary reflector that define the Q matrix, n(A) > K > 0
- * @param flags [in]
- *    Flag bits, either upper tridiagonal (ARMAS_UPPER) or lower tridiagonal (ARMAS_LOWER)
- * @param conf [in]
- *    Optional blocking configuration
- *
- * @return
- *    0 on success, -1 on failure and sets conf.error value.
+ * @see armas_x_trdbuild_w
+ * @ingroup lapack
  */
 int armas_x_trdbuild(armas_x_dense_t * A,
                      const armas_x_dense_t * tau,
@@ -57,9 +42,10 @@ int armas_x_trdbuild(armas_x_dense_t * A,
     if (!conf)
         conf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_trdbuild_w(A, tau, K, flags, &wb, conf) < 0)
-        return -1;
+    if ((err = armas_x_trdbuild_w(A, tau, K, flags, &wb, conf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
@@ -70,9 +56,9 @@ int armas_x_trdbuild(armas_x_dense_t * A,
     } else
         wbs = ARMAS_NOWORK;
 
-    int stat = armas_x_trdbuild_w(A, tau, K, flags, wbs, conf);
+    err = armas_x_trdbuild_w(A, tau, K, flags, wbs, conf);
     armas_wrelease(&wb);
-    return stat;
+    return err;
 }
 
 /**
@@ -87,13 +73,15 @@ int armas_x_trdbuild(armas_x_dense_t * A,
  *    Number of elementary reflector that define the Q matrix, n(A) > K > 0
  * @param [in] flags
  *    Flag bits, either upper tridiagonal (ARMAS_UPPER) or lower tridiagonal (ARMAS_LOWER)
- * @param wb
- *    Workspace
- * @param conf [in]
- *    Optional blocking configuration
+ * @param [in,out] wb
+ *    Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *    immediately.
+ * @param [in, out] conf
+ *    Configuration block.
  *
- * @return
- *    0 on success, -1 on failure and sets conf.error value.
+ * @retval  0  Success
+ * @retval <0  Failure, sets conf.error value.
+ * @ingroup lapack
  */
 int armas_x_trdbuild_w(armas_x_dense_t * A,
                        const armas_x_dense_t * tau,
@@ -107,7 +95,7 @@ int armas_x_trdbuild_w(armas_x_dense_t * A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (wb && wb->bytes == 0) {
         if (flags & ARMAS_UPPER)
@@ -122,12 +110,12 @@ int armas_x_trdbuild_w(armas_x_dense_t * A,
 
     if (!tau || armas_x_size(tau) != A->cols) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     if (A->cols != A->rows) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     if (K > A->rows - 1)

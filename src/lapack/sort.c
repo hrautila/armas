@@ -27,13 +27,17 @@
 #include "internal.h"
 #include "internal_lapack.h"
 
-/*
- * \brief Sort vector on absolute values.
+/**
+ * @brief Sort vector on absolute values.
  *
- * \param[in,out] D
- *      Vector to sort
- * \param[in] updown
- *      Sort to ascending order if updown > 0, and to descending if < 0.
+ * @param[in,out] D
+ *   On entry unorder vector. On exit elements sorted on absolute values
+ *   as requested.
+ * @param[in] updown
+ *   Sort to ascending order if updown > 0, and to descending if < 0.
+ *
+ * Implementation is simple insertion sort.
+ * @ingroup lapackaux
  */
 void armas_x_abs_sort_vec(armas_x_dense_t * D, int updown)
 {
@@ -57,13 +61,16 @@ void armas_x_abs_sort_vec(armas_x_dense_t * D, int updown)
     }
 }
 
-/*
- * \brief Sort vector.
+/**
+ * @brief Sort vector.
  *
- * \param[in,out] D
- *      Vector to sort
- * \param[in] updown
- *      Sort to ascending order if updown > 0, and to descending if < 0.
+ * @param[in,out] D
+ *  Unorderd vector. On exit sorted vector.
+ * @param[in] updown
+ *  Sort to ascending order if updown > 0, and to descending if < 0.
+ *
+ * Implementation is simple insertion sort.
+ * @ingroup lapackaux
  */
 void armas_x_sort_vec(armas_x_dense_t * D, int updown)
 {
@@ -140,21 +147,25 @@ int vec_abs_minmax(armas_x_dense_t * D, int minmax)
     return ix;
 }
 
-/*
- * \brief Sort eigenvalues and optionally related eigenvectors
+/**
+ * @brief Sort eigenvalues and optionally related eigenvectors
  *
- * \param[in,out] D
+ * @param[in,out] D
  *      Eigenvalues, on exit sorted eigenvalues
- * \param[in,out] U
+ * @param[in,out] U
  *      Optional matrix of column eigenvectors, on exit columns sorted to reflect
  *      sorted eigenvalues.
- * \param[in,out] V
+ * @param[in,out] V
  *      Optional matrix of row eigenvectors, on exit rows sorted to reflect sorted eigenvalues.
- * \param[in,out] C
+ * @param[in,out] C
  *      Optional column matrix or vector, on exit columns/elements sorted to reflect sorted
  *      eigenvalues.
- * \param[in] updown
+ * @param[in] updown
  *      Sort to ascending order if updown > 0 and descending order if < 0.
+ *
+ * @retval  0  Success
+ * @retval <0 Failure. Returned if D is not vector.
+ * @ingroup lapackaux
  */
 int armas_x_sort_eigenvec(armas_x_dense_t * D, armas_x_dense_t * U,
                           armas_x_dense_t * V, armas_x_dense_t * C, int updown)
@@ -166,7 +177,7 @@ int armas_x_sort_eigenvec(armas_x_dense_t * D, armas_x_dense_t * U,
     EMPTY(sD);
 
     if (!armas_x_isvector(D)) {
-        return -1;
+        return -ARMAS_ENEED_VECTOR;
     }
     // This is simple insertion sort - find index to largest/smallest value
     // in remaining subvector and swap that with value in current index.

@@ -25,12 +25,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "partition.h"
-//! \endcond
 
 #ifndef ARMAS_BLOCKING_MIN
 #define ARMAS_BLOCKING_MIN 32
@@ -187,33 +185,10 @@ int blk_qlbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
 
 
 /**
- * \brief Generate orthogonal Q matrix of QL factorization
+ * @brief Generate orthogonal Q matrix of QL factorization
  *
- * Generate the M-by-N matrix Q with orthogonal columns which
- * are defined as the first N columns of the product of K first elementary
- * reflectors.
- *
- * \param[in,out]  A
- *     On entry, the elementary reflectors as returned by qlfactor().
- *     stored below diagonal of the M by N matrix A.
- *     On exit, the orthogonal matrix Q
- *
- * \param[in]  tau
- *    Scalar coefficents of elementary reflectors
- *
- * \param[out] W
- *     Workspace
- *
- * \param[in]   K
- *     The number of elementary reflector whose product define the matrix Q
- *
- * \param[in,out] conf
- *     Blocking configuration
- *
- * \retval  0 Succes
- * \retval -1 Failure, conf.error holds error code.
- *
- * Compatible with lapackd.ORGQL.
+ * @see armas_x_qlbuild_w
+ * @ingroup lapack
  */
 int armas_x_qlbuild(armas_x_dense_t * A,
                     const armas_x_dense_t * tau, int K, armas_conf_t * cf)
@@ -221,22 +196,23 @@ int armas_x_qlbuild(armas_x_dense_t * A,
     if (!cf)
         cf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_qlbuild_w(A, tau, K, &wb, cf) < 0)
-        return -1;
+    if ((err = armas_x_qlbuild_w(A, tau, K, &wb, cf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             cf->error = ARMAS_EMEMORY;
-            return -1;
+            return -ARMAS_EMEMORY;
         }
     } else
         wbs = ARMAS_NOWORK;
 
-    int stat = armas_x_qlbuild_w(A, tau, K, wbs, cf);
+    err = armas_x_qlbuild_w(A, tau, K, wbs, cf);
     armas_wrelease(&wb);
-    return stat;
+    return err;
 }
 
 /**
@@ -257,17 +233,15 @@ int armas_x_qlbuild(armas_x_dense_t * A,
  * @param[in]   K
  *     The number of elementary reflector whose product define the matrix Q
  *
- * @param[out] W
- *    Workspace buffer needed for computation. To compute size of the required space call 
- *    the function with workspace bytes set to zero. Size of workspace is returned in 
- *    `wb.bytes` and no other computation or parameter size checking is done and function
- *    returns with success.
+ * @param[out] wb
+ *    Workspace. If *wb.bytes* is zero then the size of required workspace
+ *    is computed and returned immediately.
  *
  * @param[in,out] conf
  *     Blocking configuration
  *
- * @retval  0 Succes
- * @retval -1 Failure, conf.error holds error code.
+ * @retval  0 Success
+ * @retval <0 Failure, conf.error holds error code.
  *
  *  Last error codes returned
  *   - `ARMAS_EINVAL` A or tau is null pointer
@@ -275,6 +249,7 @@ int armas_x_qlbuild(armas_x_dense_t * A,
  *
  *
  * Compatible with lapackd.ORGQL.
+ * @ingroup lapack
  */
 int armas_x_qlbuild_w(armas_x_dense_t * A,
                       const armas_x_dense_t * tau,
@@ -291,7 +266,7 @@ int armas_x_qlbuild_w(armas_x_dense_t * A,
 
     if (!A || !tau) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (wb && wb->bytes == 0) {
@@ -306,7 +281,7 @@ int armas_x_qlbuild_w(armas_x_dense_t * A,
     wsmin = A->cols * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace
     if (lb > 0 && A->cols > lb) {

@@ -219,23 +219,26 @@ int hhcompute_unscaled(armas_x_dense_t * x0, armas_x_dense_t * x1,
 
 
 /**
+ * @brief Generate Householder reflector H
+ *
  * Generates a real elementary reflector H of order n, such that
  *
- *       H x = (+/-beta e_0)^T,  H H = I 
+ *     \f$  H x = (+/-beta * e_0)^T,  H H = I \f$
  *
  * where x is an n-element real vector. H is represented in the form
  *
- *       H = I - tau*v*v^T  or H = I - 2*v*v^T
+ *    \f$   H = I - tau*v*v^T  or H = I - 2*v*v^T \f$
  *
  * where tau is a real scalar and v is a real n-element vector.
  * If flag ARMAS_UNIT is used to generated scaled reflector vectors then `tau`
- * holds the scaling factor. 
+ * holds the scaling factor.
  *
  * Depending on flag bits generates H such that,
- *   flags == 0
- *     Hx = (beta e_0)^T, beta in R  
- *   flags == ARMAS_NONNEG
- *     Hx = (beta e_0)^T, beta >= 0.0
+ *
+ *  | Flags         | Reflector                                 |
+ *  | ------------: | :---------------------------------------- |
+ *  |            0  | \f$  Hx = (beta * e_0)^T, beta \in R \f$  |
+ *  | ARMAS_NONNEG  | \f$  Hx = (beta * e_0)^T, beta >= 0.0 \f$ |
  *
  *  @param [in,out] a11
  *     On entry first element of x-vector. On exit the first element if
@@ -244,15 +247,16 @@ int hhcompute_unscaled(armas_x_dense_t * x0, armas_x_dense_t * x1,
  *  @param [in,out] x
  *     On entry elements 1:n-1 of x. On exit elements 1:n-1 of vector `v`.
  *  @param [out] tau
- *     If ARMAS_UNIT is set then on exit value scalar `tau` in singleton
- *     matrix. Otherwise the the scalar value of `beta`.
+ *     If *ARMAS_UNIT* is set then on exit value scalar *tau* in singleton
+ *     matrix. Otherwise the the scalar value of *beta*.
  *  @param [in] flags
- *     Use ARMAS_NONNEG to generate non-negative beta values. 
- *     Use ARMAS_UNIT to generate scaled reflector vectors (stardard LAPACK).
- *  @param [in] conf
+ *     Use *ARMAS_NONNEG* to generate non-negative beta values.
+ *     Use *ARMAS_UNIT* to generate scaled reflector vectors (stardard LAPACK).
+ *  @param [in] cf
  *     Configuration block.
  *
  *  @retval 0
+ *  @ingroup lapack
  */
 int armas_x_house(armas_x_dense_t * a11, armas_x_dense_t * x,
                   armas_x_dense_t * tau, int flags, armas_conf_t * cf)
@@ -422,28 +426,31 @@ int armas_x_apply_householder1x1(armas_x_dense_t * tau, armas_x_dense_t * v,
 }
 
 /**
+ * @brief Apply Householder reflector H to matrix
+ *
  * Applies a real elementary reflector H to a real m by n matrix A,
  * from either the left or the right. 
- *
+ *```txt
  *  ( a1^t ) =  H * ( a1^T ) 
  *  ( A2   )        ( A2   )
- *
- *  \param [in,out] a1
+ *```
+ *  @param [in,out] a1
  *     On entry top row/leftmost column of matrix A. On exit transformed values.
- *  \param [in,out] A2
+ *  @param [in,out] A2
  *     On entry rows/columns 2:m of matrix A. On exit transformed values
- *  \param [in] v
+ *  @param [in] v
  *     Reflector vector; of length len(a1)-1 if unit scaled reflector. Otherwise
  *      of lenght len(a1).
- *  \param [in] tau
+ *  @param [in] tau
  *     Householder scalar or null if reflector vector is unscaled
- *  \param [in] w
+ *  @param [in] w
  *     Workspace, at least of size len(a1) elements
- *  \param [in] flags
- *     Flag bits ARMAS_LEFT or ARMAS_RIGHT
- *  \param [in] conf
+ *  @param [in] flags
+ *     Flag bits *ARMAS_LEFT* or *ARMAS_RIGHT*
+ *  @param [in] cf
  *     Configuration block
  *
+ *  @ingroup lapack
  */
 int armas_x_houseapply2x1(armas_x_dense_t * a1, armas_x_dense_t * A2,
                           armas_x_dense_t * tau, armas_x_dense_t * v,
@@ -461,28 +468,31 @@ int armas_x_houseapply2x1(armas_x_dense_t * a1, armas_x_dense_t * A2,
 }
 
 /**
- * Applies a real elementary reflector H to matrix A either from left or right. 
+ * @brief Apply Householder reflector H to matrix
  *
- *    A = H * A  or A = A * H
+ * Applies a real elementary reflector H to matrix A either from left or right.
  *
- *  \param [in,out] A
+ *   \f$ A = H  A \f$  or \f$ A = A H \f$
+ *
+ *  @param [in,out] A
  *     On entry matrix A. On exit transformed values.
- *  \param [in] tau
+ *  @param [in] tau
  *     Householder scalar for unit scaled reflector or null for unscaled
  *     reflector.
- *  \param [in] v
+ *  @param [in] v
  *     Reflector vector; for unscaled reflector then length is rows(A) if
  *     applying from right and if applying from LEFT then length is cols(A).
  *     If unit scaled reflector then length one element shorter.
- *  \param [in] w
+ *  @param [in] w
  *     Workspace, at least of size rows(A) for ARMAS_RIGHT or cols(A) for
  *     ARMAS_LEFT. If parameter  matrix A is vector then workspace is not
  *      needed.
- *  \param [in] flags
- *     Flag bits ARMAS_LEFT or ARMAS_RIGHT
- *  \param [in] conf
+ *  @param [in] flags
+ *     Flag bits *ARMAS_LEFT* or *ARMAS_RIGHT*
+ *  @param [in] cf
  *     Configuration block
  *
+ *  @ingroup lapack
  */
 int armas_x_houseapply(armas_x_dense_t * A,
                        armas_x_dense_t * tau, armas_x_dense_t * v,

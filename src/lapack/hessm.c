@@ -24,51 +24,15 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "partition.h"
-//! \endcond
+
 /**
- * @brief Multiply with the orthogonal matrix Q of Hessenberg reduction
+ * @brief Multiply with the orthogonal matrix Q of Hessenberg reduction.
  *
- * Multiply and replace C with product of C and Q where Q is a real orthogonal matrix
- * defined as the product of K = n(A) elementary reflectors.
- *
- *    \f$ Q = H_1  H_2 . . . H_K \f$
- *
- * @param[in,out] C
- *     On entry, the M-by-N matrix C or if flag bit *ARMAS_RIGHT* is set then N-by-M matrix
- *     On exit C is overwritten by \f$ Q C \f$ or \f$ Q^T C \f$. If bit *ARMAS_RIGHT* is 
- *     set then C is overwritten by \f$ CQ \f$ or \f$ C Q^T \f$
- *
- * @param[in] A
- *      Hessenberg reduction as returned by hessreduce() where the lower trapezoidal
- *      part, on and below first subdiagonal, holds the elementary reflectors.
- *
- * @param[in] tau
- *     The scalar factors of the elementary reflectors. A column vector.
- *
- * @param[out] W
- *     Workspace matrix,  required size is returned by hessmult_work()
- *
- * @param[in] flags
- *    Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT* and *ARMAS_TRANS*
- *
- * @param[in,out] conf
- *    Blocking configuration. Field conf.lb defines block size. If it is zero
- *    unblocked invocation is assumed.
- *
- * \cond
- *        flags        result
- *        -------------------------------------
- *        LEFT         C = Q*C     n(A) == m(C)
- *        RIGHT        C = C*Q     n(C) == m(A)
- *        TRANS|LEFT   C = Q.T*C   n(A) == m(C)
- *        TRANS|RIGHT  C = C*Q.T   n(C) == m(A)
- * \endcond
- *
+ * @see armas_x_hessmult_w
  * @ingroup lapack
  */
 int armas_x_hessmult(armas_x_dense_t * C,
@@ -99,6 +63,48 @@ int armas_x_hessmult(armas_x_dense_t * C,
     return err;
 }
 
+/**
+ * @brief Multiply with the orthogonal matrix Q of Hessenberg reduction
+ *
+ * Multiply and replace C with product of C and Q where Q is a real orthogonal matrix
+ * defined as the product of K = n(A) elementary reflectors.
+ *
+ *    \f$ Q = H_1  H_2 . . . H_K \f$
+ *
+ * @param[in,out] C
+ *     On entry, the M-by-N matrix C or if flag bit *ARMAS_RIGHT* is set then N-by-M matrix
+ *     On exit C is overwritten by \f$ Q C \f$ or \f$ Q^T C \f$. If bit *ARMAS_RIGHT* is
+ *     set then C is overwritten by \f$ CQ \f$ or \f$ C Q^T \f$
+ *
+ * @param[in] A
+ *      Hessenberg reduction as returned by hessreduce() where the lower trapezoidal
+ *      part, on and below first subdiagonal, holds the elementary reflectors.
+ *
+ * @param[in] tau
+ *     The scalar factors of the elementary reflectors. A column vector.
+ *
+ * @param[out] wb
+ *     Workspace. If wb.size is zero then required workspace size is computed and
+ *     returned immediately.
+ *
+ * @param[in] flags
+ *    Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT* and *ARMAS_TRANS*
+ *
+ * @param[in,out] conf
+ *    Blocking configuration. Field conf.lb defines block size. If it is zero
+ *    unblocked invocation is assumed.
+ *
+ *```md
+ *        flags        result
+ *        -------------------------------------
+ *        LEFT         C = Q*C     n(A) == m(C)
+ *        RIGHT        C = C*Q     n(C) == m(A)
+ *        TRANS|LEFT   C = Q.T*C   n(A) == m(C)
+ *        TRANS|RIGHT  C = C*Q.T   n(C) == m(A)
+ *```
+ *
+ * @ingroup lapack
+ */
 int armas_x_hessmult_w(armas_x_dense_t * C,
                        const armas_x_dense_t * A,
                        const armas_x_dense_t * tau,

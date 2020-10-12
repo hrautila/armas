@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2016
+// Copyright (c) Harri Rautila, 2016-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -486,23 +486,8 @@ int blk_ldlpv_upper(armas_x_dense_t * A, armas_x_dense_t * W,
 /**
  * @brief Compute pivoting LDLT factoring of symmetric matrix
  *
- * @param A
- *   On entry symmetric matrix store on lower (upper) triangular part. On exit
- *   the LDL^T (UDU^T) factorization of where L (U) is lower (upper) triangular
- *     matrix with unit diagonal and D is stored on diagonal entries.
- * @param W
- *   Working space for blocked implementation. If null or zero sized then
- *   unblocked algorithm used.
- * @param P
- *   Pivot vector. Size must be equal to rows/columns of input matrix. Non
- *   pivoting algorithm is used if P is ARMAS_NOPIVOT.
- * @param flags
- *   Indicator bits, lower (upper) storage if ARMAS_LOWER (ARMAS_UPPER) set.
- * @param conf
- *   Configuration block
- *
- * @retval 0  ok
- * @retval -1 error
+ * @see armas_x_ldlfactor_w
+ * @ingroup lapack
  */
 int armas_x_ldlfactor(armas_x_dense_t * A,
                       armas_pivot_t * P, int flags, armas_conf_t * conf)
@@ -514,8 +499,8 @@ int armas_x_ldlfactor(armas_x_dense_t * A,
         conf = armas_conf_default();
 
     wbs = &wb;
-    if (armas_x_ldlfactor_w(A, P, flags, &wb, conf) < 0)
-        return -1;
+    if ((err = armas_x_ldlfactor_w(A, P, flags, &wb, conf)) < 0)
+        return err;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             conf->error = ARMAS_EMEMORY;
@@ -530,6 +515,28 @@ int armas_x_ldlfactor(armas_x_dense_t * A,
 
 }
 
+/**
+ * @brief Compute pivoting LDLT factoring of symmetric matrix
+ *
+ * @param A
+ *   On entry symmetric matrix store on lower (upper) triangular part. On exit
+ *   the LDL^T (UDU^T) factorization of where L (U) is lower (upper) triangular
+ *     matrix with unit diagonal and D is stored on diagonal entries.
+ * @param P
+ *   Pivot vector. Size must be equal to rows/columns of input matrix. Non
+ *   pivoting algorithm is used if P is ARMAS_NOPIVOT.
+ * @param flags
+ *   Indicator bits, lower (upper) storage if ARMAS_LOWER (ARMAS_UPPER) set.
+ * @param wb
+ *   Workspace. If wb.bytes is zero then size of required workspace is computed
+ *   and returned immediately.
+ * @param conf
+ *   Configuration block
+ *
+ * @retval 0  Success
+ * @retval <0 Failure
+ * @ingroup lapack
+ */
 int armas_x_ldlfactor_w(armas_x_dense_t * A,
                         armas_pivot_t * P,
                         int flags, armas_wbuf_t * wb, armas_conf_t * conf)
@@ -544,7 +551,7 @@ int armas_x_ldlfactor_w(armas_x_dense_t * A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (wb && wb->bytes == 0) {
@@ -557,7 +564,7 @@ int armas_x_ldlfactor_w(armas_x_dense_t * A,
 
     if (A->rows != A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     if (P == ARMAS_NOPIVOT) {

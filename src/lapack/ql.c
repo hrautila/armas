@@ -25,12 +25,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "partition.h"
-//! \endcond
 
 #ifndef IFERROR
 #define IFERROR(exp) do { \
@@ -333,7 +331,21 @@ int armas_x_unblk_ql_reflector(armas_x_dense_t * T, armas_x_dense_t * A,
     return 0;
 }
 
-/*
+/**
+ * @brief Build the QL block reflector
+ *
+ * @param[out] T
+ *   On exit the requested block reflector.
+ * @param[in] A
+ *   The QL factored matrix
+ * @param[in] tau
+ *   The factorization scalar values/
+ * @param[in,out] conf
+ *   Configuration block.
+ *
+ * @retval  0 Success
+ * @retval <0 Failure
+ * @ingroup lapack
  */
 int armas_x_qlreflector(armas_x_dense_t * T, armas_x_dense_t * A,
                         armas_x_dense_t * tau, armas_conf_t * conf)
@@ -343,51 +355,17 @@ int armas_x_qlreflector(armas_x_dense_t * T, armas_x_dense_t * A,
 
     if (T->cols < A->cols || T->rows < A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     armas_x_unblk_ql_reflector(T, A, tau, conf);
     return 0;
 }
 
 /**
- * \brief Compute QL factorization of a M-by-N matrix A
+ * @brief Compute QL factorization of a M-by-N matrix A
  *
- * \param[in,out] A
- *    On entry, the M-by-N matrix A, M >= N. On exit, lower triangular matrix L
- *    and the orthogonal matrix Q as product of elementary reflectors.
- *
- * \param[out] tau
- *   On exit, the scalar factors of the elemenentary reflectors.
- *
- * \param[out] W
- *   Workspace, N-by-nb matrix used for work space in blocked invocations. 
- *
- * \param[in,out] conf 
- *    The configuration options.
- *
- * \retval  0 Success
- * \retval -1 Error, conf.error holds error code
- *
- * #### Additional information
- *
- *  Ortogonal matrix Q is product of elementary reflectors H(k)
- *
- *    \f$ Q = H_{k-1}...H_1 H_0, where K = min(M,N) \f$
- *
- *  Elementary reflector H(k) is stored on column k of A above the diagonal with
- *  implicit unit value on diagonal entry. The vector TAU holds scalar factors
- *  of the elementary reflectors.
- *
- *  Contents of matrix A after factorization is as follow:
- *
- *      ( v0 v1 v2 v3 )   for M=6, N=4
- *      ( v0 v1 v2 v3 )   l is element of L
- *      ( l  v1 v2 v3 )   vk is element of H(k)
- *      ( l  l  v2 v3 )
- *      ( l  l  l  v3 )
- *      ( l  l  l  l  )
- *
- *  qlfactor() is compatible with lapack.DGEQLF
+ * @see armas_x_qlfactor_w
+ * @ingroup lapack
  */
 int armas_x_qlfactor(armas_x_dense_t * A,
                      armas_x_dense_t * tau, armas_conf_t * cf)
@@ -395,9 +373,10 @@ int armas_x_qlfactor(armas_x_dense_t * A,
     if (!cf)
         cf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_qlfactor_w(A, tau, &wb, cf) < 0)
-        return -1;
+    if ((err = armas_x_qlfactor_w(A, tau, &wb, cf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
@@ -408,11 +387,10 @@ int armas_x_qlfactor(armas_x_dense_t * A,
     } else
         wbs = ARMAS_NOWORK;
 
-    int stat = armas_x_qlfactor_w(A, tau, wbs, cf);
+    err = armas_x_qlfactor_w(A, tau, wbs, cf);
     armas_wrelease(&wb);
-    return stat;
+    return err;
 }
-
 
 /**
  * @brief Compute QL factorization of a M-by-N matrix A
@@ -421,32 +399,27 @@ int armas_x_qlfactor(armas_x_dense_t * A,
  *    On entry, the M-by-N matrix A, M >= N. On exit, lower triangular matrix L
  *    and the orthogonal matrix Q as product of elementary reflectors.
  *
- * @param[out] tau  
- *   Vector of length N. On exit, the scalar factors of the elemenentary reflectors. 
- *
- * @param[in,out] conf 
- *    The blocking configuration. If nil then default blocking configuration
- *    is used. Member conf.LB defines blocking size of blocked algorithms.
- *    If it is zero then unblocked algorithm is used.
+ * @param[out] tau
+ *   Vector of length N. On exit, the scalar factors of the elemenentary reflectors.
  *
  * @param wb
- *   Workspace buffer needed for factorization. If workspace is too small for blocked
- *   factorization then actual blocking factor is adjusted to fit into provided space.
- *   To compute size of the required space call the function with workspace bytes set to zero. 
- *   Size of workspace is returned in  `wb.bytes` and no other computation or parameter size 
- *   checking is done and function returns with success.
+ *   Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *   immediately.
+ *
+ * @param[in,out] conf
+ *   The blocking configuration. If nil then default blocking configuration
  *
  * @retval  0 Success
- * @retval -1 Error, conf.error holds error code
+ * @retval <0 Failure, conf.error holds error code
  *
  *  Last error codes returned
  *   - `ARMAS_ESIZE`  if M < N 
  *   - `ARMAS_EINVAL` tau is not column vector or len(tau) < N
  *   - `ARMAS_EWORK`  if workspace is less than N elements
  *
- * #### Additional information
+ * Additional information
  *
- *  Ortogonal matrix Q is product of elementary reflectors H(k)
+ * Ortogonal matrix Q is product of elementary reflectors H(k)
  *
  *    \f$ Q = H_{k-1}...H_1 H_0, where K = min(M,N) \f$
  *
@@ -455,15 +428,16 @@ int armas_x_qlfactor(armas_x_dense_t * A,
  *  of the elementary reflectors.
  *
  *  Contents of matrix A after factorization is as follow:
- *
+ *```txt
  *      ( v0 v1 v2 v3 )   for M=6, N=4
  *      ( v0 v1 v2 v3 )   l is element of L
  *      ( l  v1 v2 v3 )   vk is element of H(k)
  *      ( l  l  v2 v3 )
  *      ( l  l  l  v3 )
  *      ( l  l  l  l  )
- *
- *  qlfactor() is compatible with lapack.DGEQLF
+ *```
+ *  armas_x_qlfactor_w() is compatible with lapack.DGEQLF
+ * @ingroup lapack
  */
 int armas_x_qlfactor_w(armas_x_dense_t * A,
                        armas_x_dense_t * tau,
@@ -480,7 +454,7 @@ int armas_x_qlfactor_w(armas_x_dense_t * A,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     if (wb && wb->bytes == 0) {
@@ -493,18 +467,18 @@ int armas_x_qlfactor_w(armas_x_dense_t * A,
     // must have: M >= N
     if (A->rows < A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     if (!armas_x_isvector(tau) || armas_x_size(tau) < A->cols) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     lb = env->lb;
     wsmin = A->cols * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace
     if (lb > 0 && A->cols > lb) {

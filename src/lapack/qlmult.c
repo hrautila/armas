@@ -25,12 +25,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "partition.h"
-//! \endcond
 
 #ifndef ARMAS_BLOCKING_MIN
 #define ARMAS_BLOCKING_MIN 32
@@ -342,39 +340,8 @@ int blk_qlmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
 /**
  * @brief Multiply with orthogonal Q matrix
  *
- * Multiply and replace C with \f$ QC \f$ or \f$ Q^TC \f$ where Q is a real
- * orthogonal matrix defined as the product of K first elementary reflectors.
- *
- *    \f$ Q = H_k H_{k-1} ... H_k \f$
- *
- * as returned by qlfactor().
- *
- * @param[in,out] C
- *     On entry, the M-by-N matrix C or if flag bit *ARMAS_RIGHT* is set then
- *     N-by-M matrix. On exit C is overwritten by \f$ QC \f$ or \f$ Q^TC \f$.
- *     If bit *ARMAS_LEFT* is set then C is overwritten by \f$ CQ \f$ or
- *     \f$ CQ^T \f$
- *
- * @param[in] A
- *     QL factorization as returned by qrfactor() where the upper trapezoidal
- *     part holds the elementary reflectors.
- *
- * @param[in] tau
- *    The scalar factors of the elementary reflectors.
- *
- * @param[out] W
- *     Workspace matrix, size as returned by qrmult_work().
- *
- * @param[in] flags
- *    Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT* and *ARMAS_TRANS*
- *
- * @param[in] conf
- *   Configuration options.
- *
- * \retval  0 Succes
- * \retval -1 Failure, `conf.error` holds error code.
- *
- * Compatible with lapack.DORMQL
+ * @see armas_x_qlmult_w
+ * @ingroup lapack
  */
 int armas_x_qlmult(armas_x_dense_t * C,
                    const armas_x_dense_t * A,
@@ -383,22 +350,23 @@ int armas_x_qlmult(armas_x_dense_t * C,
     if (!cf)
         cf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_qlmult_w(C, A, tau, flags, &wb, cf) < 0)
-        return -1;
+    if ((err = armas_x_qlmult_w(C, A, tau, flags, &wb, cf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             cf->error = ARMAS_EMEMORY;
-            return -1;
+            return -ARMAS_EMEMORY;
         }
     } else
         wbs = ARMAS_NOWORK;
 
-    int stat = armas_x_qlmult_w(C, A, tau, flags, wbs, cf);
+    err = armas_x_qlmult_w(C, A, tau, flags, wbs, cf);
     armas_wrelease(&wb);
-    return stat;
+    return err;
 }
 
 
@@ -427,18 +395,16 @@ int armas_x_qlmult(armas_x_dense_t * C,
  *
  * @param[in] flags
  *    Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT* and *ARMAS_TRANS*
- *       
+ *
  * @param wb
- *    Workspace buffer needed for computation. To compute size of the required space call 
- *    the function with workspace bytes set to zero. Size of workspace is returned in 
- *    `wb.bytes` and no other computation or parameter size checking is done and function
- *    returns with success.
+ *    Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *    immediately.
  *
  * @param[in] conf
  *   Configuration options.
  *
  * @retval  0 Succes
- * @retval -1 Failure, `conf.error` holds error code.
+ * @retval <0 Failure, `conf.error` holds error code.
  *
  *  Last error codes returned
  *   - `ARMAS_ESIZE`  if n(C) != m(A) for C*op(Q) or m(C) != m(A) for op(Q)*C
@@ -446,6 +412,7 @@ int armas_x_qlmult(armas_x_dense_t * C,
  *   - `ARMAS_EWORK`  if workspace is less than required for unblocked computation
  *
  * Compatible with lapack.DORMQL
+ * @ingroup lapack
  */
 int armas_x_qlmult_w(armas_x_dense_t * C,
                      const armas_x_dense_t * A,
@@ -463,7 +430,7 @@ int armas_x_qlmult_w(armas_x_dense_t * C,
 
     if (!C) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     env = armas_getenv();
     K = (flags & ARMAS_RIGHT) != 0 ? C->rows : C->cols;
@@ -476,13 +443,13 @@ int armas_x_qlmult_w(armas_x_dense_t * C,
     }
     if (!A || !tau) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     // check sizes; A, tau return from armas_x_qrfactor()
     P = (flags & ARMAS_RIGHT) != 0 ? C->cols : C->rows;
     if (P != A->rows || armas_x_size(tau) != A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
 
@@ -490,7 +457,7 @@ int armas_x_qlmult_w(armas_x_dense_t * C,
     wsmin = K * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace
     if (lb > 0 && K > lb) {

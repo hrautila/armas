@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -25,19 +25,14 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // ------------------------------------------------------------------------------
 
-
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "partition.h"
-//! \endcond
-
 
 #ifndef ARMAS_BLOCKING_MIN
 #define ARMAS_BLOCKING_MIN 32
 #endif
-
 
 /*
  * Unblocked algorith for computing C = Q.T*C and C = Q*C.
@@ -383,40 +378,8 @@ int blk_qrmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
 /**
  * @brief Multiply matrix with orthogonal matrix Q.
  *
- * Multiply and replace C with \f$ Q C \f$ or \f$ Q^T C \f$ where Q is a real
- *  orthogonal matrix defined as the product of k elementary reflectors.
- *
- *    \f$ Q = H_1 H_2 . . . H_k \f$
- *
- * as returned by qrfactor().
- *
- * @param[in,out] C
- *   On entry, the M-by-N matrix C or if flag bit *ARMAS_RIGHT* is set then
- *   N-by-M matrix On exit C is overwritten by \f$ Q C \f$ or \f$ Q^T C \f$.
- *   If bit *ARMAS_RIGHT* is  set then C is overwritten by \f$ C Q \f$
- *   or \f$ CQ^T \f$.
- *
- * @param[in] A
- *    QR factorization as returne by qrfactor() where the lower trapezoidal
- *    part holds the elementary reflectors.
- *
- * @param[in] tau
- *   The scalar factors of the elementary reflectors.
- *
- * @param[in,out] W
- *    Workspace matrix, required size is returned by qrmult_work().
- *
- * @param[in] flags
- *   Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
- *
- * @param conf
- *   Blocking configuration. Field LB defines block size. If it is zero
- *   unblocked invocation is assumed. Actual blocking size is adjusted
- *   to available workspace size and minimum of configured block size and
- *   block size implied by workspace is used.
- *
- * Compatible with lapack.DORMQR
- * \ingroup lapack
+ * @see armas_x_qrmult_w
+ * @ingroup lapack
  */
 int armas_x_qrmult(armas_x_dense_t * C,
                    const armas_x_dense_t * A,
@@ -425,21 +388,23 @@ int armas_x_qrmult(armas_x_dense_t * C,
     if (!cf)
         cf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_qrmult_w(C, A, tau, flags, &wb, cf) < 0)
-        return -1;
+    if ((err = armas_x_qrmult_w(C, A, tau, flags, &wb, cf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             cf->error = ARMAS_EMEMORY;
-            return -1;
+            return -ARMAS_EMEMORY;
         }
     } else
         wbs = ARMAS_NOWORK;
-    int stat = armas_x_qrmult_w(C, A, tau, flags, wbs, cf);
+
+    err = armas_x_qrmult_w(C, A, tau, flags, wbs, cf);
     armas_wrelease(&wb);
-    return stat;
+    return err;
 }
 
 
@@ -451,7 +416,7 @@ int armas_x_qrmult(armas_x_dense_t * C,
  *
  *    \f$ Q = H_1 H_2 . . . H_k \f$
  *
- * as returned by qrfactor().
+ * as returned by armas_x_qrfactor_w().
  *
  * @param[in,out] C
  *   On entry, the M-by-N matrix C or if flag bit *ARMAS_RIGHT* is set then N-by-M matrix
@@ -459,8 +424,8 @@ int armas_x_qrmult(armas_x_dense_t * C,
  *   set then C is overwritten by \f$ C Q \f$ or \f$ CQ^T \f$.
  *
  * @param[in] A
- *    QR factorization as returne by qrfactor() where the lower trapezoidal
- *    part holds the elementary reflectors.
+ *   QR factorization as returned by armas_x_qrfactor_w() where the lower trapezoidal
+ *   part holds the elementary reflectors.
  *
  * @param[in] tau
  *   The scalar factors of the elementary reflectors.
@@ -469,19 +434,14 @@ int armas_x_qrmult(armas_x_dense_t * C,
  *   Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
  *
  * @param[in,out] wb
- *    Workspace buffer needed for computation. To compute size of the required
- *    space call the function with workspace bytes set to zero. Size of
- *    workspace is returned in `wb.bytes` and no other computation or parameter
- *    size checking is done and function returns with success.
+ *   Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *   immediately.
  *
  * @param conf
- *   Blocking configuration. Field LB defines blocking size. If it is zero
- *   unblocked invocation is assumed. Actual blocking size is adjusted
- *   to available workspace size and minimum of configured block size and
- *   block size implied by workspace is used.
+ *   Blocking configuration.
  *
- *  @retval 0  success
- *  @retval -1 error and `conf.error` set to last error
+ *  @retval  0 Success
+ *  @retval <0 Failure, `conf.error` set to last error
  *
  *  Last error codes returned
  *   - `ARMAS_ESIZE`  if n(C) != m(A) for C*op(Q) or m(C) != m(A) for op(Q)*C
@@ -489,7 +449,7 @@ int armas_x_qrmult(armas_x_dense_t * C,
  *   - `ARMAS_EWORK`  if workspace is less than required for unblocked computation
  *
  * Compatible with lapack.xORMQR
- * \ingroup lapack
+ * @ingroup lapack
  */
 int armas_x_qrmult_w(armas_x_dense_t * C,
                      const armas_x_dense_t * A,
@@ -508,7 +468,7 @@ int armas_x_qrmult_w(armas_x_dense_t * C,
 
     if (!C) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     env = armas_getenv();
@@ -523,20 +483,20 @@ int armas_x_qrmult_w(armas_x_dense_t * C,
 
     if (!A || !tau) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     // check sizes; A, tau return from armas_x_qrfactor()
     P = (flags & ARMAS_RIGHT) != 0 ? C->cols : C->rows;
     if (P != A->rows || armas_x_size(tau) != A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     lb = env->lb;
     wsmin = K * sizeof(DTYPE);
     if (!wb || (wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace
     if (lb > 0 && K > lb) {

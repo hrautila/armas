@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright (c) Harri Rautila, 2013-2020
 
 // This file is part of github.com/hrautila/armas library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -371,48 +371,8 @@ int blk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
 /**
  * @brief Multiply with orthogonal matrix Q from LQ factorization
  *
- * Multiply and replace C with Q*C or Q.T*C where Q is a real orthogonal matrix
- * defined as the product of k elementary reflectors.
- *
- *    Q = H(k)H(k-1)...H(1)
- *
- * as returned by lqfactor().
- *
- * @param[in,out] C
- *     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
- *     N-by-M matrix.  On exit C is overwritten by Q*C or Q.T*C.
- *     If bit RIGHT is set then C is  overwritten by C*Q or C*Q.T
- *
- * @param[in] A
- *     LQ factorization as returne by lqfactor() where the upper
- *     trapezoidal part holds the elementary reflectors.
- *
- * @param[in] tau
- *   The scalar factors of the elementary reflectors.
- *
- * @param[out] W
- *     Workspace matrix,  required size is returned by WorksizeMultQ().
- *
- * @param[in] flags
- *     Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
- *
- * @param[in,out] conf
- *     Blocking configuration. Field LB defines block sized. If it is zero
- *     unblocked invocation is assumed.
- *
- * @retval  0 Success
- * @retval -1 Error, `conf.error` holds error code
- * Compatible with lapack.DORMLQ
- *
- * #### Notes
- *   m(A) is number of elementary reflectors == A.rows
- *   n(A) is the order of the Q matrix == A.cols
- *
- * \cond
- *   LEFT : m(C) == n(A)
- *   RIGHT: n(C) == n(A)
- * \endcond
- * \ingroup lapack
+ * @see armas_x_lqmult_w
+ * @ingroup lapack
  */
 int armas_x_lqmult(armas_x_dense_t * C,
                    const armas_x_dense_t * A,
@@ -421,42 +381,43 @@ int armas_x_lqmult(armas_x_dense_t * C,
     if (!cf)
         cf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_lqmult_w(C, A, tau, flags, &wb, cf) < 0)
-        return -1;
+    if ((err = armas_x_lqmult_w(C, A, tau, flags, &wb, cf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             cf->error = ARMAS_EMEMORY;
-            return -1;
+            return -ARMAS_EMEMORY;
         }
     } else
         wbs = ARMAS_NOWORK;
 
-    int stat = armas_x_lqmult_w(C, A, tau, flags, wbs, cf);
+    err = armas_x_lqmult_w(C, A, tau, flags, wbs, cf);
     armas_wrelease(&wb);
-    return stat;
+    return err;
 }
 
 
 /**
  * @brief Multiply with orthogonal matrix Q from LQ factorization
  *
- * Multiply and replace C with Q*C or Q.T*C where Q is a real orthogonal matrix
- * defined as the product of k elementary reflectors.
+ * Multiply and replace C with \f$ Q*C \f$ or \f$ Q^T*C  \f$ where Q is a
+ * real orthogonal matrix defined as the product of k elementary reflectors.
  *
- *    Q = H(k)H(k-1)...H(1)
+ *    \f$ Q = H(k)H(k-1)...H(1) \f$
  *
- * as returned by armas_x_lqfactor().
+ * as returned by armas_x_lqfactor_w().
  *
  * @param[in,out] C
  *     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
- *     N-by-M matrix.  On exit C is overwritten by Q*C or Q.T*C.
- *     If bit RIGHT is set then C is  overwritten by C*Q or C*Q.T
+ *     N-by-M matrix.  On exit C is overwritten by \f$ Q*C or Q^T*C \f$.
+ *     If bit RIGHT is set then C is  overwritten by \f$ C*Q or C*Q^T. \f$
  *
  * @param[in] A
- *     LQ factorization as returned by lqfactor() where the upper
+ *     LQ factorization as returned by armas_x_lqfactor_w() where the upper
  *     trapezoidal part holds the elementary reflectors.
  *
  * @param[in] tau
@@ -465,18 +426,15 @@ int armas_x_lqmult(armas_x_dense_t * C,
  * @param[in] flags
  *     Indicators. Valid indicators *ARMAS_LEFT*, *ARMAS_RIGHT*, *ARMAS_TRANS*
  *
- * @param[out] W
- *    Workspace buffer needed for computation. To compute size of the required space call 
- *    the function with workspace bytes set to zero. Size of workspace is returned in 
- *    `wb.bytes` and no other computation or parameter size checking is done and function
- *    returns with success.
+ * @param[out] wb
+ *    Workspace buffer needed for computation. If *wb.bytes* is zero then the
+ *    required workspace size is computed and returned immediately.
  *
  * @param[in,out] conf
- *     Blocking configuration. Field LB defines block sized. If it is zero
- *     unblocked invocation is assumed.
+ *     Blocking configuration.
  *
  * @retval  0 Success
- * @retval -1 Error, `conf.error` holds error code
+ * @retval <0 Error, `conf.error` holds error code
  *
  *  Last error codes returned
  *   - `ARMAS_ESIZE`  if m(C) != n(A) for C*op(Q) or n(C) != n(A) for op(Q)*C
@@ -485,15 +443,15 @@ int armas_x_lqmult(armas_x_dense_t * C,
  *
  * Compatible with lapack.DORMLQ
  *
- * #### Notes
+ * Notes
  *   m(A) is number of elementary reflectors == A.rows
  *   n(A) is the order of the Q matrix == A.cols
  *
- * \cond
+ * @cond
  *   LEFT : m(C) == n(A)
  *   RIGHT: n(C) == n(A)
- * \endcond
- * \ingroup lapack
+ * @endcond
+ * @ingroup lapack
  */
 int armas_x_lqmult_w(armas_x_dense_t * C,
                      const armas_x_dense_t * A,

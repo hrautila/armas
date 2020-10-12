@@ -111,22 +111,22 @@ void gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
 
 
 /**
- * \brief Apply Givens rotation (c, s) to rows of A.
+ * @brief Apply Givens rotation (c, s) to rows of A.
  *
- * \param A
+ * @param A
  *      Target matrix
- * \param c, s
+ * @param c, s
  *      Givens rotation paramers
- * \param r1
+ * @param r1
  *      Index to first row
- * \param r2
+ * @param r2
  *      Index to second row
- * \param col
+ * @param col
  *      Start column
- * \param ncol
+ * @param ncol
  *      Number of columns 
  *
- * \ingroup lapack givens
+ * @ingroup lapack
  */
 void armas_x_gvleft(armas_x_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
                     int col, int ncol)
@@ -153,20 +153,20 @@ void armas_x_gvleft(armas_x_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
 /**
  * @brief Apply Givens rotation (c, s) to columns of A.
  *
- * @param A
+ * @param[out] A
  *      Target matrix
- * @param c, s
+ * @param[in] c, s
  *      Givens rotation paramers
- * @pparam c1
+ * @param[in] c1
  *      Index to first column
- * @param c2
+ * @param[in] c2
  *      Index to second column
- * @param row
+ * @param[in] row
  *      Start row
- * @param nrow
+ * @param[in] nrow
  *      Number of rows
  *
- * @ingroup lapack givens
+ * @ingroup lapack
  */
 void armas_x_gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
                      int row, int nrow)
@@ -201,21 +201,21 @@ void armas_x_gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
  *    \f$ P = P_{k-1}...P_1 P_0,     P = P_0 *P_1...P_{k-1} \f$
  *
  * where \f$ P_n \f$ is plane rotation defined by 2x2 matrix
- *
+ *```txt
  *     P(n) = ( c(n), s(n) )
  *            (-s(n), c(n) )
- *
+ *```
  * Left/right is indicated with flags parameter.
  *
- * @param A [in,out]
+ * @param [in,out] A
  *      Target matrix
- * @nparam start [in]
+ * @param [in] start
  *      Start row (left update) or column (right update)
- * @param S, C [in]
+ * @param[in] S, C
  *      Rotation parameters
- * @param nrot [in]
+ * @param[in] nrot
  *      Number of rotation to apply.
- * @param flags [in]
+ * @param[in] flags
  *      Select from left (ARMAS_LEFT) or right (ARMAS_RIGHT). Or with direction
  *      flag backward (ARMAS_BACKWARD)  or forward (ARMAS_FORWARD). Forward is
  *      default direction for updates.
@@ -223,7 +223,7 @@ void armas_x_gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
  *      Number of rotation applied, min(nrot, A->rows-start) for left and
  *      min(nrot, A->cols-start) for right.
  *
- * @ingroup lapack givens
+ * @ingroup lapack
  */
 int armas_x_gvupdate(armas_x_dense_t * A, int start,
                      armas_x_dense_t * C, armas_x_dense_t * S, int nrot,
@@ -274,15 +274,16 @@ int armas_x_gvupdate(armas_x_dense_t * A, int start,
 }
 
 
-/*
- * \brief Rotate vectors
+/**
+ * @brief Rotate vectors
  *
  *  Computes
- *
+ *```txt
  *    (X^T) = G(c,s)*(X^T)   or (X Y) = (X Y)*G(c,s)
  *    (Y^T)          (Y^T)
- *
+ *```
  *  Assumes len(X) == len(Y).
+ * @ingroup lapackaux
  */
 int armas_x_gvrot_vec(armas_x_dense_t * X, armas_x_dense_t * Y, DTYPE c,
                       DTYPE s)

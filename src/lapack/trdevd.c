@@ -27,14 +27,10 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // -----------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
 #include "auxiliary.h"
-//! \endcond
-
-
 
 /*
  * \brief Implicit symmetric QR iteration  (Golub algorithm 8.3.3)
@@ -168,26 +164,9 @@ int armas_x_trdevd_qr(armas_x_dense_t * D, armas_x_dense_t * E,
 }
 
 /**
- * \brief Compute eigenvalues of a symmetric tridiagonal matrix T.
- *
- * Computes all eigenvalues and, optionally, eigenvectors of a symmetric
- * tridiagonal matrix T.
- *
- * \param[in,out] D
- *      On entry, the diagonal elements of B. On exit, the eigenvalues
- *      of T in inreasing order.
- * \param[in] E
- *      On entry, the offdiagonal elements of T. On exit, E is destroyed.
- * \param[in,out] V
- *      On entry, initial orthogonal matrix of eigenvectors. On exit,
- *      updated eigenvectors.
- * \param[in] flags
- *      Indicators *ARMAS_WANTV*
- * \param[in,out] conf
- *      Configuration block.
- * \retval  0 Success
- * \retval -1 Error, `conf.error` holds error code.
- * \ingroup lapack
+ * @brief Compute eigenvalues of a symmetric tridiagonal matrix T.
+ * @see armas_x_trdeigen_w
+ * @ingroup lapack
  */
 int armas_x_trdeigen(armas_x_dense_t * D,
                      armas_x_dense_t * E,
@@ -196,9 +175,10 @@ int armas_x_trdeigen(armas_x_dense_t * D,
     if (!conf)
         conf = armas_conf_default();
 
+    int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_trdeigen_w(D, E, V, flags, &wb, conf) < 0)
-        return -1;
+    if ((err = armas_x_trdeigen_w(D, E, V, flags, &wb, conf)) < 0)
+        return err;
 
     wbs = &wb;
     if (wb.bytes > 0) {
@@ -209,37 +189,36 @@ int armas_x_trdeigen(armas_x_dense_t * D,
     } else
         wbs = ARMAS_NOWORK;
 
-    int stat = armas_x_trdeigen_w(D, E, V, flags, wbs, conf);
+    err = armas_x_trdeigen_w(D, E, V, flags, wbs, conf);
     armas_wrelease(&wb);
-    return stat;
+    return err;
 }
 
 /**
- * \brief Compute eigenvalues of a symmetric tridiagonal matrix T.
+ * @brief Compute eigenvalues of a symmetric tridiagonal matrix T.
  *
  * Computes all eigenvalues and, optionally, eigenvectors of a symmetric
  * tridiagonal matrix T.
  *
- * \param[in,out] D
- *      On entry, the diagonal elements of B. On exit, the eigenvalues
- *      of T in inreasing order.
- * \param[in] E
- *      On entry, the offdiagonal elements of T. On exit, E is destroyed.
- * \param[in,out] V
- *      On entry, initial orthogonal matrix of eigenvectors. On exit,
- *      updated eigenvectors.
- * \param[in] flags
- *      Indicators *ARMAS_WANTV*
- * \param[out] wb
- *      Workspace of size 2*N if eigenvector wanted. If eigenvectors are not 
- *      wanted call with constant *ARMAS_NOWORK*. If eigenvector wanted and called
- *      with wb.bytes set to zero size of workspace is returned in wb.bytes and function
- *      returns with success.
- * \param[in,out] conf
- *      Configuration block.
+ * @param[in,out] D
+ *    On entry, the diagonal elements of B. On exit, the eigenvalues
+ *    of T in inreasing order.
+ * @param[in] E
+ *    On entry, the offdiagonal elements of T. On exit, E is destroyed.
+ * @param[in,out] V
+ *    On entry, initial orthogonal matrix of eigenvectors. On exit,
+ *    updated eigenvectors.
+ * @param[in] flags
+ *    Indicators *ARMAS_WANTV*
+ * @param[out] wb
+ *    Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *    immediately.
  *
- * \retval  0 Success
- * \retval -1 Error, `conf.error` holds error code.
+ * @param[in,out] conf
+ *    Configuration block.
+ *
+ * @retval  0 Success
+ * @retval <0 Error, `conf.error` holds error code.
  *
  * Last error codes:
  *   - ARMAS_EINVAL if D or E null or V null when flags ARMAS_WANTV set.
@@ -248,7 +227,7 @@ int armas_x_trdeigen(armas_x_dense_t * D,
  *   - ARMAS_EWORK  if eigenvectors wanted and workspace less than 2*len(D) elements.
  *   - ARMAS_ECONVERGE if algorigthm does not converge
  *
- * \ingroup lapack
+ * @ingroup lapack
  */
 int armas_x_trdeigen_w(armas_x_dense_t * D,
                        armas_x_dense_t * E,

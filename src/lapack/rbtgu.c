@@ -178,13 +178,16 @@ int armas_x_update2_rbt_descend(
  *   Partial recursive butterfly matrix
  * @param[in,out] conf
  *   Configuration block.
- *
+ *```txt
  *   U<n> * (U0<n/2>   0   ) (A00 A01)  (V0<n/2>    0   ) * V<n>
  *          (   0   U1<n/2>) (A10 A11)  (   0    V1<n/2>)
- * 
+ *
  *   U<n> * (U0<n/2>*A00*V0<n/2>  U0<n/2>*A01*V1<n/2>) * V<n>
  *          (U1<n/2>*A10*V0<n/2>  U1<n/2>*A11*V1<n/2>)
- * 
+ *```
+ *  @retval  0  Success
+ *  @retval <0  Failure
+ *  @ingroup lapack
  */
 int armas_x_update2_rbt(armas_x_dense_t * A,
                         armas_x_dense_t * U, armas_x_dense_t * V,
@@ -203,7 +206,7 @@ int armas_x_update2_rbt(armas_x_dense_t * A,
         && U->cols == V->cols && U->rows >= A->rows;
     if (!ok) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
 
     armas_x_update2_rbt_descend(A, U, V, Nd, conf);

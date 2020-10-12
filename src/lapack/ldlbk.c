@@ -8,8 +8,6 @@
 //! \file
 //! Symmetric matrix factorization
 
-//! \ingroup lapack
-
 #include "dtype.h"
 #include "dlpack.h"
 
@@ -27,50 +25,19 @@
 #if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
 // --------------------------------------------------------------------------
 
-//! \cond
 #include "matrix.h"
 #include "internal.h"
 #include "internal_lapack.h"
-//! \endcond
 
 #ifndef ARMAS_BLOCKING_MIN
 #define ARMAS_BLOCKING_MIN 32
 #endif
 
 /**
- * \brief Compute LDL^T factorization of real symmetric matrix.
+ * @brief Compute \f$ LDL^T \f$ factorization of real symmetric matrix.
  *
- * Computes of a real symmetric matrix A using Bunch-Kauffman pivoting
- * method.The form of factorization is
- *
- *    \f$ A = LDL^T \f$ or \f$ A = UDU^T \f$
- *
- * where L (or U) is product of permutation and unit lower (or upper)
- * triangular matrix and D is block diagonal symmetric matrix with 1x1
- * and 2x2 blocks.
- *
- * \param[in,out] A
- *      On entry, the N-by-N symmetric matrix A. If flags bit *ARMAS_LOWER*
- *      (or *ARMSA_UPPER*) is set then lower (or upper) triangular matrix
- *      and strictly upper (or lower) part is not accessed. On exit, the
- *      block diagonal matrix D and lower (or upper) triangular product
- *      matrix L (or U).
- *  \param[in] W
- *      Workspace, size as returned by `bkfactor_work()`.
- *  \param[out] P
- *      Pivot vector. On exit details of interchanges and the block
- *      structure of D. If \f$ P[k] > 0 \f$ then \f$ D[k,k] \f$ is 1x1 and
- *      rows and columns k and \f$ P[k]-1 \f$  were changed. If
- *      \f$ P[k] == P[k+1] < 0 \f$ then \f$ D[k,k] \f$ is 2x2. If A is
- *      lower then rows and columns \f$ k+1,  P[k]-1 \f$ were changed. And
- *      if A is upper then rows and columns \f$ k, P[k]-1 \f$ were changed.
- * \param[in] flags
- *      Indicator bits, *ARMAS_LOWER* or *ARMAS_UPPER*.
- *  \param[in,out] conf
- *      Optional configuration options..
- *
- *  Compatible with lapack.SYTRF.
- * \ingroup lapack
+ * @see armas_x_bkfactor_w
+ * @ingroup lapack
  */
 int armas_x_bkfactor(armas_x_dense_t * A,
                      armas_pivot_t * P, int flags, armas_conf_t * conf)
@@ -97,7 +64,7 @@ int armas_x_bkfactor(armas_x_dense_t * A,
 }
 
 /**
- * \brief Compute LDL^T factorization of real symmetric matrix.
+ * @brief Compute \f$ LDL^T \f$ factorization of real symmetric matrix.
  *
  * Computes of a real symmetric matrix A using Bunch-Kauffman pivoting method.
  * The form of factorization is 
@@ -114,7 +81,7 @@ int armas_x_bkfactor(armas_x_dense_t * A,
  *      and strictly upper (or lower) part is not accessed. On exit,
  *      the block diagonal matrix D and lower (or upper) triangular
  *      product matrix L (or U).
- *  \param[out] P
+ * @param[out] P
  *      Pivot vector. On exit details of interchanges and the block structure
  *      of D. If \f$ P[k] > 0 \f$ then \f$ D[k,k] \f$ is 1x1 and rows and
  *      columns k and \f$ P[k]-1 \f$ were changed. If \f$ P[k] == P[k+1] < 0 \f$
@@ -123,17 +90,19 @@ int armas_x_bkfactor(armas_x_dense_t * A,
  *      columns \f$ k, P[k]-1 \f$ were changed.
  * @param[in] flags
  *      Indicator bits, *ARMAS_LOWER* or *ARMAS_UPPER*.
- *  @param[in] wb
+ * @param[in] wb
  *      Workspace buffer. If non null and .bytes is zero then size (bytes)
  *      of workspace is calculated, saved into .bytes member and function
  *      returns immediately with success.
- *  @param[in,out] cf
+ * @param[in,out] conf
  *      Optional configuration options..
  *
  *  Unblocked algorithm is used if blocking configuration `env.lb` is zero
  *  or if `N < env.lb`.
  *
  *  Compatible with lapack.SYTRF.
+ * @retval  0  Success
+ * @retval <0  Failure
  * @ingroup lapack
  */
 int armas_x_bkfactor_w(armas_x_dense_t * A, armas_pivot_t * P,
@@ -149,7 +118,7 @@ int armas_x_bkfactor_w(armas_x_dense_t * A, armas_pivot_t * P,
 
     if (!A) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
 
     env = armas_getenv();
@@ -164,14 +133,14 @@ int armas_x_bkfactor_w(armas_x_dense_t * A, armas_pivot_t * P,
 
     if (A->rows != A->cols || A->cols != armas_pivot_size(P)) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     // get minumum bytes needed unblocked factorization
     lb = env->lb;
     wsmin = 2 * A->cols * sizeof(DTYPE);
     if ((wsz = armas_wbytes(wb)) < wsmin) {
         conf->error = ARMAS_EWORK;
-        return -1;
+        return -ARMAS_EWORK;
     }
     // adjust blocking factor for workspace;
     wsz /= sizeof(DTYPE);
@@ -209,30 +178,10 @@ int armas_x_bkfactor_w(armas_x_dense_t * A, armas_pivot_t * P,
     return 0;
 }
 
-
 /**
- * \brief Solve \f$ AX = B \f$ with symmetric real matrix A.
+ * @brief Solve \f$ AX = B \f$ with symmetric real matrix A.
  *
- * Solves a system of linear equations AX = B with a real symmetric matrix A
- * using the factorization \f$ A = UDU^T \f$ or \f$ A = LDL^T \f$ computed
- * by `bkfactor()`.
- *
- * @param[in,out] B
- *      On entry, right hand side matrix B. On exit, the solution matrix X.
- * @param[in] A
- *      Block diagonal matrix D and the multipliers used to compute factor U
- *      (or L) as returned by `bkfactor()`.
- * @param[in] W
- *      Workspace, not used at the moment.
- * @param[in] P
- *      Block structure of matrix D and details of interchanges.
- * @param[in] flags
- *      Indicator bits, *ARMAS_LOWER* or *ARMAS_UPPER*.
- * @param[in,out] conf
- *      Optional configuration options..
- *
- * Currently only unblocked algorightm implemented.
- * Compatible with lapack.SYTRS.
+ * @see armas_x_bksolve_w
  * @ingroup lapack
  */
 int armas_x_bksolve(armas_x_dense_t * B, const armas_x_dense_t * A,
@@ -243,13 +192,13 @@ int armas_x_bksolve(armas_x_dense_t * B, const armas_x_dense_t * A,
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_bksolve_w(B, A, P, flags, &wb, conf) < 0)
-        return -1;
+    if ((err = armas_x_bksolve_w(B, A, P, flags, &wb, conf)) < 0)
+        return err;
     wbs = &wb;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
             conf->error = ARMAS_EMEMORY;
-            return -1;
+            return -ARMAS_EMEMORY;
         }
     } else {
         wbs = ARMAS_NOWORK;
@@ -259,6 +208,31 @@ int armas_x_bksolve(armas_x_dense_t * B, const armas_x_dense_t * A,
     return err;
 }
 
+/**
+ * @brief Solve \f$ AX = B \f$ with symmetric real matrix A.
+ *
+ * Solves a system of linear equations AX = B with a real symmetric matrix A
+ * using the factorization \f$ A = UDU^T \f$ or \f$ A = LDL^T \f$ computed
+ * by `bkfactor()`.
+ *
+ * @param[in,out] B
+ *      On entry, right hand side matrix B. On exit, the solution matrix X.
+ * @param[in] A
+ *      Block diagonal matrix D and the multipliers used to compute factor U
+ *      (or L) as returned by `armas_x_bkfactor()`.
+ * @param[in] P
+ *      Block structure of matrix D and details of interchanges.
+ * @param[in] wb
+ *      Workspace, not used at the moment.
+ * @param[in] flags
+ *      Indicator bits, *ARMAS_LOWER* or *ARMAS_UPPER*.
+ * @param[in,out] conf
+ *      Optional configuration options..
+ *
+ * Currently only unblocked algorightm implemented.
+ * Compatible with lapack.SYTRS.
+ * @ingroup lapack
+ */
 int armas_x_bksolve_w(armas_x_dense_t * B, const armas_x_dense_t * A,
                       const armas_pivot_t * P, int flags,
                       armas_wbuf_t * wb, armas_conf_t * conf)
@@ -269,7 +243,7 @@ int armas_x_bksolve_w(armas_x_dense_t * B, const armas_x_dense_t * A,
 
     if (!A || !B) {
         conf->error = ARMAS_EINVAL;
-        return -1;
+        return -ARMAS_EINVAL;
     }
     if (wb && wb->bytes == 0) {
         // no need for workspace for time being;
@@ -278,7 +252,7 @@ int armas_x_bksolve_w(armas_x_dense_t * B, const armas_x_dense_t * A,
 
     if (A->cols != B->rows) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     // TODO: don't loose the const'ness of A and P for time being
     if (flags & ARMAS_LOWER) {
@@ -302,8 +276,6 @@ int armas_x_bksolve_w(armas_x_dense_t * B, const armas_x_dense_t * A,
     }
     return err;
 }
-
-
 #else
 #warning "Missing defines. No code!"
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */

@@ -28,11 +28,6 @@
 #include "internal_lapack.h"
 #include "partition.h"
 
-static inline
-int ws_qrtfactor(int M, int N, int lb)
-{
-    return lb > 0 ? lb * (N - lb) : N;
-}
 
 /*
  * Unblocked factorization.
@@ -149,65 +144,114 @@ int blk_qrtfactor(armas_x_dense_t * A, armas_x_dense_t * T,
     return 0;
 }
 
+/**
+ * @brief Compute QR factorization of a M-by-N matrix A = Q * R.
+ *
+ * @see armas_x_qrtfactor_w
+ * @ingroup lapack
+ */
+int armas_x_qrtfactor(armas_x_dense_t * A, armas_x_dense_t * T, armas_conf_t * conf)
+{
+    if (!conf)
+        conf = armas_conf_default();
 
+    int err;
+    armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
+    if ((err = armas_x_qrtfactor_w(A, T, &wb, conf)) < 0)
+        return err;
+
+    wbs = &wb;
+    if (wb.bytes > 0) {
+        if (!armas_walloc(&wb, wb.bytes)) {
+            conf->error = ARMAS_EMEMORY;
+            return -ARMAS_EMEMORY;
+        }
+    } else
+        wbs = ARMAS_NOWORK;
+
+    err = armas_x_qrtfactor_w(A, T, wbs, conf);
+    armas_wrelease(&wb);
+    return err;
+}
 
 /**
  * @brief Compute QR factorization of a M-by-N matrix A = Q * R.
  *
  * Arguments:
- *  A    On entry, the M-by-N matrix A, M >= N. On exit, upper triangular
- *       matrix R and the orthogonal matrix Q as product of elementary
- *       reflectors.
+ * @param[in, out] A
+ *   On entry, the M-by-N matrix A, M >= N. On exit, upper triangular
+ *   matrix R and the orthogonal matrix Q as product of elementary
+ *   reflectors.
  *
- *  T    On exit, block reflectors
+ * @param[out] T
+ *   On exit, block reflectors. The rows count of T is used as blocking
+ *   factor.
  *
- *  W    Workspace, N-by-lb matrix used for work space in blocked invocations. 
+ * @param[in,out] wb
+ *   Workspace. If *wb.bytes* is zero then size of required workspace in computed and returned
+ *   immediately. Size of the workspace depends on blocking factor. If reflector matrix
+ *   T is provided when workspace size is requested then the row count of T is used in
+ *   calculations. Otherwise blocking factor *env.lb* is used. (@see armas_getenv)
  *
- *  conf The blocking configuration. If nil then default blocking configuration
- *       is used. Member conf.LB defines blocking size of blocked algorithms.
- *       If it is zero then unblocked algorithm is used.
+ * @param conf
+ *   The blocking configuration.
  *
- * @returns:
- *      0 if succesfull, -1 otherwise
+ * @retval  0 Success
+ * @retval <0 Failure
  *
  * Additional information
  *
  *  Ortogonal matrix Q is product of elementary reflectors H(k)
  *
- *    Q = H(0)H(1),...,H(K-1), where K = min(M,N)
+ *   \f$ Q = H(0)H(1),...,H(K-1), where K = min(M,N) \f$
  *
  *  Elementary reflector H(k) is stored on column k of A below the diagonal with
  *  implicit unit value on diagonal entry. The matrix T holds Householder block
  *  reflectors.
  *
  *  Contents of matrix A after factorization is as follow:
- *
+ *```txt
  *    ( r  r  r  r  )   for M=6, N=4
  *    ( v1 r  r  r  )
  *    ( v1 v2 r  r  )
  *    ( v1 v2 v3 r  )
  *    ( v1 v2 v3 v4 )
  *    ( v1 v2 v3 v4 )
- *
+ *```txt
  *  where r is element of R, vk is element of H(k).
  *
  *  Compatible with lapack.xGEQRT
+ *  @ingroup lapack
  */
-int armas_x_qrtfactor(armas_x_dense_t * A, armas_x_dense_t * T,
-                      armas_x_dense_t * W, armas_conf_t * conf)
+int armas_x_qrtfactor_w(armas_x_dense_t * A, armas_x_dense_t * T,
+                        armas_wbuf_f * wb, armas_conf_t * conf)
 {
     armas_x_dense_t sT;
-    int wsmin, lb;
+    size_t wsmin, wsz = 0;
+    int lb;
     if (!conf)
         conf = armas_conf_default();
 
+    if (!A) {
+        conf->error = ARMAS_EINVAL;
+        return -ARMAS_EINVAL;
+    }
+
+    env = armas_getenv();
+    lb = T ? T->rows : env->lb;
+    if (wb && wb->bytes == 0) {
+        if (lb > 0 && A->cols > lb)
+            wb->bytes = lb * (A->cols - lb) * sizeof(DTYPE);
+        else
+            wb->bytes = A->cols * sizeof(DTYPE);
+        return 0;
+    }
     // must have: M >= N
     if (A->rows < A->cols || T->cols < A->cols) {
         conf->error = ARMAS_ESIZE;
-        return -1;
+        return -ARMAS_ESIZE;
     }
     // set blocking factor to number of rows in T
-    lb = T->rows;
     wsmin = ws_qrtfactor(A->rows, A->cols, lb);
     if (!W || armas_x_size(W) < wsmin) {
         conf->error = ARMAS_EWORK;
