@@ -102,9 +102,7 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 INPUT = \
   top_srcdir/docs/mainpage.dox \
-  top_srcdir/src/include/armas.h \
-  top_srcdir/src/include/matrix.h \
-  top_srcdir/src/include/sparse.h \
+  top_srcdir/src/include \
   top_srcdir/src/base \
   top_srcdir/src/blas \
   top_srcdir/src/io \
@@ -256,7 +254,7 @@ MAN_LINKS              = NO
 #---------------------------------------------------------------------------
 # Configuration options related to the XML output
 #---------------------------------------------------------------------------
-GENERATE_XML           = NO
+GENERATE_XML           = YES
 XML_OUTPUT             = xml
 XML_PROGRAMLISTING     = YES
 
