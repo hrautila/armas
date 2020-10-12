@@ -68,12 +68,18 @@ struct armas_ac_blas1;
 struct armas_ac_blas2;
 struct armas_ac_blas3;
 
+/**
+ * @brief Accelerator function arguments.
+ */
 union armas_ac_args {
     struct armas_ac_blas1 *blas1;
     struct armas_ac_blas2 *blas2;
     struct armas_ac_blas3 *blas3;
 };
 
+/**
+ * @brief Accelerator block definition.
+ */
 struct armas_ac_block {
     int row;
     int column;
@@ -98,6 +104,7 @@ int armas_ac_block_index(int n, int nblocks, int ntotal)
 
 #ifdef ARMAS_DTYPE_H
 /**
+ * @brief Accelerator BLAS level1 functio arguments.
  */
 struct armas_ac_blas1 {
     size_t tag;
@@ -110,6 +117,7 @@ struct armas_ac_blas1 {
 };
 
 /**
+ * @brief Accelerator BLAS level2 function arguments.
  */
 struct armas_ac_blas2 {
     size_t tag;
@@ -123,6 +131,7 @@ struct armas_ac_blas2 {
 };
 
 /**
+ * @brief Accelerator BLAS level3 function arguments.
  */
 struct armas_ac_blas3 {
     size_t tag;

@@ -137,7 +137,11 @@ enum armas_errors {
     ARMAS_ESINGULAR = 6,     ///< Singular matrix
     ARMAS_ENEGATIVE = 7,     ///< Negative value on diagonal
     ARMAS_EMEMORY = 8,       ///< Memory allocation failed
-    ARMAS_ECONVERGE = 9      ///< Algorithm does not converge
+    ARMAS_ECONVERGE = 9,     ///< Algorithm does not converge
+    ARMAS_ESVD_FACT = 10,    ///< Svd factorization failed
+    ARMAS_ESVD_LEFT = 11,    ///< Svd left eigenvector error
+    ARMAS_ESVD_RIGHT = 12,   ///< Svd right eigenvector error
+    ARMAS_ESVD_EIGEN = 13    ///< Svd bidiagonal eigenvalue error
 };
 
 enum armas_norms {
@@ -299,7 +303,7 @@ typedef struct armas_iostream armas_iostream_t;
 /**
  * @brief Initialize I/O stream
  *
- * @param[in, out] stream
+ * @param[in, out] ios
  *    On entry uninitialized iostream structure. On exit initialized stream.
  * @param[in] vt
  *    Virtual function table

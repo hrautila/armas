@@ -40,6 +40,7 @@ typedef struct armas_x_dense {
 
 /**
  * @brief Eigenvalue selection parameters
+ * @ingroup lapack
  */
 typedef struct armas_x_eigen_parameter {
     int ileft;    ///< Start index of half-open interval [ileft, iright)
@@ -124,8 +125,9 @@ extern int armas_x_json_dump(FILE *fp, const armas_x_dense_t *A, int flags);
 #define __ARMAS_INLINE extern inline
 #endif
 
-/*! @addtogroup matrix
- *  @{
+/**
+ * @addtogroup matrix
+ * @{
  */
 //! @brief Test if matrix is a vector.
 __ARMAS_INLINE
@@ -793,7 +795,9 @@ extern int armas_x_qrmult_w(
 extern int armas_x_qrsolve_w(
     armas_x_dense_t *B, const armas_x_dense_t *A, const armas_x_dense_t *tau, int flags, armas_wbuf_t *wrk, armas_conf_t *cf);
 
-extern int armas_x_qrtfactor(armas_x_dense_t *A, armas_x_dense_t *T, armas_x_dense_t *W, armas_conf_t *cf);
+extern int armas_x_qrtfactor(armas_x_dense_t *A, armas_x_dense_t *T, armas_conf_t *cf);
+
+extern int armas_x_qrtfactor_w(armas_x_dense_t *A, armas_x_dense_t *T, armas_wbuf_t *wb, armas_conf_t *cf);
 
 extern int armas_x_qrtmult(
     armas_x_dense_t *C, armas_x_dense_t *A, armas_x_dense_t *T, armas_x_dense_t *W, int flags, armas_conf_t *cf);

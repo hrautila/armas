@@ -22,11 +22,13 @@
 /**
  * @brief Partition A to 2 by 1 blocks.
  *
- *```txt
- *        AT
- *  A --> --
- *        AB
- *```
+ * Partition
+ *  \f$
+ *      A
+ *         \overset{nb}\rightarrow
+ *      \begin{pmatrix} A_T\\ \hline A_B \end{pmatrix}
+ *   \f$
+ *
  * @param[out] AT, AB Result blocks
  * @param[in]  A      Source matrix
  * @param[in]  nb     Initial block size for AT or AB
@@ -55,12 +57,20 @@ void mat_partition_2x1(armas_x_dense_t *AT, armas_x_dense_t *AB,
 /**
  * @brief Repartition 2 by 1 block to 3 by 1 block.
  *
- *```txt
- *           AT      A0            AT       A0
- * pBOTTOM: --  --> --   ; pTOP:   --  -->  A1
- *           AB      A1            AB       --
- *                   A2                     A2
- *```
+ * Repartition
+ * *ARMAS_PTOP*:
+ *  \f$
+ *     \begin{pmatrix} A_T \\ \hline A_B \end{pmatrix}
+ *        \overset{nb}\rightarrow
+ *     \begin{pmatrix} A_0 \\ A_1 \\ \hline A_2 \end{pmatrix}
+ *  , \quad \f$
+ * *ARMAS_PBOTTOM*:
+ *  \f$
+ *     \begin{pmatrix} A_T \\ \hline A_B \end{pmatrix}
+ *        \overset{nb}\rightarrow
+ *     \begin{pmatrix} A_0 \\ \hline A_1 \\ A_2 \end{pmatrix}
+ *  \f$
+ *
  * @param[in]  AT          Top bloack
  * @param[out] A0, A1, A2  Result blocks
  * @param[in]  A           Source matrix
@@ -96,12 +106,19 @@ void mat_repartition_2x1to3x1(armas_x_dense_t *AT, armas_x_dense_t *A0,
 /**
  * @brief Continue with 2 by 1 block from 3 by 1 block.
  *
- *```txt
- *           AT      A0            AT       A0
- * pBOTTOM: --  <--  A1   ; pTOP:   -- <--  --
- *           AB      --            AB       A1
- *                   A2                     A2
- *```
+ * *ARMAS_PTOP*:
+ *  \f$
+ *     \begin{pmatrix} A_0 \\ \hline A_1 \\ A_2 \end{pmatrix}
+ *        \rightarrow
+ *     \begin{pmatrix} A_T \\ \hline A_B \end{pmatrix}
+ *  , \quad \f$
+ * *ARMAS_PBOTTOM*:
+ *  \f$
+ *     \begin{pmatrix} A_0 \\ A_1 \\ \hline A_2 \end{pmatrix}
+ *        \rightarrow
+ *     \begin{pmatrix} A_T \\ \hline A_B \end{pmatrix}
+ *  \f$
+ *
  * @param[out] AT, AB      Result blocks
  * @param[in]  A0, A1      Source blocks
  * @param[in]  A           Source matrix
@@ -129,10 +146,15 @@ void mat_continue_3x1to2x1(armas_x_dense_t *AT, armas_x_dense_t *AB,
 
 /**
  * @brief Partition A to 1 by 2 blocks.
+ * \f$
+ *   A
+ *     \overset{nb}\rightarrow
+ *   \begin{pmatrix}\begin{array}{c|c} A_L & A_R \end{array}\end{pmatrix}
+ * \f$
  *
- *```txt
+ * @cond
  *  A -->  AL | AR
- *```
+ * @endcond
  * @param[out] AL, AR Result blocks
  * @param[in]  A      Source matrix
  * @param[in]  nb     Initial block size for AL or AR
@@ -161,11 +183,31 @@ void mat_partition_1x2(armas_x_dense_t *AL, armas_x_dense_t *AR,
 /**
  * @brief Repartition 1 by 2 blocks to 1 by 3 blocks.
  *
+ * *ARMAS_PLEFT* \f$
+ *   \begin{pmatrix}\begin{array}{c|c}
+ *     A_L & A_R
+ *   \end{array}\end{pmatrix}
+ *      \overset{nb}\rightarrow
+ *   \begin{pmatrix}\begin{array}{cc|c}
+ *     A_0 & A_1 & A_2
+ *   \end{array}\end{pmatrix} , \quad
+ * \f$
+ * *ARMAS_PRIGHT* \f$
+ *   \begin{pmatrix}\begin{array}{c|c}
+ *     A_L & A_R
+ *   \end{array}\end{pmatrix}
+ *      \overset{nb}\rightarrow
+ *   \begin{pmatrix}\begin{array}{c|cc}
+ *     A_0 & A_1 & A_2
+ *   \end{array}\end{pmatrix}
+ * \f$
+ * @cond
  *```txt
  * pRIGHT: AL | AR  -->  A0 | A1 A2
  * pLEFT:  AL | AR  -->  A0 A1 | A2
  *```
- * @param[in]  AL          Left bloack
+ * @endcond
+ * @param[in]  AL          Left block
  * @param[out] A0, A1, A2  Result blocks
  * @param[in]  A           Source matrix
  * @param[in]  nb          Block size for A1
@@ -198,12 +240,32 @@ void mat_repartition_1x2to1x3(armas_x_dense_t *AL, armas_x_dense_t *A0,
 }
 
 /**
- * @brief Repartition 1 by 2 blocks to 1 by 3 blocks.
+ * @brief Redefine 1 by 2 blocks from 1 by 3 blocks.
  *
- *```txt
+ * *ARMAS_PLEFT* \f$
+ *   \begin{pmatrix}\begin{array}{c|cc}
+ *     A_0 & A_1 & A_2
+ *   \end{array}\end{pmatrix}
+ *      \rightarrow
+ *   \begin{pmatrix}\begin{array}{c|c}
+ *     A_L & A_R
+ *   \end{array}\end{pmatrix}
+ *    , \quad
+ * \f$
+ * *ARMAS_PRIGHT* \f$
+ *   \begin{pmatrix}\begin{array}{cc|c}
+ *     A_0 & A_1 & A_2
+ *   \end{array}\end{pmatrix}
+ *      \rightarrow
+ *   \begin{pmatrix}\begin{array}{c|c}
+ *     A_L & A_R
+ *   \end{array}\end{pmatrix}
+ * \f$
+ * @cond
  * pRIGHT: AL | AR  --  A0 A1 | A2
  * pLEFT:  AL | AR  <--  A0 | A1 A2
- *```
+ * @endcond
+ *
  * @param[out] AL, AR      Result blocks
  * @param[in]  A0, A1      Source blocks
  * @param[in]  A           Source matrix
@@ -231,11 +293,15 @@ void mat_continue_1x3to1x2(armas_x_dense_t *AL, armas_x_dense_t *AR,
 /**
  * @brief Partition A to 2 by 2 blocks.
  *
- *```txt
- *           ATL | ATR
- *  A  -->   =========
- *           ABL | ABR
- *```
+ * \f$
+ *     A
+ *       \overset{mb,nb}\rightarrow
+ *    \begin{pmatrix}\begin{array}{c|c}
+ *       A_{TL} & A_{TR} \\
+ *       \hline
+ *       A_{BL} & A_{BR}
+ *    \end{array}\end{pmatrix}
+ * \f$
  * @param[out] ATL, ATR, ABL, ABR Result blocks
  * @param[in]  A      Source matrix
  * @param[in]  mb     Rows in initial block ATL or ABR
@@ -273,13 +339,28 @@ void mat_partition_2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
 /**
  * @brief Repartition 2 by 2 blocks to 3 by 3 blocks.
  *
- *```txt
+ * \f$
+ *      \begin{pmatrix}\begin{array}{c|c}
+ *      A_{TL} & A_{TR} \\
+ *      \hline
+ *      A_{BL} & A_{BR}
+ *      \end{array}\end{pmatrix}
+ *         \overset{nb}\rightarrow
+ *      \begin{pmatrix}\begin{array}{c|cc}
+ *      A_{00} & A_{01} & A_{02}\\
+ *      \hline
+ *      A_{10} & A_{11} & A_{12}\\
+ *      A_{20} & A_{21} & A_{22}\\
+ *      \end{array}\end{pmatrix}
+ * \f$
+ * @cond
  *                      A00 | A01 : A02
  *   ATL | ATR   nb     ===============
  *   =========   -->    A10 | A11 : A12
  *   ABL | ABR          ---------------
  *                      A20 | A21 : A22
- *```
+ * @endcond
+ *
  * @param[in]  ATL           Top block
  * @param[out] A00, A01, A02 Result block (may be null pointer except A00)
  * @param[out] A10, A11, A12 Result block (may be null pointer except A11)
@@ -289,7 +370,7 @@ void mat_partition_2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
  * @param[in]  direction     Blocking direction ARMAS_PTOPLEFT or ARMAS_PBOTTOMRIGHT.
  *
  * Blocks ATR, ABL, ABR implicitely defined by ATL and A.
- * It is valid to have either the strictly upper or lower submatrices as nil values.
+ * All but diagonal matrices may be null pointers.
  */
 __ARMAS_INLINE
 void mat_repartition_2x2to3x3(armas_x_dense_t *ATL,
@@ -353,13 +434,28 @@ void mat_repartition_2x2to3x3(armas_x_dense_t *ATL,
 /**
  * @brief Redefine 2 by 2 blocks from 3 by 3 partition.
  *
- *```txt
+ * \f$
+ *      \begin{pmatrix}\begin{array}{cc|c}
+ *      A_{00} & A_{01} & A_{02}\\
+ *      A_{10} & A_{11} & A_{12}\\
+ *      \hline
+ *      A_{20} & A_{21} & A_{22}\\
+ *      \end{array}\end{pmatrix}
+ *          \rightarrow
+ *      \begin{pmatrix}\begin{array}{c|c}
+ *      A_{TL} & A_{TR} \\
+ *      \hline
+ *      A_{BL} & A_{BR}
+ *      \end{array}\end{pmatrix}
+ * \f$
+ * @cond
  *                      A00 : A01 | A02
  *   ATL | ATR   nb     ---------------
  *   =========   <--    A10 : A11 | A12
  *   ABL | ABR          ===============
  *                      A20 : A21 | A22
- *```
+ * @endcond
+ *
  * @param[out] ATL, ATR, ABL, ABR Result blocks
  * @param[in]  A00, A11, A22      Rows in initial block ATL or ABR
  * @param[in]  A                  Source matrix
@@ -402,11 +498,11 @@ void mat_continue_3x3to2x2(armas_x_dense_t *ATL, armas_x_dense_t *ATR,
 /**
  * @brief Merge 1 by 1 block from 2 by 1 block.
  *
- *```txt
- *          AT
- * ABKL <-- --
- *          AB
- *```
+ * Merge block from two adjacent blocks.
+ *  \f$
+ *    \begin{pmatrix} A_T\\ \hline A_B \end{pmatrix} \rightarrow A_{blk}
+ *  \f$
+ *
  * @param[out] ABLK   Result block
  * @param[in]  AT, AB Source blocks
  */
@@ -430,9 +526,13 @@ void mat_merge2x1(armas_x_dense_t *ABLK, armas_x_dense_t *AT, armas_x_dense_t *A
 /**
  * @brief Merge 1 by 1 block from 1 by 2 block.
  *
- *```txt
+ * Merge block from two adjacent blocks.
+ *   \f$
+ *       \begin{pmatrix}\begin{array}{c|c} A_L & A_R \end{array}\end{pmatrix} \rightarrow  A_{blk}
+ *   \f$
+ * @cond
  * ABLK <--  AL | AR
- *```
+ * @endcond
  * @param[out] ABLK   Result block
  * @param[in]  AL, AR Source blocks
  */
@@ -456,11 +556,13 @@ void mat_merge1x2(armas_x_dense_t *ABLK, armas_x_dense_t *AL, armas_x_dense_t *A
 /**
  * @brief Partition x to 2 by 1 blocks.
  *
- *```txt 
- *        xT
- *  x --> --
- *        xB
- *```
+ * Partition
+ *  \f$
+ *    x
+ *      \overset{nb}\rightarrow
+ *    \begin{pmatrix} x_T\\ \hline x_B \end{pmatrix}
+ *  \f$
+ *
  * @param[out] xT, xB Result subvector
  * @param[in]  x      Source vector
  * @param[in]  nb     Initial length of xT or xB
@@ -490,12 +592,26 @@ void vec_partition_2x1(armas_x_dense_t *xT, armas_x_dense_t *xB,
 /**
  * @brief Repartition 2 by 1 block to 3 by 1 block.
  *
- *```txt
+ * *ARMAS_PTOP*:
+ *  \f$
+ *     \begin{pmatrix} x_T \\ \hline x_B \end{pmatrix}
+ *       \overset{nb}\rightarrow
+ *     \begin{pmatrix} x_0 \\ x_1 \\ \hline x_2 \end{pmatrix}
+ *  , \quad
+ *  \f$
+ * *ARMAS_PBOTTOM*:
+ *  \f$
+ *     \begin{pmatrix} x_T \\ \hline x_B \end{pmatrix}
+ *        \overset{nb}\rightarrow
+ *     \begin{pmatrix} x_0 \\ \hline x_1 \\ x_2 \end{pmatrix}
+ *  \f$
+ * @cond
  *           xT      x0            xT       x0
  * pBOTTOM: --  --> --   ; pTOP:   --  -->  x1
  *           xB      x1            xB       --
  *                   x2                     x2
- *```
+ * @endcond
+ *
  * @param[in]  xT          Top subvector
  * @param[out] x0, x1, x2  Result subvectors
  * @param[in]  x           Source vector
@@ -533,12 +649,26 @@ void vec_repartition_2x1to3x1(armas_x_dense_t *xT, armas_x_dense_t *x0,
 /**
  * @brief Continue with 2 by 1 block from 3 by 1 block.
  *
- *```txt
+ * *ARMAS_PTOP*:
+ *  \f$
+ *     \begin{pmatrix} x_0 \\ \hline x_1 \\ x_2 \end{pmatrix}
+ *       \rightarrow
+ *     \begin{pmatrix} x_T \\ \hline x_B \end{pmatrix}
+ *  , \quad
+ *  \f$
+ * *ARMAS_PBOTTOM*:
+ *  \f$
+ *     \begin{pmatrix} x_0 \\ x_1 \\ \hline x_2 \end{pmatrix}
+ *        \rightarrow
+ *     \begin{pmatrix} x_T \\ \hline x_B \end{pmatrix}
+ *  \f$
+ * @cond
  *           xT      x0            xT       x0
  * pBOTTOM: --  <--  x1   ; pTOP:   -- <--  --
  *           xB      --            xB       x1
  *                   x2                     x2
- *```
+ * @endcond
+ *
  * @param[out] xT, xB     Result subvectors
  * @param[in]  x0, x1     Source subvectors
  * @param[in]  x          Source vector
