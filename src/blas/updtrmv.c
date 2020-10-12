@@ -118,15 +118,16 @@ void armas_x_mvupdate_trm_unsafe(
  * @brief General triangular/trapezoidial matrix rank update.
  *
  * Computes 
- *    - \f$ A = A + alpha \times X Y^T \f$
+ *    - \f$ A = beta \times A + alpha \times x y^T \f$
  *
  * where A is upper (lower) triangular or trapezoidial matrix as defined with
  * flag bits *ARMAS_UPPER* (*ARMAS_LOWER*).
  *
+ * @param[in]      beta scalar multiplier
  * @param[in,out]  A target matrix
  * @param[in]      alpha scalar multiplier
- * @param[in]      X source vector
- * @param[in]      Y source vector
+ * @param[in]      x source vector
+ * @param[in]      y source vector
  * @param[in]      flags flag bits
  * @param[in]      conf  configuration block
  *

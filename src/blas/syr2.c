@@ -107,15 +107,16 @@ void update_syr2_recursive(
  * @brief Symmetric matrix rank-2 update.
  *
  * Computes
- *    -\f$ A = A + alpha \times X Y^T + alpha \times Y X^T \f$
+ *    \f$ beta \times A = A + alpha \times x y^T + alpha \times y x^T \f$
  *
  * where A is symmetric matrix stored in lower (upper) triangular part of matrix A.
  * If flag *ARMAS_LOWER* (*ARMAR_UPPER*) is set matrix is store in lower (upper) triangular
  * part of A and upper (lower) triangular part is not referenced.
  *
+ * @param[in]      beta scalar multiplier
  * @param[in,out]  A target matrix
  * @param[in]      alpha scalar multiplier
- * @param[in]      X, Y source vector
+ * @param[in]      x, y source vector
  * @param[in]      flags flag bits
  * @param[in]      conf configuration block
  *

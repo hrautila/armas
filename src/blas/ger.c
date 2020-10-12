@@ -205,12 +205,13 @@ void armas_x_mvupdate_unsafe(
 /**
  * @brief General matrix rank update.
  *
- * Computes  \f$ A = A + alpha \times X Y^T \f$
+ * Computes  \f$ A = \beta A + \alpha \times X Y^T \f$
  *
+ * @param[in]      beta scalar multiplier
  * @param[in,out]  A target matrix
- * @param[in]      X source vector
- * @param[in]      Y source vector
  * @param[in]      alpha scalar multiplier
+ * @param[in]      x source vector
+ * @param[in]      y source vector
  * @param[in]      conf  configuration block
  *
  * @ingroup blas

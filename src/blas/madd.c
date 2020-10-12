@@ -62,6 +62,7 @@ void vec_add(armas_x_dense_t *X,  const DTYPE alpha, int N)
  * @param [in,out] A matrix
  * @param [in] alpha constant
  * @param [in] flags flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
+ * @param [in,out] cf Configuration block.
  * 
  * @ingroup matrix
  */

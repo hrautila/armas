@@ -163,16 +163,16 @@ void armas_x_mvmult_sym_unsafe(
  * @brief Symmetric matrix-vector multiply.
  *
  * Computes
- *    - \f$ Y = alpha \times A X + beta \times Y \f$
+ *    \f$ y = beta \times y + alpha \times A x \f$
  *
  * Matrix A elements are stored on lower (upper) triangular part of the matrix
  * if flag bit *ARMAS_LOWER* (*ARMAS_UPPER*) is set.
  *
  *  @param[in]      beta scalar
- *  @param[in,out]  Y   target and source vector
+ *  @param[in,out]  y   target and source vector
  *  @param[in]      alpha scalar
  *  @param[in]      A   symmetrix lower (upper) matrix
- *  @param[in]      X   source operand vector
+ *  @param[in]      x   source operand vector
  *  @param[in]      flags  flag bits
  *  @param[in]      conf   configuration block
  *

@@ -37,11 +37,18 @@
  * If flag *ARMAS_LOWER* (*ARMAR_UPPER*) is set matrix is store in lower (upper) triangular
  * part of A and upper (lower) triangular part is not referenced.
  *
- * @param[in,out]  A target matrix
- * @param[in]      alpha scalar multiplier
- * @param[in]      X source vector
- * @param[in]      flags flag bits 
- * @param[in]      conf configuration block
+ * @param[in] beta
+ *  Scalar multiplier
+ * @param[in,out]  A
+ *  Target matrix
+ * @param[in] alpha
+ *  Scalar multiplier
+ * @param[in] x
+ *  Source vector
+ * @param[in] flags
+ *  Flag bits
+ * @param[in] conf
+ *  Configuration block
  *
  * @retval  0  Success
  * @retval <0  Failed

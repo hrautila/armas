@@ -276,7 +276,7 @@ void madd_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t
  *      to first matrix.
  * @param [in] flags
  *      Indicator flags for matrix shape, ARMAS_UPPER, ARMAS_LOWER or ARMAS_TRANS
- * @param [in] conf
+ * @param [in] cf
  *      Configuration block
  * @retval 0 OK
  * @retval <0 Error

@@ -106,10 +106,12 @@ int armas_x_copy(armas_x_dense_t *Y, const armas_x_dense_t *X, armas_conf_t *con
  *     Source matrix or vector
  * @param [in] flags
  *     If ARMAS_TRANS then B^T is copied.
+ * @param [in,out] cf
+ *     Configuration block.
  *
- * @retval 0 Success
- * @retval -1 Fail, cf->error holds error code
- * 
+ * @retval  0 Success
+ * @retval <0 Failure, *cf.error* holds error code
+ *
  * @ingroup matrix
  */
 int armas_x_mcopy(armas_x_dense_t *A, const armas_x_dense_t *B, int flags, armas_conf_t *cf)

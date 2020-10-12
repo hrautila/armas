@@ -120,6 +120,8 @@ int armas_x_scale(armas_x_dense_t *x, const DTYPE alpha, armas_conf_t *conf)
  *      scaling constant
  * @param [in] flags
  *      flag bits (ARMAS_UPPER,ARMAS_LOWER,ARMAS_UNIT)
+ * @param[in,out] cf
+ *      Configuration block.
  *
  * @ingroup matrix
  */

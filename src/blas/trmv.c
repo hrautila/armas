@@ -301,7 +301,7 @@ void armas_x_mvmult_trm_unsafe(
  * where A is upper (lower) triangular matrix defined with flag bits *ARMAS_UPPER*
  * (*ARMAS_LOWER*).
  *
- * @param[in,out] X target and source vector
+ * @param[in,out] x target and source vector
  * @param[in]     alpha scalar multiplier
  * @param[in]     A matrix
  * @param[in]     flags operand flags
