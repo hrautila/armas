@@ -7,7 +7,8 @@ Need autoconf, automake and libtool packages.
 
 ```sh
    $ ./bootstrap.sh
-   $ ./configure CFLAGS=-O3
+   $ mkdir build
+   $ cd build; ../configure CFLAGS=-O3
    $ make
    $ make check
    $ make install
@@ -16,46 +17,39 @@ Need autoconf, automake and libtool packages.
 Building documentation. Needs doxygen package.
 
 ```sh
+   $ cd build/docs
    $ make docs
+   $ doxygen
 ```
 
 ### Configuration options
 
-   * --enable-float64
+   * \--enable-float64
 
      Compile double precision version, enabled by default. Tested.
 
-   * --enable-accelerators
+   * \--enable-accelerators
 
      Enable accelerator API. Includes threaded accelerators for BLAS3 functions.
 
-   * --enable-ext-precision
+   * \--enable-ext-precision
 
      Extended precison BLAS functionality. Enabled by default.
 
-   * --enable-sparse
+   * \--enable-sparse
 
      Enable sparse matrix support. Includes iterative solvers. No support for direct
      methods.
 
-   * --enable-compat
+   * \--enable-compat
 
      Add compability layer; fortran and cblas functions, disabled by default
 	(Proof of concept and not tested)
 
-   * --enable-float32
+   * \--enable-float32
 
      Compile single precision version, disabled by default.
 
-Additional configuration options.
-
-   * --enable-complex64
-
-     Compile single precision complex version, disabled by default. Not tested
-
-   * --enable-complex128
-
-     Compile double precision complex version, disabled by default. Not tested
 
 ### SIMD optimizations
 
