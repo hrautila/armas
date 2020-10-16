@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,15 +12,15 @@
 #include "dlpack.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_gvleft) && defined(armas_x_gvright)
+// this file provides following type dependent functions
+#if defined(armas_gvleft) && defined(armas_gvright)
 #define ARMAS_PROVIDES 1
 #endif
-#if defined(armas_x_gvrotate)
+#if defined(armas_gvrotate)
 #define ARMAS_REQUIRES 1
 #endif
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 //! \cond
@@ -70,7 +70,7 @@
  * \ingroup lapackaux internal
  */
 static inline
-void gvleft(armas_x_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
+void gvleft(armas_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
             int col, int ncol)
 {
     DTYPE t0, *y0, *y1;
@@ -94,7 +94,7 @@ void gvleft(armas_x_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
  * \ingroup lapackaux internal
  */
 static inline
-void gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
+void gvright(armas_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
              int row, int nrow)
 {
     DTYPE t0, *y0, *y1;
@@ -128,7 +128,7 @@ void gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
  *
  * @ingroup lapack
  */
-void armas_x_gvleft(armas_x_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
+void armas_gvleft(armas_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
                     int col, int ncol)
 {
     DTYPE v0;
@@ -141,8 +141,8 @@ void armas_x_gvleft(armas_x_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
     if (r1 == r2) {
         // one row
         for (k = col; k < lastc; k++) {
-            v0 = armas_x_get(A, r1, k);
-            armas_x_set(A, r1, k, c * v0);
+            v0 = armas_get(A, r1, k);
+            armas_set(A, r1, k, c * v0);
         }
         return;
     }
@@ -168,7 +168,7 @@ void armas_x_gvleft(armas_x_dense_t * A, DTYPE c, DTYPE s, int r1, int r2,
  *
  * @ingroup lapack
  */
-void armas_x_gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
+void armas_gvright(armas_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
                      int row, int nrow)
 {
     DTYPE v0;
@@ -181,8 +181,8 @@ void armas_x_gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
     if (c1 == c2) {
         // one column
         for (k = row; k < lastr; k++) {
-            v0 = armas_x_get(A, k, c1);
-            armas_x_set(A, k, c1, c * v0);
+            v0 = armas_get(A, k, c1);
+            armas_set(A, k, c1, c * v0);
         }
         return;
     }
@@ -225,8 +225,8 @@ void armas_x_gvright(armas_x_dense_t * A, DTYPE c, DTYPE s, int c1, int c2,
  *
  * @ingroup lapack
  */
-int armas_x_gvupdate(armas_x_dense_t * A, int start,
-                     armas_x_dense_t * C, armas_x_dense_t * S, int nrot,
+int armas_gvupdate(armas_dense_t * A, int start,
+                     armas_dense_t * C, armas_dense_t * S, int nrot,
                      int flags)
 {
     int k, n, end = start + nrot;
@@ -236,16 +236,16 @@ int armas_x_gvupdate(armas_x_dense_t * A, int start,
         if (flags & ARMAS_LEFT) {
             end = min(A->rows, end);
             for (k = end, n = nrot; n > 0 && k > start; n--, k--) {
-                c = armas_x_get_at_unsafe(C, n - 1);
-                s = armas_x_get_at_unsafe(S, n - 1);
+                c = armas_get_at_unsafe(C, n - 1);
+                s = armas_get_at_unsafe(S, n - 1);
                 if (c != 1.0 || s != 0.0)
                     gvleft(A, c, s, k - 1, k, 0, A->cols);
             }
         } else {
             end = min(A->cols, end);
             for (k = end, n = nrot; n > 0 && k > start; n--, k--) {
-                c = armas_x_get_at_unsafe(C, n - 1);
-                s = armas_x_get_at_unsafe(S, n - 1);
+                c = armas_get_at_unsafe(C, n - 1);
+                s = armas_get_at_unsafe(S, n - 1);
                 if (c != 1.0 || s != 0.0)
                     gvright(A, c, s, k - 1, k, 0, A->rows);
             }
@@ -255,16 +255,16 @@ int armas_x_gvupdate(armas_x_dense_t * A, int start,
         if (flags & ARMAS_LEFT) {
             end = min(A->rows, end);
             for (k = start, n = 0; n < nrot && k < end; n++, k++) {
-                c = armas_x_get_at_unsafe(C, n);
-                s = armas_x_get_at_unsafe(S, n);
+                c = armas_get_at_unsafe(C, n);
+                s = armas_get_at_unsafe(S, n);
                 if (c != 1.0 || s != 0.0)
                     gvleft(A, c, s, k, k + 1, 0, A->cols);
             }
         } else {
             end = min(A->cols, end);
             for (k = start, n = 0; n < nrot && k < end; n++, k++) {
-                c = armas_x_get_at_unsafe(C, n);
-                s = armas_x_get_at_unsafe(S, n);
+                c = armas_get_at_unsafe(C, n);
+                s = armas_get_at_unsafe(S, n);
                 if (c != 1.0 || s != 0.0)
                     gvright(A, c, s, k, k + 1, 0, A->rows);
             }
@@ -285,17 +285,17 @@ int armas_x_gvupdate(armas_x_dense_t * A, int start,
  *  Assumes len(X) == len(Y).
  * @ingroup lapackaux
  */
-int armas_x_gvrot_vec(armas_x_dense_t * X, armas_x_dense_t * Y, DTYPE c,
+int armas_gvrot_vec(armas_dense_t * X, armas_dense_t * Y, DTYPE c,
                       DTYPE s)
 {
     DTYPE x, y;
     int k;
-    for (k = 0; k < armas_x_size(X); k++) {
-        x = armas_x_get_at_unsafe(X, k);
-        y = armas_x_get_at_unsafe(Y, k);
-        armas_x_gvrotate(&x, &y, c, s, x, y);
-        armas_x_set_at_unsafe(X, k, x);
-        armas_x_set_at_unsafe(Y, k, y);
+    for (k = 0; k < armas_size(X); k++) {
+        x = armas_get_at_unsafe(X, k);
+        y = armas_get_at_unsafe(Y, k);
+        armas_gvrotate(&x, &y, c, s, x, y);
+        armas_set_at_unsafe(X, k, x);
+        armas_set_at_unsafe(Y, k, y);
     }
     return 0;
 }

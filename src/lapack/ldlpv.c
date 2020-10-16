@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2016-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,18 +9,18 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_ldlfactor) && defined(armas_x_ldlfactor_w) \
-    && defined(armas_x_ldlsolve)
+// this file provides following type dependent functions
+#if defined(armas_ldlfactor) && defined(armas_ldlfactor_w) \
+    && defined(armas_ldlsolve)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_mvupdate_trm)
+#if defined(armas_mvupdate_trm)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -35,10 +35,10 @@
 #endif
 
 extern
-int ldlfactor_np(armas_x_dense_t * A, armas_x_dense_t * W, int flags,
+int ldlfactor_np(armas_dense_t * A, armas_dense_t * W, int flags,
                  armas_conf_t * conf);
 extern
-int ldlsolve_np(armas_x_dense_t * B, const armas_x_dense_t * A, int flags,
+int ldlsolve_np(armas_dense_t * B, const armas_dense_t * A, int flags,
                 armas_conf_t * conf);
 
 
@@ -51,10 +51,10 @@ int ldlsolve_np(armas_x_dense_t * B, const armas_x_dense_t * A, int flags,
  *   A22  =   l21*d1*l21.t + L22*D2*L22.t  => A22 = A22 - l21*d1*l21t
  */
 static
-int unblk_ldlpv_lower(armas_x_dense_t * A, armas_pivot_t * P,
+int unblk_ldlpv_lower(armas_dense_t * A, armas_pivot_t * P,
                       armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABL, ABR, A00, a11, a21, A22, D;
+    armas_dense_t ATL, ABL, ABR, A00, a11, a21, A22, D;
     armas_pivot_t pT, pB, p0, p1, p2;
     int im, err = 0;
     DTYPE a11val;
@@ -79,17 +79,17 @@ int unblk_ldlpv_lower(armas_x_dense_t * A, armas_pivot_t * P,
         pivot_repart_2x1to3x1(
             &pT, /**/ &p0, &p1, &p2, /**/ P, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
-        armas_x_diag(&D, &ABR, 0);
-        if ((im = armas_x_iamax(&D, conf)) != 0) {
+        armas_diag(&D, &ABR, 0);
+        if ((im = armas_iamax(&D, conf)) != 0) {
             // pivot
             apply_bkpivot_lower(&ABR, 0, im, conf);
             swap_rows(&ABL, 0, im, conf);
         }
         // A22 = A22 - l21*d11*l21.T = A22 - a21*a21.T/a11
-        a11val = ONE / armas_x_get_unsafe(&a11, 0, 0);
-        armas_x_mvupdate_trm(ONE, &A22, -a11val, &a21, &a21, ARMAS_LOWER, conf);
+        a11val = ONE / armas_get_unsafe(&a11, 0, 0);
+        armas_mvupdate_trm(ONE, &A22, -a11val, &a21, &a21, ARMAS_LOWER, conf);
         // l21 = a21/a11
-        armas_x_scale(&a21, a11val, conf);
+        armas_scale(&a21, a11val, conf);
         // save pivot; positive index 
         armas_pivot_set(&p1, 0, im + ATL.rows + 1);
         // ---------------------------------------------------------------------
@@ -104,15 +104,15 @@ int unblk_ldlpv_lower(armas_x_dense_t * A, armas_pivot_t * P,
 
 // compute D - alpha*diag(x.T*x);
 static inline
-void update_diag(armas_x_dense_t * D, armas_x_dense_t * X, DTYPE alpha)
+void update_diag(armas_dense_t * D, armas_dense_t * X, DTYPE alpha)
 {
     DTYPE d, x;
     int k;
-    for (k = 0; k < armas_x_size(D); k++) {
-        d = armas_x_get_at_unsafe(D, k);
-        x = armas_x_get_at_unsafe(X, k);
+    for (k = 0; k < armas_size(D); k++) {
+        d = armas_get_at_unsafe(D, k);
+        x = armas_get_at_unsafe(X, k);
         d -= (alpha * x) * x;
-        armas_x_set_at_unsafe(D, k, d);
+        armas_set_at_unsafe(D, k, d);
     }
 }
 
@@ -121,12 +121,12 @@ void update_diag(armas_x_dense_t * D, armas_x_dense_t * X, DTYPE alpha)
  * trailing matrix; Y is A.rows,ncol matrix that will hold L21*D1
  */
 static
-int unblk_ldlpv_lower_ncol(armas_x_dense_t * A, armas_x_dense_t * Y,
+int unblk_ldlpv_lower_ncol(armas_dense_t * A, armas_dense_t * Y,
                            armas_pivot_t * P, int ncol, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABL, ABR, A00, a10, a11, A20, a21, A22, D;
-    armas_x_dense_t DT, DB, D0, d1, D2;
-    armas_x_dense_t YTL, YBL, YBR, Y00, y10, y11, Y20, y21, Y22;
+    armas_dense_t ATL, ABL, ABR, A00, a10, a11, A20, a21, A22, D;
+    armas_dense_t DT, DB, D0, d1, D2;
+    armas_dense_t YTL, YBL, YBR, Y00, y10, y11, Y20, y21, Y22;
     armas_pivot_t pT, pB, p0, p1, p2;
     int im, err = 0;
     DTYPE a11val;
@@ -140,9 +140,9 @@ int unblk_ldlpv_lower_ncol(armas_x_dense_t * A, armas_x_dense_t * Y,
 
     // make copy of diagonal elements; last column of Y matrix
     // will be overwriten in the end
-    armas_x_column(&D, Y, Y->cols - 1);
-    armas_x_diag(&D0, A, 0);
-    armas_x_copy(&D, &D0, conf);
+    armas_column(&D, Y, Y->cols - 1);
+    armas_diag(&D0, A, 0);
+    armas_copy(&D, &D0, conf);
 
     mat_partition_2x2(
         &ATL, __nil,
@@ -173,27 +173,27 @@ int unblk_ldlpv_lower_ncol(armas_x_dense_t * A, armas_x_dense_t * Y,
             &pT, /**/
             &p0, &p1, &p2, /**/ P, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
-        if ((im = armas_x_iamax(&DB, conf)) != 0) {
+        if ((im = armas_iamax(&DB, conf)) != 0) {
             // pivot
             apply_bkpivot_lower(&ABR, 0, im, conf);
             swap_rows(&ABL, 0, im, conf);
             swap_rows(&YBL, 0, im, conf);
-            a11val = armas_x_get_at_unsafe(&DB, im);
-            armas_x_set_at_unsafe(&DB, im, armas_x_get_at_unsafe(&DB, 0));
-            armas_x_set_at_unsafe(&DB, 0, a11val);
+            a11val = armas_get_at_unsafe(&DB, im);
+            armas_set_at_unsafe(&DB, im, armas_get_at_unsafe(&DB, 0));
+            armas_set_at_unsafe(&DB, 0, a11val);
         }
         // ---------------------------------------------------------------------
-        a11val = armas_x_get_at_unsafe(&d1, 0);
+        a11val = armas_get_at_unsafe(&d1, 0);
         // update a21 with prevous; a21 := a21 - A20*y10
-        armas_x_mvmult(ONE, &a21, -ONE, &A20, &y10, 0, conf);
+        armas_mvmult(ONE, &a21, -ONE, &A20, &y10, 0, conf);
         // this will overwrite D2 when ncol == 0;
-        armas_x_copy(&y21, &a21, conf);
+        armas_copy(&y21, &a21, conf);
         // update diagonal; diag(A22) = D2 - diag(a21*a21.T)/a11;
         if (ncol > 0)
             update_diag(&D2, &a21, ONE / a11val);
-        armas_x_set_unsafe(&a11, 0, 0, a11val);
+        armas_set_unsafe(&a11, 0, 0, a11val);
         // a21 = a21/a11
-        armas_x_scale(&a21, ONE / a11val, conf);
+        armas_scale(&a21, ONE / a11val, conf);
         // save pivot; positive index 
         armas_pivot_set(&p1, 0, im + ATL.rows + 1);
         // ---------------------------------------------------------------------
@@ -216,10 +216,10 @@ int unblk_ldlpv_lower_ncol(armas_x_dense_t * A, armas_x_dense_t * Y,
  *
  */
 static
-int blk_ldlpv_lower(armas_x_dense_t * A, armas_x_dense_t * W,
+int blk_ldlpv_lower(armas_dense_t * A, armas_dense_t * W,
                     armas_pivot_t * P, int lb, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABL, ABR, A00, A11, A21, A22, YL, Y11, Y21;
+    armas_dense_t ATL, ABL, ABR, A00, A11, A21, A22, YL, Y11, Y21;
     armas_pivot_t pT, pB, p0, p1, p2;
     int k, err = 0;
 
@@ -241,17 +241,17 @@ int blk_ldlpv_lower(armas_x_dense_t * A, armas_x_dense_t * W,
         pivot_repart_2x1to3x1(
             &pT, /**/ &p0, &p1, &p2, /**/ P, lb, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
-        armas_x_make(&YL, ABL.rows, A21.cols, ABL.rows, armas_x_data(W));
+        armas_make(&YL, ABL.rows, A21.cols, ABL.rows, armas_data(W));
 
         unblk_ldlpv_lower_ncol(&ABR, &YL, &p1, A11.cols, conf);
         mat_partition_2x1(&Y11, &Y21, /**/ &YL, A11.rows, ARMAS_PTOP);
 
         // A22 = A22 - L21*D1*L21.T   (Y21 is L21*D1, A21 is L21)
-        armas_x_update_trm(ONE, &A22,
+        armas_update_trm(ONE, &A22,
                            -ONE, &Y21, &A21, ARMAS_LOWER | ARMAS_TRANSB, conf);
 
         // pivot rows on left side; update pivot indexes;
-        armas_x_pivot(&ABL, &p1, ARMAS_PIVOT_ROWS | ARMAS_PIVOT_FORWARD, conf);
+        armas_pivot(&ABL, &p1, ARMAS_PIVOT_ROWS | ARMAS_PIVOT_FORWARD, conf);
         for (k = 0; k < lb; k++) {
             armas_pivot_set_unsafe(&p1, k,
                                    armas_pivot_get_unsafe(&p1, k) + ATL.rows);
@@ -266,7 +266,7 @@ int blk_ldlpv_lower(armas_x_dense_t * A, armas_x_dense_t * W,
 
     if (ABR.cols > 0) {
         unblk_ldlpv_lower(&ABR, &p2, conf);
-        armas_x_pivot(&ABL, &p2, ARMAS_PIVOT_ROWS | ARMAS_PIVOT_FORWARD, conf);
+        armas_pivot(&ABL, &p2, ARMAS_PIVOT_ROWS | ARMAS_PIVOT_FORWARD, conf);
         for (k = 0; k < ABR.cols; k++) {
             armas_pivot_set_unsafe(&p2, k,
                                    armas_pivot_get_unsafe(&p2, k) + ATL.rows);
@@ -284,10 +284,10 @@ int blk_ldlpv_lower(armas_x_dense_t * A, armas_x_dense_t * W,
  *   A00  =   u01*d1*u01.t + U00*D1*U00.t  => A00 = A00 - a01*a01.t/a11
  */
 static
-int unblk_ldlpv_upper(armas_x_dense_t * A, armas_pivot_t * P,
+int unblk_ldlpv_upper(armas_dense_t * A, armas_pivot_t * P,
                         armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ATR, ABR, A00, a11, a01, A22, D;
+    armas_dense_t ATL, ATR, ABR, A00, a11, a01, A22, D;
     armas_pivot_t pT, pB, p0, p1, p2;
     int im, err = 0;
     DTYPE a11val;
@@ -311,18 +311,18 @@ int unblk_ldlpv_upper(armas_x_dense_t * A, armas_pivot_t * P,
         pivot_repart_2x1to3x1(
             &pT, /**/ &p0, &p1, &p2, /**/ P, 1, ARMAS_PTOP);
         // ---------------------------------------------------------------------
-        armas_x_diag(&D, &ATL, 0);
-        if ((im = armas_x_iamax(&D, conf)) != ATL.rows - 1) {
+        armas_diag(&D, &ATL, 0);
+        if ((im = armas_iamax(&D, conf)) != ATL.rows - 1) {
             // pivot
             apply_bkpivot_upper(&ATL, ATL.rows - 1, im, conf);
             swap_rows(&ATR, ATL.rows - 1, im, conf);
         }
         // ---------------------------------------------------------------------
         // A00 = A00 - u01*d1*u01.T = A00 - a01*a01.T/a11
-        a11val = ONE / armas_x_get_unsafe(&a11, 0, 0);
-        armas_x_mvupdate_trm(ONE, &A00, -a11val, &a01, &a01, ARMAS_UPPER, conf);
+        a11val = ONE / armas_get_unsafe(&a11, 0, 0);
+        armas_mvupdate_trm(ONE, &A00, -a11val, &a01, &a01, ARMAS_UPPER, conf);
         // u01 = a01/a11
-        armas_x_scale(&a01, a11val, conf);
+        armas_scale(&a01, a11val, conf);
         // save pivot; positive index 
         armas_pivot_set(&p1, 0, im + 1);
         // ---------------------------------------------------------------------
@@ -340,12 +340,12 @@ int unblk_ldlpv_upper(armas_x_dense_t * A, armas_pivot_t * P,
  * trailing matrix; Y is A.rows,ncol matrix that will hold U21*D1
  */
 static
-int unblk_ldlpv_upper_ncol(armas_x_dense_t * A, armas_x_dense_t * Y,
+int unblk_ldlpv_upper_ncol(armas_dense_t * A, armas_dense_t * Y,
                            armas_pivot_t * P, int ncol, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ATR, ABR, A00, a01, A02, a11, a12, A22, D;
-    armas_x_dense_t DT, DB, D0, d1, D2;
-    armas_x_dense_t YTL, YTR, YBR, Y00, y01, Y02, y11, y12, Y22;
+    armas_dense_t ATL, ATR, ABR, A00, a01, A02, a11, a12, A22, D;
+    armas_dense_t DT, DB, D0, d1, D2;
+    armas_dense_t YTL, YTR, YBR, Y00, y01, Y02, y11, y12, Y22;
     armas_pivot_t pT, pB, p0, p1, p2;
     int im, err = 0;
     DTYPE a11val;
@@ -360,9 +360,9 @@ int unblk_ldlpv_upper_ncol(armas_x_dense_t * A, armas_x_dense_t * Y,
 
     // make copy of diagonal elements; first column of Y matrix
     // will be overwriten in the end
-    armas_x_column(&D, Y, 0);
-    armas_x_diag(&D0, A, 0);
-    armas_x_copy(&D, &D0, conf);
+    armas_column(&D, Y, 0);
+    armas_diag(&D0, A, 0);
+    armas_copy(&D, &D0, conf);
 
     mat_partition_2x2(
         &ATL, &ATR,
@@ -391,28 +391,28 @@ int unblk_ldlpv_upper_ncol(armas_x_dense_t * A, armas_x_dense_t * Y,
         pivot_repart_2x1to3x1(
             &pT, /**/ &p0, &p1, &p2, /**/ P, 1, ARMAS_PTOP);
         // ---------------------------------------------------------------------
-        if ((im = armas_x_iamax(&DT, conf)) != ATL.rows - 1) {
+        if ((im = armas_iamax(&DT, conf)) != ATL.rows - 1) {
             // pivot
             apply_bkpivot_upper(&ATL, ATL.rows - 1, im, conf);
             swap_rows(&ATR, ATL.rows - 1, im, conf);
             swap_rows(&YTR, ATL.rows - 1, im, conf);
-            a11val = armas_x_get_at_unsafe(&DT, im);
-            armas_x_set_at_unsafe(&DT, im,
-                                  armas_x_get_at_unsafe(&DT, ATL.rows - 1));
-            armas_x_set_at_unsafe(&DT, ATL.rows - 1, a11val);
+            a11val = armas_get_at_unsafe(&DT, im);
+            armas_set_at_unsafe(&DT, im,
+                                  armas_get_at_unsafe(&DT, ATL.rows - 1));
+            armas_set_at_unsafe(&DT, ATL.rows - 1, a11val);
         }
         // ---------------------------------------------------------------------
-        a11val = armas_x_get_at_unsafe(&d1, 0);
+        a11val = armas_get_at_unsafe(&d1, 0);
         // update a01 with prevous; a01 := a01 - A02*y12
-        armas_x_mvmult(ONE, &a01, -ONE, &A02, &y12, 0, conf);
+        armas_mvmult(ONE, &a01, -ONE, &A02, &y12, 0, conf);
         // this will overwrite D0 when ncol == 0;
-        armas_x_copy(&y01, &a01, conf);
+        armas_copy(&y01, &a01, conf);
         // update diagonal; diag(A00) = D0 - diag(a01*a01.T)/a11;
         if (ncol > 0)
             update_diag(&D0, &a01, ONE / a11val);
-        armas_x_set_unsafe(&a11, 0, 0, a11val);
+        armas_set_unsafe(&a11, 0, 0, a11val);
         // a01 = a01/a11
-        armas_x_scale(&a01, ONE / a11val, conf);
+        armas_scale(&a01, ONE / a11val, conf);
         // save pivot; positive index 
         armas_pivot_set(&p1, 0, im + 1);
         // ---------------------------------------------------------------------
@@ -432,10 +432,10 @@ int unblk_ldlpv_upper_ncol(armas_x_dense_t * A, armas_x_dense_t * Y,
 
 
 static
-int blk_ldlpv_upper(armas_x_dense_t * A, armas_x_dense_t * W,
+int blk_ldlpv_upper(armas_dense_t * A, armas_dense_t * W,
                       armas_pivot_t * P, int lb, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ATR, ABR, A00, A01, A11, A22, Y, Y11, Y01;
+    armas_dense_t ATL, ATR, ABR, A00, A01, A11, A22, Y, Y11, Y01;
     armas_pivot_t pT, pB, p0, p1, p2;
     int err = 0;
 
@@ -458,17 +458,17 @@ int blk_ldlpv_upper(armas_x_dense_t * A, armas_x_dense_t * W,
             &pT, /**/
             &p0, &p1, &p2, /**/ P, lb, ARMAS_PTOP);
         // ---------------------------------------------------------------------
-        armas_x_make(&Y, ATL.rows, A01.cols, ATL.rows, armas_x_data(W));
+        armas_make(&Y, ATL.rows, A01.cols, ATL.rows, armas_data(W));
 
         unblk_ldlpv_upper_ncol(&ATL, &Y, &p1, A11.cols, conf);
         mat_partition_2x1(&Y01, &Y11, /**/ &Y, A11.rows, ARMAS_PBOTTOM);
 
         // A00 = A00 - U01*D1*U01.T   (Y01 is U01*D1, A01 is U01)
-        armas_x_update_trm(ONE, &A00,
+        armas_update_trm(ONE, &A00,
                            -ONE, &Y01, &A01, ARMAS_UPPER | ARMAS_TRANSB, conf);
 
         // pivot rows on right side;
-        armas_x_pivot(&ATR, &p1, ARMAS_PIVOT_ROWS | ARMAS_PIVOT_BACKWARD, conf);
+        armas_pivot(&ATR, &p1, ARMAS_PIVOT_ROWS | ARMAS_PIVOT_BACKWARD, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, &ATR,
@@ -478,7 +478,7 @@ int blk_ldlpv_upper(armas_x_dense_t * A, armas_x_dense_t * W,
     }
     if (ATL.rows > 0) {
         unblk_ldlpv_upper(&ATL, &pT, conf);
-        armas_x_pivot(&ATR, &pT, ARMAS_PIVOT_ROWS | ARMAS_PIVOT_BACKWARD, conf);
+        armas_pivot(&ATR, &pT, ARMAS_PIVOT_ROWS | ARMAS_PIVOT_BACKWARD, conf);
     }
     return err;
 }
@@ -486,10 +486,10 @@ int blk_ldlpv_upper(armas_x_dense_t * A, armas_x_dense_t * W,
 /**
  * @brief Compute pivoting LDLT factoring of symmetric matrix
  *
- * @see armas_x_ldlfactor_w
+ * @see armas_ldlfactor_w
  * @ingroup lapack
  */
-int armas_x_ldlfactor(armas_x_dense_t * A,
+int armas_ldlfactor(armas_dense_t * A,
                       armas_pivot_t * P, int flags, armas_conf_t * conf)
 {
     int err;
@@ -499,7 +499,7 @@ int armas_x_ldlfactor(armas_x_dense_t * A,
         conf = armas_conf_default();
 
     wbs = &wb;
-    if ((err = armas_x_ldlfactor_w(A, P, flags, &wb, conf)) < 0)
+    if ((err = armas_ldlfactor_w(A, P, flags, &wb, conf)) < 0)
         return err;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
@@ -509,7 +509,7 @@ int armas_x_ldlfactor(armas_x_dense_t * A,
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_ldlfactor_w(A, P, flags, wbs, conf);
+    err = armas_ldlfactor_w(A, P, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 
@@ -537,13 +537,13 @@ int armas_x_ldlfactor(armas_x_dense_t * A,
  * @retval <0 Failure
  * @ingroup lapack
  */
-int armas_x_ldlfactor_w(armas_x_dense_t * A,
+int armas_ldlfactor_w(armas_dense_t * A,
                         armas_pivot_t * P,
                         int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
     int lb, err = 0;
     size_t wsz;
-    armas_x_dense_t W;
+    armas_dense_t W;
     armas_env_t *env;
 
     if (!conf)
@@ -569,7 +569,7 @@ int armas_x_ldlfactor_w(armas_x_dense_t * A,
 
     if (P == ARMAS_NOPIVOT) {
         wsz = armas_wbytes(wb) / sizeof(DTYPE);
-        armas_x_make(&W, wsz, 1, wsz, (DTYPE *) armas_wptr(wb));
+        armas_make(&W, wsz, 1, wsz, (DTYPE *) armas_wptr(wb));
         return ldlfactor_np(A, &W, flags, conf);
     }
 
@@ -592,7 +592,7 @@ int armas_x_ldlfactor_w(armas_x_dense_t * A,
         }
     } else {
         // blocked version
-        armas_x_make(&W, wsz, 1, wsz, (DTYPE *) armas_wptr(wb));
+        armas_make(&W, wsz, 1, wsz, (DTYPE *) armas_wptr(wb));
         if (flags & ARMAS_UPPER) {
             err = blk_ldlpv_upper(A, &W, P, lb, conf);
         } else {
@@ -621,19 +621,19 @@ int armas_x_ldlfactor_w(armas_x_dense_t * A,
  * @retval  0 ok
  * @retval -1 error
  */
-int armas_x_ldlsolve(armas_x_dense_t * B,
-                     const armas_x_dense_t * A,
+int armas_ldlsolve(armas_dense_t * B,
+                     const armas_dense_t * A,
                      const armas_pivot_t * P, int flags, armas_conf_t * conf)
 {
     int pivot1_dir, pivot2_dir;
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_size(B) == 0 || armas_x_size(A) == 0)
+    if (armas_size(B) == 0 || armas_size(A) == 0)
         return 0;
 
     if (P == ARMAS_NOPIVOT)
-        return ldlsolve_np(B, (armas_x_dense_t *) A, flags, conf);
+        return ldlsolve_np(B, (armas_dense_t *) A, flags, conf);
 
     if (A->rows != A->cols || A->cols != B->rows) {
         conf->error = ARMAS_ESIZE;
@@ -650,22 +650,22 @@ int armas_x_ldlsolve(armas_x_dense_t * B,
     pivot2_dir =
         flags & ARMAS_UPPER ? ARMAS_PIVOT_FORWARD : ARMAS_PIVOT_BACKWARD;
 
-    armas_x_pivot(B, (armas_pivot_t *) P, ARMAS_PIVOT_ROWS | pivot1_dir, conf);
+    armas_pivot(B, (armas_pivot_t *) P, ARMAS_PIVOT_ROWS | pivot1_dir, conf);
 
     if (flags & ARMAS_TRANS) {
         // X = L.-1*(D.-1*(L.-T*B))
-        armas_x_solve_trm(B, ONE, A,
+        armas_solve_trm(B, ONE, A,
                           flags | ARMAS_UNIT | ARMAS_TRANS | ARMAS_LEFT, conf);
-        armas_x_solve_diag(B, ONE, A, ARMAS_LEFT, conf);
-        armas_x_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_LEFT, conf);
+        armas_solve_diag(B, ONE, A, ARMAS_LEFT, conf);
+        armas_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_LEFT, conf);
     } else {
         // X = L.-T*(D.-1*(L.-1*B))
-        armas_x_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_LEFT, conf);
-        armas_x_solve_diag(B, ONE, A, ARMAS_LEFT, conf);
-        armas_x_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_TRANS, conf);
+        armas_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_LEFT, conf);
+        armas_solve_diag(B, ONE, A, ARMAS_LEFT, conf);
+        armas_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_TRANS, conf);
     }
 
-    armas_x_pivot(B, (armas_pivot_t *) P, ARMAS_PIVOT_ROWS | pivot2_dir, conf);
+    armas_pivot(B, (armas_pivot_t *) P, ARMAS_PIVOT_ROWS | pivot2_dir, conf);
 
     return 0;
 }

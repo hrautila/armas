@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_lqmult) && defined(armas_x_lqmult_w)
+// this file provides following type dependent functions
+#if defined(armas_lqmult) && defined(armas_lqmult_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_householder)
+#if defined(armas_householder)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -43,13 +43,13 @@
  * Progressing from bottom-right to top-left produces H(k)H(k-1)...H(1) == Q.T and C = Q.T*C
  */
 static
-int unblk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
-                      armas_x_dense_t * tau, armas_x_dense_t * W, int flags,
+int unblk_lqmult_left(armas_dense_t * C, armas_dense_t * A,
+                      armas_dense_t * tau, armas_dense_t * W, int flags,
                       armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a12, A22, *Aref;
-    armas_x_dense_t tT, tB, t0, t1, t2, w12;
-    armas_x_dense_t CT, CB, C0, c1, C2;
+    armas_dense_t ATL, ABR, A00, a11, a12, A22, *Aref;
+    armas_dense_t tT, tB, t0, t1, t2, w12;
+    armas_dense_t CT, CB, C0, c1, C2;
     int pAdir, pAstart, pStart, pDir;
     int mb, nb, tb, cb;
 
@@ -64,7 +64,7 @@ int unblk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
         mb = max(0, A->rows - A->cols);
         nb = max(0, A->cols - A->rows);
         cb = max(0, C->rows - A->rows);
-        tb = max(0, armas_x_size(tau) - A->rows);
+        tb = max(0, armas_size(tau) - A->rows);
         Aref = &ATL;
     } else {
         pAstart = ARMAS_PTOPLEFT;
@@ -82,7 +82,7 @@ int unblk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
     mat_partition_2x1(
         &tT, &tB, /**/ tau, tb, pStart);
 
-    armas_x_make(&w12, C->cols, 1, C->cols, armas_x_data(W));
+    armas_make(&w12, C->cols, 1, C->cols, armas_data(W));
 
     while (Aref->rows > 0 && Aref->cols > 0) {
         mat_repartition_2x2to3x3(
@@ -95,7 +95,7 @@ int unblk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
         mat_repartition_2x1to3x1(
             &tT, &t0, &t1, &t2, /**/ tau, 1, pDir);
         // ---------------------------------------------------------------------
-        armas_x_apply_householder2x1(&t1, &a12,
+        armas_apply_householder2x1(&t1, &a12,
                                      &c1, &C2, &w12, ARMAS_LEFT, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -110,13 +110,13 @@ int unblk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
 }
 
 static
-int blk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
-                    armas_x_dense_t * tau, armas_x_dense_t * T,
-                    armas_x_dense_t * W, int flags, int lb, armas_conf_t * conf)
+int blk_lqmult_left(armas_dense_t * C, armas_dense_t * A,
+                    armas_dense_t * tau, armas_dense_t * T,
+                    armas_dense_t * W, int flags, int lb, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A11, A12, A22, AR, *Aref;
-    armas_x_dense_t tT, tB, t0, t1, t2, Tcur, Wrk;
-    armas_x_dense_t CT, CB, C0, C1, C2;
+    armas_dense_t ATL, ABR, A00, A11, A12, A22, AR, *Aref;
+    armas_dense_t tT, tB, t0, t1, t2, Tcur, Wrk;
+    armas_dense_t CT, CB, C0, C1, C2;
     int pAdir, pAstart, pStart, pDir;
     int mb, nb, tb, cb, transpose;
 
@@ -131,7 +131,7 @@ int blk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
         mb = max(0, A->rows - A->cols);
         nb = max(0, A->cols - A->rows);
         cb = max(0, C->rows - A->rows);
-        tb = max(0, armas_x_size(tau) - min(A->rows, A->cols));
+        tb = max(0, armas_size(tau) - min(A->rows, A->cols));
         Aref = &ATL;
         transpose = FALSE;
     } else {
@@ -165,13 +165,13 @@ int blk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
         // ---------------------------------------------------------------------
         // build block reflector
         mat_merge1x2(&AR, &A11, &A12);
-        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
-        armas_x_mscale(&Tcur, ZERO, 0, conf);
-        armas_x_unblk_lq_reflector(&Tcur, &AR, &t1, conf);
+        armas_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_data(T));
+        armas_mscale(&Tcur, ZERO, 0, conf);
+        armas_unblk_lq_reflector(&Tcur, &AR, &t1, conf);
 
         // compute Q*C or Q.T*C
-        armas_x_make(&Wrk, C1.cols, A11.cols, C1.cols, armas_x_data(W));
-        armas_x_update_lq_left(&C1, &C2,
+        armas_make(&Wrk, C1.cols, A11.cols, C1.cols, armas_data(W));
+        armas_update_lq_left(&C1, &C2,
                                &A11, &A12, &Tcur, &Wrk, transpose, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -201,13 +201,13 @@ int blk_lqmult_left(armas_x_dense_t * C, armas_x_dense_t * A,
  * Progressing from bottom-right to top-left produces C*H(k)...H(2)H(1) == C*Q.
  */
 static
-int unblk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
-                       armas_x_dense_t * tau, armas_x_dense_t * W, int flags,
+int unblk_lqmult_right(armas_dense_t * C, armas_dense_t * A,
+                       armas_dense_t * tau, armas_dense_t * W, int flags,
                        armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a12, A22, *Aref;
-    armas_x_dense_t tT, tB, t0, t1, t2, w12;
-    armas_x_dense_t CL, CR, C0, c1, C2;
+    armas_dense_t ATL, ABR, A00, a11, a12, A22, *Aref;
+    armas_dense_t tT, tB, t0, t1, t2, w12;
+    armas_dense_t CL, CR, C0, c1, C2;
     int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
     int mb, nb, tb, cb;
 
@@ -235,7 +235,7 @@ int unblk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
         mb = max(0, A->rows - A->cols);
         nb = max(0, A->cols - A->rows);
         cb = max(0, C->cols - A->rows);
-        tb = max(0, armas_x_size(tau) - min(A->rows, A->cols));
+        tb = max(0, armas_size(tau) - min(A->rows, A->cols));
         Aref = &ATL;
     }
 
@@ -247,7 +247,7 @@ int unblk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
     mat_partition_2x1(
         &tT, &tB, /**/ tau, tb, pStart);
 
-    armas_x_make(&w12, C->rows, 1, C->rows, armas_x_data(W));
+    armas_make(&w12, C->rows, 1, C->rows, armas_data(W));
 
     while (Aref->rows > 0 && Aref->cols > 0) {
         mat_repartition_2x2to3x3(
@@ -260,7 +260,7 @@ int unblk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
         mat_repartition_2x1to3x1(
             &tT, &t0, &t1, &t2, /**/ tau, 1, pDir);
         // ---------------------------------------------------------------------
-        armas_x_apply_householder2x1(&t1, &a12,
+        armas_apply_householder2x1(&t1, &a12,
                                      &c1, &C2, &w12, ARMAS_RIGHT, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -284,14 +284,14 @@ int unblk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
  * compact WY algorithm.
  */
 static
-int blk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
-                     armas_x_dense_t * tau, armas_x_dense_t * T,
-                     armas_x_dense_t * W, int flags, int lb,
+int blk_lqmult_right(armas_dense_t * C, armas_dense_t * A,
+                     armas_dense_t * tau, armas_dense_t * T,
+                     armas_dense_t * W, int flags, int lb,
                      armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A11, A12, A21, A22, AR, *Aref;
-    armas_x_dense_t tT, tB, t0, t1, t2, Tcur, Wrk;
-    armas_x_dense_t CL, CR, C0, C1, C2;
+    armas_dense_t ATL, ABR, A00, A11, A12, A21, A22, AR, *Aref;
+    armas_dense_t tT, tB, t0, t1, t2, Tcur, Wrk;
+    armas_dense_t CL, CR, C0, C1, C2;
     int pAdir, pAstart, pStart, pDir, pCstart, pCdir;
     int mb, nb, cb, tb, transpose;
 
@@ -321,7 +321,7 @@ int blk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
         mb = max(0, A->rows - A->cols);
         nb = max(0, A->cols - A->rows);
         cb = max(0, C->cols - A->rows);
-        tb = max(0, armas_x_size(tau) - min(A->rows, A->cols));
+        tb = max(0, armas_size(tau) - min(A->rows, A->cols));
         Aref = &ATL;
         transpose = FALSE;
     }
@@ -347,13 +347,13 @@ int blk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
         // ---------------------------------------------------------------------
         // build block reflector
         mat_merge1x2(&AR, &A11, &A12);
-        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
-        armas_x_mscale(&Tcur, ZERO, 0, conf);
-        armas_x_unblk_lq_reflector(&Tcur, &AR, &t1, conf);
+        armas_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_data(T));
+        armas_mscale(&Tcur, ZERO, 0, conf);
+        armas_unblk_lq_reflector(&Tcur, &AR, &t1, conf);
 
         // compute Q*C or Q.T*C
-        armas_x_make(&Wrk, C1.rows, A11.cols, C1.rows, armas_x_data(W));
-        armas_x_update_lq_right(&C1, &C2,
+        armas_make(&Wrk, C1.rows, A11.cols, C1.rows, armas_data(W));
+        armas_update_lq_right(&C1, &C2,
                                 &A11, &A12, &Tcur, &Wrk, transpose, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -371,19 +371,19 @@ int blk_lqmult_right(armas_x_dense_t * C, armas_x_dense_t * A,
 /**
  * @brief Multiply with orthogonal matrix Q from LQ factorization
  *
- * @see armas_x_lqmult_w
+ * @see armas_lqmult_w
  * @ingroup lapack
  */
-int armas_x_lqmult(armas_x_dense_t * C,
-                   const armas_x_dense_t * A,
-                   const armas_x_dense_t * tau, int flags, armas_conf_t * cf)
+int armas_lqmult(armas_dense_t * C,
+                   const armas_dense_t * A,
+                   const armas_dense_t * tau, int flags, armas_conf_t * cf)
 {
     if (!cf)
         cf = armas_conf_default();
 
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if ((err = armas_x_lqmult_w(C, A, tau, flags, &wb, cf)) < 0)
+    if ((err = armas_lqmult_w(C, A, tau, flags, &wb, cf)) < 0)
         return err;
 
     wbs = &wb;
@@ -395,7 +395,7 @@ int armas_x_lqmult(armas_x_dense_t * C,
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_lqmult_w(C, A, tau, flags, wbs, cf);
+    err = armas_lqmult_w(C, A, tau, flags, wbs, cf);
     armas_wrelease(&wb);
     return err;
 }
@@ -409,7 +409,7 @@ int armas_x_lqmult(armas_x_dense_t * C,
  *
  *    \f$ Q = H(k)H(k-1)...H(1) \f$
  *
- * as returned by armas_x_lqfactor_w().
+ * as returned by armas_lqfactor_w().
  *
  * @param[in,out] C
  *     On entry, the M-by-N matrix C or if flag bit RIGHT is set then
@@ -417,7 +417,7 @@ int armas_x_lqmult(armas_x_dense_t * C,
  *     If bit RIGHT is set then C is  overwritten by \f$ C*Q or C*Q^T. \f$
  *
  * @param[in] A
- *     LQ factorization as returned by armas_x_lqfactor_w() where the upper
+ *     LQ factorization as returned by armas_lqfactor_w() where the upper
  *     trapezoidal part holds the elementary reflectors.
  *
  * @param[in] tau
@@ -453,12 +453,12 @@ int armas_x_lqmult(armas_x_dense_t * C,
  * @endcond
  * @ingroup lapack
  */
-int armas_x_lqmult_w(armas_x_dense_t * C,
-                     const armas_x_dense_t * A,
-                     const armas_x_dense_t * tau,
+int armas_lqmult_w(armas_dense_t * C,
+                     const armas_dense_t * A,
+                     const armas_dense_t * tau,
                      int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t T, Wrk;
+    armas_dense_t T, Wrk;
     armas_env_t *env;
     size_t wsmin, wsz = 0;
     int lb, K, P;
@@ -485,9 +485,9 @@ int armas_x_lqmult_w(armas_x_dense_t * C,
         conf->error = ARMAS_EINVAL;
         return -1;
     }
-    // check sizes; A, tau return from armas_x_qrfactor()
+    // check sizes; A, tau return from armas_qrfactor()
     P = (flags & ARMAS_RIGHT) != 0 ? C->cols : C->rows;
-    if (P != A->cols || armas_x_size(tau) != A->rows) {
+    if (P != A->cols || armas_size(tau) != A->rows) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
@@ -516,25 +516,25 @@ int armas_x_lqmult_w(armas_x_dense_t * C,
 
     if (lb == 0 || K <= lb) {
         // unblocked 
-        armas_x_make(&Wrk, K, 1, K, buf);
+        armas_make(&Wrk, K, 1, K, buf);
         if ((flags & ARMAS_RIGHT) != 0) {
-            unblk_lqmult_right(C, (armas_x_dense_t *) A,
-                                 (armas_x_dense_t *) tau, &Wrk, flags, conf);
+            unblk_lqmult_right(C, (armas_dense_t *) A,
+                                 (armas_dense_t *) tau, &Wrk, flags, conf);
         } else {
-            unblk_lqmult_left(C, (armas_x_dense_t *) A,
-                                (armas_x_dense_t *) tau, &Wrk, flags, conf);
+            unblk_lqmult_left(C, (armas_dense_t *) A,
+                                (armas_dense_t *) tau, &Wrk, flags, conf);
         }
     } else {
         // blocked code; block reflector T and temporary space
-        armas_x_make(&T, lb, lb, lb, buf);
-        armas_x_make(&Wrk, K, lb, K, &buf[armas_x_size(&T)]);
+        armas_make(&T, lb, lb, lb, buf);
+        armas_make(&Wrk, K, lb, K, &buf[armas_size(&T)]);
 
         if ((flags & ARMAS_RIGHT) != 0) {
-            blk_lqmult_right(C, (armas_x_dense_t *) A,
-                               (armas_x_dense_t *) tau, &T, &Wrk, flags, lb,
+            blk_lqmult_right(C, (armas_dense_t *) A,
+                               (armas_dense_t *) tau, &T, &Wrk, flags, lb,
                                conf);
         } else {
-            blk_lqmult_left(C, (armas_x_dense_t *) A, (armas_x_dense_t *) tau,
+            blk_lqmult_left(C, (armas_dense_t *) A, (armas_dense_t *) tau,
                               &T, &Wrk, flags, lb, conf);
         }
     }

@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2016-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_ldlfactor)
+// this file provides following type dependent functions
+#if defined(armas_ldlfactor)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_blas)
+#if defined(armas_blas)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -40,9 +40,9 @@
  *   A22  =   l21*d1*l21.t + L22*D2*L22.t  => A22 = A22 - l21*d1*l21t
  */
 static
-int unblk_ldlnp_lower(armas_x_dense_t * A, armas_conf_t * conf)
+int unblk_ldlnp_lower(armas_dense_t * A, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a21, A22;
+    armas_dense_t ATL, ABR, A00, a11, a21, A22;
     int err = 0;
     DTYPE a11val;
 
@@ -64,10 +64,10 @@ int unblk_ldlnp_lower(armas_x_dense_t * A, armas_conf_t * conf)
         // d11 = a11; no-op
 
         // A22 = A22 - l21*d11*l21.T = A22 - a21*a21.T/a11
-        a11val = ONE / armas_x_get_unsafe(&a11, 0, 0);
-        armas_x_mvupdate_trm(ONE, &A22, -a11val, &a21, &a21, ARMAS_LOWER, conf);
+        a11val = ONE / armas_get_unsafe(&a11, 0, 0);
+        armas_mvupdate_trm(ONE, &A22, -a11val, &a21, &a21, ARMAS_LOWER, conf);
         // l21 = a21/a11
-        armas_x_scale(&a21, a11val, conf);
+        armas_scale(&a21, a11val, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -85,9 +85,9 @@ int unblk_ldlnp_lower(armas_x_dense_t * A, armas_conf_t * conf)
  *   A00  =   u01*d1*u01.t + U00*D1*U00.t  => A00 = A00 - a01*a01.t/a11
  */
 static
-int unblk_ldlnp_upper(armas_x_dense_t * A, armas_conf_t * conf)
+int unblk_ldlnp_upper(armas_dense_t * A, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a01, A22;
+    armas_dense_t ATL, ABR, A00, a11, a01, A22;
     int err = 0;
     DTYPE a11val;
 
@@ -108,10 +108,10 @@ int unblk_ldlnp_upper(armas_x_dense_t * A, armas_conf_t * conf)
         // d11 = a11; no-op
 
         // A00 = A00 - u01*d1*u01.T = A00 - a01*a01.T/a11
-        a11val = ONE / armas_x_get_unsafe(&a11, 0, 0);
-        armas_x_mvupdate_trm(ONE, &A00, -a11val, &a01, &a01, ARMAS_UPPER, conf);
+        a11val = ONE / armas_get_unsafe(&a11, 0, 0);
+        armas_mvupdate_trm(ONE, &A00, -a11val, &a01, &a01, ARMAS_UPPER, conf);
         // u01 = a01/a11
-        armas_x_scale(&a01, a11val, conf);
+        armas_scale(&a01, a11val, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -131,10 +131,10 @@ int unblk_ldlnp_upper(armas_x_dense_t * A, armas_conf_t * conf)
  *   A22  =   L21*D1*L21.t + L22*D2*L22.t  => L22 = A22 - L21*D1*L21.t
  */
 static
-int blk_ldlnp_lower(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
+int blk_ldlnp_lower(armas_dense_t * A, armas_dense_t * W, int lb,
                     armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A11, A21, A22, L21, D;
+    armas_dense_t ATL, ABR, A00, A11, A21, A22, L21, D;
     int err = 0;
 
     EMPTY(A00);
@@ -152,22 +152,22 @@ int blk_ldlnp_lower(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
             __nil, &A21, &A22, /**/ A, lb, ARMAS_PBOTTOMRIGHT);
         // ---------------------------------------------------------------------
         unblk_ldlnp_lower(&A11, conf);
-        armas_x_diag(&D, &A11, 0);
+        armas_diag(&D, &A11, 0);
 
         // A21 = A21*A11.-T
-        armas_x_solve_trm(&A21, ONE, &A11,
+        armas_solve_trm(&A21, ONE, &A11,
                           ARMAS_RIGHT|ARMAS_LOWER|ARMAS_UNIT|ARMAS_TRANS, conf);
         // A21 = A21.D.-1  (=L21)
-        armas_x_solve_diag(&A21, ONE, &D, ARMAS_RIGHT, conf);
+        armas_solve_diag(&A21, ONE, &D, ARMAS_RIGHT, conf);
 
         // Wrk = L21 = D1*L21.T
-        armas_x_make(&L21, A21.rows, A21.cols, A21.rows, armas_x_data(W));
-        armas_x_mcopy(&L21, &A21, 0, conf);
+        armas_make(&L21, A21.rows, A21.cols, A21.rows, armas_data(W));
+        armas_mcopy(&L21, &A21, 0, conf);
         // L21 = L21*D
-        armas_x_mult_diag(&L21, ONE, &D, ARMAS_RIGHT, conf);
+        armas_mult_diag(&L21, ONE, &D, ARMAS_RIGHT, conf);
 
         // A22 = A22 - L21*A21.T
-        armas_x_update_trm(ONE, &A22,
+        armas_update_trm(ONE, &A22,
                            -ONE, &L21, &A21, ARMAS_LOWER|ARMAS_TRANSB, conf);
 
         // ---------------------------------------------------------------------
@@ -180,10 +180,10 @@ int blk_ldlnp_lower(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
 
 
 static
-int blk_ldlnp_upper(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
+int blk_ldlnp_upper(armas_dense_t * A, armas_dense_t * W, int lb,
                     armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A01, A11, A22, D, L01;
+    armas_dense_t ATL, ABR, A00, A01, A11, A22, D, L01;
     int err = 0;
 
     mat_partition_2x2(
@@ -198,22 +198,22 @@ int blk_ldlnp_upper(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
             __nil, __nil, &A22, /**/ A, lb, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------
         unblk_ldlnp_upper(&A11, conf);
-        armas_x_diag(&D, &A11, 0);
+        armas_diag(&D, &A11, 0);
 
         // A01 = A01*A11.-T
-        armas_x_solve_trm(&A01, ONE, &A11,
+        armas_solve_trm(&A01, ONE, &A11,
                           ARMAS_RIGHT|ARMAS_UPPER|ARMAS_UNIT|ARMAS_TRANS, conf);
         // A01 = A01.D.-1  (=L01)
-        armas_x_solve_diag(&A01, ONE, &D, ARMAS_RIGHT, conf);
+        armas_solve_diag(&A01, ONE, &D, ARMAS_RIGHT, conf);
 
         // Wrk = L01 = D1*L01.T
-        armas_x_make(&L01, A01.rows, A01.cols, A01.rows, armas_x_data(W));
-        armas_x_mcopy(&L01, &A01, 0, conf);
+        armas_make(&L01, A01.rows, A01.cols, A01.rows, armas_data(W));
+        armas_mcopy(&L01, &A01, 0, conf);
         // L01 = L01*D
-        armas_x_mult_diag(&L01, ONE, &D, ARMAS_RIGHT, conf);
+        armas_mult_diag(&L01, ONE, &D, ARMAS_RIGHT, conf);
 
         // A00 = A00 - L01*A01.T
-        armas_x_update_trm(ONE, &A00,
+        armas_update_trm(ONE, &A00,
                            -ONE, &L01, &A01, ARMAS_UPPER|ARMAS_TRANSB, conf);
 
         // ---------------------------------------------------------------------
@@ -246,7 +246,7 @@ int blk_ldlnp_upper(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
  * @retval  0  ok
  * @retval <0 error
  */
-int ldlfactor_np(armas_x_dense_t * A, armas_x_dense_t * W, int flags,
+int ldlfactor_np(armas_dense_t * A, armas_dense_t * W, int flags,
                  armas_conf_t * conf)
 {
     armas_env_t *env;
@@ -260,7 +260,7 @@ int ldlfactor_np(armas_x_dense_t * A, armas_x_dense_t * W, int flags,
     }
     env = armas_getenv();
     lb = env->lb;
-    ws = armas_x_size(W);
+    ws = armas_size(W);
     ws_opt = ws_calculate(A->rows, lb);
 
     if (ws > 0 && ws < ws_opt) {
@@ -301,13 +301,13 @@ int ldlfactor_np(armas_x_dense_t * A, armas_x_dense_t * W, int flags,
  * @retval  0 ok
  * @retval <0 error
  */
-int ldlsolve_np(armas_x_dense_t * B, const armas_x_dense_t * A, int flags,
+int ldlsolve_np(armas_dense_t * B, const armas_dense_t * A, int flags,
                 armas_conf_t * conf)
 {
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_size(B) == 0 || armas_x_size(A) == 0)
+    if (armas_size(B) == 0 || armas_size(A) == 0)
         return 0;
 
     if (A->rows != A->cols || A->cols != B->rows) {
@@ -317,15 +317,15 @@ int ldlsolve_np(armas_x_dense_t * B, const armas_x_dense_t * A, int flags,
 
     if (flags & ARMAS_TRANS) {
         // X = L.-1*(D.-1*(L.-T*B))
-        armas_x_solve_trm(B, ONE, A,
+        armas_solve_trm(B, ONE, A,
                           flags | ARMAS_UNIT | ARMAS_TRANS | ARMAS_LEFT, conf);
-        armas_x_solve_diag(B, ONE, A, ARMAS_LEFT, conf);
-        armas_x_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_LEFT, conf);
+        armas_solve_diag(B, ONE, A, ARMAS_LEFT, conf);
+        armas_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_LEFT, conf);
     } else {
         // X = L.-T*(D.-1*(L.-1*B))
-        armas_x_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_LEFT, conf);
-        armas_x_solve_diag(B, ONE, A, ARMAS_LEFT, conf);
-        armas_x_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_TRANS, conf);
+        armas_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_LEFT, conf);
+        armas_solve_diag(B, ONE, A, ARMAS_LEFT, conf);
+        armas_solve_trm(B, ONE, A, flags | ARMAS_UNIT | ARMAS_TRANS, conf);
     }
     return 0;
 }

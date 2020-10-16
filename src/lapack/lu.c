@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -14,17 +14,17 @@
 #include "dlpack.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_lufactor)
+// this file provides following type dependent functions
+#if defined(armas_lufactor)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_blas2) && defined(armas_x_blas3)
+#if defined(armas_blas2) && defined(armas_blas3)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -33,9 +33,9 @@
 #include "pivot.h"
 
 static
-int unblk_lufactor_nopiv(armas_x_dense_t * A, armas_conf_t * conf)
+int unblk_lufactor_nopiv(armas_dense_t * A, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a12, a21, A22;
+    armas_dense_t ATL, ABR, A00, a11, a12, a21, A22;
     DTYPE a11val;
 
     EMPTY(A00);
@@ -51,11 +51,11 @@ int unblk_lufactor_nopiv(armas_x_dense_t * A, armas_conf_t * conf)
             __nil, &a21, &A22, /**/ A, 1, ARMAS_PBOTTOMRIGHT);
         // ---------------------------------------------------------------------
         // a21 = a21/a11
-        a11val = armas_x_get(&a11, 0, 0);
-        armas_x_scale(&a21, ONE/a11val, conf);
+        a11val = armas_get(&a11, 0, 0);
+        armas_scale(&a21, ONE/a11val, conf);
 
         // A22 = A22 - a21*a12
-        armas_x_mvupdate(ONE, &A22, -ONE, &a21, &a12, conf);
+        armas_mvupdate(ONE, &A22, -ONE, &a21, &a12, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -65,9 +65,9 @@ int unblk_lufactor_nopiv(armas_x_dense_t * A, armas_conf_t * conf)
 }
 
 static
-int blk_lufactor_nopiv(armas_x_dense_t * A, int lb, armas_conf_t * conf)
+int blk_lufactor_nopiv(armas_dense_t * A, int lb, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A11, A12, A21, A22;
+    armas_dense_t ATL, ABR, A00, A11, A12, A21, A22;
 
     EMPTY(A00);
 
@@ -84,12 +84,12 @@ int blk_lufactor_nopiv(armas_x_dense_t * A, int lb, armas_conf_t * conf)
         // A11 = LU(A11)
         unblk_lufactor_nopiv(&A11, conf);
         // A12 = trilu(A11)*A12.-1
-        armas_x_solve_trm(&A12, ONE, &A11,
+        armas_solve_trm(&A12, ONE, &A11,
                           ARMAS_LEFT | ARMAS_LOWER | ARMAS_UNIT, conf);
         // A21 = A21.-1*triu(A11)
-        armas_x_solve_trm(&A21, ONE, &A11, ARMAS_RIGHT | ARMAS_UPPER, conf);
+        armas_solve_trm(&A21, ONE, &A11, ARMAS_RIGHT | ARMAS_UPPER, conf);
         // A22 = A22 - A21*A12
-        armas_x_mult(ONE, &A22, -ONE, &A21, &A12, ARMAS_NONE, conf);
+        armas_mult(ONE, &A22, -ONE, &A21, &A12, ARMAS_NONE, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -107,11 +107,11 @@ int blk_lufactor_nopiv(armas_x_dense_t * A, int lb, armas_conf_t * conf)
  * Unblocked factorization with partial (row) pivoting. 'Left looking' version.
  */
 static
-int unblk_lufactor(armas_x_dense_t * A, armas_pivot_t * P, int offset,
+int unblk_lufactor(armas_dense_t * A, armas_pivot_t * P, int offset,
                      armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, A00, a01, a10, a11, a21, A20, A22;
-    armas_x_dense_t AL, AR, A0, a1, A2, aB0;
+    armas_dense_t ATL, ATR, ABL, ABR, A00, a01, a10, a11, a21, A20, A22;
+    armas_dense_t AL, AR, A0, a1, A2, aB0;
     armas_pivot_t pT, pB, p0, p1, p2;
     int pi, err = 0;
     DTYPE a11val, aa;
@@ -136,35 +136,35 @@ int unblk_lufactor(armas_x_dense_t * A, armas_pivot_t * P, int offset,
             &pT, &p0, &p1, &p2, /**/ P, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
         // A. apply previous pivots and updates to current column
-        armas_x_pivot_rows(&a1, &p0, ARMAS_PIVOT_FORWARD, conf);
+        armas_pivot_rows(&a1, &p0, ARMAS_PIVOT_FORWARD, conf);
         // a. a01 = trilu(A00)\a01
-        armas_x_mvsolve_trm(&a01, ONE, &A00,
+        armas_mvsolve_trm(&a01, ONE, &A00,
                             ARMAS_LEFT | ARMAS_LOWER | ARMAS_UNIT, conf);
         // b. a11 = a11 - a10*a01
-        a11val = armas_x_get(&a11, 0, 0);
-        aa = armas_x_dot(&a10, &a01, conf);
-        armas_x_set(&a11, 0, 0, a11val - aa);
+        a11val = armas_get(&a11, 0, 0);
+        aa = armas_dot(&a10, &a01, conf);
+        armas_set(&a11, 0, 0, a11val - aa);
         // c. a21 = a21 - A20*a01
-        err = armas_x_mvmult(ONE, &a21, -ONE, &A20, &a01, ARMAS_NONE, conf);
+        err = armas_mvmult(ONE, &a21, -ONE, &A20, &a01, ARMAS_NONE, conf);
         // HERE:
         // current column has been updated with effects of earlier computations.
         // B. find pivot index on vector ( a11 ) == ABR[:,0] (1st column of ABR)
         //                               ( a21 )
-        armas_x_column(&aB0, &ABR, 0);
-        pi = armas_x_pivot_index(&aB0, conf);
+        armas_column(&aB0, &ABR, 0);
+        pi = armas_pivot_index(&aB0, conf);
         armas_pivot_set(&p1, 0, pi);
-        armas_x_pivot_rows(&aB0, &p1, ARMAS_PIVOT_FORWARD, conf);
+        armas_pivot_rows(&aB0, &p1, ARMAS_PIVOT_FORWARD, conf);
 
         // a21 = a21 / a11
-        a11val = armas_x_get(&a11, 0, 0);
+        a11val = armas_get(&a11, 0, 0);
         if (a11val == 0.0) {
             conf->error = ARMAS_ESINGULAR;
             err = -1;
         } else {
-            armas_x_scale(&a21, ONE/a11val, conf);
+            armas_scale(&a21, ONE/a11val, conf);
         }
         // apply pivots on left columns
-        armas_x_pivot_rows(&ABL, &p1, ARMAS_PIVOT_FORWARD, conf);
+        armas_pivot_rows(&ABL, &p1, ARMAS_PIVOT_FORWARD, conf);
         // pivot index to origin of matrix row numbers
         armas_pivot_set(&p1, 0, pi + ATL.rows);
         // ---------------------------------------------------------------------
@@ -179,8 +179,8 @@ int unblk_lufactor(armas_x_dense_t * A, armas_pivot_t * P, int offset,
 
     if (ABR.cols > 0) {
         // here A.rows < A.cols; handle the right columns
-        armas_x_pivot_rows(&ATR, P, ARMAS_PIVOT_FORWARD, conf);
-        armas_x_solve_trm(&ATR, ONE, &ATL,
+        armas_pivot_rows(&ATR, P, ARMAS_PIVOT_FORWARD, conf);
+        armas_solve_trm(&ATR, ONE, &ATL,
                           ARMAS_LEFT | ARMAS_UNIT | ARMAS_LOWER, conf);
     }
     return err;
@@ -192,11 +192,11 @@ int unblk_lufactor(armas_x_dense_t * A, armas_pivot_t * P, int offset,
  * updated on current block and left blocks.
  */
 static
-int blk_lufactor(armas_x_dense_t * A, armas_pivot_t * P, int lb,
+int blk_lufactor(armas_dense_t * A, armas_pivot_t * P, int lb,
                    armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, A00, A01, A10, A11, A21, A20, A22;
-    armas_x_dense_t AL, AR, A0, A1, A2, AB0;
+    armas_dense_t ATL, ATR, ABL, ABR, A00, A01, A10, A11, A21, A20, A22;
+    armas_dense_t AL, AR, A0, A1, A2, AB0;
     armas_pivot_t pT, pB, p0, p1, p2;
     int k, pi, err = 0;
 
@@ -223,14 +223,14 @@ int blk_lufactor(armas_x_dense_t * A, armas_pivot_t * P, int lb,
             &pT, &p0, &p1, &p2, /**/ P, A11.cols, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
         // A. apply previous pivots and updates to current column
-        armas_x_pivot_rows(&A1, &p0, ARMAS_PIVOT_FORWARD, conf);
+        armas_pivot_rows(&A1, &p0, ARMAS_PIVOT_FORWARD, conf);
         // a. A01 = trilu(A00) \ A01
-        armas_x_solve_trm(&A01, ONE, &A00,
+        armas_solve_trm(&A01, ONE, &A00,
                           ARMAS_LEFT | ARMAS_LOWER | ARMAS_UNIT, conf);
         // b. A11 = A11 - A10*A01
-        armas_x_mult(ONE, &A11, -ONE, &A10, &A01, ARMAS_NONE, conf);
+        armas_mult(ONE, &A11, -ONE, &A10, &A01, ARMAS_NONE, conf);
         // c. A21 = A21 - A20*A01
-        armas_x_mult(ONE, &A21, -ONE, &A20, &A01, ARMAS_NONE, conf);
+        armas_mult(ONE, &A21, -ONE, &A20, &A01, ARMAS_NONE, conf);
         // HERE:
         // current block has been updated with effects of earlier computations.
         // B. factor ( A11 )
@@ -239,7 +239,7 @@ int blk_lufactor(armas_x_dense_t * A, armas_pivot_t * P, int lb,
         err = unblk_lufactor(&AB0, &p1, ATL.rows, conf);
 
         // apply pivots on left columns
-        armas_x_pivot_rows(&ABL, &p1, ARMAS_PIVOT_FORWARD, conf);
+        armas_pivot_rows(&ABL, &p1, ARMAS_PIVOT_FORWARD, conf);
 
         // shift pivot indicies to origin of matrix row numbers
         for (k = 0; k < armas_pivot_size(&p1); k++) {
@@ -258,8 +258,8 @@ int blk_lufactor(armas_x_dense_t * A, armas_pivot_t * P, int lb,
 
     if (ABR.cols > 0) {
         // here A.rows < A.cols; handle the right columns
-        armas_x_pivot_rows(&ATR, P, ARMAS_PIVOT_FORWARD, conf);
-        armas_x_solve_trm(&ATR, ONE, &ATL,
+        armas_pivot_rows(&ATR, P, ARMAS_PIVOT_FORWARD, conf);
+        armas_solve_trm(&ATR, ONE, &ATL,
                           ARMAS_LEFT | ARMAS_UNIT | ARMAS_LOWER, conf);
     }
     return err;
@@ -288,7 +288,7 @@ int blk_lufactor(armas_x_dense_t * A, armas_pivot_t * P, int lb,
  * Compatible with lapack.xGETRF
  * @ingroup lapack
  */
-int armas_x_lufactor(armas_x_dense_t * A, armas_pivot_t * P,
+int armas_lufactor(armas_dense_t * A, armas_pivot_t * P,
                      armas_conf_t * cf)
 {
     int err = 0;
@@ -317,7 +317,7 @@ int armas_x_lufactor(armas_x_dense_t * A, armas_pivot_t * P,
  *
  * Solve a system of linear equations \f$ AX = B \f$ or \f$ A^TX = B \f$
  * with general N-by-N* matrix A using the LU factorization computed
- * by armas_x_lufactor().
+ * by armas_lufactor().
  *
  * @param[in,out] B
  *      On entry, the right hand side matrix B. On exit, the solution matrix X.
@@ -339,7 +339,7 @@ int armas_x_lufactor(armas_x_dense_t * A, armas_pivot_t * P,
  * Compatible with lapack.DGETRS.
  * @ingroup lapack
  */
-int armas_x_lusolve(armas_x_dense_t * B, armas_x_dense_t * A,
+int armas_lusolve(armas_dense_t * B, armas_dense_t * A,
                     armas_pivot_t * P, int flags, armas_conf_t * cf)
 {
     int ok;
@@ -353,20 +353,20 @@ int armas_x_lusolve(armas_x_dense_t * B, armas_x_dense_t * A,
     }
     if (P) {
         // pivots; apply to B.
-        armas_x_pivot_rows(B, P, ARMAS_PIVOT_FORWARD, cf);
+        armas_pivot_rows(B, P, ARMAS_PIVOT_FORWARD, cf);
     }
 
     if (flags & ARMAS_TRANS) {
         // solve A.T*X = B; X = A.-T*B == (L.T*U.T).-1*B == U.-T*(L.-T*B)
-        armas_x_solve_trm(
+        armas_solve_trm(
             B, ONE, A, ARMAS_LEFT | ARMAS_LOWER | ARMAS_UNIT | ARMAS_TRANSA, cf);
-        armas_x_solve_trm(
+        armas_solve_trm(
             B, ONE, A, ARMAS_LEFT | ARMAS_UPPER | ARMAS_TRANSA, cf);
     } else {
         // solve A*X = B;  X = A.-1*B == (L*U).-1*B == U.-1*(L.-1*B)
-        armas_x_solve_trm(
+        armas_solve_trm(
             B, ONE, A, ARMAS_LEFT | ARMAS_LOWER | ARMAS_UNIT, cf);
-        armas_x_solve_trm(
+        armas_solve_trm(
             B, ONE, A, ARMAS_LEFT | ARMAS_UPPER, cf);
     }
     return 0;

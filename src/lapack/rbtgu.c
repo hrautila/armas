@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2015-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_update2_rbt)  && defined(armas_x_update2_rbt_descend)
+// this file provides following type dependent functions
+#if defined(armas_update2_rbt)  && defined(armas_update2_rbt_descend)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_mscale)
+#if defined(armas_mscale)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -59,8 +59,8 @@
  *     lb >= mb; lb >= nb
  */
 static
-void update2_rbt(armas_x_dense_t * A, armas_x_dense_t * R,
-                 armas_x_dense_t * S, int Nd, armas_conf_t * conf)
+void update2_rbt(armas_dense_t * A, armas_dense_t * R,
+                 armas_dense_t * S, int Nd, armas_conf_t * conf)
 {
     int lb, nb, mb, i, j;
     DTYPE r0, r1, s0, s1;
@@ -77,61 +77,61 @@ void update2_rbt(armas_x_dense_t * A, armas_x_dense_t * R,
     mb = A->rows - lb;
     nb = A->cols - lb;
     for (j = 0; j < nb; j++) {
-        s0 = armas_x_get_at_unsafe(S, j);
-        s1 = armas_x_get_at_unsafe(S, j + lb);
+        s0 = armas_get_at_unsafe(S, j);
+        s1 = armas_get_at_unsafe(S, j + lb);
         for (i = 0; i < mb; i++) {
-            r0 = armas_x_get_at_unsafe(R, i);
-            r1 = armas_x_get_at_unsafe(R, i + lb);
-            a00 = armas_x_get_unsafe(A, i, j);
-            a01 = armas_x_get_unsafe(A, i, j + lb);
-            a10 = armas_x_get_unsafe(A, i + lb, j);
-            a11 = armas_x_get_unsafe(A, i + lb, j + lb);
-            armas_x_set_unsafe(A, i, j,
+            r0 = armas_get_at_unsafe(R, i);
+            r1 = armas_get_at_unsafe(R, i + lb);
+            a00 = armas_get_unsafe(A, i, j);
+            a01 = armas_get_unsafe(A, i, j + lb);
+            a10 = armas_get_unsafe(A, i + lb, j);
+            a11 = armas_get_unsafe(A, i + lb, j + lb);
+            armas_set_unsafe(A, i, j,
                                HALF * s0 * r0 * ((a00 + a01) + (a10 + a11)));
-            armas_x_set_unsafe(A, i, j + lb,
+            armas_set_unsafe(A, i, j + lb,
                                HALF * s1 * r0 * ((a00 + a10) - (a01 + a11)));
-            armas_x_set_unsafe(A, i + lb, j,
+            armas_set_unsafe(A, i + lb, j,
                                HALF * s0 * r1 * ((a00 + a01) - (a10 + a11)));
-            armas_x_set_unsafe(A, i + lb, j + lb,
+            armas_set_unsafe(A, i + lb, j + lb,
                                HALF * s1 * r1 * ((a00 + a11) - (a01 + a10)));
         }
         // for case when Nd > rows(A); here i+lb > rows(A)
         for (; i < lb; i++) {
-            r0 = armas_x_get_at_unsafe(R, i);
-            a00 = armas_x_get_unsafe(A, i, j);
-            a01 = armas_x_get_unsafe(A, i, j + lb);
-            armas_x_set_unsafe(A, i, j, HALF * s0 * r0 * (a00 + a01));
-            armas_x_set_unsafe(A, i, j + lb, HALF * s1 * r0 * (a00 - a01));
+            r0 = armas_get_at_unsafe(R, i);
+            a00 = armas_get_unsafe(A, i, j);
+            a01 = armas_get_unsafe(A, i, j + lb);
+            armas_set_unsafe(A, i, j, HALF * s0 * r0 * (a00 + a01));
+            armas_set_unsafe(A, i, j + lb, HALF * s1 * r0 * (a00 - a01));
         }
     }
     // Nd > cols(A); here j+lb > cols(A); this updates first and second quadrant
     for (; j < lb; j++) {
-        s0 = armas_x_get_at_unsafe(S, j);
+        s0 = armas_get_at_unsafe(S, j);
         for (i = 0; i < mb; i++) {
-            r0 = armas_x_get_at_unsafe(R, i);
-            r1 = armas_x_get_at_unsafe(R, i + lb);
-            a00 = armas_x_get_unsafe(A, i, j);
-            a10 = armas_x_get_unsafe(A, i + lb, j);
-            armas_x_set_unsafe(A, i, j, HALF * s0 * r0 * (a00 + a10));
-            armas_x_set_unsafe(A, i + lb, j, HALF * s0 * r1 * (a00 - a10));
+            r0 = armas_get_at_unsafe(R, i);
+            r1 = armas_get_at_unsafe(R, i + lb);
+            a00 = armas_get_unsafe(A, i, j);
+            a10 = armas_get_unsafe(A, i + lb, j);
+            armas_set_unsafe(A, i, j, HALF * s0 * r0 * (a00 + a10));
+            armas_set_unsafe(A, i + lb, j, HALF * s0 * r1 * (a00 - a10));
         }
         // for case when Nd > rows(A);
         for (; i < lb; i++) {
-            r0 = armas_x_get_at_unsafe(R, i);
-            a00 = armas_x_get_unsafe(A, i, j);
-            armas_x_set_unsafe(A, i, j, HALF * s0 * r0 * (a00));
+            r0 = armas_get_at_unsafe(R, i);
+            a00 = armas_get_unsafe(A, i, j);
+            armas_set_unsafe(A, i, j, HALF * s0 * r0 * (a00));
         }
 
     }
 
 }
 
-int armas_x_update2_rbt_descend(
-    armas_x_dense_t * A, armas_x_dense_t * U,
-    armas_x_dense_t * V, int Nd, armas_conf_t * conf)
+int armas_update2_rbt_descend(
+    armas_dense_t * A, armas_dense_t * U,
+    armas_dense_t * V, int Nd, armas_conf_t * conf)
 {
-    armas_x_dense_t A00, A01, A10, A11;
-    armas_x_dense_t UL, UR, U0, U1, VL, VR, V0, V1;
+    armas_dense_t A00, A01, A10, A11;
+    armas_dense_t UL, UR, U0, U1, VL, VR, V0, V1;
     int lb;
 
     EMPTY(VL);
@@ -157,10 +157,10 @@ int armas_x_update2_rbt_descend(
     mat_partition_2x2(&A00, &A01, &A10, &A11, /**/ A, lb, lb, ARMAS_PTOPLEFT);
 
     // compute subblocks;
-    armas_x_update2_rbt_descend(&A00, &U0, &V0, Nd / 2, conf);
-    armas_x_update2_rbt_descend(&A01, &U0, &V1, Nd / 2, conf);
-    armas_x_update2_rbt_descend(&A10, &U1, &V0, Nd / 2, conf);
-    armas_x_update2_rbt_descend(&A11, &U1, &V1, Nd / 2, conf);
+    armas_update2_rbt_descend(&A00, &U0, &V0, Nd / 2, conf);
+    armas_update2_rbt_descend(&A01, &U0, &V1, Nd / 2, conf);
+    armas_update2_rbt_descend(&A10, &U1, &V0, Nd / 2, conf);
+    armas_update2_rbt_descend(&A11, &U1, &V1, Nd / 2, conf);
 
     // update current level
     update2_rbt(A, &UR, &VR, Nd, conf);
@@ -189,8 +189,8 @@ int armas_x_update2_rbt_descend(
  *  @retval <0  Failure
  *  @ingroup lapack
  */
-int armas_x_update2_rbt(armas_x_dense_t * A,
-                        armas_x_dense_t * U, armas_x_dense_t * V,
+int armas_update2_rbt(armas_dense_t * A,
+                        armas_dense_t * U, armas_dense_t * V,
                         armas_conf_t * conf)
 {
     int ok, Nd, twod;
@@ -209,7 +209,7 @@ int armas_x_update2_rbt(armas_x_dense_t * A,
         return -ARMAS_ESIZE;
     }
 
-    armas_x_update2_rbt_descend(A, U, V, Nd, conf);
+    armas_update2_rbt_descend(A, U, V, Nd, conf);
     return 0;
 }
 #else

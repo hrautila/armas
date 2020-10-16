@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,18 +12,18 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_bdsvd) && defined(armas_x_bdsvd_w)
+// this file provides following type dependent functions
+#if defined(armas_bdsvd) && defined(armas_bdsvd_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_gvcompute) && defined(armas_x_gvupdate) \
-    && defined(armas_x_bdsvd2x2_vec)
+#if defined(armas_gvcompute) && defined(armas_gvupdate) \
+    && defined(armas_bdsvd2x2_vec)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -35,52 +35,52 @@
  * \brief Rotate lower bidiagonal matrix to upper bidiagonal matrix.
  */
 static
-void bdmake_upper(armas_x_dense_t * D, armas_x_dense_t * E,
-                  armas_x_dense_t * U, armas_x_dense_t * C,
-                  armas_x_dense_t * CS)
+void bdmake_upper(armas_dense_t * D, armas_dense_t * E,
+                  armas_dense_t * U, armas_dense_t * C,
+                  armas_dense_t * CS)
 {
-    armas_x_dense_t Cl, Sl;
+    armas_dense_t Cl, Sl;
     DTYPE cosl, sinl, r, d0, e0, d1;
-    int saves, k, N = armas_x_size(D);
+    int saves, k, N = armas_size(D);
 
     saves = 0;
     if (U || C) {
-        armas_x_subvector(&Cl, CS, 0, N);
-        armas_x_subvector(&Sl, CS, N, N);
+        armas_subvector(&Cl, CS, 0, N);
+        armas_subvector(&Sl, CS, N, N);
         saves = 1;
     }
-    d0 = armas_x_get_at_unsafe(D, 0);
+    d0 = armas_get_at_unsafe(D, 0);
     for (k = 0; k < N - 1; k++) {
-        e0 = armas_x_get_at_unsafe(E, k);
-        d1 = armas_x_get_at_unsafe(D, k + 1);
-        armas_x_gvcompute(&cosl, &sinl, &r, d0, e0);
-        armas_x_set_at_unsafe(D, k, r);
-        armas_x_set_at_unsafe(E, k, sinl * d1);
+        e0 = armas_get_at_unsafe(E, k);
+        d1 = armas_get_at_unsafe(D, k + 1);
+        armas_gvcompute(&cosl, &sinl, &r, d0, e0);
+        armas_set_at_unsafe(D, k, r);
+        armas_set_at_unsafe(E, k, sinl * d1);
         d0 = cosl * d1;
-        armas_x_set_at_unsafe(D, k + 1, d0);
+        armas_set_at_unsafe(D, k + 1, d0);
         if (saves) {
-            armas_x_set_at_unsafe(&Cl, k, cosl);
-            armas_x_set_at_unsafe(&Sl, k, sinl);
+            armas_set_at_unsafe(&Cl, k, cosl);
+            armas_set_at_unsafe(&Sl, k, sinl);
         }
     }
 
     if (U && k > 0) {
-        armas_x_gvupdate(U, 0, &Cl, &Sl, N - 1, ARMAS_RIGHT);
+        armas_gvupdate(U, 0, &Cl, &Sl, N - 1, ARMAS_RIGHT);
     }
     if (C && k > 0) {
-        armas_x_gvupdate(C, 0, &Cl, &Sl, N - 1, ARMAS_LEFT);
+        armas_gvupdate(C, 0, &Cl, &Sl, N - 1, ARMAS_LEFT);
     }
 }
 
 /**
  * @brief Compute SVD of bidiagonal matrix.
  *
- * @see armas_x_bdsvd_w
+ * @see armas_bdsvd_w
  *
  * @ingroup lapack
  */
-int armas_x_bdsvd(armas_x_dense_t * D, armas_x_dense_t * E,
-                  armas_x_dense_t * U, armas_x_dense_t * V,
+int armas_bdsvd(armas_dense_t * D, armas_dense_t * E,
+                  armas_dense_t * U, armas_dense_t * V,
                   int flags, armas_conf_t * conf)
 {
     int err;
@@ -89,7 +89,7 @@ int armas_x_bdsvd(armas_x_dense_t * D, armas_x_dense_t * E,
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_bdsvd_w(D, E, U, V, flags, &wb, conf) < 0)
+    if (armas_bdsvd_w(D, E, U, V, flags, &wb, conf) < 0)
         return -1;
 
     wbs = &wb;
@@ -102,7 +102,7 @@ int armas_x_bdsvd(armas_x_dense_t * D, armas_x_dense_t * E,
         wbs = ARMAS_NOWORK;
     }
 
-    err = armas_x_bdsvd_w(D, E, U, V, flags, wbs, conf);
+    err = armas_bdsvd_w(D, E, U, V, flags, wbs, conf);
     armas_wrelease(&wb);
 
     return err;
@@ -148,14 +148,14 @@ int armas_x_bdsvd(armas_x_dense_t * D, armas_x_dense_t * E,
  * Corresponds to lapack.xBDSQR
  * @ingroup lapack
  */
-int armas_x_bdsvd_w(armas_x_dense_t * D,
-                    armas_x_dense_t * E,
-                    armas_x_dense_t * U,
-                    armas_x_dense_t * V,
+int armas_bdsvd_w(armas_dense_t * D,
+                    armas_dense_t * E,
+                    armas_dense_t * U,
+                    armas_dense_t * V,
                     int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t CS, *uu, *vv;
-    int uuvv, err, N = armas_x_size(D);
+    armas_dense_t CS, *uu, *vv;
+    int uuvv, err, N = armas_size(D);
     ABSTYPE tol = 8.0;
 
     if (!conf)
@@ -173,10 +173,10 @@ int armas_x_bdsvd_w(armas_x_dense_t * D,
         return 0;
     }
 
-    uu = (armas_x_dense_t *) 0;
-    vv = (armas_x_dense_t *) 0;
+    uu = (armas_dense_t *) 0;
+    vv = (armas_dense_t *) 0;
     // check for sizes
-    if (!(armas_x_isvector(D) && armas_x_isvector(E))) {
+    if (!(armas_isvector(D) && armas_isvector(E))) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
@@ -204,7 +204,7 @@ int armas_x_bdsvd_w(armas_x_dense_t * D,
         }
         vv = V;
     }
-    if (armas_x_size(E) != N - 1) {
+    if (armas_size(E) != N - 1) {
         conf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
@@ -215,9 +215,9 @@ int armas_x_bdsvd_w(armas_x_dense_t * D,
     }
 
     if (uu || vv) {
-        armas_x_make(&CS, 4 * N, 1, 4 * N, (DTYPE *) armas_wptr(wb));
+        armas_make(&CS, 4 * N, 1, 4 * N, (DTYPE *) armas_wptr(wb));
     } else {
-        armas_x_make(&CS, 0, 0, 1, (DTYPE *) 0);
+        armas_make(&CS, 0, 0, 1, (DTYPE *) 0);
     }
     if (flags & ARMAS_LOWER) {
         // rotate to UPPER bidiagonal
@@ -229,12 +229,12 @@ int armas_x_bdsvd_w(armas_x_dense_t * D,
         tol = ((ABSTYPE) conf->tolmult) * EPS;
     }
     if (conf->optflags & ARMAS_OBSVD_GOLUB) {
-        err = armas_x_bdsvd_golub(D, E, uu, vv, &CS, tol, conf);
+        err = armas_bdsvd_golub(D, E, uu, vv, &CS, tol, conf);
     } else {
-        err = armas_x_bdsvd_demmel(D, E, uu, vv, &CS, tol, flags, conf);
+        err = armas_bdsvd_demmel(D, E, uu, vv, &CS, tol, flags, conf);
     }
     if (err == 0) {
-        armas_x_sort_eigenvec(D, uu, vv, __nil, -1);
+        armas_sort_eigenvec(D, uu, vv, __nil, -1);
     } else {
         conf->error = ARMAS_ECONVERGE;
     }

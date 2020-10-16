@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_trdmult) && defined(armas_x_trdmult_w)
+// this file provides following type dependent functions
+#if defined(armas_trdmult) && defined(armas_trdmult_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_qrmult_w) && defined(armas_x_qlmult_w)
+#if defined(armas_qrmult_w) && defined(armas_qlmult_w)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -33,18 +33,18 @@
 
 /**
  * @brief Multiply matrix C with orthogonal matrix Q.
- * @see armas_x_trdmult_w
+ * @see armas_trdmult_w
  * @ingroup lapack
  */
-int armas_x_trdmult(armas_x_dense_t * C,
-                    const armas_x_dense_t * A,
-                    const armas_x_dense_t * tau, int flags, armas_conf_t * conf)
+int armas_trdmult(armas_dense_t * C,
+                    const armas_dense_t * A,
+                    const armas_dense_t * tau, int flags, armas_conf_t * conf)
 {
     if (!conf)
         conf = armas_conf_default();
 
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_trdmult_w(C, A, tau, flags, &wb, conf) < 0)
+    if (armas_trdmult_w(C, A, tau, flags, &wb, conf) < 0)
         return -1;
 
     wbs = &wb;
@@ -56,7 +56,7 @@ int armas_x_trdmult(armas_x_dense_t * C,
     } else
         wbs = ARMAS_NOWORK;
 
-    int stat = armas_x_trdmult_w(C, A, tau, flags, wbs, conf);
+    int stat = armas_trdmult_w(C, A, tau, flags, wbs, conf);
     armas_wrelease(&wb);
     return stat;
 }
@@ -84,12 +84,12 @@ int armas_x_trdmult(armas_x_dense_t * C,
  * @retval <0 Error
  * @ingroup lapack
  */
-int armas_x_trdmult_w(armas_x_dense_t * C,
-                      const armas_x_dense_t * A,
-                      const armas_x_dense_t * tau,
+int armas_trdmult_w(armas_dense_t * C,
+                      const armas_dense_t * A,
+                      const armas_dense_t * tau,
                       int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t Ch, Qh, tauh;
+    armas_dense_t Ch, Qh, tauh;
     int err = 0;
 
     if (!conf)
@@ -102,13 +102,13 @@ int armas_x_trdmult_w(armas_x_dense_t * C,
 
     if (wb && wb->bytes == 0) {
         if (flags & ARMAS_UPPER)
-            err = armas_x_qlmult_w(C, A, tau, flags, wb, conf);
+            err = armas_qlmult_w(C, A, tau, flags, wb, conf);
         else
-            err = armas_x_qrmult_w(C, A, tau, flags, wb, conf);
+            err = armas_qrmult_w(C, A, tau, flags, wb, conf);
         return err;
     }
 
-    if (!A || !tau || armas_x_size(tau) != A->cols) {
+    if (!A || !tau || armas_size(tau) != A->cols) {
         conf->error = ARMAS_EINVAL;
         return -1;
     }
@@ -126,22 +126,22 @@ int armas_x_trdmult_w(armas_x_dense_t * C,
 
     if (flags & ARMAS_UPPER) {
         if (flags & ARMAS_RIGHT) {
-            armas_x_submatrix(&Ch, C, 0, 0, C->rows, C->cols - 1);
+            armas_submatrix(&Ch, C, 0, 0, C->rows, C->cols - 1);
         } else {
-            armas_x_submatrix(&Ch, C, 0, 0, C->rows - 1, C->cols);
+            armas_submatrix(&Ch, C, 0, 0, C->rows - 1, C->cols);
         }
-        armas_x_submatrix(&Qh, A, 0, 1, A->rows - 1, A->rows - 1);
-        armas_x_submatrix(&tauh, tau, 0, 0, A->rows - 1, 1);
-        err = armas_x_qlmult_w(&Ch, &Qh, &tauh, flags, wb, conf);
+        armas_submatrix(&Qh, A, 0, 1, A->rows - 1, A->rows - 1);
+        armas_submatrix(&tauh, tau, 0, 0, A->rows - 1, 1);
+        err = armas_qlmult_w(&Ch, &Qh, &tauh, flags, wb, conf);
     } else {
         if (flags & ARMAS_RIGHT) {
-            armas_x_submatrix(&Ch, C, 0, 1, C->rows, C->cols - 1);
+            armas_submatrix(&Ch, C, 0, 1, C->rows, C->cols - 1);
         } else {
-            armas_x_submatrix(&Ch, C, 1, 0, C->rows - 1, C->cols);
+            armas_submatrix(&Ch, C, 1, 0, C->rows - 1, C->cols);
         }
-        armas_x_submatrix(&Qh, A, 1, 0, A->rows - 1, A->rows - 1);
-        armas_x_submatrix(&tauh, tau, 0, 0, A->rows - 1, 1);
-        err = armas_x_qrmult_w(&Ch, &Qh, &tauh, flags, wb, conf);
+        armas_submatrix(&Qh, A, 1, 0, A->rows - 1, A->rows - 1);
+        armas_submatrix(&tauh, tau, 0, 0, A->rows - 1, 1);
+        err = armas_qrmult_w(&Ch, &Qh, &tauh, flags, wb, conf);
     }
     return err;
 }

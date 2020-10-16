@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2016-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_hhouse)  && defined(armas_x_hhouse_apply)
+// this file provides following type dependent functions
+#if defined(armas_hhouse)  && defined(armas_hhouse_apply)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_blas1) && defined(armas_x_blas2)
+#if defined(armas_blas1) && defined(armas_blas2)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 
@@ -90,8 +90,8 @@ static inline double sqrt_x2my2(double x, double y)
  *  @retval <0 Failure
  *  @ingroup lapack
  */
-int armas_x_hhouse(armas_x_dense_t * a11, armas_x_dense_t * x,
-                   armas_x_dense_t * tau, int flags, armas_conf_t * cf)
+int armas_hhouse(armas_dense_t * a11, armas_dense_t * x,
+                   armas_dense_t * tau, int flags, armas_conf_t * cf)
 {
     DTYPE rsafmin, safmin, normx, alpha, beta, sign, delta, scale, t;
     int nscale = 0;
@@ -101,15 +101,15 @@ int armas_x_hhouse(armas_x_dense_t * a11, armas_x_dense_t * x,
 
     safmin = SAFEMIN / EPS;
 
-    normx = armas_x_nrm2(x, cf);
-    alpha = armas_x_get(a11, 0, 0);
+    normx = armas_nrm2(x, cf);
+    alpha = armas_get(a11, 0, 0);
     if (ABS(alpha) < normx) {
         // alpha^2 - normx^2 < 0; sqrt not defined
         cf->error = ARMAS_EINVAL;
         return -ARMAS_EINVAL;
     }
     if (normx == 0.0) {
-        armas_x_set(tau, 0, 0, 0.0);
+        armas_set(tau, 0, 0, 0.0);
         return 0;
     }
     sign = SIGN(alpha) ? -1.0 : 1.0;
@@ -121,12 +121,12 @@ int armas_x_hhouse(armas_x_dense_t * a11, armas_x_dense_t * x,
         rsafmin = 1.0 / safmin;
         do {
             nscale++;
-            armas_x_scale(x, rsafmin, cf);
+            armas_scale(x, rsafmin, cf);
             beta *= rsafmin;
             alpha *= rsafmin;
         } while (ABS(beta) < safmin);
         // now beta in [safmin ... 1.0]
-        normx = armas_x_nrm2(x, cf);
+        normx = armas_nrm2(x, cf);
         beta = sqrt_x2my2(alpha, normx);
     }
 
@@ -167,15 +167,15 @@ int armas_x_hhouse(armas_x_dense_t * a11, armas_x_dense_t * x,
         break;
     }
     // v = - x/(alpha - beta)
-    armas_x_scale(x, scale, cf);
+    armas_scale(x, scale, cf);
     // tau = 2.0/(1 - v^T v) = 2.0/(1 - (normx/delta)*(normx/delta)
     t = 2.0 / (1.0 - (normx / delta) * (normx / delta));
-    armas_x_set(tau, 0, 0, t);
+    armas_set(tau, 0, 0, t);
 
     while (nscale-- > 0) {
         beta *= safmin;
     }
-    armas_x_set(a11, 0, 0, beta);
+    armas_set(a11, 0, 0, beta);
     return 0;
 }
 
@@ -214,45 +214,45 @@ int armas_x_hhouse(armas_x_dense_t * a11, armas_x_dense_t * x,
  *                  w1 := tau*(a1 + A2.T*v) if side == LEFT
  *                     := tau*(a1 + A2*v)   if side == RIGHT
  */
-int armas_x_hhouse_apply(armas_x_dense_t * tau, armas_x_dense_t * v,
-                         armas_x_dense_t * a1, armas_x_dense_t * A2,
-                         armas_x_dense_t * w, int flags, armas_conf_t * cf)
+int armas_hhouse_apply(armas_dense_t * tau, armas_dense_t * v,
+                         armas_dense_t * a1, armas_dense_t * A2,
+                         armas_dense_t * w, int flags, armas_conf_t * cf)
 {
     DTYPE tval;
-    armas_x_dense_t w1;
+    armas_dense_t w1;
 
     if (!cf)
         cf = armas_conf_default();
-    if (armas_x_size(w) < armas_x_size(a1)) {
+    if (armas_size(w) < armas_size(a1)) {
         cf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
-    armas_x_make(&w1, armas_x_size(a1), 1, armas_x_size(a1), armas_x_data(w));
+    armas_make(&w1, armas_size(a1), 1, armas_size(a1), armas_data(w));
 
-    tval = armas_x_get(tau, 0, 0);
+    tval = armas_get(tau, 0, 0);
     if (tval == 0.0) {
         return 0;
     }
     // w1 = a1
-    armas_x_copy(&w1, a1, cf);
+    armas_copy(&w1, a1, cf);
     if (flags & ARMAS_LEFT) {
         // w1 = a1 + A2.T*v
-        armas_x_mvmult(ONE, &w1, ONE, A2, v, ARMAS_TRANSA, cf);
+        armas_mvmult(ONE, &w1, ONE, A2, v, ARMAS_TRANSA, cf);
     } else {
         // w1 = a1 + A2*v
-        armas_x_mvmult(ONE, &w1, ONE, A2, v, ARMAS_NONE, cf);
+        armas_mvmult(ONE, &w1, ONE, A2, v, ARMAS_NONE, cf);
     }
     // w1 = tau*w1
-    armas_x_scale(&w1, tval, cf);
+    armas_scale(&w1, tval, cf);
 
     // a1 = a1 - w1
-    armas_x_axpy(a1, -ONE, &w1, cf);
+    armas_axpy(a1, -ONE, &w1, cf);
 
     // A2 = A2 + v*w1
     if (flags & ARMAS_LEFT) {
-        armas_x_mvupdate(ONE, A2, ONE, v, &w1, cf);
+        armas_mvupdate(ONE, A2, ONE, v, &w1, cf);
     } else {
-        armas_x_mvupdate(ONE, A2, ONE, &w1, v, cf);
+        armas_mvupdate(ONE, A2, ONE, &w1, v, cf);
     }
     return 0;
 }

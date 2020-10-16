@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_housemult) && defined(armas_x_housemult_w)
+// this file provides following type dependent functions
+#if defined(armas_housemult) && defined(armas_housemult_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_blas1) && defined(armas_x_blas2)
+#if defined(armas_blas1) && defined(armas_blas2)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -48,13 +48,13 @@
  *    3. (flags & ARMAS_UNIT) != 0 --> len(tau) == len(P.col)
  */
 static
-void hmult_left(armas_x_dense_t * X, armas_x_dense_t * tau, armas_x_dense_t * P,
-                armas_x_dense_t * w, int flags, armas_conf_t * cf)
+void hmult_left(armas_dense_t * X, armas_dense_t * tau, armas_dense_t * P,
+                armas_dense_t * w, int flags, armas_conf_t * cf)
 {
     int pdir, xdir, xstart, pstart, xm, pm, pn;
-    armas_x_dense_t PTL, PBR, P00, p11, P22, p21;
-    armas_x_dense_t XT, XB, X0, x1, X2;
-    armas_x_dense_t tT, tB, t0, t1, t2, t, v, *vp, *tp = __nil;
+    armas_dense_t PTL, PBR, P00, p11, P22, p21;
+    armas_dense_t XT, XB, X0, x1, X2;
+    armas_dense_t tT, tB, t0, t1, t2, t, v, *vp, *tp = __nil;
     DTYPE _tau, _v0val;
 
     EMPTY(tT);
@@ -69,7 +69,7 @@ void hmult_left(armas_x_dense_t * X, armas_x_dense_t * tau, armas_x_dense_t * P,
 
     int unit = flags & ARMAS_UNIT;
     int m = P->cols;
-    int isvector = armas_x_isvector(X);
+    int isvector = armas_isvector(X);
 
     if ((flags & ARMAS_TRANS) != 0) {
         // compute x = H(m-1)*...H(1)*H(0)*x
@@ -84,7 +84,7 @@ void hmult_left(armas_x_dense_t * X, armas_x_dense_t * tau, armas_x_dense_t * P,
          */
         pm = max(0, P->rows - P->cols);
         pn = max(0, P->cols - P->rows);
-        xm = max(0, armas_x_size(tau) - P->cols);
+        xm = max(0, armas_size(tau) - P->cols);
         xstart = ARMAS_PBOTTOM;
         pstart = ARMAS_PBOTTOMRIGHT;
         pdir = ARMAS_PTOPLEFT;
@@ -96,12 +96,12 @@ void hmult_left(armas_x_dense_t * X, armas_x_dense_t * tau, armas_x_dense_t * P,
     if (unit) {
         mat_partition_2x1(&tT, &tB, /**/ tau, xm, xstart);
         _v0val = ONE;
-        armas_x_make(&v, 1, 1, 1, &_v0val);
+        armas_make(&v, 1, 1, 1, &_v0val);
         tp = &t1;
         vp = &v;
     } else {
         _tau = TWO;
-        armas_x_make(&t, 1, 1, 1, &_tau);
+        armas_make(&t, 1, 1, 1, &_tau);
         tp = &t;
         vp = &p11;
     }
@@ -117,29 +117,29 @@ void hmult_left(armas_x_dense_t * X, armas_x_dense_t * tau, armas_x_dense_t * P,
         if (unit)
             mat_repartition_2x1to3x1(&tT, &t0, &t1, &t2, /**/ tau, 1, xdir);
         // ---------------------------------------------------------------------
-        DTYPE tval = armas_x_get_unsafe(tp, 0, 0);
-        DTYPE v0val = armas_x_get_unsafe(vp, 0, 0);
+        DTYPE tval = armas_get_unsafe(tp, 0, 0);
+        DTYPE v0val = armas_get_unsafe(vp, 0, 0);
         if (isvector) {
             // no workspace needed if X is vector
             DTYPE w1;
             // w  = v0*x1 + X2.T*p21
-            w1 = armas_x_dot(&X2, &p21, cf);
-            w1 += v0val * armas_x_get_unsafe(&x1, 0, 0);
+            w1 = armas_dot(&X2, &p21, cf);
+            w1 += v0val * armas_get_unsafe(&x1, 0, 0);
             // x1 = x1 - tau*v0*w
-            armas_x_set_unsafe(&x1, 0, 0,
-                               armas_x_get_unsafe(&x1, 0,
+            armas_set_unsafe(&x1, 0, 0,
+                               armas_get_unsafe(&x1, 0,
                                                   0) - tval * v0val * w1);
             // X2 = X2 - tau*p21*w
-            armas_x_axpy(&X2, -tval * w1, &p21, cf);
+            armas_axpy(&X2, -tval * w1, &p21, cf);
         } else {
             // w  = v0*x1
-            armas_x_axpby(ZERO, w, v0val, &x1, cf);
+            armas_axpby(ZERO, w, v0val, &x1, cf);
             // w  = v0*x1 + X2.T*p21
-            armas_x_mvmult(ONE, w, ONE, &X2, &p21, ARMAS_TRANSA, cf);
+            armas_mvmult(ONE, w, ONE, &X2, &p21, ARMAS_TRANSA, cf);
             // x1 = x1 - tau*v0*w
-            armas_x_axpy(&x1, -tval * v0val, w, cf);
+            armas_axpy(&x1, -tval * v0val, w, cf);
             // X2 = X2 - tau*p21*w
-            armas_x_mvupdate(ONE, &X2, -tval, &p21, w, cf);
+            armas_mvupdate(ONE, &X2, -tval, &p21, w, cf);
         }
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -165,14 +165,14 @@ void hmult_left(armas_x_dense_t * X, armas_x_dense_t * tau, armas_x_dense_t * P,
  *    3. (flags & ARMAS_UNIT) != 0 --> len(tau) == len(P.col)
  */
 static
-void hmult_right(armas_x_dense_t * X, armas_x_dense_t * tau,
-                 armas_x_dense_t * P, armas_x_dense_t * w,
+void hmult_right(armas_dense_t * X, armas_dense_t * tau,
+                 armas_dense_t * P, armas_dense_t * w,
                  int flags, armas_conf_t * cf)
 {
     int pdir, xdir, xstart, pstart, tstart, tdir, xm, pm, pn, tm;
-    armas_x_dense_t PTL, PBR, P00, p11, P22, p21;
-    armas_x_dense_t XL, XR, X0, x1, X2;
-    armas_x_dense_t tT, tB, t0, t1, t2, t, v, *vp, *tp = __nil;
+    armas_dense_t PTL, PBR, P00, p11, P22, p21;
+    armas_dense_t XL, XR, X0, x1, X2;
+    armas_dense_t tT, tB, t0, t1, t2, t, v, *vp, *tp = __nil;
     DTYPE _tau, _v0val;
 
     EMPTY(tT);
@@ -188,14 +188,14 @@ void hmult_right(armas_x_dense_t * X, armas_x_dense_t * tau,
 
     int unit = flags & ARMAS_UNIT;
     int m = P->cols;
-    int isvector = armas_x_isvector(X);
+    int isvector = armas_isvector(X);
 
     if ((flags & ARMAS_TRANS) != 0) {
         // compute x = x*H(m-1)*...H(1)*H(0)
         pm = max(0, P->rows - P->cols);
         pn = max(0, P->cols - P->rows);
         xm = max(0, X->cols - P->cols);
-        tm = max(0, armas_x_size(tau) - P->cols);
+        tm = max(0, armas_size(tau) - P->cols);
         xstart = ARMAS_PRIGHT;
         pstart = ARMAS_PBOTTOMRIGHT;
         pdir = ARMAS_PTOPLEFT;
@@ -220,12 +220,12 @@ void hmult_right(armas_x_dense_t * X, armas_x_dense_t * tau,
     if (unit) {
         mat_partition_2x1(&tT, &tB, /**/ tau, tm, tstart);
         _v0val = ONE;
-        armas_x_make(&v, 1, 1, 1, &_v0val);
+        armas_make(&v, 1, 1, 1, &_v0val);
         tp = &t1;
         vp = &v;
     } else {
         _tau = TWO;
-        armas_x_make(&t, 1, 1, 1, &_tau);
+        armas_make(&t, 1, 1, 1, &_tau);
         tp = &t;
         vp = &p11;
     }
@@ -241,28 +241,28 @@ void hmult_right(armas_x_dense_t * X, armas_x_dense_t * tau,
         if (unit)
             mat_repartition_2x1to3x1(&tT, &t0, &t1, &t2, /**/ tau, 1, tdir);
         // ---------------------------------------------------------------------
-        DTYPE tval = armas_x_get_unsafe(tp, 0, 0);
-        DTYPE v0val = armas_x_get_unsafe(vp, 0, 0);
+        DTYPE tval = armas_get_unsafe(tp, 0, 0);
+        DTYPE v0val = armas_get_unsafe(vp, 0, 0);
         if (isvector) {
             // no workspace needed if X is vector
             DTYPE w1, t;
             // w  = v0*x1 + X2*p21
-            w1 = armas_x_dot(&X2, &p21, cf);
-            w1 += v0val * armas_x_get_unsafe(&x1, 0, 0);
+            w1 = armas_dot(&X2, &p21, cf);
+            w1 += v0val * armas_get_unsafe(&x1, 0, 0);
             // x1 = x1 - tau*v0*w
-            t = armas_x_get_unsafe(&x1, 0, 0) - tval * v0val * w1;
-            armas_x_set_unsafe(&x1, 0, 0, t);
+            t = armas_get_unsafe(&x1, 0, 0) - tval * v0val * w1;
+            armas_set_unsafe(&x1, 0, 0, t);
             // X2 = X2 - tau*p21*w
-            armas_x_axpy(&X2, -tval * w1, &p21, cf);
+            armas_axpy(&X2, -tval * w1, &p21, cf);
         } else {
             // w  = v0*x1
-            armas_x_axpby(ZERO, w, v0val, &x1, cf);
+            armas_axpby(ZERO, w, v0val, &x1, cf);
             // w  = v0*x1 + X2*p21
-            armas_x_mvmult(ONE, w, ONE, &X2, &p21, 0, cf);
+            armas_mvmult(ONE, w, ONE, &X2, &p21, 0, cf);
             // x1 = x1 - tau*v0*w
-            armas_x_axpy(&x1, -tval * v0val, w, cf);
+            armas_axpy(&x1, -tval * v0val, w, cf);
             // X2 = X2 - tau*w*p21
-            armas_x_mvupdate(ONE, &X2, -tval, w, &p21, cf);
+            armas_mvupdate(ONE, &X2, -tval, w, &p21, cf);
         }
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -285,7 +285,7 @@ void hmult_right(armas_x_dense_t * X, armas_x_dense_t * tau,
  * @param [in] tau
  *     Vector of scalar multipliers of unit scaled Householder reflectors stored
  *     in Q. If reflectors are not scaled ie. flag ARMAS_UNIT was not set when
- *     reflectors were generated by calls to 'armas_x_house' function, then
+ *     reflectors were generated by calls to 'armas_house' function, then
  *    `tau` is not used.
  * @param [in] Q
  *     Elementary householder reflectors store in columns of Q in the
@@ -308,19 +308,19 @@ void hmult_right(armas_x_dense_t * X, armas_x_dense_t * tau,
  * @retval <0 failure, cf.error is set
  * @ingroup lapack
  */
-int armas_x_housemult_w(armas_x_dense_t * X,
-                        armas_x_dense_t * tau,
-                        armas_x_dense_t * Q,
+int armas_housemult_w(armas_dense_t * X,
+                        armas_dense_t * tau,
+                        armas_dense_t * Q,
                         int flags, armas_wbuf_t * wb, armas_conf_t * cf)
 {
     if (!cf)
         cf = armas_conf_default();
 
-    if (!wb && !armas_x_isvector(X)) {
+    if (!wb && !armas_isvector(X)) {
         cf->error = ARMAS_EINVAL;
         return -1;
     }
-    if (!armas_x_isvector(X) && wb->bytes == 0) {
+    if (!armas_isvector(X) && wb->bytes == 0) {
         // compute workspace size
         int nelem = flags & ARMAS_LEFT ? X->cols : X->rows;
         wb->bytes = nelem * sizeof(DTYPE);
@@ -329,7 +329,7 @@ int armas_x_housemult_w(armas_x_dense_t * X,
     // check parameter sizes;
     if (flags & ARMAS_UNIT) {
         // this is unit scaled reflector; tau is needed
-        if (armas_x_size(tau) != Q->cols) {
+        if (armas_size(tau) != Q->cols) {
             cf->error = ARMAS_ESIZE;
             return -1;
         }
@@ -342,12 +342,12 @@ int armas_x_housemult_w(armas_x_dense_t * X,
     }
 
     size_t wpos = armas_wpos(wb);
-    armas_x_dense_t w, *wptr;
+    armas_dense_t w, *wptr;
     wptr = __nil;
-    if (!armas_x_isvector(X)) {
+    if (!armas_isvector(X)) {
         int nelem = flags & ARMAS_LEFT ? X->cols : X->rows;
         DTYPE *t = armas_wreserve(wb, nelem, sizeof(DTYPE));
-        armas_x_make(&w, nelem, 1, nelem, t);
+        armas_make(&w, nelem, 1, nelem, t);
         wptr = &w;
     }
 
@@ -363,28 +363,28 @@ int armas_x_housemult_w(armas_x_dense_t * X,
 /**
  * @brief Multiply by Householder reflectors
  *
- * @see armas_x_housemult_w
+ * @see armas_housemult_w
  * @ingroup lapack
  */
-int armas_x_housemult(armas_x_dense_t * X,
-                      armas_x_dense_t * tau,
-                      armas_x_dense_t * Q, int flags, armas_conf_t * cf)
+int armas_housemult(armas_dense_t * X,
+                      armas_dense_t * tau,
+                      armas_dense_t * Q, int flags, armas_conf_t * cf)
 {
     if (!cf)
         cf = armas_conf_default();
-    if (armas_x_isvector(X)) {
-        return armas_x_housemult_w(X, tau, Q, flags, (armas_wbuf_t *) 0, cf);
+    if (armas_isvector(X)) {
+        return armas_housemult_w(X, tau, Q, flags, (armas_wbuf_t *) 0, cf);
     }
     int err;
     armas_wbuf_t wb = ARMAS_WBNULL;
-    if ((err = armas_x_housemult_w(X, tau, Q, flags, &wb, cf)) < 0)
+    if ((err = armas_housemult_w(X, tau, Q, flags, &wb, cf)) < 0)
         return err;
 
     if (!armas_walloc(&wb, wb.bytes)) {
         cf->error = ARMAS_EMEMORY;
         return -ARMAS_EMEMORY;
     }
-    err = armas_x_housemult_w(X, tau, Q, flags, &wb, cf);
+    err = armas_housemult_w(X, tau, Q, flags, &wb, cf);
     armas_wrelease(&wb);
     return err;
 }

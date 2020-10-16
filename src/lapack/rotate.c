@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,15 +9,15 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_gvrotate)  && defined(armas_x_gvcompute)
+// this file provides following type dependent functions
+#if defined(armas_gvrotate)  && defined(armas_gvcompute)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -33,7 +33,7 @@
  *
  * @ingroup lapack
  */
-void armas_x_gvcompute(DTYPE * c, DTYPE * s, DTYPE * r, DTYPE a, DTYPE b)
+void armas_gvcompute(DTYPE * c, DTYPE * s, DTYPE * r, DTYPE a, DTYPE b)
 {
     gvrotg(c, s, r, a, b);
 }
@@ -51,7 +51,7 @@ void armas_x_gvcompute(DTYPE * c, DTYPE * s, DTYPE * r, DTYPE a, DTYPE b)
  *```
  * @ingroup lapack
  */
-void armas_x_gvrotate(DTYPE * v0, DTYPE * v1,
+void armas_gvrotate(DTYPE * v0, DTYPE * v1,
                       DTYPE cos, DTYPE sin, DTYPE y0, DTYPE y1)
 {
     *v0 = cos * y0 + sin * y1;

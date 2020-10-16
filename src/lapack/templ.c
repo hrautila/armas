@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_xyz)
+// this file provides following type dependent functions
+#if defined(armas_xyz)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_wzx)
+#if defined(armas_wzx)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -28,12 +28,12 @@
 
 // template function with matrix partitioning from top-left to bottom-right
 static
-int local_func(armas_x_dense_t * A, int flags, armas_conf_t * cf)
+int local_func(armas_dense_t * A, int flags, armas_conf_t * cf)
 {
     // full partitioning; diagonal elements are required, others only as needed
     // (replace with __nil if not needed)
-    armas_x_dense_t ATL, ABL, ABR, ATR, A00, a01, A02;
-    armas_x_dense_t a10, a11, a12, A20, a21, A22;
+    armas_dense_t ATL, ABL, ABR, ATR, A00, a01, A02;
+    armas_dense_t a10, a11, a12, A20, a21, A22;
     int err = 0;
     DTYPE a11val;
 

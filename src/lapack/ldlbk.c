@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,17 +12,17 @@
 #include "dlpack.h"
 
 // --------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_bkfactor) && defined(armas_x_bkfactor_w) && defined(armas_x_bksolve)
+// this file provides following type dependent functions
+#if defined(armas_bkfactor) && defined(armas_bkfactor_w) && defined(armas_bksolve)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_ldlbk)
+#if defined(armas_ldlbk)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // --------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -36,10 +36,10 @@
 /**
  * @brief Compute \f$ LDL^T \f$ factorization of real symmetric matrix.
  *
- * @see armas_x_bkfactor_w
+ * @see armas_bkfactor_w
  * @ingroup lapack
  */
-int armas_x_bkfactor(armas_x_dense_t * A,
+int armas_bkfactor(armas_dense_t * A,
                      armas_pivot_t * P, int flags, armas_conf_t * conf)
 {
     int err;
@@ -48,7 +48,7 @@ int armas_x_bkfactor(armas_x_dense_t * A,
         conf = armas_conf_default();
 
     wbs = &wb;
-    if (armas_x_bkfactor_w(A, P, flags, &wb, conf) < 0)
+    if (armas_bkfactor_w(A, P, flags, &wb, conf) < 0)
         return -1;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
@@ -58,7 +58,7 @@ int armas_x_bkfactor(armas_x_dense_t * A,
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_bkfactor_w(A, P, flags, wbs, conf);
+    err = armas_bkfactor_w(A, P, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }
@@ -105,10 +105,10 @@ int armas_x_bkfactor(armas_x_dense_t * A,
  * @retval <0  Failure
  * @ingroup lapack
  */
-int armas_x_bkfactor_w(armas_x_dense_t * A, armas_pivot_t * P,
+int armas_bkfactor_w(armas_dense_t * A, armas_pivot_t * P,
                        int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t Wrk;
+    armas_dense_t Wrk;
     int lb, k;
     size_t wsmin, wsz, wpos;
     armas_env_t *env;
@@ -160,18 +160,18 @@ int armas_x_bkfactor_w(armas_x_dense_t * A, armas_pivot_t * P,
     }
 
     if (lb == 0 || A->cols <= lb) {
-        armas_x_make(&Wrk, A->rows, 2, A->rows, armas_wptr(wb));
+        armas_make(&Wrk, A->rows, 2, A->rows, armas_wptr(wb));
         if (flags & ARMAS_UPPER) {
-            armas_x_unblk_bkfactor_upper(A, &Wrk, P, conf);
+            armas_unblk_bkfactor_upper(A, &Wrk, P, conf);
         } else {
-            armas_x_unblk_bkfactor_lower(A, &Wrk, P, conf);
+            armas_unblk_bkfactor_lower(A, &Wrk, P, conf);
         }
     } else {
-        armas_x_make(&Wrk, A->rows, lb + 1, A->rows, armas_wptr(wb));
+        armas_make(&Wrk, A->rows, lb + 1, A->rows, armas_wptr(wb));
         if (flags & ARMAS_UPPER) {
-            armas_x_blk_bkfactor_upper(A, &Wrk, P, lb, conf);
+            armas_blk_bkfactor_upper(A, &Wrk, P, lb, conf);
         } else {
-            armas_x_blk_bkfactor_lower(A, &Wrk, P, lb, conf);
+            armas_blk_bkfactor_lower(A, &Wrk, P, lb, conf);
         }
     }
     armas_wsetpos(wb, wpos);
@@ -181,10 +181,10 @@ int armas_x_bkfactor_w(armas_x_dense_t * A, armas_pivot_t * P,
 /**
  * @brief Solve \f$ AX = B \f$ with symmetric real matrix A.
  *
- * @see armas_x_bksolve_w
+ * @see armas_bksolve_w
  * @ingroup lapack
  */
-int armas_x_bksolve(armas_x_dense_t * B, const armas_x_dense_t * A,
+int armas_bksolve(armas_dense_t * B, const armas_dense_t * A,
                     const armas_pivot_t * P, int flags, armas_conf_t * conf)
 {
     int err;
@@ -192,7 +192,7 @@ int armas_x_bksolve(armas_x_dense_t * B, const armas_x_dense_t * A,
     if (!conf)
         conf = armas_conf_default();
 
-    if ((err = armas_x_bksolve_w(B, A, P, flags, &wb, conf)) < 0)
+    if ((err = armas_bksolve_w(B, A, P, flags, &wb, conf)) < 0)
         return err;
     wbs = &wb;
     if (wb.bytes > 0) {
@@ -203,7 +203,7 @@ int armas_x_bksolve(armas_x_dense_t * B, const armas_x_dense_t * A,
     } else {
         wbs = ARMAS_NOWORK;
     }
-    err = armas_x_bksolve_w(B, A, P, flags, wbs, conf);
+    err = armas_bksolve_w(B, A, P, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }
@@ -219,7 +219,7 @@ int armas_x_bksolve(armas_x_dense_t * B, const armas_x_dense_t * A,
  *      On entry, right hand side matrix B. On exit, the solution matrix X.
  * @param[in] A
  *      Block diagonal matrix D and the multipliers used to compute factor U
- *      (or L) as returned by `armas_x_bkfactor()`.
+ *      (or L) as returned by `armas_bkfactor()`.
  * @param[in] P
  *      Block structure of matrix D and details of interchanges.
  * @param[in] wb
@@ -233,7 +233,7 @@ int armas_x_bksolve(armas_x_dense_t * B, const armas_x_dense_t * A,
  * Compatible with lapack.SYTRS.
  * @ingroup lapack
  */
-int armas_x_bksolve_w(armas_x_dense_t * B, const armas_x_dense_t * A,
+int armas_bksolve_w(armas_dense_t * B, const armas_dense_t * A,
                       const armas_pivot_t * P, int flags,
                       armas_wbuf_t * wb, armas_conf_t * conf)
 {
@@ -257,22 +257,22 @@ int armas_x_bksolve_w(armas_x_dense_t * B, const armas_x_dense_t * A,
     // TODO: don't loose the const'ness of A and P for time being
     if (flags & ARMAS_LOWER) {
         // first part: Z = D.-1*(L.-1*B)
-        err = armas_x_unblk_bksolve_lower(
-            B, (armas_x_dense_t *) A, (armas_pivot_t *) P, 1, conf);
+        err = armas_unblk_bksolve_lower(
+            B, (armas_dense_t *) A, (armas_pivot_t *) P, 1, conf);
         if (err < 0)
             return err;
         // second part: X = L.-T*Z
-        err =  armas_x_unblk_bksolve_lower(
-            B, (armas_x_dense_t *) A, (armas_pivot_t *) P, 2, conf);
+        err =  armas_unblk_bksolve_lower(
+            B, (armas_dense_t *) A, (armas_pivot_t *) P, 2, conf);
     } else {
         // first part: Z = D.-1*(U.-1*B)
-        err = armas_x_unblk_bksolve_upper(
-            B, (armas_x_dense_t *) A, (armas_pivot_t *) P, 1, conf);
+        err = armas_unblk_bksolve_upper(
+            B, (armas_dense_t *) A, (armas_pivot_t *) P, 1, conf);
         if ( err < 0)
             return err;
         // second part: X = U.-T*Z
-        err = armas_x_unblk_bksolve_upper(
-            B, (armas_x_dense_t *) A, (armas_pivot_t *) P, 2, conf);
+        err = armas_unblk_bksolve_upper(
+            B, (armas_dense_t *) A, (armas_pivot_t *) P, 2, conf);
     }
     return err;
 }

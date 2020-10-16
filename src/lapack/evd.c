@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_eigen_sym)
+// this file provides following type dependent functions
+#if defined(armas_eigen_sym)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_trdeigen) && defined(armas_x_trdreduce) && defined(armas_x_trdbuild)
+#if defined(armas_trdeigen) && defined(armas_trdreduce) && defined(armas_trdbuild)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -27,35 +27,35 @@
 #include "internal_lapack.h"
 
 #ifndef ARMAS_NIL
-#define ARMAS_NIL (armas_x_dense_t *)0
+#define ARMAS_NIL (armas_dense_t *)0
 #endif
 
 /*
  * \brief Eigenvalues and vectors of 2x2 matrix
  */
 static
-int eigen_sym_small(armas_x_dense_t * D, armas_x_dense_t * A,
-                    armas_x_dense_t * W, int flags, armas_conf_t * conf)
+int eigen_sym_small(armas_dense_t * D, armas_dense_t * A,
+                    armas_dense_t * W, int flags, armas_conf_t * conf)
 {
     DTYPE d0, b0, d1, e0, e1, cs, sn;
 
-    d0 = armas_x_get_unsafe(A, 0, 0);
-    d1 = armas_x_get_unsafe(A, 1, 1);
+    d0 = armas_get_unsafe(A, 0, 0);
+    d1 = armas_get_unsafe(A, 1, 1);
     if (flags & ARMAS_UPPER) {
-        b0 = armas_x_get_unsafe(A, 0, 1);
+        b0 = armas_get_unsafe(A, 0, 1);
     } else {
-        b0 = armas_x_get_unsafe(A, 1, 0);
+        b0 = armas_get_unsafe(A, 1, 0);
     }
-    armas_x_sym_eigen2x2vec(&e0, &e1, &cs, &sn, d0, b0, d1);
-    armas_x_set_at_unsafe(D, 0, e0);
-    armas_x_set_at_unsafe(D, 1, e1);
+    armas_sym_eigen2x2vec(&e0, &e1, &cs, &sn, d0, b0, d1);
+    armas_set_at_unsafe(D, 0, e0);
+    armas_set_at_unsafe(D, 1, e1);
 
     if (flags & ARMAS_WANTV) {
-        armas_x_set_unsafe(A, 0, 0, ONE);
-        armas_x_set_unsafe(A, 1, 1, ONE);
-        armas_x_set_unsafe(A, 0, 1, ZERO);
-        armas_x_set_unsafe(A, 1, 0, ZERO);
-        armas_x_gvright(A, cs, sn, 0, 1, 0, A->rows);
+        armas_set_unsafe(A, 0, 0, ONE);
+        armas_set_unsafe(A, 1, 1, ONE);
+        armas_set_unsafe(A, 0, 1, ZERO);
+        armas_set_unsafe(A, 1, 0, ZERO);
+        armas_gvright(A, cs, sn, 0, 1, 0, A->rows);
     }
     return 0;
 }
@@ -63,11 +63,11 @@ int eigen_sym_small(armas_x_dense_t * D, armas_x_dense_t * A,
 /**
  * @brief Compute eigenvalue decomposition of symmetric N-by-N matrix
  *
- * @see armas_x_eigen_sym_w
+ * @see armas_eigen_sym_w
  * @ingroup lapack
  */
-int armas_x_eigen_sym(armas_x_dense_t * D,
-                      armas_x_dense_t * A, int flags, armas_conf_t * conf)
+int armas_eigen_sym(armas_dense_t * D,
+                      armas_dense_t * A, int flags, armas_conf_t * conf)
 {
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
@@ -75,11 +75,11 @@ int armas_x_eigen_sym(armas_x_dense_t * D,
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_size(A) == 0)
+    if (armas_size(A) == 0)
         return 0;
 
     wbs = &wb;
-    if ((err = armas_x_eigen_sym_w(D, A, flags, &wb, conf)) < 0)
+    if ((err = armas_eigen_sym_w(D, A, flags, &wb, conf)) < 0)
         return err;
 
     if (wb.bytes > 0) {
@@ -90,7 +90,7 @@ int armas_x_eigen_sym(armas_x_dense_t * D,
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_eigen_sym_w(D, A, flags, wbs, conf);
+    err = armas_eigen_sym_w(D, A, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }
@@ -119,11 +119,11 @@ int armas_x_eigen_sym(armas_x_dense_t * D,
  *
  * @ingroup lapack
  */
-int armas_x_eigen_sym_w(armas_x_dense_t * D,
-                        armas_x_dense_t * A,
+int armas_eigen_sym_w(armas_dense_t * D,
+                        armas_dense_t * A,
                         int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t sD, sE, E, tau, *vv;
+    armas_dense_t sD, sE, E, tau, *vv;
     size_t wsz, wpos, wpt;
     DTYPE *buf;
     int ioff, N;
@@ -140,21 +140,21 @@ int armas_x_eigen_sym_w(armas_x_dense_t * D,
 
     if (wb && wb->bytes == 0) {
         if (N > 2) {
-            if (armas_x_trdreduce_w(A, ARMAS_NIL, flags, wb, conf) < 0)
+            if (armas_trdreduce_w(A, ARMAS_NIL, flags, wb, conf) < 0)
                 return -1;
             wb->bytes += 2 * N * sizeof(DTYPE);
         }
         return 0;
     }
 
-    if (A->rows != A->cols && armas_x_size(D) != A->rows) {
+    if (A->rows != A->cols && armas_size(D) != A->rows) {
         conf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
     if (N == 1) {
-        armas_x_set_at_unsafe(D, 0, armas_x_get_unsafe(A, 0, 0));
+        armas_set_at_unsafe(D, 0, armas_get_unsafe(A, 0, 0));
         if (flags & ARMAS_WANTV) {
-            armas_x_set_unsafe(A, 0, 0, ONE);
+            armas_set_unsafe(A, 0, 0, ONE);
         }
         return 0;
     }
@@ -177,26 +177,26 @@ int armas_x_eigen_sym_w(armas_x_dense_t * D,
     ioff = flags & ARMAS_LOWER ? -1 : 1;
     // sub/super diagonal reservation
     buf = (DTYPE *) armas_wreserve(wb, N - 1, sizeof(DTYPE));
-    armas_x_make(&E, N - 1, 1, N - 1, buf);
+    armas_make(&E, N - 1, 1, N - 1, buf);
 
     // tau vector reservation; save work buffer position
     wpt = armas_wpos(wb);
     buf = (DTYPE *) armas_wreserve(wb, N, sizeof(DTYPE));
-    armas_x_make(&tau, N, 1, N, buf);
+    armas_make(&tau, N, 1, N, buf);
 
     // reduce to tridiagonal form
-    if (armas_x_trdreduce_w(A, &tau, flags, wb, conf) != 0)
+    if (armas_trdreduce_w(A, &tau, flags, wb, conf) != 0)
         return -2;
 
     // copy diagonals
-    armas_x_diag(&sD, A, 0);
-    armas_x_diag(&sE, A, ioff);
-    armas_x_copy(D, &sD, conf);
-    armas_x_copy(&E, &sE, conf);
+    armas_diag(&sD, A, 0);
+    armas_diag(&sE, A, ioff);
+    armas_copy(D, &sD, conf);
+    armas_copy(&E, &sE, conf);
 
     // if vectors required, build in A
     if (flags & ARMAS_WANTV) {
-        if (armas_x_trdbuild_w(A, &tau, N, flags, wb, conf) != 0)
+        if (armas_trdbuild_w(A, &tau, N, flags, wb, conf) != 0)
             return -3;
         vv = A;
     }
@@ -204,7 +204,7 @@ int armas_x_eigen_sym_w(armas_x_dense_t * D,
     armas_wsetpos(wb, wpt);
 
     // compute eigenvalues/vectors of tridiagonal matrix
-    if (armas_x_trdeigen_w(D, &E, vv, flags, wb, conf) != 0)
+    if (armas_trdeigen_w(D, &E, vv, flags, wb, conf) != 0)
         return -4;
 
     armas_wsetpos(wb, wpos);
@@ -214,12 +214,12 @@ int armas_x_eigen_sym_w(armas_x_dense_t * D,
 /**
  * @brief Compute selected eigenvalues of symmetric matrix.
  *
- * @see armas_x_eigen_sym_selected_w
+ * @see armas_eigen_sym_selected_w
  * @ingroup lapack
  */
-int armas_x_eigen_sym_selected(armas_x_dense_t * D,
-                               armas_x_dense_t * A,
-                               const armas_x_eigen_parameter_t * params,
+int armas_eigen_sym_selected(armas_dense_t * D,
+                               armas_dense_t * A,
+                               const armas_eigen_parameter_t * params,
                                int flags, armas_conf_t * conf)
 {
     int err;
@@ -229,7 +229,7 @@ int armas_x_eigen_sym_selected(armas_x_dense_t * D,
         conf = armas_conf_default();
 
     wbs = &wb;
-    if (armas_x_eigen_sym_selected_w(D, A, params, flags, &wb, conf) < 0)
+    if (armas_eigen_sym_selected_w(D, A, params, flags, &wb, conf) < 0)
         return -1;
     if (wb.bytes > 0) {
         if (!armas_walloc(&wb, wb.bytes)) {
@@ -238,7 +238,7 @@ int armas_x_eigen_sym_selected(armas_x_dense_t * D,
         }
     } else
         wbs = ARMAS_NOWORK;
-    err = armas_x_eigen_sym_selected_w(D, A, params, flags, wbs, conf);
+    err = armas_eigen_sym_selected_w(D, A, params, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }
@@ -270,13 +270,13 @@ int armas_x_eigen_sym_selected(armas_x_dense_t * D,
  *
  * @ingroup lapack
  */
-int armas_x_eigen_sym_selected_w(armas_x_dense_t * D,
-                                 armas_x_dense_t * A,
-                                 const armas_x_eigen_parameter_t * params,
+int armas_eigen_sym_selected_w(armas_dense_t * D,
+                                 armas_dense_t * A,
+                                 const armas_eigen_parameter_t * params,
                                  int flags,
                                  armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t sD, sE, tau;
+    armas_dense_t sD, sE, tau;
     size_t wsz, wpos;
     DTYPE *buf;
     int ioff, N, err;
@@ -290,7 +290,7 @@ int armas_x_eigen_sym_selected_w(armas_x_dense_t * D,
     }
     N = A->rows;
     if (wb && wb->bytes == 0) {
-        if ((err = armas_x_trdreduce_w(A, ARMAS_NIL, flags, wb, conf)) < 0)
+        if ((err = armas_trdreduce_w(A, ARMAS_NIL, flags, wb, conf)) < 0)
             return err;
         wb->bytes += N * sizeof(DTYPE);
         return 0;
@@ -314,10 +314,10 @@ int armas_x_eigen_sym_selected_w(armas_x_dense_t * D,
     ioff = flags & ARMAS_LOWER ? -1 : 1;
     if (N > 2) {
         buf = (DTYPE *) armas_wreserve(wb, N, sizeof(DTYPE));
-        armas_x_make(&tau, N, 1, N, buf);
+        armas_make(&tau, N, 1, N, buf);
 
         // reduce to tridiagonal form
-        if ((err = armas_x_trdreduce_w(A, &tau, flags, wb, conf)) < 0) {
+        if ((err = armas_trdreduce_w(A, &tau, flags, wb, conf)) < 0) {
             armas_wsetpos(wb, wpos);
             return err;
         }
@@ -325,11 +325,11 @@ int armas_x_eigen_sym_selected_w(armas_x_dense_t * D,
     }
     armas_wsetpos(wb, wpos);
 
-    armas_x_diag(&sD, A, 0);
-    armas_x_diag(&sE, A, ioff);
+    armas_diag(&sD, A, 0);
+    armas_diag(&sE, A, ioff);
 
     // compute selected eigenvalues
-    if ((err =armas_x_trdbisect(D, &sD, &sE, params, conf)) < 0)
+    if ((err =armas_trdbisect(D, &sD, &sE, params, conf)) < 0)
         return err;
 
     return 0;

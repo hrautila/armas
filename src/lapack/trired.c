@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_trdreduce) && defined(armas_x_trdreduce_w)
+// this file provides following type dependent functions
+#if defined(armas_trdreduce) && defined(armas_trdreduce_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_householder) && defined(armas_x_blas)
+#if defined(armas_householder) && defined(armas_blas)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -71,17 +71,17 @@
  *    ( v1 v2 v3 e d )
  */
 static
-int unblk_trdreduce_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                          armas_x_dense_t * W, armas_conf_t * conf)
+int unblk_trdreduce_lower(armas_dense_t * A, armas_dense_t * tauq,
+                          armas_dense_t * W, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a21, A22;
-    armas_x_dense_t tT, tB, tq0, tq1, tq2, y21;
+    armas_dense_t ATL, ABR, A00, a11, a21, A22;
+    armas_dense_t tT, tB, tq0, tq1, tq2, y21;
     DTYPE v0, beta, tauval;
 
     EMPTY(A00);
     EMPTY(a11);
 
-    if (armas_x_size(tauq) == 0)
+    if (armas_size(tauq) == 0)
         return 0;
 
     mat_partition_2x2(
@@ -102,26 +102,26 @@ int unblk_trdreduce_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tq0, &tq1, &tq2, /**/ tauq, 1, ARMAS_PBOTTOM);
         // --------------------------------------------------------------------
         // temp vector for this round
-        armas_x_make(&y21, A22.rows, 1, A22.rows, armas_x_data(W));
+        armas_make(&y21, A22.rows, 1, A22.rows, armas_data(W));
 
         // compute householder to zero subdiagonal entries
-        armas_x_compute_householder_vec(&a21, &tq1, conf);
-        tauval = armas_x_get(&tq1, 0, 0);
+        armas_compute_householder_vec(&a21, &tq1, conf);
+        tauval = armas_get(&tq1, 0, 0);
 
         // set subdiagonal to unit
-        v0 = armas_x_get(&a21, 0, 0);
-        armas_x_set(&a21, 0, 0, ONE);
+        v0 = armas_get(&a21, 0, 0);
+        armas_set(&a21, 0, 0, ONE);
 
         // y21 := tauq*A22*a21
-        armas_x_mvmult_sym(ZERO, &y21, tauval, &A22, &a21, ARMAS_LOWER, conf);
+        armas_mvmult_sym(ZERO, &y21, tauval, &A22, &a21, ARMAS_LOWER, conf);
         // beta := tauq*a21.T*y21
-        beta = tauval * armas_x_dot(&a21, &y21, conf);
+        beta = tauval * armas_dot(&a21, &y21, conf);
         // y21 := y21 - 0.5*beta*a21
-        armas_x_axpy(&y21, -HALF * beta, &a21, conf);
+        armas_axpy(&y21, -HALF * beta, &a21, conf);
         // A22 := A22 - a21*y21.T - y21*a21.T
-        armas_x_mvupdate2_sym(ONE, &A22, -ONE, &a21, &y21, ARMAS_LOWER, conf);
+        armas_mvupdate2_sym(ONE, &A22, -ONE, &a21, &y21, ARMAS_LOWER, conf);
         // restore subdiagonal
-        armas_x_set(&a21, 0, 0, v0);
+        armas_set(&a21, 0, 0, v0);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -137,13 +137,13 @@ int unblk_trdreduce_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
  * This is adaptation of TRIRED_LAZY_UNB algorithm from (1).
  */
 static
-int unblk_trdbuild_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                         armas_x_dense_t * Y, armas_x_dense_t * W,
+int unblk_trdbuild_lower(armas_dense_t * A, armas_dense_t * tauq,
+                         armas_dense_t * Y, armas_dense_t * W,
                          armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a10, a11, A20, a21, A22;
-    armas_x_dense_t YTL, YBR, Y00, y10, y11, Y20, y21, Y22;
-    armas_x_dense_t tT, tB, tq0, tq1, tq2, w12;
+    armas_dense_t ATL, ABR, A00, a10, a11, A20, a21, A22;
+    armas_dense_t YTL, YBR, Y00, y10, y11, Y20, y21, Y22;
+    armas_dense_t tT, tB, tq0, tq1, tq2, w12;
     DTYPE beta, tauval, aa, v0 = ZERO;
     int k, err = 0;
 
@@ -178,43 +178,43 @@ int unblk_trdbuild_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tq0, &tq1, &tq2, /**/ tauq, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
         // Use top row of Y for workspace
-        armas_x_submatrix(&w12, Y, 0, 0, 1, Y00.cols);
+        armas_submatrix(&w12, Y, 0, 0, 1, Y00.cols);
 
         if (Y00.cols > 0) {
             // a11 := a11 - a10*y10 - y10*a10
-            aa = armas_x_dot(&a10, &y10, conf);
-            aa += armas_x_dot(&y10, &a10, conf);
-            armas_x_set(&a11, 0, 0, armas_x_get(&a11, 0, 0) - aa);
+            aa = armas_dot(&a10, &y10, conf);
+            aa += armas_dot(&y10, &a10, conf);
+            armas_set(&a11, 0, 0, armas_get(&a11, 0, 0) - aa);
             // a21 := a21 - A20*y10
-            armas_x_mvmult(ONE, &a21, -ONE, &A20, &y10, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a21, -ONE, &A20, &y10, ARMAS_NONE, conf);
             // a21 := a21 - Y20*a10
-            armas_x_mvmult(ONE, &a21, -ONE, &Y20, &a10, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a21, -ONE, &Y20, &a10, ARMAS_NONE, conf);
             // restore subdiagonal value
-            armas_x_set(&a10, 0, a10.cols - 1, v0);
+            armas_set(&a10, 0, a10.cols - 1, v0);
         }
         // compute householder to zero subdiagonal entries
-        armas_x_compute_householder_vec(&a21, &tq1, conf);
-        tauval = armas_x_get(&tq1, 0, 0);
+        armas_compute_householder_vec(&a21, &tq1, conf);
+        tauval = armas_get(&tq1, 0, 0);
 
         // set subdiagonal to unit
-        v0 = armas_x_get(&a21, 0, 0);
-        armas_x_set(&a21, 0, 0, ONE);
+        v0 = armas_get(&a21, 0, 0);
+        armas_set(&a21, 0, 0, ONE);
 
         // y21 := tauq*A22*a21
-        armas_x_mvmult_sym(ZERO, &y21, tauval, &A22, &a21, ARMAS_LOWER, conf);
+        armas_mvmult_sym(ZERO, &y21, tauval, &A22, &a21, ARMAS_LOWER, conf);
         // w12 := A20.T*a21
-        armas_x_mvmult(ZERO, &w12, ONE, &A20, &a21, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w12, ONE, &A20, &a21, ARMAS_TRANS, conf);
         // y21 := y21 - tauq*Y20*(A20.T*a21)
-        armas_x_mvmult(ONE, &y21, -tauval, &Y20, &w12, ARMAS_NONE, conf);
+        armas_mvmult(ONE, &y21, -tauval, &Y20, &w12, ARMAS_NONE, conf);
         // w12 := Y20.T*a21
-        armas_x_mvmult(ZERO, &w12, ONE, &Y20, &a21, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w12, ONE, &Y20, &a21, ARMAS_TRANS, conf);
         // y21 := y21 - tauq*A20*(Y20.T*a21)
-        armas_x_mvmult(ONE, &y21, -tauval, &A20, &w12, ARMAS_NONE, conf);
+        armas_mvmult(ONE, &y21, -tauval, &A20, &w12, ARMAS_NONE, conf);
 
         // beta := tauq*a21.T*y21
-        beta = tauval * armas_x_dot(&a21, &y21, conf);
+        beta = tauval * armas_dot(&a21, &y21, conf);
         // y21 := y21 - 0.5*beta*a21
-        armas_x_axpy(&y21, -HALF * beta, &a21, conf);
+        armas_axpy(&y21, -HALF * beta, &a21, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -228,18 +228,18 @@ int unblk_trdbuild_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
     }
 
     // restore subdiagonal value; note we access A matrix
-    armas_x_set(A, ATL.rows, ATL.cols - 1, v0);
+    armas_set(A, ATL.rows, ATL.cols - 1, v0);
     return err;
 }
 
 static
-int blk_trdreduce_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                          armas_x_dense_t * Y, armas_x_dense_t * W,
+int blk_trdreduce_lower(armas_dense_t * A, armas_dense_t * tauq,
+                          armas_dense_t * Y, armas_dense_t * W,
                           int lb, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A11, A21, A22;
-    armas_x_dense_t YT, YB, Y0, Y1, Y2;
-    armas_x_dense_t tT, tB, tq0, tq1, tq2;
+    armas_dense_t ATL, ABR, A00, A11, A21, A22;
+    armas_dense_t YT, YB, Y0, Y1, Y2;
+    armas_dense_t tT, tB, tq0, tq1, tq2;
     DTYPE v0 = ZERO;
     int err = 0;
 
@@ -273,14 +273,14 @@ int blk_trdreduce_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
             err = err == 0 ? -1 : err;
         }
         // set subdiagonal to unit
-        v0 = armas_x_get(&A21, 0, A21.cols - 1);
-        armas_x_set(&A21, 0, A21.cols- 1, 1.0);
+        v0 = armas_get(&A21, 0, A21.cols - 1);
+        armas_set(&A21, 0, A21.cols- 1, 1.0);
 
         // A22 := A22 - A21*Y2.T - Y2*A21.T
-        armas_x_update2_sym(ONE, &A22, -ONE, &A21, &Y2, ARMAS_LOWER, conf);
+        armas_update2_sym(ONE, &A22, -ONE, &A21, &Y2, ARMAS_LOWER, conf);
 
         // restore subdiagonal entry
-        armas_x_set(&A21, 0, A21.cols - 1, v0);
+        armas_set(&A21, 0, A21.cols - 1, v0);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -309,18 +309,18 @@ int blk_trdreduce_lower(armas_x_dense_t * A, armas_x_dense_t * tauq,
  * matrix and tau-vector partitioning is starting from last position. 
  */
 static
-int unblk_trdreduce_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                          armas_x_dense_t * W, int tail, armas_conf_t * conf)
+int unblk_trdreduce_upper(armas_dense_t * A, armas_dense_t * tauq,
+                          armas_dense_t * W, int tail, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a01, a11, A22;
-    armas_x_dense_t tT, tB, tq0, tq1, tq2, y21;
+    armas_dense_t ATL, ABR, A00, a01, a11, A22;
+    armas_dense_t tT, tB, tq0, tq1, tq2, y21;
     int toff;
     DTYPE v0, beta, tauval;
 
     EMPTY(ATL);
     v0 = ZERO;
 
-    if (armas_x_size(tauq) == 0)
+    if (armas_size(tauq) == 0)
         return 0;
 
     toff = tail ? 0 : 1;
@@ -343,26 +343,26 @@ int unblk_trdreduce_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tq0, &tq1, &tq2, /**/ tauq, 1, ARMAS_PTOP);
         // ---------------------------------------------------------------------
         // temp vector for this round
-        armas_x_make(&y21, A00.cols, 1, A00.cols, armas_x_data(W));
+        armas_make(&y21, A00.cols, 1, A00.cols, armas_data(W));
 
         // compute householder to zero subdiagonal entries
-        armas_x_compute_householder_rev(&a01, &tq1, conf);
-        tauval = armas_x_get(&tq1, 0, 0);
+        armas_compute_householder_rev(&a01, &tq1, conf);
+        tauval = armas_get(&tq1, 0, 0);
 
         // set subdiagonal to unit
-        v0 = armas_x_get(&a01, a01.rows - 1, 0);
-        armas_x_set(&a01, a01.rows - 1, 0, ONE);
+        v0 = armas_get(&a01, a01.rows - 1, 0);
+        armas_set(&a01, a01.rows - 1, 0, ONE);
 
         // y21 := tauq*A00*a01
-        armas_x_mvmult_sym(ZERO, &y21, tauval, &A00, &a01, ARMAS_UPPER, conf);
+        armas_mvmult_sym(ZERO, &y21, tauval, &A00, &a01, ARMAS_UPPER, conf);
         // beta := tauq*a01.T*y21
-        beta = tauval * armas_x_dot(&a01, &y21, conf);
+        beta = tauval * armas_dot(&a01, &y21, conf);
         // y21 := y21 - 0.5*beta*a01
-        armas_x_axpy(&y21, -HALF * beta, &a01, conf);
+        armas_axpy(&y21, -HALF * beta, &a01, conf);
         // A00 := A00 - a01*y21.T - y21*a01.T
-        armas_x_mvupdate2_sym(ONE, &A00, -ONE, &a01, &y21, ARMAS_UPPER, conf);
+        armas_mvupdate2_sym(ONE, &A00, -ONE, &a01, &y21, ARMAS_UPPER, conf);
         // restore subdiagonal
-        armas_x_set(&a01, a01.rows - 1, 0, v0);
+        armas_set(&a01, a01.rows - 1, 0, v0);
 
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -380,13 +380,13 @@ int unblk_trdreduce_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
  * This is adaptation of TRIRED_LAZY_UNB algorithm from (1).
  */
 static
-int unblk_trdbuild_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                         armas_x_dense_t * Y, armas_x_dense_t * W,
+int unblk_trdbuild_upper(armas_dense_t * A, armas_dense_t * tauq,
+                         armas_dense_t * Y, armas_dense_t * W,
                          armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a01, A02, a11, a12, A22;
-    armas_x_dense_t YTL, YBR, Y00, y01, Y02, y11, y12, Y22;
-    armas_x_dense_t tT, tB, tq0, tq1, tq2, w12;
+    armas_dense_t ATL, ABR, A00, a01, A02, a11, a12, A22;
+    armas_dense_t YTL, YBR, Y00, y01, Y02, y11, y12, Y22;
+    armas_dense_t tT, tB, tq0, tq1, tq2, w12;
     DTYPE v0, beta, tauval, aa;
     int k, err = 0;
 
@@ -422,43 +422,43 @@ int unblk_trdbuild_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tq0, &tq1, &tq2, /**/ tauq, 1, ARMAS_PTOP);
         // ---------------------------------------------------------------------
         // use bottom row of Y for workspace
-        armas_x_submatrix(&w12, Y, Y->rows - 1, 0, 1, Y02.cols);
+        armas_submatrix(&w12, Y, Y->rows - 1, 0, 1, Y02.cols);
 
         if (Y02.cols > 0) {
             // a11 := a11 - a12*y12 - y12*a12
-            aa = armas_x_dot(&a12, &y12, conf);
-            aa += armas_x_dot(&y12, &a12, conf);
-            armas_x_set(&a11, 0, 0, armas_x_get(&a11, 0, 0) - aa);
+            aa = armas_dot(&a12, &y12, conf);
+            aa += armas_dot(&y12, &a12, conf);
+            armas_set(&a11, 0, 0, armas_get(&a11, 0, 0) - aa);
             // a01 := a01 - A02*y12
-            armas_x_mvmult(ONE, &a01, -ONE, &A02, &y12, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a01, -ONE, &A02, &y12, ARMAS_NONE, conf);
             // a01 := a01 - Y02*a12
-            armas_x_mvmult(ONE, &a01, -ONE, &Y02, &a12, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a01, -ONE, &Y02, &a12, ARMAS_NONE, conf);
             // restore subdiagonal value
-            armas_x_set(&a12, 0, 0, v0);
+            armas_set(&a12, 0, 0, v0);
         }
         // compute householder to zero superdiagonal entries
-        armas_x_compute_householder_rev(&a01, &tq1, conf);
-        tauval = armas_x_get(&tq1, 0, 0);
+        armas_compute_householder_rev(&a01, &tq1, conf);
+        tauval = armas_get(&tq1, 0, 0);
 
         // set superdiagonal to unit
-        v0 = armas_x_get(&a01, a01.rows - 1, 0);
-        armas_x_set(&a01, a01.rows - 1, 0, ONE);
+        v0 = armas_get(&a01, a01.rows - 1, 0);
+        armas_set(&a01, a01.rows - 1, 0, ONE);
 
         // y01 := tauq*A00*a01
-        armas_x_mvmult_sym(ZERO, &y01, tauval, &A00, &a01, ARMAS_UPPER, conf);
+        armas_mvmult_sym(ZERO, &y01, tauval, &A00, &a01, ARMAS_UPPER, conf);
         // w12 := A02.T*a01
-        armas_x_mvmult(ZERO, &w12, ONE, &A02, &a01, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w12, ONE, &A02, &a01, ARMAS_TRANS, conf);
         // y01 := y01 - tauq*Y02*(A02.T*a01)
-        armas_x_mvmult(ONE, &y01, -tauval, &Y02, &w12, ARMAS_NONE, conf);
+        armas_mvmult(ONE, &y01, -tauval, &Y02, &w12, ARMAS_NONE, conf);
         // w12 := Y02.T*a01
-        armas_x_mvmult(ZERO, &w12, ONE, &Y02, &a01, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w12, ONE, &Y02, &a01, ARMAS_TRANS, conf);
         // y01 := y01 - tauq*A02*(Y02.T*a01)
-        armas_x_mvmult(ONE, &y01, -tauval, &A02, &w12, ARMAS_NONE, conf);
+        armas_mvmult(ONE, &y01, -tauval, &A02, &w12, ARMAS_NONE, conf);
 
         // beta := tauq*a01.T*y01
-        beta = tauval * armas_x_dot(&a01, &y01, conf);
+        beta = tauval * armas_dot(&a01, &y01, conf);
         // y01 := y01 - 0.5*beta*a01
-        armas_x_axpy(&y01, -HALF * beta, &a01, conf);
+        armas_axpy(&y01, -HALF * beta, &a01, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -472,20 +472,20 @@ int unblk_trdbuild_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
     }
 
     // restore superdiagonal value
-    armas_x_set(A, ATL.rows - 1, ATL.cols, v0);
+    armas_set(A, ATL.rows - 1, ATL.cols, v0);
     return err;
 }
 
 
 
 static
-int blk_trdreduce_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                        armas_x_dense_t * Y, armas_x_dense_t * W,
+int blk_trdreduce_upper(armas_dense_t * A, armas_dense_t * tauq,
+                        armas_dense_t * Y, armas_dense_t * W,
                         int lb, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A01, A11, A22;
-    armas_x_dense_t YT, YB, Y0, Y1, Y2;
-    armas_x_dense_t tT, tB, tq0, tq1, tq2;
+    armas_dense_t ATL, ABR, A00, A01, A11, A22;
+    armas_dense_t YT, YB, Y0, Y1, Y2;
+    armas_dense_t tT, tB, tq0, tq1, tq2;
     DTYPE v0;
     int err = 0;
 
@@ -518,14 +518,14 @@ int blk_trdreduce_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
             err = err == 0 ? -1 : err;
         }
         // set superdiagonal to unit
-        v0 = armas_x_get(&A01, A01.rows - 1, 0);
-        armas_x_set(&A01, A01.rows - 1, 0, ONE);
+        v0 = armas_get(&A01, A01.rows - 1, 0);
+        armas_set(&A01, A01.rows - 1, 0, ONE);
 
         // A00 := A00 - A01*Y0.T - Y0*A01.T
-        armas_x_update2_sym(ONE, &A00, -ONE, &A01, &Y0, ARMAS_UPPER, conf);
+        armas_update2_sym(ONE, &A00, -ONE, &A01, &Y0, ARMAS_UPPER, conf);
 
         // restore superdiagonal entry
-        armas_x_set(&A01, A01.rows - 1, 0, v0);
+        armas_set(&A01, A01.rows - 1, 0, v0);
 
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -547,17 +547,17 @@ int blk_trdreduce_upper(armas_x_dense_t * A, armas_x_dense_t * tauq,
 
 /**
  * @brief Reduce symmetric matrix to tridiagonal form.
- * @see armas_x_trdreduce_w
+ * @see armas_trdreduce_w
  * @ingroup lapack
  */
-int armas_x_trdreduce(armas_x_dense_t * A,
-                      armas_x_dense_t * tauq, int flags, armas_conf_t * conf)
+int armas_trdreduce(armas_dense_t * A,
+                      armas_dense_t * tauq, int flags, armas_conf_t * conf)
 {
     if (!conf)
         conf = armas_conf_default();
 
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if (armas_x_trdreduce_w(A, tauq, flags, &wb, conf) < 0)
+    if (armas_trdreduce_w(A, tauq, flags, &wb, conf) < 0)
         return -1;
 
     wbs = &wb;
@@ -569,7 +569,7 @@ int armas_x_trdreduce(armas_x_dense_t * A,
     } else
         wbs = ARMAS_NOWORK;
 
-    int stat = armas_x_trdreduce_w(A, tauq, flags, wbs, conf);
+    int stat = armas_trdreduce_w(A, tauq, flags, wbs, conf);
     armas_wrelease(&wb);
     return stat;
 }
@@ -628,11 +628,11 @@ int armas_x_trdreduce(armas_x_dense_t * A,
  *```
  * @ingroup lapack
  */
-int armas_x_trdreduce_w(armas_x_dense_t * A,
-                        armas_x_dense_t * tauq,
+int armas_trdreduce_w(armas_dense_t * A,
+                        armas_dense_t * tauq,
                         int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t Y, Wrk;
+    armas_dense_t Y, Wrk;
     armas_env_t *env;
     size_t wsmin, wsz;
     int lb, err = 0;
@@ -658,7 +658,7 @@ int armas_x_trdreduce_w(armas_x_dense_t * A,
         conf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
-    if (!armas_x_isvector(tauq) && armas_x_size(tauq) != A->cols) {
+    if (!armas_isvector(tauq) && armas_size(tauq) != A->cols) {
         conf->error = ARMAS_EINVAL;
         return -ARMAS_EINVAL;
     }
@@ -683,14 +683,14 @@ int armas_x_trdreduce_w(armas_x_dense_t * A,
     buf = (DTYPE *) armas_wptr(wb);
 
     if (lb == 0 || A->cols <= lb) {
-        armas_x_make(&Wrk, A->rows, 1, A->rows, buf);
+        armas_make(&Wrk, A->rows, 1, A->rows, buf);
         if (flags & ARMAS_UPPER) {
             err = unblk_trdreduce_upper(A, tauq, &Wrk, FALSE, conf);
         } else {
             err = unblk_trdreduce_lower(A, tauq, &Wrk, conf);
         }
     } else {
-        armas_x_make(&Y, A->rows, lb, A->rows, buf);
+        armas_make(&Y, A->rows, lb, A->rows, buf);
         // Make W = Y in folling. W is used in following subroutine only when reducing
         // last block to tridiagonal form and Y is not needed anymore
         // TODO: fix this later

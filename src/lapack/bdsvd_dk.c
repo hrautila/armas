@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_bdsvd_demmel)
+// this file provides following type dependent functions
+#if defined(armas_bdsvd_demmel)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_gvcompute) && defined(armas_x_gvupdate) && defined(armas_x_bdsvd2x2_vec)
+#if defined(armas_gvcompute) && defined(armas_gvupdate) && defined(armas_bdsvd2x2_vec)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -40,21 +40,21 @@
  * See (1) 2.4
  */
 static
-void estimate_sval(DTYPE * smin, DTYPE * smax, armas_x_dense_t * D,
-                   armas_x_dense_t * E)
+void estimate_sval(DTYPE * smin, DTYPE * smax, armas_dense_t * D,
+                   armas_dense_t * E)
 {
     DTYPE ssmin, ssmax, mu, e0, e1, d1;
-    int k, N = armas_x_size(D);
+    int k, N = armas_size(D);
 
-    d1 = ABS(armas_x_get_at_unsafe(D, 0));
-    e1 = ABS(armas_x_get_at_unsafe(E, 0));
+    d1 = ABS(armas_get_at_unsafe(D, 0));
+    e1 = ABS(armas_get_at_unsafe(E, 0));
     e0 = e1;
     ssmax = d1 > e1 ? d1 : e1;
     mu = ssmin = d1;
     for (k = 1; k < N; k++) {
-        d1 = ABS(armas_x_get_at_unsafe(D, k));
+        d1 = ABS(armas_get_at_unsafe(D, k));
         if (k < N - 1)
-            e1 = ABS(armas_x_get_at_unsafe(E, k));
+            e1 = ABS(armas_get_at_unsafe(E, k));
         if (d1 > ssmax)
             ssmax = d1;
         if (e1 > ssmax)
@@ -114,31 +114,31 @@ void estimate_sval(DTYPE * smin, DTYPE * smax, armas_x_dense_t * D,
  *   slow   = estimate of minimum singular value 
  *   shigh  = estimate of maximum singular value max(|D(i)|, |E(i)|)
  */
-int armas_x_bdsvd_demmel(armas_x_dense_t * D, armas_x_dense_t * E,
-                         armas_x_dense_t * U, armas_x_dense_t * V,
-                         armas_x_dense_t * CS, DTYPE tol, int flags,
+int armas_bdsvd_demmel(armas_dense_t * D, armas_dense_t * E,
+                         armas_dense_t * U, armas_dense_t * V,
+                         armas_dense_t * CS, DTYPE tol, int flags,
                          armas_conf_t * conf)
 {
     int N, work, maxit, i, n, k, nrot, ip, iq, zero, saves, abstol, forwards;
     int ipold, iqold;
     DTYPE e0, e1, d0, d1, dp, f0, g0, r, ushift, slow, shigh, threshold, mu;
-    armas_x_dense_t sD, sE, Cr, Sr, Cl, Sl;
+    armas_dense_t sD, sE, Cr, Sr, Cl, Sl;
 
     EMPTY(sD);
     EMPTY(sE);
     forwards = 1;
     zero = 0;
 
-    N = armas_x_size(D);
+    N = armas_size(D);
     maxit = 6 * N * N;
     saves = 0;
     abstol = conf->optflags & ARMAS_OABSTOL;
 
     if (U || V) {
-        armas_x_subvector(&Cr, CS, 0, N);
-        armas_x_subvector(&Sr, CS, N, N);
-        armas_x_subvector(&Cl, CS, 2 * N, N);
-        armas_x_subvector(&Sl, CS, 3 * N, N);
+        armas_subvector(&Cr, CS, 0, N);
+        armas_subvector(&Sr, CS, N, N);
+        armas_subvector(&Cl, CS, 2 * N, N);
+        armas_subvector(&Sl, CS, 3 * N, N);
         saves = 1;
     }
 
@@ -170,17 +170,17 @@ int armas_x_bdsvd_demmel(armas_x_dense_t * D, armas_x_dense_t * E,
         // In effect iq is index to start of B2, ip is index to start of B1.
         // We search from bottom of the matrix to top and zero values below threshold
         // on the way upwards. And update estimates of singular values.
-        d0 = ABS(armas_x_get_at_unsafe(D, iq - 1));
+        d0 = ABS(armas_get_at_unsafe(D, iq - 1));
         if (abstol && d0 < threshold)
-            armas_x_set_at_unsafe(D, iq - 1, ZERO);
-        shigh = ABS(armas_x_get_at_unsafe(D, iq - 1));
+            armas_set_at_unsafe(D, iq - 1, ZERO);
+        shigh = ABS(armas_get_at_unsafe(D, iq - 1));
         slow = shigh;
         // proceed from bottom to top; 
         for (k = iq - 1; k > 0; k--) {
-            d0 = ABS(armas_x_get_at_unsafe(D, k - 1));
-            e0 = ABS(armas_x_get_at_unsafe(E, k - 1));
+            d0 = ABS(armas_get_at_unsafe(D, k - 1));
+            e0 = ABS(armas_get_at_unsafe(E, k - 1));
             if (e0 < threshold) {
-                armas_x_set_at_unsafe(E, k - 1, ZERO);
+                armas_set_at_unsafe(E, k - 1, ZERO);
                 if (k == (iq - 1)) {
                     // convergence of bottom singular value
                     iq = iq - 1;
@@ -211,19 +211,19 @@ int armas_x_bdsvd_demmel(armas_x_dense_t * D, armas_x_dense_t * E,
         if ((iq - ip) == 2) {
             // 2x2 block, do separately
             DTYPE smin, smax, cosl, sinl, cosr, sinr;
-            d0 = armas_x_get_at_unsafe(D, ip);
-            d1 = armas_x_get_at_unsafe(D, ip + 1);
-            e1 = armas_x_get_at_unsafe(E, ip);
-            armas_x_bdsvd2x2_vec(&smin, &smax,
+            d0 = armas_get_at_unsafe(D, ip);
+            d1 = armas_get_at_unsafe(D, ip + 1);
+            e1 = armas_get_at_unsafe(E, ip);
+            armas_bdsvd2x2_vec(&smin, &smax,
                                  &cosl, &sinl, &cosr, &sinr, d0, e1, d1);
-            armas_x_set_at_unsafe(D, ip, smax);
-            armas_x_set_at_unsafe(D, ip + 1, smin);
-            armas_x_set_at_unsafe(E, ip, ZERO);
+            armas_set_at_unsafe(D, ip, smax);
+            armas_set_at_unsafe(D, ip + 1, smin);
+            armas_set_at_unsafe(E, ip, ZERO);
             if (U) {
-                armas_x_gvright(U, cosl, sinl, ip, ip + 1, 0, U->rows);
+                armas_gvright(U, cosl, sinl, ip, ip + 1, 0, U->rows);
             }
             if (V) {
-                armas_x_gvleft(V, cosr, sinr, ip, ip + 1, 0, V->cols);
+                armas_gvleft(V, cosr, sinr, ip, ip + 1, 0, V->cols);
             }
             iq -= 2;
             goto Next;
@@ -233,56 +233,56 @@ int armas_x_bdsvd_demmel(armas_x_dense_t * D, armas_x_dense_t * E,
             // this first time or when new disjoint block selected
             ipold = ip;
             iqold = iq;
-            d0 = ABS(armas_x_get_at_unsafe(D, ip));
-            d1 = ABS(armas_x_get_at_unsafe(D, iq - 1));
+            d0 = ABS(armas_get_at_unsafe(D, ip));
+            d1 = ABS(armas_get_at_unsafe(D, iq - 1));
             // select direction
             forwards = d1 >= d0 || (flags & ARMAS_FORWARD) != 0;
         }
         // convergence
         if (forwards) {
             // criterion 1b, 1a, 2a
-            e0 = ABS(armas_x_get_at_unsafe(E, iq - 2));
-            d0 = ABS(armas_x_get_at_unsafe(D, iq - 1));
+            e0 = ABS(armas_get_at_unsafe(E, iq - 2));
+            d0 = ABS(armas_get_at_unsafe(D, iq - 1));
             // this is the standard convergence test 
             if ((abstol && e0 < threshold) || e0 < tol * d0) {
-                armas_x_set_at_unsafe(E, iq - 2, ZERO);
+                armas_set_at_unsafe(E, iq - 2, ZERO);
                 iq = iq - 1;
                 goto Next;
             }
             // if relative tolerance then criteria 1a.
             if (!abstol) {
-                mu = ABS(armas_x_get_at_unsafe(D, ip));
+                mu = ABS(armas_get_at_unsafe(D, ip));
                 for (k = ip; k < iq - 1; k++) {
-                    e0 = armas_x_get_at_unsafe(E, k);
+                    e0 = armas_get_at_unsafe(E, k);
                     if (ABS(e0) <= tol * mu) {
                         // test recurrence |e(j)/mu(j)| <= tol
-                        armas_x_set_at_unsafe(E, k, ZERO);
+                        armas_set_at_unsafe(E, k, ZERO);
                         goto Next;
                     }
-                    d0 = ABS(armas_x_get_at_unsafe(D, k + 1));
+                    d0 = ABS(armas_get_at_unsafe(D, k + 1));
                     mu = d0 * (mu / (mu + ABS(e0)));
                 }
             }
         } else {
             // criterion 1a, 1b, 2b
-            e0 = ABS(armas_x_get_at_unsafe(E, ip));
-            d0 = ABS(armas_x_get_at_unsafe(D, ip));
+            e0 = ABS(armas_get_at_unsafe(E, ip));
+            d0 = ABS(armas_get_at_unsafe(D, ip));
             if ((abstol && e0 < threshold) || e0 < tol * d0) {
-                armas_x_set_at_unsafe(E, ip, ZERO);
+                armas_set_at_unsafe(E, ip, ZERO);
                 ip = ip + 1;
                 goto Next;
             }
             // if relative tolerance then criteria 1b.
             if (!abstol) {
-                mu = ABS(armas_x_get_at_unsafe(D, iq - 1));
+                mu = ABS(armas_get_at_unsafe(D, iq - 1));
                 for (k = iq - 1; k > ip; k--) {
-                    e0 = armas_x_get_at_unsafe(E, k - 1);
+                    e0 = armas_get_at_unsafe(E, k - 1);
                     if (ABS(e0) <= tol * mu) {
                         // test recurrence |e(j)/mu(j)| <= tol
-                        armas_x_set_at_unsafe(E, k - 1, ZERO);
+                        armas_set_at_unsafe(E, k - 1, ZERO);
                         goto Next;
                     }
-                    d0 = ABS(armas_x_get_at_unsafe(D, k - 1));
+                    d0 = ABS(armas_get_at_unsafe(D, k - 1));
                     mu = d0 * (mu / (mu + ABS(e0)));
                 }
             }
@@ -292,67 +292,67 @@ int armas_x_bdsvd_demmel(armas_x_dense_t * D, armas_x_dense_t * E,
             zero = 1;
         } else {
             if (forwards) {
-                d0 = ABS(armas_x_get_at_unsafe(D, ip));
-                d1 = armas_x_get_at_unsafe(D, iq - 2);
-                e1 = armas_x_get_at_unsafe(E, iq - 2);
-                dp = armas_x_get_at_unsafe(D, iq - 1);
-                armas_x_bdsvd2x2(&ushift, &r, d1, e1, dp);
+                d0 = ABS(armas_get_at_unsafe(D, ip));
+                d1 = armas_get_at_unsafe(D, iq - 2);
+                e1 = armas_get_at_unsafe(E, iq - 2);
+                dp = armas_get_at_unsafe(D, iq - 1);
+                armas_bdsvd2x2(&ushift, &r, d1, e1, dp);
             } else {
-                d0 = ABS(armas_x_get_at_unsafe(D, iq - 1));
-                d1 = armas_x_get_at_unsafe(D, ip);
-                e1 = armas_x_get_at_unsafe(E, ip);
-                dp = armas_x_get_at_unsafe(D, ip + 1);
-                armas_x_bdsvd2x2(&ushift, &r, d1, e1, dp);
+                d0 = ABS(armas_get_at_unsafe(D, iq - 1));
+                d1 = armas_get_at_unsafe(D, ip);
+                e1 = armas_get_at_unsafe(E, ip);
+                dp = armas_get_at_unsafe(D, ip + 1);
+                armas_bdsvd2x2(&ushift, &r, d1, e1, dp);
             }
             if (d0 > ZERO)
                 zero = (ushift / d0) * (ushift / d0) <= EPS;
         }
 
-        armas_x_subvector(&sD, D, ip, iq - ip);
-        armas_x_subvector(&sE, E, ip, iq - ip - 1);
+        armas_subvector(&sD, D, ip, iq - ip);
+        armas_subvector(&sE, E, ip, iq - ip - 1);
         // QR iteration
         if (forwards) {
             if (zero) {
                 // implicit zero shift QR
-                nrot = armas_x_bd_qrzero(&sD, &sE, &Cr, &Sr, &Cl, &Sl, saves);
+                nrot = armas_bd_qrzero(&sD, &sE, &Cr, &Sr, &Cl, &Sl, saves);
             } else {
                 // standard shifted QR
                 f0 = (ABS(d0) - ushift) * (copysign(ONE, d0) + ushift / d0);
-                g0 = armas_x_get_at_unsafe(E, ip);
-                nrot = armas_x_bd_qrsweep(&sD, &sE,
+                g0 = armas_get_at_unsafe(E, ip);
+                nrot = armas_bd_qrsweep(&sD, &sE,
                                           &Cr, &Sr, &Cl, &Sl, f0, g0, saves);
             }
-            e0 = ABS(armas_x_get_at_unsafe(E, iq - 2));
+            e0 = ABS(armas_get_at_unsafe(E, iq - 2));
             if (e0 <= threshold) {
-                armas_x_set_at_unsafe(E, iq - 2, ZERO);
+                armas_set_at_unsafe(E, iq - 2, ZERO);
             }
             if (U) {
-                armas_x_gvupdate(U, ip, &Cl, &Sl, nrot, ARMAS_RIGHT);
+                armas_gvupdate(U, ip, &Cl, &Sl, nrot, ARMAS_RIGHT);
             }
             if (V) {
-                armas_x_gvupdate(V, ip, &Cr, &Sr, nrot, ARMAS_LEFT);
+                armas_gvupdate(V, ip, &Cr, &Sr, nrot, ARMAS_LEFT);
             }
         } else {
             if (zero) {
                 // implicit zero shift QL
-                nrot = armas_x_bd_qlzero(&sD, &sE, &Cr, &Sr, &Cl, &Sl, saves);
+                nrot = armas_bd_qlzero(&sD, &sE, &Cr, &Sr, &Cl, &Sl, saves);
             } else {
                 // standard shifted QL
                 f0 = (ABS(d0) - ushift) * (copysign(ONE, d0) + ushift / d0);
-                g0 = armas_x_get_at_unsafe(E, iq - 2);
-                nrot = armas_x_bd_qlsweep(&sD, &sE,
+                g0 = armas_get_at_unsafe(E, iq - 2);
+                nrot = armas_bd_qlsweep(&sD, &sE,
                                           &Cr, &Sr, &Cl, &Sl, f0, g0, saves);
             }
-            e0 = ABS(armas_x_get_at_unsafe(E, ip));
+            e0 = ABS(armas_get_at_unsafe(E, ip));
             if (e0 <= threshold) {
-                armas_x_set_at_unsafe(E, ip, ZERO);
+                armas_set_at_unsafe(E, ip, ZERO);
             }
             if (U) {
-                armas_x_gvupdate(U, ip, &Cr, &Sr, nrot,
+                armas_gvupdate(U, ip, &Cr, &Sr, nrot,
                                  ARMAS_RIGHT | ARMAS_BACKWARD);
             }
             if (V) {
-                armas_x_gvupdate(V, ip, &Cl, &Sl, nrot,
+                armas_gvupdate(V, ip, &Cl, &Sl, nrot,
                                  ARMAS_LEFT | ARMAS_BACKWARD);
             }
         }
@@ -365,12 +365,12 @@ int armas_x_bdsvd_demmel(armas_x_dense_t * D, armas_x_dense_t * E,
     if (maxit > 0) {
         // finished properly 
         for (i = 0; i < N; i++) {
-            d0 = armas_x_get_at(D, i);
+            d0 = armas_get_at(D, i);
             if (d0 < 0) {
-                armas_x_set_at(D, i, -d0);
+                armas_set_at(D, i, -d0);
                 if (V) {
-                    armas_x_row(&sD, V, i);
-                    armas_x_scale(&sD, -1.0, conf);
+                    armas_row(&sD, V, i);
+                    armas_scale(&sD, -1.0, conf);
                 }
             }
         }

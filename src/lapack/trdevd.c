@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,19 +12,19 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_trdeigen) && defined(armas_x_trdeigen_w)
+// this file provides following type dependent functions
+#if defined(armas_trdeigen) && defined(armas_trdeigen_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_gvupdate) && defined(armas_x_gvright) \
-    && defined(armas_x_sym_eigen2x2vec) && defined(armas_x_trd_qrsweep) \
-    && defined(armas_x_trd_qlsweep)
+#if defined(armas_gvupdate) && defined(armas_gvright) \
+    && defined(armas_sym_eigen2x2vec) && defined(armas_trd_qrsweep) \
+    && defined(armas_trd_qlsweep)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -38,22 +38,22 @@
  * Lapack: DSTEQR
  */
 static
-int armas_x_trdevd_qr(armas_x_dense_t * D, armas_x_dense_t * E,
-                      armas_x_dense_t * V, armas_x_dense_t * CS, ABSTYPE tol,
+int armas_trdevd_qr(armas_dense_t * D, armas_dense_t * E,
+                      armas_dense_t * V, armas_dense_t * CS, ABSTYPE tol,
                       int flags, armas_conf_t * conf)
 {
     int ip, iq, iqold, ipold, k, N, n, maxiter, nrot;
     int forwards = 1, stop = 0, saves = 0;
     ABSTYPE e0, e1, d0, d1, f0, g0, ushift;
-    armas_x_dense_t Cr, Sr, sD, sE;
+    armas_dense_t Cr, Sr, sD, sE;
 
     EMPTY(sD);
     EMPTY(sE);
 
-    N = armas_x_size(D);
+    N = armas_size(D);
     if (V) {
-        armas_x_subvector(&Cr, CS, 0, N);
-        armas_x_subvector(&Sr, CS, N, N);
+        armas_subvector(&Cr, CS, 0, N);
+        armas_subvector(&Sr, CS, N, N);
         saves = 1;
     }
 
@@ -62,12 +62,12 @@ int armas_x_trdevd_qr(armas_x_dense_t * D, armas_x_dense_t * E,
     ip = ipold = 0;
     for (stop = 0, n = 0; !stop && maxiter > 0 && iq > 0; maxiter--, n++) {
         // 1. deflate off-diagonal entries if they are small
-        d0 = ABS(armas_x_get_at_unsafe(D, iq - 1));
+        d0 = ABS(armas_get_at_unsafe(D, iq - 1));
         for (k = iq - 1; k > 0; k--) {
-            e1 = ABS(armas_x_get_at_unsafe(E, k - 1));
-            d1 = ABS(armas_x_get_at_unsafe(D, k - 1));
+            e1 = ABS(armas_get_at_unsafe(E, k - 1));
+            d1 = ABS(armas_get_at_unsafe(D, k - 1));
             if (e1 < tol * (d0 + d1)) {
-                armas_x_set_at_unsafe(E, k - 1, ZERO);
+                armas_set_at_unsafe(E, k - 1, ZERO);
                 if (k == (iq - 1)) {
                     // convergence of bottom value;
                     iq = iq - 1;
@@ -99,16 +99,16 @@ int armas_x_trdevd_qr(armas_x_dense_t * D, armas_x_dense_t * E,
         if ((iq - ip) == 2) {
             // 2x2 block
             DTYPE a, b, c, e0, e1, cs, sn;
-            a = armas_x_get_at_unsafe(D, ip);
-            b = armas_x_get_at_unsafe(E, ip);
-            c = armas_x_get_at_unsafe(D, ip + 1);
-            armas_x_sym_eigen2x2vec(&e0, &e1, &cs, &sn, a, b, c);
+            a = armas_get_at_unsafe(D, ip);
+            b = armas_get_at_unsafe(E, ip);
+            c = armas_get_at_unsafe(D, ip + 1);
+            armas_sym_eigen2x2vec(&e0, &e1, &cs, &sn, a, b, c);
             //printf(".. 2x2 block [%d,%d] e0 = %e, e1 = %e\n", ip, iq, e0, e1);
-            armas_x_set_at_unsafe(D, ip, e0);
-            armas_x_set_at_unsafe(D, ip + 1, e1);
-            armas_x_set_at_unsafe(E, ip, ZERO);
+            armas_set_at_unsafe(D, ip, e0);
+            armas_set_at_unsafe(D, ip + 1, e1);
+            armas_set_at_unsafe(E, ip, ZERO);
             if (V) {
-                armas_x_gvright(V, cs, sn, ip, ip + 1, 0, V->rows);
+                armas_gvright(V, cs, sn, ip, ip + 1, 0, V->rows);
             }
             iq -= 2;
             goto Next;
@@ -118,42 +118,42 @@ int armas_x_trdevd_qr(armas_x_dense_t * D, armas_x_dense_t * E,
             // disjoint block, select direction
             ipold = ip;
             iqold = iq;
-            d0 = ABS(armas_x_get_at_unsafe(D, ip));
-            d1 = ABS(armas_x_get_at_unsafe(D, iq - 1));
+            d0 = ABS(armas_get_at_unsafe(D, ip));
+            d1 = ABS(armas_get_at_unsafe(D, iq - 1));
             forwards = d1 >= d0 || (flags & ARMAS_FORWARD) != 0;
         }
 
-        armas_x_subvector(&sD, D, ip, iq - ip);
-        armas_x_subvector(&sE, E, ip, iq - ip - 1);
+        armas_subvector(&sD, D, ip, iq - ip);
+        armas_subvector(&sE, E, ip, iq - ip - 1);
 
         if (forwards) {
             // implicit QR sweep on subvector
             // d1 last in D, d0 before d1, e0 last in E
-            d0 = armas_x_get_at_unsafe(D, iq - 2);
-            e0 = armas_x_get_at_unsafe(E, iq - 2);
-            d1 = armas_x_get_at_unsafe(D, iq - 1);
+            d0 = armas_get_at_unsafe(D, iq - 2);
+            e0 = armas_get_at_unsafe(E, iq - 2);
+            d1 = armas_get_at_unsafe(D, iq - 1);
             // Wilkinson shift from trailing 2x2 matrix
             ushift = wilkinson_shift(d0, e0, d1);
-            f0 = armas_x_get_at_unsafe(&sD, 0) - ushift;
-            g0 = armas_x_get_at_unsafe(&sE, 0);
-            nrot = armas_x_trd_qrsweep(&sD, &sE, &Cr, &Sr, f0, g0, saves);
+            f0 = armas_get_at_unsafe(&sD, 0) - ushift;
+            g0 = armas_get_at_unsafe(&sE, 0);
+            nrot = armas_trd_qrsweep(&sD, &sE, &Cr, &Sr, f0, g0, saves);
             // update eigenvectors
             if (V) {
-                armas_x_gvupdate(V, ip, &Cr, &Sr, nrot, ARMAS_RIGHT);
+                armas_gvupdate(V, ip, &Cr, &Sr, nrot, ARMAS_RIGHT);
             }
         } else {
             // implicit QL sweep on subvector
-            d0 = armas_x_get_at_unsafe(D, ip);
-            d1 = armas_x_get_at_unsafe(D, ip + 1);
-            e0 = armas_x_get_at_unsafe(E, ip);
+            d0 = armas_get_at_unsafe(D, ip);
+            d1 = armas_get_at_unsafe(D, ip + 1);
+            e0 = armas_get_at_unsafe(E, ip);
             // Wilkinson shift from leading 2x2 matrix
             ushift = wilkinson_shift(d1, e0, d0);
-            f0 = armas_x_get_at_unsafe(D, iq - 1) - ushift;
-            g0 = armas_x_get_at_unsafe(E, iq - 2);
-            nrot = armas_x_trd_qlsweep(&sD, &sE, &Cr, &Sr, f0, g0, saves);
+            f0 = armas_get_at_unsafe(D, iq - 1) - ushift;
+            g0 = armas_get_at_unsafe(E, iq - 2);
+            nrot = armas_trd_qlsweep(&sD, &sE, &Cr, &Sr, f0, g0, saves);
             // update eigenvectors
             if (V) {
-                armas_x_gvupdate(V, ip, &Cr, &Sr, nrot,
+                armas_gvupdate(V, ip, &Cr, &Sr, nrot,
                                  ARMAS_RIGHT | ARMAS_BACKWARD);
             }
         }
@@ -165,19 +165,19 @@ int armas_x_trdevd_qr(armas_x_dense_t * D, armas_x_dense_t * E,
 
 /**
  * @brief Compute eigenvalues of a symmetric tridiagonal matrix T.
- * @see armas_x_trdeigen_w
+ * @see armas_trdeigen_w
  * @ingroup lapack
  */
-int armas_x_trdeigen(armas_x_dense_t * D,
-                     armas_x_dense_t * E,
-                     armas_x_dense_t * V, int flags, armas_conf_t * conf)
+int armas_trdeigen(armas_dense_t * D,
+                     armas_dense_t * E,
+                     armas_dense_t * V, int flags, armas_conf_t * conf)
 {
     if (!conf)
         conf = armas_conf_default();
 
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if ((err = armas_x_trdeigen_w(D, E, V, flags, &wb, conf)) < 0)
+    if ((err = armas_trdeigen_w(D, E, V, flags, &wb, conf)) < 0)
         return err;
 
     wbs = &wb;
@@ -189,7 +189,7 @@ int armas_x_trdeigen(armas_x_dense_t * D,
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_trdeigen_w(D, E, V, flags, wbs, conf);
+    err = armas_trdeigen_w(D, E, V, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }
@@ -229,13 +229,13 @@ int armas_x_trdeigen(armas_x_dense_t * D,
  *
  * @ingroup lapack
  */
-int armas_x_trdeigen_w(armas_x_dense_t * D,
-                       armas_x_dense_t * E,
-                       armas_x_dense_t * V,
+int armas_trdeigen_w(armas_dense_t * D,
+                       armas_dense_t * E,
+                       armas_dense_t * V,
                        int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t CS, *vv;
-    int err, N = armas_x_size(D);
+    armas_dense_t CS, *vv;
+    int err, N = armas_size(D);
     ABSTYPE tol = 5.0;
 
     if (!conf)
@@ -253,9 +253,9 @@ int armas_x_trdeigen_w(armas_x_dense_t * D,
         return 0;
     }
 
-    vv = (armas_x_dense_t *) 0;
+    vv = (armas_dense_t *) 0;
     // check for sizes
-    if (!(armas_x_isvector(D) && armas_x_isvector(E))) {
+    if (!(armas_isvector(D) && armas_isvector(E))) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -1;
     }
@@ -270,7 +270,7 @@ int armas_x_trdeigen_w(armas_x_dense_t * D,
         }
         vv = V;
     }
-    if (armas_x_size(E) != N - 1) {
+    if (armas_size(E) != N - 1) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
@@ -281,19 +281,19 @@ int armas_x_trdeigen_w(armas_x_dense_t * D,
     }
 
     if (vv) {
-        armas_x_make(&CS, 2 * N, 1, 2 * N, (DTYPE *) armas_wptr(wb));
+        armas_make(&CS, 2 * N, 1, 2 * N, (DTYPE *) armas_wptr(wb));
     } else {
-        armas_x_make(&CS, 0, 0, 1, (DTYPE *) 0);
+        armas_make(&CS, 0, 0, 1, (DTYPE *) 0);
     }
 
     tol = tol * EPS;
     if (conf->tolmult > 0) {
         tol = ((ABSTYPE) conf->tolmult) * EPS;
     }
-    err = armas_x_trdevd_qr(D, E, vv, &CS, tol, flags, conf);
+    err = armas_trdevd_qr(D, E, vv, &CS, tol, flags, conf);
 
     if (err == 0) {
-        armas_x_sort_eigenvec(D, vv, __nil, __nil, ARMAS_ASC);
+        armas_sort_eigenvec(D, vv, __nil, __nil, ARMAS_ASC);
     } else {
         conf->error = ARMAS_ECONVERGE;
     }

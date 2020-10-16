@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,17 +12,17 @@
 #include "dlpack.h"
 
 // ----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_rqbuild)
+// this file provides following type dependent functions
+#if defined(armas_rqbuild)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_householder)
+#if defined(armas_householder)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -48,13 +48,13 @@
  * Compatible to lapack.xORG2R subroutine.
  */
 static
-int unblk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
-                  armas_x_dense_t * W, int mk, int nk, int mayclear,
+int unblk_rqbuild(armas_dense_t * A, armas_dense_t * tau,
+                  armas_dense_t * W, int mk, int nk, int mayclear,
                   armas_conf_t * conf)
 {
     DTYPE tauval;
-    armas_x_dense_t ATL, ABL, ATR, ABR, A00, a01, a10, a11, a12, A22, D;
-    armas_x_dense_t tT, tB, t0, t1, t2, w12;
+    armas_dense_t ATL, ABL, ATR, ABR, A00, a01, a10, a11, a12, A22, D;
+    armas_dense_t tT, tB, t0, t1, t2, w12;
 
 
     EMPTY(a11);
@@ -67,10 +67,10 @@ int unblk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
 
     // zero the top part and to unit matrix
     if (mk > 0 && mayclear) {
-        armas_x_mscale(&ATL, ZERO, 0, conf);
-        armas_x_mscale(&ATR, ZERO, 0, conf);
-        armas_x_diag(&D, &ATL, ATL.cols - mk);
-        armas_x_madd(&D, ONE, 0, conf);
+        armas_mscale(&ATL, ZERO, 0, conf);
+        armas_mscale(&ATR, ZERO, 0, conf);
+        armas_diag(&D, &ATL, ATL.cols - mk);
+        armas_madd(&D, ONE, 0, conf);
     }
 
     while (ABR.rows > 0 && ABR.cols > 0) {
@@ -82,14 +82,14 @@ int unblk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
         mat_repartition_2x1to3x1(
             &tT, &t0, &t1, &t2, /**/ tau, 1, ARMAS_PBOTTOM);
         // --------------------------------------------------------------------
-        armas_x_make(&w12, a01.rows, 1, a01.rows, armas_x_data(W));
-        armas_x_apply_householder2x1(&t1, &a10,
+        armas_make(&w12, a01.rows, 1, a01.rows, armas_data(W));
+        armas_apply_householder2x1(&t1, &a10,
                                      &a01, &A00, &w12, ARMAS_RIGHT, conf);
 
-        tauval = armas_x_get(&t1, 0, 0);
-        armas_x_scale(&a10, -tauval, conf);
-        armas_x_set(&a11, 0, 0, ONE - tauval);
-        armas_x_scale(&a12, ZERO, conf);
+        tauval = armas_get(&t1, 0, 0);
+        armas_scale(&a10, -tauval, conf);
+        armas_set(&a11, 0, 0, ONE - tauval);
+        armas_scale(&a12, ZERO, conf);
         // --------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, &ATR,
@@ -104,12 +104,12 @@ int unblk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
  * Blocked code.
  */
 static
-int blk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
-                armas_x_dense_t * T, armas_x_dense_t * W, int K, int lb,
+int blk_rqbuild(armas_dense_t * A, armas_dense_t * tau,
+                armas_dense_t * T, armas_dense_t * W, int K, int lb,
                 armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABL, ABR, ATR, A00, A01, A10, A11, A12, A22, AL, D;
-    armas_x_dense_t tT, tB, t0, t1, t2, Tcur, Wrk;
+    armas_dense_t ATL, ABL, ABR, ATR, A00, A01, A10, A11, A12, A22, AL, D;
+    armas_dense_t tT, tB, t0, t1, t2, Tcur, Wrk;
     int mk, nk, uk;
 
     mk = A->rows - K;
@@ -124,15 +124,15 @@ int blk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
 
     // zero the top part
     if (mk + uk > 0) {
-        armas_x_mscale(&ATR, ZERO, 0, conf);
+        armas_mscale(&ATR, ZERO, 0, conf);
         if (uk > 0) {
             // number of reflector is not multiple of blocking factor
             unblk_rqbuild(&ATL, &tT, W, ATL.rows-uk, ATL.cols-uk, TRUE, conf);
         } else {
             // blocking factor is multiple of K
-            armas_x_mscale(&ATL, ZERO, 0, conf);
-            armas_x_diag(&D, &ATL, ATL.cols - ATL.rows);
-            armas_x_madd(&D, ONE, 0, conf);
+            armas_mscale(&ATL, ZERO, 0, conf);
+            armas_diag(&D, &ATL, ATL.cols - ATL.rows);
+            armas_madd(&D, ONE, 0, conf);
         }
     }
 
@@ -148,20 +148,20 @@ int blk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
         mat_merge1x2(&AL, &A10, &A11);
 
         // build block reflector
-        armas_x_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_x_data(T));
-        armas_x_mscale(&Tcur, ZERO, 0, conf);
-        armas_x_unblk_rq_reflector(&Tcur, &AL, &t1, conf);
+        armas_make(&Tcur, A11.cols, A11.cols, A11.cols, armas_data(T));
+        armas_mscale(&Tcur, ZERO, 0, conf);
+        armas_unblk_rq_reflector(&Tcur, &AL, &t1, conf);
 
         // update A00, A01
-        armas_x_make(&Wrk, A01.rows, A01.cols, A01.rows, armas_x_data(W));
-        armas_x_update_rq_right(&A01, &A00,
+        armas_make(&Wrk, A01.rows, A01.cols, A01.rows, armas_data(W));
+        armas_update_rq_right(&A01, &A00,
                                 &A11, &A10, &Tcur, &Wrk, TRUE, conf);
 
         // update current block
         unblk_rqbuild(&AL, &t1, W, 0, A10.cols, FALSE, conf);
 
         // zero right cols
-        armas_x_mscale(&A12, ZERO, 0, conf);
+        armas_mscale(&A12, ZERO, 0, conf);
         // --------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -175,18 +175,18 @@ int blk_rqbuild(armas_x_dense_t * A, armas_x_dense_t * tau,
 /**
  * @brief Generate the orthogonal Q matrix of RQ factorization
  *
- * @see armas_x_rqbuild_w
+ * @see armas_rqbuild_w
  * @ingroup lapack
  */
-int armas_x_rqbuild(armas_x_dense_t * A,
-                    const armas_x_dense_t * tau, int K, armas_conf_t * cf)
+int armas_rqbuild(armas_dense_t * A,
+                    const armas_dense_t * tau, int K, armas_conf_t * cf)
 {
     if (!cf)
         cf = armas_conf_default();
 
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if ((err = armas_x_rqbuild_w(A, tau, K, &wb, cf)) < 0)
+    if ((err = armas_rqbuild_w(A, tau, K, &wb, cf)) < 0)
         return err;
 
     wbs = &wb;
@@ -198,7 +198,7 @@ int armas_x_rqbuild(armas_x_dense_t * A,
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_rqbuild_w(A, tau, K, wbs, cf);
+    err = armas_rqbuild_w(A, tau, K, wbs, cf);
     armas_wrelease(&wb);
     return err;
 }
@@ -235,11 +235,11 @@ int armas_x_rqbuild(armas_x_dense_t * A,
  * Compatible with lapackd.ORGRQ.
  * @ingroup lapack
  */
-int armas_x_rqbuild_w(armas_x_dense_t * A,
-                      const armas_x_dense_t * tau,
+int armas_rqbuild_w(armas_dense_t * A,
+                      const armas_dense_t * tau,
                       int K, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t T, Wrk;
+    armas_dense_t T, Wrk;
     armas_env_t *env;
     size_t wsmin, wsz = 0;
     int lb;
@@ -265,7 +265,7 @@ int armas_x_rqbuild_w(armas_x_dense_t * A,
         conf->error = ARMAS_EINVAL;
         return -ARMAS_EINVAL;
     }
-    if (armas_x_size(tau) != A->rows) {
+    if (armas_size(tau) != A->rows) {
         conf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
@@ -291,16 +291,16 @@ int armas_x_rqbuild_w(armas_x_dense_t * A,
     buf = (DTYPE *) armas_wptr(wb);
 
     if (lb == 0 || A->cols <= lb) {
-        armas_x_make(&Wrk, A->rows, 1, A->rows, buf);
+        armas_make(&Wrk, A->rows, 1, A->rows, buf);
         // start row: A->rows - K, column: A.cols - K
-        unblk_rqbuild(A, (armas_x_dense_t *) tau, &Wrk, A->rows-K,
+        unblk_rqbuild(A, (armas_dense_t *) tau, &Wrk, A->rows-K,
                       A->cols-K, TRUE, conf);
     } else {
         // block reflector [lb, lb]; other temporary [m(A)-lb, lb]
-        armas_x_make(&T, lb, lb, lb, buf);
-        armas_x_make(&Wrk, A->rows-lb, lb, A->rows-lb, &buf[armas_x_size(&T)]);
+        armas_make(&T, lb, lb, lb, buf);
+        armas_make(&Wrk, A->rows-lb, lb, A->rows-lb, &buf[armas_size(&T)]);
 
-        blk_rqbuild(A, (armas_x_dense_t *) tau, &T, &Wrk, K, lb, conf);
+        blk_rqbuild(A, (armas_dense_t *) tau, &T, &Wrk, K, lb, conf);
     }
     armas_wsetpos(wb, wsz);
     return 0;

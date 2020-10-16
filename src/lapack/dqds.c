@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,15 +9,15 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_dqds) && defined(armas_x_scale_to)
+// this file provides following type dependent functions
+#if defined(armas_dqds) && defined(armas_scale_to)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -105,8 +105,8 @@ void twosum(DTYPE * x, DTYPE * y, DTYPE a, DTYPE b)
 
 
 static
-int dqds_sweep(armas_x_dense_t * dq, armas_x_dense_t * de,
-               armas_x_dense_t * sq, armas_x_dense_t * se,
+int dqds_sweep(armas_dense_t * dq, armas_dense_t * de,
+               armas_dense_t * sq, armas_dense_t * se,
                int N, DTYPE tau, dmin_data_t * dm)
 {
     int k;
@@ -116,8 +116,8 @@ int dqds_sweep(armas_x_dense_t * dq, armas_x_dense_t * de,
         return 0;
     }
 
-    d = armas_x_get_at_unsafe(sq, 0) - tau;
-    emin = armas_x_get_at_unsafe(se, 0);
+    d = armas_get_at_unsafe(sq, 0) - tau;
+    emin = armas_get_at_unsafe(se, 0);
     dm->dmin = d;
     dm->dmin1 = d;
     dm->dmin2 = d;
@@ -125,9 +125,9 @@ int dqds_sweep(armas_x_dense_t * dq, armas_x_dense_t * de,
     dm->dn1 = d;
     dm->dn = d;
     for (k = 0; k < N - 3; k++) {
-        qk = d + armas_x_get_at_unsafe(se, k);
-        t = armas_x_get_at_unsafe(sq, k + 1) / qk;
-        ek = armas_x_get_at_unsafe(se, k) * t;
+        qk = d + armas_get_at_unsafe(se, k);
+        t = armas_get_at_unsafe(sq, k + 1) / qk;
+        ek = armas_get_at_unsafe(se, k) * t;
         d = d * t - tau;
 
         if (ek < emin)
@@ -136,8 +136,8 @@ int dqds_sweep(armas_x_dense_t * dq, armas_x_dense_t * de,
             dm->dmin = d;
             dm->imin = k + 1;
         }
-        armas_x_set_at_unsafe(dq, k, qk);
-        armas_x_set_at_unsafe(de, k, ek);
+        armas_set_at_unsafe(dq, k, qk);
+        armas_set_at_unsafe(de, k, ek);
     }
     // unroll last steps and compute value of d as algorithm dqds(2) in (1) section 2
     // Within the loop above d = d*(qk1/qk) - tau, in unrolled steps d = qk1*(d/qk) - tau.
@@ -146,9 +146,9 @@ int dqds_sweep(armas_x_dense_t * dq, armas_x_dense_t * de,
     case 3:
         dm->dn2 = d;
         dm->dmin2 = dm->dmin;
-        qk = d + armas_x_get_at_unsafe(se, k);
-        qk1 = armas_x_get_at_unsafe(sq, k + 1);
-        ek = armas_x_get_at_unsafe(se, k) * (qk1 / qk);
+        qk = d + armas_get_at_unsafe(se, k);
+        qk1 = armas_get_at_unsafe(sq, k + 1);
+        ek = armas_get_at_unsafe(se, k) * (qk1 / qk);
 #if 0
         // LAPACK dlasq5 does not check emin values for unrolled tail elements
         // this or next
@@ -160,16 +160,16 @@ int dqds_sweep(armas_x_dense_t * dq, armas_x_dense_t * de,
             dm->dmin = dm->dn1;
             dm->imin = k + 1;
         }
-        armas_x_set_at_unsafe(dq, k, qk);
-        armas_x_set_at_unsafe(de, k, ek);
+        armas_set_at_unsafe(dq, k, qk);
+        armas_set_at_unsafe(de, k, ek);
         k++;
         // fall through
     case 2:
         // k = N-2;
         dm->dmin1 = dm->dmin;
-        qk = d + armas_x_get_at_unsafe(se, k);
-        qk1 = armas_x_get_at_unsafe(sq, k + 1);
-        ek = armas_x_get_at_unsafe(se, k) * (qk1 / qk);
+        qk = d + armas_get_at_unsafe(se, k);
+        qk1 = armas_get_at_unsafe(sq, k + 1);
+        ek = armas_get_at_unsafe(se, k) * (qk1 / qk);
 #if 0
         // enabling this affects segment split checks, last entries are
         // small and may cause tail splitting for a segment. 
@@ -181,12 +181,12 @@ int dqds_sweep(armas_x_dense_t * dq, armas_x_dense_t * de,
             dm->dmin = dm->dn;
             dm->imin = k + 1;
         }
-        armas_x_set_at_unsafe(dq, k, qk);
-        armas_x_set_at_unsafe(de, k, ek);
+        armas_set_at_unsafe(dq, k, qk);
+        armas_set_at_unsafe(de, k, ek);
         // fall through
     case 1:
         // k = N-1
-        armas_x_set_at_unsafe(dq, N - 1, dm->dn);
+        armas_set_at_unsafe(dq, N - 1, dm->dn);
         break;
     default:
         break;
@@ -200,7 +200,7 @@ int dqds_sweep(armas_x_dense_t * dq, armas_x_dense_t * de,
  * \brief Compute sum of products as described in (1) section 7.
  */
 static
-DTYPE sum_of_prod(armas_x_dense_t * q, armas_x_dense_t * e, int N,
+DTYPE sum_of_prod(armas_dense_t * q, armas_dense_t * e, int N,
                   DTYPE start)
 {
     register DTYPE sum, prod, oldprod, qk, ek;
@@ -209,8 +209,8 @@ DTYPE sum_of_prod(armas_x_dense_t * q, armas_x_dense_t * e, int N,
     oldprod = prod = ONE;
     for (k = N - 2; k >= 0 && 100.0 * MAX(oldprod, prod) >= sum; k--) {
         oldprod = prod;
-        qk = armas_x_get_at_unsafe(q, k);
-        ek = armas_x_get_at_unsafe(e, k);
+        qk = armas_get_at_unsafe(q, k);
+        ek = armas_get_at_unsafe(e, k);
         prod *= ek / qk;
         sum += prod;
     }
@@ -222,8 +222,8 @@ DTYPE sum_of_prod(armas_x_dense_t * q, armas_x_dense_t * e, int N,
  * \brief Compute sum of products with upper bound as described in (1) section 7.
  */
 static
-int sum_of_prod_bounded(DTYPE * res, armas_x_dense_t * q,
-                        armas_x_dense_t * e, int N, DTYPE start,
+int sum_of_prod_bounded(DTYPE * res, armas_dense_t * q,
+                        armas_dense_t * e, int N, DTYPE start,
                         DTYPE bound)
 {
     register DTYPE sum, prod, oldprod, qk, ek;
@@ -233,8 +233,8 @@ int sum_of_prod_bounded(DTYPE * res, armas_x_dense_t * q,
     for (k = N - 2;
          k >= 0 && 100.0 * MAX(oldprod, prod) > sum && bound > sum; k--) {
         oldprod = prod;
-        qk = armas_x_get_at_unsafe(q, k);
-        ek = armas_x_get_at_unsafe(e, k);
+        qk = armas_get_at_unsafe(q, k);
+        ek = armas_get_at_unsafe(e, k);
         /*
          * LAPACK code in dlasq4 breaks out from the corresponding loop and
          * returns directly without changing last tau value if ek > qk. Intentional?
@@ -255,8 +255,8 @@ int sum_of_prod_bounded(DTYPE * res, armas_x_dense_t * q,
  * \brief Compute new shift;
  */
 static
-void dqds_shift(DTYPE * tau, armas_x_dense_t * q, armas_x_dense_t * e,
-                  armas_x_dense_t * q0, armas_x_dense_t * e0, int N, int neigen,
+void dqds_shift(DTYPE * tau, armas_dense_t * q, armas_dense_t * e,
+                  armas_dense_t * q0, armas_dense_t * e0, int N, int neigen,
                   dmin_data_t * dm)
 {
     DTYPE qn, qn1, en1, en2, an, an1, bn1, bn2;
@@ -276,9 +276,9 @@ void dqds_shift(DTYPE * tau, armas_x_dense_t * q, armas_x_dense_t * e,
     //N -= neigen;
     // see (1) end of sec 6.3.2; N must be at least 3 here
     qn = an = dm->dn;
-    qn1 = armas_x_get_at_unsafe(q, N - 2);
-    en1 = armas_x_get_at_unsafe(e, N - 2);
-    en2 = armas_x_get_at_unsafe(e, N - 3);
+    qn1 = armas_get_at_unsafe(q, N - 2);
+    en1 = armas_get_at_unsafe(e, N - 2);
+    en2 = armas_get_at_unsafe(e, N - 3);
     an1 = qn1 + en1;
     bn1 = SQRT(qn) * SQRT(en1);
 
@@ -334,8 +334,8 @@ void dqds_shift(DTYPE * tau, armas_x_dense_t * q, armas_x_dense_t * e,
             // case 4(b); twisted factorization; twist at N-2
             // printf("..[shift] case 4(b): imin = %d\n", dm->imin);
             dm->ttype = -41;
-            en1 = armas_x_get_at_unsafe(e0, N - 2);     // old e(n-1)
-            qn = armas_x_get_at_unsafe(q0, N - 1);      // old q(n)
+            en1 = armas_get_at_unsafe(e0, N - 2);     // old e(n-1)
+            qn = armas_get_at_unsafe(q0, N - 1);      // old q(n)
             gamma = dm->dn1;
             if (en1 > qn) {
                 //printf("..[shift] case 4(b): en1 > qn  [%e > %e]\n", en1, qn);
@@ -356,10 +356,10 @@ void dqds_shift(DTYPE * tau, armas_x_dense_t * q, armas_x_dense_t * e,
             // case 5; twisted factorization; twist at N-3
             //printf("..[shift] case 5: imin = %d\n", dm->imin);
             stau = 0.25 * dm->dmin;
-            qn = armas_x_get_at_unsafe(q0, N - 1);      // old q(n)
-            qn1 = armas_x_get_at_unsafe(q0, N - 2);     // old q(n-1)
-            en1 = armas_x_get_at_unsafe(e0, N - 2);     // old e(n-1)
-            en2 = armas_x_get_at_unsafe(e0, N - 3);     // old e(n-2)
+            qn = armas_get_at_unsafe(q0, N - 1);      // old q(n)
+            qn1 = armas_get_at_unsafe(q0, N - 2);     // old q(n-1)
+            en1 = armas_get_at_unsafe(e0, N - 2);     // old e(n-1)
+            en2 = armas_get_at_unsafe(e0, N - 3);     // old e(n-2)
             gamma = dm->dn2;
             x1 = (en2 / qn1) * (1.0 + en1 / qn);
             ie = sum_of_prod_bounded(&phi, q, e, N - 2, x1, 9.0 / 16.0);
@@ -516,7 +516,7 @@ void dqds2x2(DTYPE * r1, DTYPE * r2, DTYPE q1, DTYPE e1, DTYPE q2, DTYPE sigma)
  *           ee0, ee1, ..., een1, 0      [eerow]
  */
 static
-int dqds_neglible(armas_x_dense_t * Z, int N, int ping, DTYPE sigma)
+int dqds_neglible(armas_dense_t * Z, int N, int ping, DTYPE sigma)
 {
     int qrow, erow, qqrow, eerow;
     DTYPE qn, qn1, qn2, en1, en2, en1p, en2p, r1, r2;
@@ -535,33 +535,33 @@ int dqds_neglible(armas_x_dense_t * Z, int N, int ping, DTYPE sigma)
     //  e(n-2) neglible if
     //    old.e(n-2) <= eps^2*q(n-2) || e(n-2) <= eps^2*(sigma + q(n-1)*q(n)/(q(n)+e(n-1)))
 
-    en1 = armas_x_get_unsafe(Z, erow, N - 2);
-    en1p = armas_x_get_unsafe(Z, eerow, N - 2);
-    qn = armas_x_get_unsafe(Z, qrow, N - 1);
-    qn1 = armas_x_get_unsafe(Z, qrow, N - 2);
+    en1 = armas_get_unsafe(Z, erow, N - 2);
+    en1p = armas_get_unsafe(Z, eerow, N - 2);
+    qn = armas_get_unsafe(Z, qrow, N - 1);
+    qn1 = armas_get_unsafe(Z, qrow, N - 2);
 
     // deflate if N == 1 or if last E is neglibe --> 1 eigenvalue 
     if (N == 1 || en1 <= EPS2 * (sigma + qn) || en1p <= EPS2 * qn1) {
-        r1 = armas_x_get_unsafe(Z, qqrow, N - 1);
+        r1 = armas_get_unsafe(Z, qqrow, N - 1);
         //printf("..[neglible] deflate, 1 eigenvalue, k=%d, eig=%9.7f (%9.7f)\n",
         //       N-1, SQRT(qn+sigma), SQRT(r1+sigma));
-        armas_x_set_unsafe(Z, 0, N - 1, qn + sigma);
+        armas_set_unsafe(Z, 0, N - 1, qn + sigma);
         return 1;
     }
 
     if (N > 2) {
         // check if second to last E is neglible; 2 eigenvalues
-        en2 = armas_x_get_unsafe(Z, erow, N - 3);
-        en2p = armas_x_get_unsafe(Z, eerow, N - 3);
-        qn2 = armas_x_get_unsafe(Z, qrow, N - 3);
+        en2 = armas_get_unsafe(Z, erow, N - 3);
+        en2p = armas_get_unsafe(Z, eerow, N - 3);
+        qn2 = armas_get_unsafe(Z, qrow, N - 3);
         if (en2 > EPS2 * sigma && en2p > EPS2 * qn2) {
             return 0;
         }
     }
     // 2 eigenvalues; from (1) sec 6.1
     dqds2x2_plain(&r1, &r2, qn1, en1, qn);
-    armas_x_set_unsafe(Z, 0, N - 1, qn * (qn1 / r1) + sigma);
-    armas_x_set_unsafe(Z, 0, N - 2, r1 + sigma);
+    armas_set_unsafe(Z, 0, N - 1, qn * (qn1 / r1) + sigma);
+    armas_set_unsafe(Z, 0, N - 2, r1 + sigma);
     //printf("..[neglible] deflate, 2 eigenvalues, k=%d, 1.eig=%9.6f, 2.eig=%9.6f\n",
     //     N-1, SQRT(qn*(qn1/r1)+sigma), SQRT(r1+sigma));
     return 2;
@@ -571,25 +571,25 @@ int dqds_neglible(armas_x_dense_t * Z, int N, int ping, DTYPE sigma)
  * \brief Flip N first entries of q and N-1 of e.
  */
 static
-int dqds_flip(armas_x_dense_t * Z, /*armas_x_dense_t *e, */ int N)
+int dqds_flip(armas_dense_t * Z, /*armas_dense_t *e, */ int N)
 {
     DTYPE qt, et;
     int k;
     for (k = 0; k < N / 2; k++) {
-        qt = armas_x_get_unsafe(Z, 0, k);
-        armas_x_set_unsafe(Z, 0, k, armas_x_get_unsafe(Z, 0, N - 1 - k));
-        armas_x_set_unsafe(Z, 0, N - 1 - k, qt);
-        qt = armas_x_get_unsafe(Z, 1, k);
-        armas_x_set_unsafe(Z, 1, k, armas_x_get_unsafe(Z, 1, N - 1 - k));
-        armas_x_set_unsafe(Z, 1, N - 1 - k, qt);
+        qt = armas_get_unsafe(Z, 0, k);
+        armas_set_unsafe(Z, 0, k, armas_get_unsafe(Z, 0, N - 1 - k));
+        armas_set_unsafe(Z, 0, N - 1 - k, qt);
+        qt = armas_get_unsafe(Z, 1, k);
+        armas_set_unsafe(Z, 1, k, armas_get_unsafe(Z, 1, N - 1 - k));
+        armas_set_unsafe(Z, 1, N - 1 - k, qt);
 
         if (k != N - 2 - k) {
-            et = armas_x_get_unsafe(Z, 2, k);
-            armas_x_set_unsafe(Z, 2, k, armas_x_get_unsafe(Z, 2, N - 2 - k));
-            armas_x_set_unsafe(Z, 2, N - 2 - k, et);
-            et = armas_x_get_unsafe(Z, 3, k);
-            armas_x_set_unsafe(Z, 3, k, armas_x_get_unsafe(Z, 3, N - 2 - k));
-            armas_x_set_unsafe(Z, 3, N - 2 - k, et);
+            et = armas_get_unsafe(Z, 2, k);
+            armas_set_unsafe(Z, 2, k, armas_get_unsafe(Z, 2, N - 2 - k));
+            armas_set_unsafe(Z, 2, N - 2 - k, et);
+            et = armas_get_unsafe(Z, 3, k);
+            armas_set_unsafe(Z, 3, k, armas_get_unsafe(Z, 3, N - 2 - k));
+            armas_set_unsafe(Z, 3, N - 2 - k, et);
         }
     }
     // we have flipped q and e, normal dqds_sweep does not include last 2
@@ -608,10 +608,10 @@ int dqds_flip(armas_x_dense_t * Z, /*armas_x_dense_t *e, */ int N)
  * \return number of deflations
  */
 static
-int dqds_goodstep(DTYPE * ssum, armas_x_dense_t * Z, int N, int pp,
+int dqds_goodstep(DTYPE * ssum, armas_dense_t * Z, int N, int pp,
                   dmin_data_t * dmind)
 {
-    armas_x_dense_t sq, dq, se, de;
+    armas_dense_t sq, dq, se, de;
     int n, ncnt, nfail, newseg;
     DTYPE x, y, q0, q1, sigma, tau;
 
@@ -625,18 +625,18 @@ int dqds_goodstep(DTYPE * ssum, armas_x_dense_t * Z, int N, int pp,
     //printf("..[goodstep] entering ping=%d, N=%d, newseg=%d, sigma=%e, dmin=%e\n",
     //     pp, N, newseg, sigma, dmind->dmin);
 
-    armas_x_row(&sq, Z, pp);
-    armas_x_row(&dq, Z, 1 - pp);
-    armas_x_row(&se, Z, 2 + pp);
-    armas_x_row(&de, Z, 3 - pp);
+    armas_row(&sq, Z, pp);
+    armas_row(&dq, Z, 1 - pp);
+    armas_row(&se, Z, 2 + pp);
+    armas_row(&de, Z, 3 - pp);
 
     dmind->niter++;
     if (N == 1) {
-        armas_x_set_unsafe(Z, 0, 0,
-                           armas_x_get_at_unsafe(&sq,
+        armas_set_unsafe(Z, 0, 0,
+                           armas_get_at_unsafe(&sq,
                                                  0) + (sigma + dmind->cterm));
         //printf("..[goodstep] deflated single valued vector eig=%9.6f\n",
-        //       SQRT(armas_x_get_unsafe(Z, 0, 0)));
+        //       SQRT(armas_get_unsafe(Z, 0, 0)));
         return 1;
     }
     // 1. Look for neglible E-values
@@ -653,8 +653,8 @@ int dqds_goodstep(DTYPE * ssum, armas_x_dense_t * Z, int N, int pp,
     }
     // 2 test flipping 1.5*q(0) < q(N-1) if new segment or deflated values
     if (newseg || ncnt > 0) {
-        q0 = armas_x_get_at_unsafe(&sq, 0);
-        q1 = armas_x_get_at_unsafe(&sq, N - ncnt - 1);
+        q0 = armas_get_at_unsafe(&sq, 0);
+        q1 = armas_get_at_unsafe(&sq, N - ncnt - 1);
         if (CFLIP * q0 < q1) {
             //printf("..[goodstep] need flipping.. [0, %d]\n", N-ncnt-1);
             dqds_flip(Z, N - ncnt);
@@ -671,11 +671,11 @@ int dqds_goodstep(DTYPE * ssum, armas_x_dense_t * Z, int N, int pp,
         dqds_sweep(&dq, &de, &sq, &se, N - ncnt, tau, dmind);
         if (dmind->dmin < ZERO) {
             // failure here
-            DTYPE en1 = armas_x_get_at_unsafe(&de, N - ncnt - 2);
+            DTYPE en1 = armas_get_at_unsafe(&de, N - ncnt - 2);
             if (dmind->dmin1 > ZERO && en1 < EPS * (sigma + dmind->dn1) &&
                 ABS(dmind->dn) < EPS * sigma) {
                 // convergence masked by negative d (section 6.4)
-                armas_x_set_at_unsafe(&dq, N - ncnt - 1, ZERO);
+                armas_set_at_unsafe(&dq, N - ncnt - 1, ZERO);
                 dmind->dmin = ZERO;
                 //printf("..[masked] dmin1 > %e, setting qn to zero.!\n",
                 //       dmind->dmin1);
@@ -721,10 +721,10 @@ int dqds_goodstep(DTYPE * ssum, armas_x_dense_t * Z, int N, int pp,
  * \brief Run DQDS on one segment
  */
 static
-int dqds_segment(armas_x_dense_t * Z, int N, DTYPE sigma, DTYPE dmin,
+int dqds_segment(armas_dense_t * Z, int N, DTYPE sigma, DTYPE dmin,
                    dmin_data_t * dmind, int level)
 {
-    armas_x_dense_t sZ;
+    armas_dense_t sZ;
     int ip, iq, ping, neigen, maxiter, niter;
 
     //printf("\n** segment %d start [N=%d, sigma=%e, dmin=%e, qmax=%e, emin=%e] **\n",
@@ -746,7 +746,7 @@ int dqds_segment(armas_x_dense_t * Z, int N, DTYPE sigma, DTYPE dmin,
 
         //printf("\n-- segment loop: niter=%d/%d, N=%d %d:%d dmin=%e --\n", niter, maxiter, iq-ip, ip, iq, dmind->dmin);
 
-        armas_x_submatrix(&sZ, Z, 0, ip, 4, iq - ip);
+        armas_submatrix(&sZ, Z, 0, ip, 4, iq - ip);
         neigen = dqds_goodstep(&sigma, &sZ, iq - ip, ping, dmind);
         ping = PONG - ping;
         if (neigen > 0) {
@@ -767,18 +767,18 @@ int dqds_segment(armas_x_dense_t * Z, int N, DTYPE sigma, DTYPE dmin,
             // emins[1] old emin from Z -> ZZ (PING) phase
             if (emins[0] < EPS2 * sigma || emins[1] < EPS2 * qmax) {
                 // check for splits
-                qmin = armas_x_get_unsafe(&sZ, 0, iq - 1);
-                emin = armas_x_get_unsafe(&sZ, 2, iq - 1);
+                qmin = armas_get_unsafe(&sZ, 0, iq - 1);
+                emin = armas_get_unsafe(&sZ, 2, iq - 1);
                 qmax = qmin;
                 emax = emin;
                 for (k = iq - 1; k > ip; k--) {
-                    q0 = armas_x_get_unsafe(&sZ, 0, k);
-                    e0 = armas_x_get_unsafe(&sZ, 2, k);
-                    e1 = armas_x_get_unsafe(&sZ, 3, k);
+                    q0 = armas_get_unsafe(&sZ, 0, k);
+                    e0 = armas_get_unsafe(&sZ, 2, k);
+                    e1 = armas_get_unsafe(&sZ, 3, k);
                     if (e1 <= EPS2 * q0 || e0 <= EPS2 * sigma) {
                         // split here
-                        armas_x_dense_t zZ;
-                        armas_x_submatrix(&zZ, &sZ, 0, k, sZ.rows, iq - k);
+                        armas_dense_t zZ;
+                        armas_submatrix(&zZ, &sZ, 0, k, sZ.rows, iq - k);
                         dmind->qmax = MAX(qmax, q0);
                         qmin = MIN(qmin, q0);
                         emax = MAX(emax, e0);
@@ -796,8 +796,8 @@ int dqds_segment(armas_x_dense_t * Z, int N, DTYPE sigma, DTYPE dmin,
                         dmind->cterm = cterm;
                         dmind->dmin = -ZERO;
                         // reset limits
-                        qmin = armas_x_get_unsafe(&sZ, 0, iq - 1);
-                        emin = armas_x_get_unsafe(&sZ, 2, iq - 1);
+                        qmin = armas_get_unsafe(&sZ, 0, iq - 1);
+                        emin = armas_get_unsafe(&sZ, 2, iq - 1);
                         qmax = qmin;
                         emax = emin;
                     } else {
@@ -807,7 +807,7 @@ int dqds_segment(armas_x_dense_t * Z, int N, DTYPE sigma, DTYPE dmin,
                         emax = MAX(emax, e0);
                     }
                 }
-                q0 = armas_x_get_unsafe(&sZ, 0, k);
+                q0 = armas_get_unsafe(&sZ, 0, k);
                 qmax = MAX(qmax, q0);
             }
         }
@@ -822,10 +822,10 @@ int dqds_segment(armas_x_dense_t * Z, int N, DTYPE sigma, DTYPE dmin,
  * \brief Run Li's test from (1), section 3.3
  */
 static
-void dqds_li_test(int ping, armas_x_dense_t * Z, int N, DTYPE * emin,
+void dqds_li_test(int ping, armas_dense_t * Z, int N, DTYPE * emin,
                   DTYPE * qmax)
 {
-    armas_x_dense_t sq, se, dq, de;
+    armas_dense_t sq, se, dq, de;
     DTYPE qk, qk1, ek, d, emn, qmx;
     int k;
 
@@ -834,18 +834,18 @@ void dqds_li_test(int ping, armas_x_dense_t * Z, int N, DTYPE * emin,
     EMPTY(se);
     EMPTY(sq);
 
-    armas_x_row(&sq, Z, ping);
-    armas_x_row(&dq, Z, 1 - ping);
-    armas_x_row(&se, Z, 2 + ping);
-    armas_x_row(&de, Z, 3 - ping);
+    armas_row(&sq, Z, ping);
+    armas_row(&dq, Z, 1 - ping);
+    armas_row(&se, Z, 2 + ping);
+    armas_row(&de, Z, 3 - ping);
 
-    d = armas_x_get_at_unsafe(&sq, N - 1);
+    d = armas_get_at_unsafe(&sq, N - 1);
     // run Li's reverse test
     for (k = N - 1; k > 0; k--) {
-        qk = armas_x_get_at_unsafe(&sq, k - 1);
-        ek = armas_x_get_at_unsafe(&se, k - 1);
+        qk = armas_get_at_unsafe(&sq, k - 1);
+        ek = armas_get_at_unsafe(&se, k - 1);
         if (ek <= EPS2 * d) {
-            armas_x_set_at_unsafe(&se, k - 1, -ZERO);
+            armas_set_at_unsafe(&se, k - 1, -ZERO);
             d = qk;
         } else {
             d = qk * (d / (d + ek));
@@ -853,16 +853,16 @@ void dqds_li_test(int ping, armas_x_dense_t * Z, int N, DTYPE * emin,
     }
     // map Z -> ZZ and Li's test, update emin
     qmx = ZERO;
-    emn = armas_x_get_at_unsafe(&se, 0);
-    d = armas_x_get_at_unsafe(&sq, 0);
+    emn = armas_get_at_unsafe(&se, 0);
+    d = armas_get_at_unsafe(&sq, 0);
     for (k = 0; k < N - 1; k++) {
-        ek = armas_x_get_at_unsafe(&se, k);
-        qk1 = armas_x_get_at_unsafe(&sq, k + 1);
+        ek = armas_get_at_unsafe(&se, k);
+        qk1 = armas_get_at_unsafe(&sq, k + 1);
         qk = d + ek;
         if (ek < EPS2 * d) {
             // Li's test eq.5 in (1), page 12
             //printf("..[li] ek=%13e < EPS2*d [%13e, %13e]\n", ek, d, EPS2*d);
-            armas_x_set_at_unsafe(&se, k, -ZERO);
+            armas_set_at_unsafe(&se, k, -ZERO);
             qk = d;
             ek = ZERO;
             d = qk1;
@@ -880,12 +880,12 @@ void dqds_li_test(int ping, armas_x_dense_t * Z, int N, DTYPE * emin,
             ek = qk1 * (ek / qk);
             d = qk1 * (d / qk);
         }
-        armas_x_set_at_unsafe(&dq, k, qk);
-        armas_x_set_at_unsafe(&de, k, ek);
+        armas_set_at_unsafe(&dq, k, qk);
+        armas_set_at_unsafe(&de, k, ek);
         emn = MIN(emn, ek);
         qmx = MAX(qmx, qk);
     }
-    armas_x_set_at_unsafe(&dq, N - 1, d);
+    armas_set_at_unsafe(&dq, N - 1, d);
     *emin = emn;
     *qmax = qmx;
 }
@@ -895,9 +895,9 @@ void dqds_li_test(int ping, armas_x_dense_t * Z, int N, DTYPE * emin,
  * \brief Top left of DQDS algorithm
  */
 static
-int dqds_main(armas_x_dense_t * Z, int N)
+int dqds_main(armas_dense_t * Z, int N)
 {
-    armas_x_dense_t sZ, sq, se;
+    armas_dense_t sZ, sq, se;
     dmin_data_t dmind;
     DTYPE q0, q1, e0, emin, emax, qmin, qmax, sigma, dmin, cterm;
     int ip, iq, niter, maxiter, ncnt;
@@ -907,8 +907,8 @@ int dqds_main(armas_x_dense_t * Z, int N)
     EMPTY(sq);
 
     // test flipping 1.5*q(0) < q(N-1)
-    q0 = armas_x_get_unsafe(Z, 0, 0);
-    q1 = armas_x_get_unsafe(Z, 0, N - 1);
+    q0 = armas_get_unsafe(Z, 0, 0);
+    q1 = armas_get_unsafe(Z, 0, N - 1);
     if (CFLIP * q0 < q1) {
         dqds_flip(Z, N);
     }
@@ -917,8 +917,8 @@ int dqds_main(armas_x_dense_t * Z, int N)
     dqds_li_test(PING, Z, N, &emin, &qmax);
     dqds_li_test(PONG, Z, N, &emin, &qmax);
 #endif
-    armas_x_row(&sq, Z, 0);
-    armas_x_row(&se, Z, 1);
+    armas_row(&sq, Z, 0);
+    armas_row(&se, Z, 1);
 
     // find unreduce block and run dqds on the segment
     DMIN_INIT(dmind);
@@ -929,14 +929,14 @@ int dqds_main(armas_x_dense_t * Z, int N)
     sigma = ZERO;
 
     for (niter = 0; niter < maxiter && iq > 0; niter++) {
-        qmin = armas_x_get_unsafe(Z, 0, iq - 1);
+        qmin = armas_get_unsafe(Z, 0, iq - 1);
         qmax = qmin;
         emax = ZERO;
-        emin = iq > 1 ? armas_x_get_unsafe(Z, 2, iq - 2) : ZERO;
+        emin = iq > 1 ? armas_get_unsafe(Z, 2, iq - 2) : ZERO;
 
         for (ip = iq - 1; ip > 0; ip--) {
-            q0 = armas_x_get_unsafe(Z, 0, ip - 1);
-            e0 = armas_x_get_unsafe(Z, 2, ip - 1);
+            q0 = armas_get_unsafe(Z, 0, ip - 1);
+            e0 = armas_get_unsafe(Z, 2, ip - 1);
             if (e0 <= ZERO) {
                 // e0 < 0.0 
                 //printf("..[main] e0 <= 0.0 [%d], e0=%e\n", ip, e0);
@@ -956,7 +956,7 @@ int dqds_main(armas_x_dense_t * Z, int N)
         dmind.emin = emin;
 
         // select subblock
-        armas_x_submatrix(&sZ, Z, 0, ip, Z->rows, iq - ip);
+        armas_submatrix(&sZ, Z, 0, ip, Z->rows, iq - ip);
         cterm = dmind.cterm;
         if ((ncnt = dqds_segment(&sZ, iq - ip, sigma, dmin, &dmind, 0)) < 0) {
             //printf("..[main] subblock [%d,%d] not converged\n", ip, iq);
@@ -981,7 +981,7 @@ int dqds_main(armas_x_dense_t * Z, int N)
  *
  * lapack.xLASCL
  */
-int armas_x_scale_to(armas_x_dense_t * A, DTYPE from, DTYPE to, int flags,
+int armas_scale_to(armas_dense_t * A, DTYPE from, DTYPE to, int flags,
                      armas_conf_t * conf)
 {
     DTYPE cfrom1, cto1, mul;
@@ -1013,7 +1013,7 @@ int armas_x_scale_to(armas_x_dense_t * A, DTYPE from, DTYPE to, int flags,
                 ready = 1;
             }
         }
-        armas_x_mscale(A, mul, flags, conf);
+        armas_mscale(A, mul, flags, conf);
     } while (!ready);
     return 0;
 }
@@ -1028,14 +1028,14 @@ int armas_x_scale_to(armas_x_dense_t * A, DTYPE from, DTYPE to, int flags,
  * \param[in]  conf
  *      Configuration block
  */
-int armas_x_dqds(armas_x_dense_t * D, armas_x_dense_t * E, armas_conf_t * conf)
+int armas_dqds(armas_dense_t * D, armas_dense_t * E, armas_conf_t * conf)
 {
     int err = 0;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
 
     if (!conf)
         conf = armas_conf_default();
-    if (armas_x_dqds_w(D, E, &wb, conf) < 0)
+    if (armas_dqds_w(D, E, &wb, conf) < 0)
         return -1;
     if (wb.bytes > 0 && wb.bytes <= ARMAS_MAX_ONSTACK_WSPACE) {
         char b[ARMAS_MAX_ONSTACK_WSPACE];
@@ -1044,7 +1044,7 @@ int armas_x_dqds(armas_x_dense_t * D, armas_x_dense_t * E, armas_conf_t * conf)
             .offset = 0,
             .bytes = ARMAS_MAX_ONSTACK_WSPACE
         };
-        err = armas_x_dqds_w(D, E, &wbt, conf);
+        err = armas_dqds_w(D, E, &wbt, conf);
     } else {
         wbs = &wb;
         if (wb.bytes > 0) {
@@ -1054,7 +1054,7 @@ int armas_x_dqds(armas_x_dense_t * D, armas_x_dense_t * E, armas_conf_t * conf)
             }
         } else
             wbs = ARMAS_NOWORK;
-        err = armas_x_dqds_w(D, E, wbs, conf);
+        err = armas_dqds_w(D, E, wbs, conf);
         armas_wrelease(&wb);
     }
     return err;
@@ -1080,10 +1080,10 @@ int armas_x_dqds(armas_x_dense_t * D, armas_x_dense_t * E, armas_conf_t * conf)
  *      An Implementation of the DQDS Algorithm (Positive Case),
  *      Lapack working notes #121
  */
-int armas_x_dqds_w(armas_x_dense_t * D, armas_x_dense_t * E, armas_wbuf_t * wb,
+int armas_dqds_w(armas_dense_t * D, armas_dense_t * E, armas_wbuf_t * wb,
                    armas_conf_t * conf)
 {
-    armas_x_dense_t sq, se, Z;
+    armas_dense_t sq, se, Z;
     int k, N, err;
     size_t wsz;
     DTYPE dmax, emax, di, ei;
@@ -1102,7 +1102,7 @@ int armas_x_dqds_w(armas_x_dense_t * D, armas_x_dense_t * E, armas_wbuf_t * wb,
         conf->error = ARMAS_EINVAL;
         return -1;
     }
-    N = armas_x_size(D);
+    N = armas_size(D);
     if (wb && wb->bytes == 0) {
         wb->bytes = 4 * N * sizeof(DTYPE);
         return 0;
@@ -1112,7 +1112,7 @@ int armas_x_dqds_w(armas_x_dense_t * D, armas_x_dense_t * E, armas_wbuf_t * wb,
         conf->error = ARMAS_EINVAL;
         return -1;
     }
-    if (armas_x_size(E) != N - 1) {
+    if (armas_size(E) != N - 1) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
@@ -1127,25 +1127,25 @@ int armas_x_dqds_w(armas_x_dense_t * D, armas_x_dense_t * E, armas_wbuf_t * wb,
      * 3rd the e-values and 4th the ee-values as in (1) Z array. Each column
      * represents {q(k), qq(k), e(k), ee(k)} tuple.
      */
-    armas_x_make(&Z, 4, N, 4, (DTYPE *) armas_wptr(wb));
-    armas_x_scale(&Z, ZERO, conf);
-    armas_x_row(&sq, &Z, 0);
-    armas_x_row(&se, &Z, 2);
+    armas_make(&Z, 4, N, 4, (DTYPE *) armas_wptr(wb));
+    armas_scale(&Z, ZERO, conf);
+    armas_row(&sq, &Z, 0);
+    armas_row(&se, &Z, 2);
 
     dmax = ZERO;
     emax = ZERO;
     for (k = 0; k < N - 1; k++) {
-        di = ABS(armas_x_get_at_unsafe(D, k));
-        ei = ABS(armas_x_get_at_unsafe(E, k));
+        di = ABS(armas_get_at_unsafe(D, k));
+        ei = ABS(armas_get_at_unsafe(E, k));
         emax = MAX(emax, ei);
         dmax = MAX(dmax, di);
-        armas_x_set_at_unsafe(&sq, k, di);
-        armas_x_set_at_unsafe(&se, k, ei);
+        armas_set_at_unsafe(&sq, k, di);
+        armas_set_at_unsafe(&se, k, ei);
     }
-    di = ABS(armas_x_get_at_unsafe(D, N - 1));
+    di = ABS(armas_get_at_unsafe(D, N - 1));
     dmax = MAX(dmax, di);
-    armas_x_set_at_unsafe(&sq, N - 1, di);
-    armas_x_set_at_unsafe(&se, N - 1, ZERO);
+    armas_set_at_unsafe(&sq, N - 1, di);
+    armas_set_at_unsafe(&se, N - 1, ZERO);
 
     if (emax == ZERO) {
         // already diagonal
@@ -1156,32 +1156,32 @@ int armas_x_dqds_w(armas_x_dense_t * D, armas_x_dense_t * E, armas_wbuf_t * wb,
     scalemax = SQRT(EPS / SAFEMIN);
     // scale values from QMAX to SCALEMAX
     /* missing */
-    armas_x_scale_to(&sq, qmax, scalemax, ARMAS_ANY, conf);
-    armas_x_scale_to(&se, qmax, scalemax, ARMAS_ANY, conf);
+    armas_scale_to(&sq, qmax, scalemax, ARMAS_ANY, conf);
+    armas_scale_to(&se, qmax, scalemax, ARMAS_ANY, conf);
 #endif
     // square scaled elements
     for (k = 0; k < N - 1; k++) {
-        di = armas_x_get_at_unsafe(&sq, k);
-        ei = armas_x_get_at_unsafe(&se, k);
-        armas_x_set_at_unsafe(&sq, k, di * di);
-        armas_x_set_at_unsafe(&se, k, ei * ei);
+        di = armas_get_at_unsafe(&sq, k);
+        ei = armas_get_at_unsafe(&se, k);
+        armas_set_at_unsafe(&sq, k, di * di);
+        armas_set_at_unsafe(&se, k, ei * ei);
     }
-    di = armas_x_get_at_unsafe(&sq, N - 1);
-    armas_x_set_at_unsafe(&sq, N - 1, di * di);
+    di = armas_get_at_unsafe(&sq, N - 1);
+    armas_set_at_unsafe(&sq, N - 1, di * di);
 
     // run DQDS algorithm on Z
     if ((err = dqds_main(&Z, N)) == 0) {
 
         for (k = 0; k < N; k++) {
-            di = SQRT(armas_x_get_at_unsafe(&sq, k));
-            armas_x_set_at_unsafe(D, k, di);
+            di = SQRT(armas_get_at_unsafe(&sq, k));
+            armas_set_at_unsafe(D, k, di);
         }
 #if defined(__DQDS_SCALING)
         // rescale from SCALEMAX to QMAX
-        armas_x_scale_to(D, scalemax, qmax, ARMAS_ANY, conf);
+        armas_scale_to(D, scalemax, qmax, ARMAS_ANY, conf);
 #endif
         // and sort elements
-        armas_x_sort_eigenvec(D, __nil, __nil, __nil, ARMAS_DESC);
+        armas_sort_eigenvec(D, __nil, __nil, __nil, ARMAS_DESC);
     } else {
         conf->error = ARMAS_ECONVERGE;
         err = -1;

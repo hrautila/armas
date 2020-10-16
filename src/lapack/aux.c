@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,15 +12,15 @@
 #include "dlpack.h"
 
 // ----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_bdsvd2x2) && defined(armas_x_bdsvd2x2_vec)
+// this file provides following type dependent functions
+#if defined(armas_bdsvd2x2) && defined(armas_bdsvd2x2_vec)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -101,7 +101,7 @@
  * @return
  *      Value of the smaller singular value.
  */
-DTYPE armas_x_bdsvd2x2(DTYPE * smin, DTYPE * smax, DTYPE f, DTYPE g, DTYPE h)
+DTYPE armas_bdsvd2x2(DTYPE * smin, DTYPE * smax, DTYPE f, DTYPE g, DTYPE h)
 {
     DTYPE C, fa, ga, ha, fhmax, fhmin, gs, d, t;
 
@@ -183,7 +183,7 @@ static inline DTYPE sign(DTYPE a, DTYPE b)
  *
  * Compatible with LAPACK xLASV2.
  */
-void armas_x_bdsvd2x2_vec(DTYPE * ssmin, DTYPE * ssmax, DTYPE * cosl,
+void armas_bdsvd2x2_vec(DTYPE * ssmin, DTYPE * ssmax, DTYPE * cosl,
                           DTYPE * sinl, DTYPE * cosr, DTYPE * sinr,
                           DTYPE f, DTYPE g, DTYPE h)
 {
@@ -326,7 +326,7 @@ void armas_x_bdsvd2x2_vec(DTYPE * ssmin, DTYPE * ssmax, DTYPE * cosl,
  * @param[out]  z1, z2  Eigenvalues
  * @param[in]   a, b, c Matrix values, a and c on diagonal and b off-diagonal
  */
-void armas_x_sym_eigen2x2(DTYPE * z1, DTYPE * z2, DTYPE a, DTYPE b, DTYPE c)
+void armas_sym_eigen2x2(DTYPE * z1, DTYPE * z2, DTYPE a, DTYPE b, DTYPE c)
 {
     DTYPE T, b2a, amca, Zt, acmax, acmin;
 
@@ -367,7 +367,7 @@ void armas_x_sym_eigen2x2(DTYPE * z1, DTYPE * z2, DTYPE a, DTYPE b, DTYPE c)
  * @param[in]  a, b, c Matrix entries, a and c on diagonal, b off-diagonal
  *
  */
-void armas_x_sym_eigen2x2vec(DTYPE * z1, DTYPE * z2, DTYPE * cs,
+void armas_sym_eigen2x2vec(DTYPE * z1, DTYPE * z2, DTYPE * cs,
                              DTYPE * sn, DTYPE a, DTYPE b, DTYPE c)
 {
     DTYPE T, b2a, amca, Zt, acmax, acmin, ht;

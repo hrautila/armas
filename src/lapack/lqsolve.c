@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,17 +12,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_lqsolve) && defined(armas_x_lqsolve_w)
+// this file provides following type dependent functions
+#if defined(armas_lqsolve) && defined(armas_lqsolve_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_lqmult)
+#if defined(armas_lqmult)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ----------------------------------------------------------------------------
 
 //! \cond
@@ -39,19 +39,19 @@ int ws_lqsolve(int M, int N, int lb)
 /**
  * @brief Solve a system of linear equations
  *
- * @see armas_x_lqsolve_w
+ * @see armas_lqsolve_w
  * @ingroup lapack
  */
-int armas_x_lqsolve(armas_x_dense_t * B,
-                    const armas_x_dense_t * A,
-                    const armas_x_dense_t * tau, int flags, armas_conf_t * cf)
+int armas_lqsolve(armas_dense_t * B,
+                    const armas_dense_t * A,
+                    const armas_dense_t * tau, int flags, armas_conf_t * cf)
 {
     if (!cf)
         cf = armas_conf_default();
 
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
-    if ((err = armas_x_lqsolve_w(B, A, tau, flags, &wb, cf)) < 0)
+    if ((err = armas_lqsolve_w(B, A, tau, flags, &wb, cf)) < 0)
         return err;
 
     wbs = &wb;
@@ -63,7 +63,7 @@ int armas_x_lqsolve(armas_x_dense_t * B,
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_lqsolve_w(B, A, tau, flags, wbs, cf);
+    err = armas_lqsolve_w(B, A, tau, flags, wbs, cf);
     armas_wrelease(&wb);
     return err;
 }
@@ -72,7 +72,7 @@ int armas_x_lqsolve(armas_x_dense_t * B,
  * @brief Solve a system of linear equations
  *
  * Solve a system of linear equations A*X = B with general M-by-N (M < N)
- * matrix A using the LQ factorization computed by armas_x_lqfactor_w().
+ * matrix A using the LQ factorization computed by armas_lqfactor_w().
  *
  * If *ARMAS_TRANS is set:
  *   find the minimum norm solution of an overdetermined system \f$ A^T X = B \f$
@@ -112,12 +112,12 @@ int armas_x_lqsolve(armas_x_dense_t * B,
  * Compatible with lapack.GELS (the m >= n part)
  * @ingroup lapack
  */
-int armas_x_lqsolve_w(armas_x_dense_t * B,
-                      const armas_x_dense_t * A,
-                      const armas_x_dense_t * tau,
+int armas_lqsolve_w(armas_dense_t * B,
+                      const armas_dense_t * A,
+                      const armas_dense_t * tau,
                       int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t L, BL, BB;
+    armas_dense_t L, BL, BB;
     size_t wsmin, wsz = 0;
 
     if (!conf)
@@ -128,7 +128,7 @@ int armas_x_lqsolve_w(armas_x_dense_t * B,
         return -ARMAS_EINVAL;
     }
     if (wb && wb->bytes == 0) {
-        return armas_x_lqmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
+        return armas_lqmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
     }
 
     if (B->rows != A->cols) {
@@ -141,30 +141,30 @@ int armas_x_lqsolve_w(armas_x_dense_t * B,
         conf->error = ARMAS_EWORK;
         return -ARMAS_EWORK;
     }
-    armas_x_submatrix(&L, A, 0, 0, A->rows, A->rows);
-    armas_x_submatrix(&BL, B, 0, 0, A->rows, B->cols);
+    armas_submatrix(&L, A, 0, 0, A->rows, A->rows);
+    armas_submatrix(&BL, B, 0, 0, A->rows, B->cols);
 
     if (flags & ARMAS_TRANS) {
         // solve least square problem min || A.T*X - B ||
 
         // B' = Q.T*B
-        armas_x_lqmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
+        armas_lqmult_w(B, A, tau, ARMAS_LEFT, wb, conf);
 
         // X = L.-1*B'
-        armas_x_solve_trm(&BL, ONE, &L,
+        armas_solve_trm(&BL, ONE, &L,
                           ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA, conf);
 
     } else {
         // solve underdetermined system A*X = B
         // B' = L.-1*B
-        armas_x_solve_trm(&BL, ONE, &L, ARMAS_LEFT|ARMAS_LOWER, conf);
+        armas_solve_trm(&BL, ONE, &L, ARMAS_LEFT|ARMAS_LOWER, conf);
 
         // clear bottom part of B
-        armas_x_submatrix(&BB, B, A->rows, 0, -1, -1);
-        armas_x_mscale(&BB, ZERO, 0, conf);
+        armas_submatrix(&BB, B, A->rows, 0, -1, -1);
+        armas_mscale(&BB, ZERO, 0, conf);
 
         // X = Q.T*B'
-        armas_x_lqmult_w(B, A, tau, ARMAS_LEFT|ARMAS_TRANS, wb, conf);
+        armas_lqmult_w(B, A, tau, ARMAS_LEFT|ARMAS_TRANS, wb, conf);
     }
     return 0;
 }

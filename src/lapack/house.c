@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // ----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_householder)
+// this file provides following type dependent functions
+#if defined(armas_householder)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_blas1) && defined(armas_x_blas2)
+#if defined(armas_blas1) && defined(armas_blas2)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ----------------------------------------------------------------------------
 
 
@@ -93,20 +93,20 @@
  */
 
 static
-int internal_householder(armas_x_dense_t * a11, armas_x_dense_t * x,
-                         armas_x_dense_t * tau, int flags,
+int internal_householder(armas_dense_t * a11, armas_dense_t * x,
+                         armas_dense_t * tau, int flags,
                          armas_conf_t * cf)
 {
     DTYPE normx, alpha, beta, delta, sign, safmin, rsafmin, t;
     int nscale = 0;
 
-    normx = armas_x_nrm2(x, cf);
+    normx = armas_nrm2(x, cf);
     if (normx == 0.0) {
-        armas_x_set(tau, 0, 0, 0.0);
+        armas_set(tau, 0, 0, 0.0);
         return 0;
     }
 
-    alpha = armas_x_get_unsafe(a11, 0, 0);
+    alpha = armas_get_unsafe(a11, 0, 0);
     sign = SIGN(alpha) ? -1.0 : 1.0;
 
     beta = HYPOT(alpha, normx);
@@ -117,13 +117,13 @@ int internal_householder(armas_x_dense_t * a11, armas_x_dense_t * x,
         rsafmin = 1.0 / safmin;
         do {
             nscale++;
-            armas_x_scale(x, rsafmin, cf);
+            armas_scale(x, rsafmin, cf);
             beta *= rsafmin;
             alpha *= rsafmin;
         } while (beta < safmin);
 
         // now beta in [safmin ... 1.0]
-        normx = armas_x_nrm2(x, cf);
+        normx = armas_nrm2(x, cf);
         beta = HYPOT(alpha, normx);
     }
 
@@ -161,13 +161,13 @@ int internal_householder(armas_x_dense_t * a11, armas_x_dense_t * x,
         t = -delta / beta;
         break;
     }
-    armas_x_scale(x, 1.0 / delta, cf);
-    armas_x_set_unsafe(tau, 0, 0, t);
+    armas_scale(x, 1.0 / delta, cf);
+    armas_set_unsafe(tau, 0, 0, t);
 
     while (nscale-- > 0) {
         beta *= safmin;
     }
-    armas_x_set_unsafe(a11, 0, 0, beta);
+    armas_set_unsafe(a11, 0, 0, beta);
 
     return 0;
 }
@@ -178,18 +178,18 @@ int internal_householder(armas_x_dense_t * a11, armas_x_dense_t * x,
  * 
  */
 static
-int hhcompute_unscaled(armas_x_dense_t * x0, armas_x_dense_t * x1,
-                       armas_x_dense_t * tau, int flags, armas_conf_t * cf)
+int hhcompute_unscaled(armas_dense_t * x0, armas_dense_t * x1,
+                       armas_dense_t * tau, int flags, armas_conf_t * cf)
 {
     DTYPE normx, x0val, alpha, beta, delta, sign;
 
-    normx = armas_x_nrm2(x1, cf);
+    normx = armas_nrm2(x1, cf);
     if (normx == 0.0) {
-        armas_x_set_unsafe(tau, 0, 0, armas_x_get_unsafe(x0, 0, 0));
+        armas_set_unsafe(tau, 0, 0, armas_get_unsafe(x0, 0, 0));
         return 0;
     }
 
-    x0val = armas_x_get_unsafe(x0, 0, 0);
+    x0val = armas_get_unsafe(x0, 0, 0);
     sign = SIGN(x0val) ? -1.0 : 1.0;
 
     beta = HYPOT(x0val, normx);
@@ -211,9 +211,9 @@ int hhcompute_unscaled(armas_x_dense_t * x0, armas_x_dense_t * x1,
         break;
     }
 
-    armas_x_set_unsafe(x0, 0, 0, alpha / delta);
-    armas_x_scale(x1, 1.0 / delta, cf);
-    armas_x_set_unsafe(tau, 0, 0, beta);
+    armas_set_unsafe(x0, 0, 0, alpha / delta);
+    armas_scale(x1, 1.0 / delta, cf);
+    armas_set_unsafe(tau, 0, 0, beta);
     return 0;
 }
 
@@ -258,8 +258,8 @@ int hhcompute_unscaled(armas_x_dense_t * x0, armas_x_dense_t * x1,
  *  @retval 0
  *  @ingroup lapack
  */
-int armas_x_house(armas_x_dense_t * a11, armas_x_dense_t * x,
-                  armas_x_dense_t * tau, int flags, armas_conf_t * cf)
+int armas_house(armas_dense_t * a11, armas_dense_t * x,
+                  armas_dense_t * tau, int flags, armas_conf_t * cf)
 {
     if (!cf)
         cf = armas_conf_default();
@@ -270,72 +270,72 @@ int armas_x_house(armas_x_dense_t * a11, armas_x_dense_t * x,
     return hhcompute_unscaled(a11, x, tau, flags, cf);
 }
 
-int armas_x_house_vec(armas_x_dense_t * x, armas_x_dense_t * tau, int flags,
+int armas_house_vec(armas_dense_t * x, armas_dense_t * tau, int flags,
                       armas_conf_t * cf)
 {
-    armas_x_dense_t alpha, x2;
+    armas_dense_t alpha, x2;
     if (!cf)
         cf = armas_conf_default();
 
-    armas_x_submatrix(&alpha, x, 0, 0, 1, 1);
+    armas_submatrix(&alpha, x, 0, 0, 1, 1);
     if (x->rows == 1) {
-        armas_x_submatrix(&x2, x, 0, 1, 1, armas_x_size(x) - 1);
+        armas_submatrix(&x2, x, 0, 1, 1, armas_size(x) - 1);
     } else {
-        armas_x_submatrix(&x2, x, 1, 0, armas_x_size(x) - 1, 1);
+        armas_submatrix(&x2, x, 1, 0, armas_size(x) - 1, 1);
     }
-    return armas_x_house(&alpha, &x2, tau, flags, cf);
+    return armas_house(&alpha, &x2, tau, flags, cf);
 }
 
 // library internal 
-void armas_x_compute_householder(armas_x_dense_t * a11, armas_x_dense_t * x,
-                                 armas_x_dense_t * tau, armas_conf_t * cf)
+void armas_compute_householder(armas_dense_t * a11, armas_dense_t * x,
+                                 armas_dense_t * tau, armas_conf_t * cf)
 {
     int flags = (cf->optflags & ARMAS_NONNEG) != 0 ? ARMAS_NONNEG : 0;
     internal_householder(a11, x, tau, flags, cf);
 }
 
 // library internal 
-void armas_x_compute_householder_vec(armas_x_dense_t * x, armas_x_dense_t * tau,
+void armas_compute_householder_vec(armas_dense_t * x, armas_dense_t * tau,
                                armas_conf_t * cf)
 {
-    armas_x_dense_t alpha, x2;
+    armas_dense_t alpha, x2;
 
-    if (armas_x_size(x) == 0) {
-        armas_x_set(tau, 0, 0, 0.0);
+    if (armas_size(x) == 0) {
+        armas_set(tau, 0, 0, 0.0);
         return;
     }
 
     int flags = (cf->optflags & ARMAS_NONNEG) != 0 ? ARMAS_NONNEG : 0;
 
-    armas_x_submatrix(&alpha, x, 0, 0, 1, 1);
+    armas_submatrix(&alpha, x, 0, 0, 1, 1);
     if (x->rows == 1) {
-        armas_x_submatrix(&x2, x, 0, 1, 1, armas_x_size(x) - 1);
+        armas_submatrix(&x2, x, 0, 1, 1, armas_size(x) - 1);
     } else {
-        armas_x_submatrix(&x2, x, 1, 0, armas_x_size(x) - 1, 1);
+        armas_submatrix(&x2, x, 1, 0, armas_size(x) - 1, 1);
     }
     internal_householder(&alpha, &x2, tau, flags, cf);
 }
 
 
 // library internal 
-void armas_x_compute_householder_rev(armas_x_dense_t * x, armas_x_dense_t * tau,
+void armas_compute_householder_rev(armas_dense_t * x, armas_dense_t * tau,
                                armas_conf_t * cf)
 {
-    armas_x_dense_t alpha, x2;
+    armas_dense_t alpha, x2;
 
-    if (armas_x_size(x) == 0) {
-        armas_x_set(tau, 0, 0, 0.0);
+    if (armas_size(x) == 0) {
+        armas_set(tau, 0, 0, 0.0);
         return;
     }
 
     int flags = (cf->optflags & ARMAS_NONNEG) != 0 ? ARMAS_NONNEG : 0;
 
     if (x->rows == 1) {
-        armas_x_submatrix(&alpha, x, 0, -1, 1, 1);
-        armas_x_submatrix(&x2, x, 0, 0, 1, armas_x_size(x) - 1);
+        armas_submatrix(&alpha, x, 0, -1, 1, 1);
+        armas_submatrix(&x2, x, 0, 0, 1, armas_size(x) - 1);
     } else {
-        armas_x_submatrix(&alpha, x, -1, 0, 1, 1);
-        armas_x_submatrix(&x2, x, 0, 0, armas_x_size(x) - 1, 1);
+        armas_submatrix(&alpha, x, -1, 0, 1, 1);
+        armas_submatrix(&x2, x, 0, 0, armas_size(x) - 1, 1);
     }
     internal_householder(&alpha, &x2, tau, flags, cf);
 }
@@ -358,36 +358,36 @@ void armas_x_compute_householder_rev(armas_x_dense_t * x, armas_x_dense_t * tau,
  *
  * Intermediate work space w1 required as parameter, no allocation.
  */
-int armas_x_apply_householder2x1(armas_x_dense_t * tau, armas_x_dense_t * v,
-                                 armas_x_dense_t * a1, armas_x_dense_t * A2,
-                                 armas_x_dense_t * w1, int flags,
+int armas_apply_householder2x1(armas_dense_t * tau, armas_dense_t * v,
+                                 armas_dense_t * a1, armas_dense_t * A2,
+                                 armas_dense_t * w1, int flags,
                                  armas_conf_t * cf)
 {
     DTYPE tval;
-    tval = tau ? armas_x_get(tau, 0, 0) : TWO;
+    tval = tau ? armas_get(tau, 0, 0) : TWO;
     if (tval == 0.0) {
         return 0;
     }
     // w1 = a1
-    armas_x_axpby(ZERO, w1, ONE, a1, cf);
+    armas_axpby(ZERO, w1, ONE, a1, cf);
     if (flags & ARMAS_LEFT) {
         // w1 = a1 + A2.T*v
-        armas_x_mvmult(ONE, w1, ONE, A2, v, ARMAS_TRANSA, cf);
+        armas_mvmult(ONE, w1, ONE, A2, v, ARMAS_TRANSA, cf);
     } else {
         // w1 = a1 + A2*v
-        armas_x_mvmult(ONE, w1, ONE, A2, v, ARMAS_NONE, cf);
+        armas_mvmult(ONE, w1, ONE, A2, v, ARMAS_NONE, cf);
     }
     // w1 = tau*w1
-    armas_x_scale(w1, tval, cf);
+    armas_scale(w1, tval, cf);
 
     // a1 = a1 - w1
-    armas_x_axpy(a1, -ONE, w1, cf);
+    armas_axpy(a1, -ONE, w1, cf);
 
     // A2 = A2 - v*w1
     if (flags & ARMAS_LEFT) {
-        armas_x_mvupdate(ONE, A2, -ONE, v, w1, cf);
+        armas_mvupdate(ONE, A2, -ONE, v, w1, cf);
     } else {
-        armas_x_mvupdate(ONE, A2, -ONE, w1, v, cf);
+        armas_mvupdate(ONE, A2, -ONE, w1, v, cf);
     }
     return 0;
 }
@@ -401,26 +401,26 @@ int armas_x_apply_householder2x1(armas_x_dense_t * tau, armas_x_dense_t * v,
  *  RIGHT:  A = A*H = A - tau*A*v*v.T = A - tau*w1*v.T
  *  LEFT:   A = H*A = A - tau*v*v.T*A = A - tau*v*A.T*v = A - tau*v*w1
  */
-int armas_x_apply_householder1x1(armas_x_dense_t * tau, armas_x_dense_t * v,
-                                 armas_x_dense_t * A, armas_x_dense_t * w,
+int armas_apply_householder1x1(armas_dense_t * tau, armas_dense_t * v,
+                                 armas_dense_t * A, armas_dense_t * w,
                                  int flags, armas_conf_t * cf)
 {
     DTYPE tval;
 
-    tval = tau ? armas_x_get(tau, 0, 0) : TWO;
+    tval = tau ? armas_get(tau, 0, 0) : TWO;
     if (tval == ZERO) {
         return 0;
     }
     if (flags & ARMAS_LEFT) {
         // w = A.T*v
-        armas_x_mvmult(ZERO, w, ONE, A, v, ARMAS_TRANS, cf);
+        armas_mvmult(ZERO, w, ONE, A, v, ARMAS_TRANS, cf);
         // A = A - tau*v*w
-        armas_x_mvupdate(ONE, A, -tval, v, w, cf);
+        armas_mvupdate(ONE, A, -tval, v, w, cf);
     } else {
         // w = A*v
-        armas_x_mvmult(ZERO, w, ONE, A, v, ARMAS_NONE, cf);
+        armas_mvmult(ZERO, w, ONE, A, v, ARMAS_NONE, cf);
         // A = A - tau*w*v
-        armas_x_mvupdate(ONE, A, -tval, w, v, cf);
+        armas_mvupdate(ONE, A, -tval, w, v, cf);
     }
     return 0;
 }
@@ -452,19 +452,19 @@ int armas_x_apply_householder1x1(armas_x_dense_t * tau, armas_x_dense_t * v,
  *
  *  @ingroup lapack
  */
-int armas_x_houseapply2x1(armas_x_dense_t * a1, armas_x_dense_t * A2,
-                          armas_x_dense_t * tau, armas_x_dense_t * v,
-                          armas_x_dense_t * w, int flags, armas_conf_t * cf)
+int armas_houseapply2x1(armas_dense_t * a1, armas_dense_t * A2,
+                          armas_dense_t * tau, armas_dense_t * v,
+                          armas_dense_t * w, int flags, armas_conf_t * cf)
 {
-    armas_x_dense_t w1;
+    armas_dense_t w1;
     if (!cf)
         cf = armas_conf_default();
-    if (armas_x_size(w) < armas_x_size(a1)) {
+    if (armas_size(w) < armas_size(a1)) {
         cf->error = ARMAS_ESIZE;
         return -1;
     }
-    armas_x_make(&w1, armas_x_size(a1), 1, armas_x_size(a1), armas_x_data(w));
-    return armas_x_apply_householder2x1(tau, v, a1, A2, &w1, flags, cf);
+    armas_make(&w1, armas_size(a1), 1, armas_size(a1), armas_data(w));
+    return armas_apply_householder2x1(tau, v, a1, A2, &w1, flags, cf);
 }
 
 /**
@@ -494,36 +494,36 @@ int armas_x_houseapply2x1(armas_x_dense_t * a1, armas_x_dense_t * A2,
  *
  *  @ingroup lapack
  */
-int armas_x_houseapply(armas_x_dense_t * A,
-                       armas_x_dense_t * tau, armas_x_dense_t * v,
-                       armas_x_dense_t * w, int flags, armas_conf_t * cf)
+int armas_houseapply(armas_dense_t * A,
+                       armas_dense_t * tau, armas_dense_t * v,
+                       armas_dense_t * w, int flags, armas_conf_t * cf)
 {
-    armas_x_dense_t w1, a1, A2;
+    armas_dense_t w1, a1, A2;
     if (!cf)
         cf = armas_conf_default();
 
     int scaled = !tau || (flags & ARMAS_UNIT) != 0 ? 1 : 0;
 
-    if (armas_x_isvector(A)) {
+    if (armas_isvector(A)) {
         DTYPE alpha;
         if (scaled) {
-            if (armas_x_size(A) - 1 != armas_x_size(v)) {
+            if (armas_size(A) - 1 != armas_size(v)) {
                 cf->error = ARMAS_ESIZE;
                 return -1;
             }
-            armas_x_subvector(&A2, A, 1, armas_x_size(A) - 1);
-            alpha = armas_x_dot(&A2, v, cf);
-            alpha += armas_x_get_unsafe(A, 0, 0);
-            alpha *= armas_x_get_unsafe(tau, 0, 0);
-            armas_x_set_unsafe(A, 0, 0, armas_x_get_unsafe(A, 0, 0) - alpha);
-            armas_x_axpy(&A2, -alpha, v, cf);
+            armas_subvector(&A2, A, 1, armas_size(A) - 1);
+            alpha = armas_dot(&A2, v, cf);
+            alpha += armas_get_unsafe(A, 0, 0);
+            alpha *= armas_get_unsafe(tau, 0, 0);
+            armas_set_unsafe(A, 0, 0, armas_get_unsafe(A, 0, 0) - alpha);
+            armas_axpy(&A2, -alpha, v, cf);
         } else {
-            if (armas_x_size(A) != armas_x_size(v)) {
+            if (armas_size(A) != armas_size(v)) {
                 cf->error = ARMAS_ESIZE;
                 return -1;
             }
-            alpha = TWO * armas_x_dot(A, v, cf);
-            armas_x_axpy(A, -alpha, v, cf);
+            alpha = TWO * armas_dot(A, v, cf);
+            armas_axpy(A, -alpha, v, cf);
         }
         return 0;
     }
@@ -531,17 +531,17 @@ int armas_x_houseapply(armas_x_dense_t * A,
     int ok = 0;
     switch (flags & ARMAS_RIGHT) {
     case ARMAS_RIGHT:
-        ok = A->rows - scaled == armas_x_size(v);
+        ok = A->rows - scaled == armas_size(v);
         break;
     default:
-        ok = A->cols - scaled == armas_x_size(v);
+        ok = A->cols - scaled == armas_size(v);
         break;
     }
     if (!ok) {
         cf->error = ARMAS_ESIZE;
         return -1;
     }
-    if (!w || armas_x_size(w) < armas_x_size(v) + scaled) {
+    if (!w || armas_size(w) < armas_size(v) + scaled) {
         cf->error = ARMAS_EWORK;
         return -1;
     }
@@ -549,24 +549,24 @@ int armas_x_houseapply(armas_x_dense_t * A,
     if (scaled) {
         switch (flags & (ARMAS_RIGHT | ARMAS_LEFT)) {
         case ARMAS_RIGHT:
-            armas_x_submatrix(&a1, A, 0, 0, A->rows, 1);
-            armas_x_submatrix(&A2, A, 0, 1, A->rows, A->cols - 1);
+            armas_submatrix(&a1, A, 0, 0, A->rows, 1);
+            armas_submatrix(&A2, A, 0, 1, A->rows, A->cols - 1);
             break;
         case ARMAS_LEFT:
         default:
-            armas_x_submatrix(&a1, A, 0, 0, 1, A->cols);
-            armas_x_submatrix(&A2, A, 1, 0, A->rows - 1, A->cols);
+            armas_submatrix(&a1, A, 0, 0, 1, A->cols);
+            armas_submatrix(&A2, A, 1, 0, A->rows - 1, A->cols);
             break;
         }
-        armas_x_make(
-            &w1, armas_x_size(&a1), 1, armas_x_size(&a1), armas_x_data(w));
-        return armas_x_apply_householder2x1(tau, v, &a1, &A2, &w1, flags, cf);
+        armas_make(
+            &w1, armas_size(&a1), 1, armas_size(&a1), armas_data(w));
+        return armas_apply_householder2x1(tau, v, &a1, &A2, &w1, flags, cf);
     }
     // unscaled householder reflector here
     int n = (flags & ARMAS_RIGHT) != 0 ? A->rows : A->cols;
-    armas_x_make(&w1, n, 1, n, armas_x_data(w));
+    armas_make(&w1, n, 1, n, armas_data(w));
     // tau is null pointer here
-    return armas_x_apply_householder1x1(tau, v, A, &w1, flags, cf);
+    return armas_apply_householder1x1(tau, v, A, &w1, flags, cf);
 }
 
 #else

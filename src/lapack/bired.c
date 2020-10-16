@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,17 +12,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_bdreduce) && defined(armas_x_bdreduce_w)
+// this file provides following type dependent functions
+#if defined(armas_bdreduce) && defined(armas_bdreduce_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_householder) && defined(armas_x_blas)
+#if defined(armas_householder) && defined(armas_blas)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -101,13 +101,13 @@ int ws_bdreduce(int M, int N, int lb)
  * This computing (1-tauq*v*v.T)*A*(1-taup*u.u.T) from left to right. 
  */
 static
-int unblk_bdreduce_left(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                        armas_x_dense_t * taup, armas_x_dense_t * W,
+int unblk_bdreduce_left(armas_dense_t * A, armas_dense_t * tauq,
+                        armas_dense_t * taup, armas_dense_t * W,
                         armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a12, a21, A22;
-    armas_x_dense_t tqT, tqB, tq0, tq1, tq2, y21;
-    armas_x_dense_t tpT, tpB, tp0, tp1, tp2, z21;
+    armas_dense_t ATL, ABR, A00, a11, a12, a21, A22;
+    armas_dense_t tqT, tqB, tq0, tq1, tq2, y21;
+    armas_dense_t tpT, tpB, tp0, tp1, tp2, z21;
     DTYPE v0, beta, tauqv, taupv;
 
     EMPTY(A00);
@@ -136,40 +136,40 @@ int unblk_bdreduce_left(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tp0, &tp1, &tp2, /**/ taup, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
         // temp vector for this round
-        armas_x_make(&y21, a12.cols, 1, a12.cols, armas_x_data(W));
-        armas_x_make(&z21, a21.rows, 1, a21.rows,
-                     &armas_x_data(W)[armas_x_size(&y21)]);
+        armas_make(&y21, a12.cols, 1, a12.cols, armas_data(W));
+        armas_make(&z21, a21.rows, 1, a21.rows,
+                     &armas_data(W)[armas_size(&y21)]);
 
         // compute householder to zero subdiagonal entries
-        armas_x_compute_householder(&a11, &a21, &tq1, conf);
+        armas_compute_householder(&a11, &a21, &tq1, conf);
 
         if (a12.cols > 0) {
             // y21 := a12 + A22.T*a21
-            armas_x_axpby(ZERO, &y21, ONE, &a12, conf);
-            armas_x_mvmult(ONE, &y21, ONE, &A22, &a21, ARMAS_TRANSA, conf);
+            armas_axpby(ZERO, &y21, ONE, &a12, conf);
+            armas_mvmult(ONE, &y21, ONE, &A22, &a21, ARMAS_TRANSA, conf);
 
             // a12 := a12 - tauq*y21
-            tauqv = armas_x_get(&tq1, 0, 0);
-            armas_x_axpy(&a12, -tauqv, &y21, conf);
+            tauqv = armas_get(&tq1, 0, 0);
+            armas_axpy(&a12, -tauqv, &y21, conf);
 
             // compute householder to zero elements above 1st superdiagonal
-            armas_x_compute_householder_vec(&a12, &tp1, conf);
-            taupv = armas_x_get(&tp1, 0, 0);
-            v0 = armas_x_get(&a12, 0, 0);
-            armas_x_set(&a12, 0, 0, ONE);
+            armas_compute_householder_vec(&a12, &tp1, conf);
+            taupv = armas_get(&tp1, 0, 0);
+            v0 = armas_get(&a12, 0, 0);
+            armas_set(&a12, 0, 0, ONE);
 
             // [v == a12, u == a21]
-            beta = armas_x_dot(&y21, &a12, conf);
+            beta = armas_dot(&y21, &a12, conf);
             // z21 := tauq*beta*v == tauq*beta*a21
-            armas_x_axpby(ZERO, &z21, tauqv * beta, &a21, conf);
+            armas_axpby(ZERO, &z21, tauqv * beta, &a21, conf);
             // z21 := A22*v - z21 == A22*a12 - z21
-            armas_x_mvmult(-ONE, &z21, ONE, &A22, &a12, ARMAS_NONE, conf);
+            armas_mvmult(-ONE, &z21, ONE, &A22, &a12, ARMAS_NONE, conf);
             // A22 := A22 - tauq*u*y21 == A22 - tauq*a21*y21
-            armas_x_mvupdate(ONE, &A22, -tauqv, &a21, &y21, conf);
+            armas_mvupdate(ONE, &A22, -tauqv, &a21, &y21, conf);
             // A22 := A22 - taup*z21*v == A22 - taup*z21*a12
-            armas_x_mvupdate(ONE, &A22, -taupv, &z21, &a12, conf);
+            armas_mvupdate(ONE, &A22, -taupv, &z21, &a12, conf);
 
-            armas_x_set(&a12, 0, 0, v0);
+            armas_set(&a12, 0, 0, v0);
         }
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -193,15 +193,15 @@ int unblk_bdreduce_left(armas_x_dense_t * A, armas_x_dense_t * tauq,
  * Y is n(A)-2,nb and Z is m(A)-1,nb  
  */
 static
-int unblk_bdbuild_left(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                         armas_x_dense_t * taup, armas_x_dense_t * Y,
-                         armas_x_dense_t * Z, armas_conf_t * conf)
+int unblk_bdbuild_left(armas_dense_t * A, armas_dense_t * tauq,
+                         armas_dense_t * taup, armas_dense_t * Y,
+                         armas_dense_t * Z, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ATR, ABR, A00, a01, A02, a10, a11, a12, A20, a21, A22;
-    armas_x_dense_t YTL, YBR, Y00, y10, y11, Y20, y21, Y22;
-    armas_x_dense_t ZTL, ZBR, Z00, z10, z11, Z20, z21, Z22;
-    armas_x_dense_t tqT, tqB, tq0, tq1, tq2;
-    armas_x_dense_t tpT, tpB, tp0, tp1, tp2, w00;
+    armas_dense_t ATL, ATR, ABR, A00, a01, A02, a10, a11, a12, A20, a21, A22;
+    armas_dense_t YTL, YBR, Y00, y10, y11, Y20, y21, Y22;
+    armas_dense_t ZTL, ZBR, Z00, z10, z11, Z20, z21, Z22;
+    armas_dense_t tqT, tqB, tq0, tq1, tq2;
+    armas_dense_t tpT, tpB, tp0, tp1, tp2, w00;
     DTYPE beta, tauqv, taupv, aa, v0 = ZERO;
     int k;
 
@@ -251,65 +251,65 @@ int unblk_bdbuild_left(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tpT,
             &tp0, &tp1, &tp2, /**/ taup, 1, ARMAS_PBOTTOM);
         // --------------------------------------------------------------------
-        armas_x_submatrix(&w00, Z, 0, Z->cols - 1, A20.cols, 1);
+        armas_submatrix(&w00, Z, 0, Z->cols - 1, A20.cols, 1);
         // u10 == a10, U20 == A20, u21 == a21,
         // v10 == a01, V20 == A02, v21 == a12
         if (Y20.cols > 0) {
             // a11 = a11 - u10*y10 - z10*v10
-            aa = armas_x_dot(&a10, &y10, conf);
-            aa += armas_x_dot(&z10, &a01, conf);
-            armas_x_set(&a11, 0, 0, armas_x_get(&a11, 0, 0) - aa);
+            aa = armas_dot(&a10, &y10, conf);
+            aa += armas_dot(&z10, &a01, conf);
+            armas_set(&a11, 0, 0, armas_get(&a11, 0, 0) - aa);
             // a21 := a21 - U20*y10 - Z20*v10
-            armas_x_mvmult(ONE, &a21, -ONE, &A20, &y10, ARMAS_NONE, conf);
-            armas_x_mvmult(ONE, &a21, -ONE, &Z20, &a01, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a21, -ONE, &A20, &y10, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a21, -ONE, &Z20, &a01, ARMAS_NONE, conf);
             // a12 := a12 - u10.T*Y20.T - z10.T*V20.T
-            armas_x_mvmult(ONE, &a12, -ONE, &Y20, &a10, ARMAS_NONE, conf);
-            armas_x_mvmult(ONE, &a12, -ONE, &A02, &z10, ARMAS_TRANS, conf);
+            armas_mvmult(ONE, &a12, -ONE, &Y20, &a10, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a12, -ONE, &A02, &z10, ARMAS_TRANS, conf);
             // restore bidiagonal entry
-            armas_x_set(&a01, a01.rows - 1, 0, v0);
+            armas_set(&a01, a01.rows - 1, 0, v0);
         }
         // compute householder to zero subdiagonal entries
-        armas_x_compute_householder(&a11, &a21, &tq1, conf);
-        tauqv = armas_x_get(&tq1, 0, 0);
+        armas_compute_householder(&a11, &a21, &tq1, conf);
+        tauqv = armas_get(&tq1, 0, 0);
 
         // y21 := a12 + A22.T*u21 - Y20*U20.T*u21 - V20*Z20.T*u21
-        armas_x_axpby(ZERO, &y21, ONE, &a12, conf);
-        armas_x_mvmult(ONE, &y21, ONE, &A22, &a21, ARMAS_TRANS, conf);
+        armas_axpby(ZERO, &y21, ONE, &a12, conf);
+        armas_mvmult(ONE, &y21, ONE, &A22, &a21, ARMAS_TRANS, conf);
         // w00 := U20.T*u21 [= A20.T*a21]
-        armas_x_mvmult(ZERO, &w00, ONE, &A20, &a21, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w00, ONE, &A20, &a21, ARMAS_TRANS, conf);
         // y21 := y21 - U20*w00 [U20 == A20]
-        armas_x_mvmult(ONE, &y21, -ONE, &Y20, &w00, ARMAS_NONE, conf);
+        armas_mvmult(ONE, &y21, -ONE, &Y20, &w00, ARMAS_NONE, conf);
         // w00 := Z20.T*u21
-        armas_x_mvmult(ZERO, &w00, ONE, &Z20, &a21, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w00, ONE, &Z20, &a21, ARMAS_TRANS, conf);
         // y21 := y21 - V20*w00  [V20 == A02.T]
-        armas_x_mvmult(ONE, &y21, -ONE, &A02, &w00, ARMAS_TRANS, conf);
+        armas_mvmult(ONE, &y21, -ONE, &A02, &w00, ARMAS_TRANS, conf);
 
         // a12 := a12 - tauq*y21
-        armas_x_scale(&y21, tauqv, conf);
-        armas_x_axpy(&a12, -ONE, &y21, conf);
+        armas_scale(&y21, tauqv, conf);
+        armas_axpy(&a12, -ONE, &y21, conf);
 
         // compute householder to zero elements above 1st superdiagonal
-        armas_x_compute_householder_vec(&a12, &tp1, conf);
-        taupv = armas_x_get(&tp1, 0, 0);
-        v0 = armas_x_get(&a12, 0, 0);
-        armas_x_set(&a12, 0, 0, ONE);
+        armas_compute_householder_vec(&a12, &tp1, conf);
+        taupv = armas_get(&tp1, 0, 0);
+        v0 = armas_get(&a12, 0, 0);
+        armas_set(&a12, 0, 0, ONE);
 
         // z21 := taup*(A22*v - U20*Y20.T*v - Z20*V20.T*v - beta*u)
         // [v == a12, u == a21]
-        beta = armas_x_dot(&y21, &a12, conf);
+        beta = armas_dot(&y21, &a12, conf);
         // z21 := beta*u
-        armas_x_axpby(ZERO, &z21, beta, &a21, conf);
+        armas_axpby(ZERO, &z21, beta, &a21, conf);
         // w00 = Y20.T*v
-        armas_x_mvmult(ZERO, &w00, ONE, &Y20, &a12, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w00, ONE, &Y20, &a12, ARMAS_TRANS, conf);
         // z21 = z21 + U20*w00
-        armas_x_mvmult(ONE, &z21, ONE, &A20, &w00, ARMAS_NONE, conf);
+        armas_mvmult(ONE, &z21, ONE, &A20, &w00, ARMAS_NONE, conf);
         // w00 := V20.T*v  (V20.T == A02)
-        armas_x_mvmult(ZERO, &w00, ONE, &A02, &a12, ARMAS_NONE, conf);
+        armas_mvmult(ZERO, &w00, ONE, &A02, &a12, ARMAS_NONE, conf);
         // z21 := z21 + Z20*w00
-        armas_x_mvmult(ONE, &z21, ONE, &Z20, &w00, ARMAS_NONE, conf);
+        armas_mvmult(ONE, &z21, ONE, &Z20, &w00, ARMAS_NONE, conf);
 
         // z21 := -taup*z21 + taup*A22*v
-        armas_x_mvmult(-taupv, &z21, taupv, &A22, &a12, ARMAS_NONE, conf);
+        armas_mvmult(-taupv, &z21, taupv, &A22, &a12, ARMAS_NONE, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, &ATR,
@@ -328,28 +328,28 @@ int unblk_bdbuild_left(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tpB, /**/ &tp0, &tp1, /**/ taup, ARMAS_PBOTTOM);
     }
     // restore bidiagonal entry
-    armas_x_set(&ATR, ATR.rows - 1, 0, v0);
+    armas_set(&ATR, ATR.rows - 1, 0, v0);
     return 0;
 }
 
 
 static
-int blk_bdreduce_left(armas_x_dense_t * A,
-                      armas_x_dense_t * tauq, armas_x_dense_t * taup,
-                      armas_x_dense_t * W, int lb, armas_conf_t * conf)
+int blk_bdreduce_left(armas_dense_t * A,
+                      armas_dense_t * tauq, armas_dense_t * taup,
+                      armas_dense_t * W, int lb, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A11, A12, A21, A22;
-    armas_x_dense_t Y, YT, YB, Y0, Y1, Y2;
-    armas_x_dense_t Z, ZT, ZB, Z0, Z1, Z2;
-    armas_x_dense_t tqT, tqB, tq0, tq1, tq2;
-    armas_x_dense_t tpT, tpB, tp0, tp1, tp2;
+    armas_dense_t ATL, ABR, A00, A11, A12, A21, A22;
+    armas_dense_t Y, YT, YB, Y0, Y1, Y2;
+    armas_dense_t Z, ZT, ZB, Z0, Z1, Z2;
+    armas_dense_t tqT, tqB, tq0, tq1, tq2;
+    armas_dense_t tpT, tpB, tp0, tp1, tp2;
     DTYPE v0;
 
     EMPTY(A00);
     EMPTY(A11);
 
-    armas_x_make(&Z, A->rows, lb, A->rows, armas_x_data(W));
-    armas_x_make(&Y, A->cols, lb, A->cols, &armas_x_data(W)[armas_x_size(&Z)]);
+    armas_make(&Z, A->rows, lb, A->rows, armas_data(W));
+    armas_make(&Y, A->cols, lb, A->cols, &armas_data(W)[armas_size(&Z)]);
 
     mat_partition_2x2(
         &ATL, __nil,
@@ -389,16 +389,16 @@ int blk_bdreduce_left(armas_x_dense_t * A,
         unblk_bdbuild_left(&ABR, &tq1, &tp1, &YB, &ZB, conf);
 
         // set superdiagonal entry to one
-        v0 = armas_x_get(&A12, A12.rows - 1, 0);
-        armas_x_set(&A12, A12.rows - 1, 0, ONE);
+        v0 = armas_get(&A12, A12.rows - 1, 0);
+        armas_set(&A12, A12.rows - 1, 0, ONE);
 
         // A22 := A22 - U2*Y2.T
-        armas_x_mult(ONE, &A22, -ONE, &A21, &Y2, ARMAS_TRANSB, conf);
+        armas_mult(ONE, &A22, -ONE, &A21, &Y2, ARMAS_TRANSB, conf);
         // A22 := A22 - Z2*V2.T
-        armas_x_mult(ONE, &A22, -ONE, &Z2, &A12, ARMAS_NONE, conf);
+        armas_mult(ONE, &A22, -ONE, &Z2, &A12, ARMAS_NONE, conf);
 
         // restore super-diagonal entry
-        armas_x_set(&A12, A12.rows - 1, 0, v0);
+        armas_set(&A12, A12.rows - 1, 0, v0);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -472,13 +472,13 @@ int blk_bdreduce_left(armas_x_dense_t * A,
  * bidiagonal matrix B.
  */
 static
-int unblk_bdreduce_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                           armas_x_dense_t * taup, armas_x_dense_t * W,
+int unblk_bdreduce_right(armas_dense_t * A, armas_dense_t * tauq,
+                           armas_dense_t * taup, armas_dense_t * W,
                            armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a12, a21, A22;
-    armas_x_dense_t tqT, tqB, tq0, tq1, tq2, y21;
-    armas_x_dense_t tpT, tpB, tp0, tp1, tp2, z21;
+    armas_dense_t ATL, ABR, A00, a11, a12, a21, A22;
+    armas_dense_t tqT, tqB, tq0, tq1, tq2, y21;
+    armas_dense_t tpT, tpB, tp0, tp1, tp2, z21;
     DTYPE v0, beta, tauqv, taupv;
 
     EMPTY(A00);
@@ -507,41 +507,41 @@ int unblk_bdreduce_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tp0, &tp1, &tp2, /**/ taup, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
         // temp vector for this round
-        armas_x_make(&y21, a21.rows, 1, a21.rows, armas_x_data(W));
-        armas_x_make(&z21, a12.cols, 1, a12.cols,
-                     &armas_x_data(W)[armas_x_size(&y21)]);
+        armas_make(&y21, a21.rows, 1, a21.rows, armas_data(W));
+        armas_make(&z21, a12.cols, 1, a12.cols,
+                     &armas_data(W)[armas_size(&y21)]);
 
         // compute householder to zero superdiagonal entries
-        armas_x_compute_householder(&a11, &a12, &tp1, conf);
+        armas_compute_householder(&a11, &a12, &tp1, conf);
 
         if (a21.rows > 0) {
             // y21 := a21 + A22.T*a12
-            armas_x_axpby(ZERO, &y21, ONE, &a21, conf);
-            armas_x_mvmult(ONE, &y21, ONE, &A22, &a12, ARMAS_NONE, conf);
+            armas_axpby(ZERO, &y21, ONE, &a21, conf);
+            armas_mvmult(ONE, &y21, ONE, &A22, &a12, ARMAS_NONE, conf);
 
             // a21 := a21 - taup*y21
-            taupv = armas_x_get(&tp1, 0, 0);
-            armas_x_axpy(&a21, -taupv, &y21, conf);
+            taupv = armas_get(&tp1, 0, 0);
+            armas_axpy(&a21, -taupv, &y21, conf);
 
             // compute householder to zero elements below 1st subdiagonal
-            armas_x_compute_householder_vec(&a21, &tq1, conf);
-            tauqv = armas_x_get(&tq1, 0, 0);
+            armas_compute_householder_vec(&a21, &tq1, conf);
+            tauqv = armas_get(&tq1, 0, 0);
 
-            v0 = armas_x_get(&a21, 0, 0);
-            armas_x_set(&a21, 0, 0, ONE);
+            v0 = armas_get(&a21, 0, 0);
+            armas_set(&a21, 0, 0, ONE);
 
             // [v == a21, u == a12]
-            beta = armas_x_dot(&y21, &a21, conf);
+            beta = armas_dot(&y21, &a21, conf);
             // z21 := taup*beta*a12
-            armas_x_axpby(ZERO, &z21, taupv * beta, &a12, conf);
+            armas_axpby(ZERO, &z21, taupv * beta, &a12, conf);
             // z21 := A22*a21 - z21
-            armas_x_mvmult(-ONE, &z21, ONE, &A22, &a21, ARMAS_TRANS, conf);
+            armas_mvmult(-ONE, &z21, ONE, &A22, &a21, ARMAS_TRANS, conf);
             // A22 := A22 - taup*y21*a12
-            armas_x_mvupdate(ONE, &A22, -taupv, &y21, &a12, conf);
+            armas_mvupdate(ONE, &A22, -taupv, &y21, &a12, conf);
             // A22 := A22 - tauq*z21*a21
-            armas_x_mvupdate(ONE, &A22, -tauqv, &a21, &z21, conf);
+            armas_mvupdate(ONE, &A22, -tauqv, &a21, &z21, conf);
 
-            armas_x_set_unsafe(&a21, 0, 0, v0);
+            armas_set_unsafe(&a21, 0, 0, v0);
         }
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -576,15 +576,15 @@ int unblk_bdreduce_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
  * Z matrix on each iteration.
  */
 static
-int unblk_bdbuild_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                          armas_x_dense_t * taup, armas_x_dense_t * Y,
-                          armas_x_dense_t * Z, armas_conf_t * conf)
+int unblk_bdbuild_right(armas_dense_t * A, armas_dense_t * tauq,
+                          armas_dense_t * taup, armas_dense_t * Y,
+                          armas_dense_t * Z, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABL, ABR, A00, a01, A02, a10, a11, a12, A20, a21, A22;
-    armas_x_dense_t YTL, YBR, Y00, y10, y11, Y20, y21, Y22;
-    armas_x_dense_t ZTL, ZBR, Z00, z10, z11, Z20, z21, Z22;
-    armas_x_dense_t tqT, tqB, tq0, tq1, tq2;
-    armas_x_dense_t tpT, tpB, tp0, tp1, tp2, w00;
+    armas_dense_t ATL, ABL, ABR, A00, a01, A02, a10, a11, a12, A20, a21, A22;
+    armas_dense_t YTL, YBR, Y00, y10, y11, Y20, y21, Y22;
+    armas_dense_t ZTL, ZBR, Z00, z10, z11, Z20, z21, Z22;
+    armas_dense_t tqT, tqB, tq0, tq1, tq2;
+    armas_dense_t tpT, tpB, tp0, tp1, tp2, w00;
     DTYPE beta, tauqv, taupv, aa, v0 = ZERO;
     int k;
 
@@ -634,65 +634,65 @@ int unblk_bdbuild_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tpT,
             &tp0, &tp1, &tp2, /**/ taup, 1, ARMAS_PBOTTOM);
         // --------------------------------------------------------------------
-        armas_x_submatrix(&w00, Z, 0, Z->cols - 1, A02.rows, 1);
+        armas_submatrix(&w00, Z, 0, Z->cols - 1, A02.rows, 1);
         // u10 == a10, U20 == A20, u21 == a21,
         // v10 == a01, V20 == A02, v21 == a12
         if (Y20.cols > 0) {
             // a11 = a11 - u10*y10 - z10*v10
-            aa = armas_x_dot(&a10, &z10, conf);
-            aa += armas_x_dot(&y10, &a01, conf);
-            armas_x_set(&a11, 0, 0, armas_x_get(&a11, 0, 0) - aa);
+            aa = armas_dot(&a10, &z10, conf);
+            aa += armas_dot(&y10, &a01, conf);
+            armas_set(&a11, 0, 0, armas_get(&a11, 0, 0) - aa);
             // a12 := a12 - V20*y10 - Z20*u10
-            armas_x_mvmult(ONE, &a12, -ONE, &A02, &y10, ARMAS_TRANS, conf);
-            armas_x_mvmult(ONE, &a12, -ONE, &Z20, &a10, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a12, -ONE, &A02, &y10, ARMAS_TRANS, conf);
+            armas_mvmult(ONE, &a12, -ONE, &Z20, &a10, ARMAS_NONE, conf);
             // a21 := a21 - Y20*v10 - U20*z10
-            armas_x_mvmult(ONE, &a21, -ONE, &Y20, &a01, ARMAS_NONE, conf);
-            armas_x_mvmult(ONE, &a21, -ONE, &A20, &z10, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a21, -ONE, &Y20, &a01, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a21, -ONE, &A20, &z10, ARMAS_NONE, conf);
             // restore bidiagonal entry
-            armas_x_set(&a10, 0, a10.cols - 1, v0);
+            armas_set(&a10, 0, a10.cols - 1, v0);
         }
         // compute householder to zero subdiagonal entries
-        armas_x_compute_householder(&a11, &a12, &tp1, conf);
-        taupv = armas_x_get(&tp1, 0, 0);
+        armas_compute_householder(&a11, &a12, &tp1, conf);
+        taupv = armas_get(&tp1, 0, 0);
 
         // y21 := a12 + A22*v21 - Y20*U20.T*v21 - V20*Z20.T*v21
-        armas_x_axpby(ZERO, &y21, ONE, &a21, conf);
-        armas_x_mvmult(ONE, &y21, ONE, &A22, &a12, ARMAS_NONE, conf);
+        armas_axpby(ZERO, &y21, ONE, &a21, conf);
+        armas_mvmult(ONE, &y21, ONE, &A22, &a12, ARMAS_NONE, conf);
         // w00 := U20.T*v21 [= A02*a12]
-        armas_x_mvmult(ZERO, &w00, ONE, &A02, &a12, ARMAS_NONE, conf);
+        armas_mvmult(ZERO, &w00, ONE, &A02, &a12, ARMAS_NONE, conf);
         // y21 := y21 - U20*w00 [U20 == A20]
-        armas_x_mvmult(ONE, &y21, -ONE, &Y20, &w00, ARMAS_NONE, conf);
+        armas_mvmult(ONE, &y21, -ONE, &Y20, &w00, ARMAS_NONE, conf);
         // w00 := Z20.T*v21
-        armas_x_mvmult(ZERO, &w00, ONE, &Z20, &a12, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w00, ONE, &Z20, &a12, ARMAS_TRANS, conf);
         // y21 := y21 - V20*w00
-        armas_x_mvmult(ONE, &y21, -ONE, &A20, &w00, ARMAS_NONE, conf);
+        armas_mvmult(ONE, &y21, -ONE, &A20, &w00, ARMAS_NONE, conf);
 
         // a21 := a21 - taup*y21
-        armas_x_scale(&y21, taupv, conf);
-        armas_x_axpy(&a21, -ONE, &y21, conf);
+        armas_scale(&y21, taupv, conf);
+        armas_axpy(&a21, -ONE, &y21, conf);
 
         // compute householder to zero elements below 1st subdiagonal
-        armas_x_compute_householder_vec(&a21, &tq1, conf);
-        tauqv = armas_x_get(&tq1, 0, 0);
-        v0 = armas_x_get(&a21, 0, 0);
-        armas_x_set_unsafe(&a21, 0, 0, ONE);
+        armas_compute_householder_vec(&a21, &tq1, conf);
+        tauqv = armas_get(&tq1, 0, 0);
+        v0 = armas_get(&a21, 0, 0);
+        armas_set_unsafe(&a21, 0, 0, ONE);
 
         // z21 := tauq*(A22*y - U20*Y20.T*u - Z20*V20.T*u - beta*v)
         // [v == a12, u == a21]
-        beta = armas_x_dot(&y21, &a21, conf);
+        beta = armas_dot(&y21, &a21, conf);
         // z21 := beta*v
-        armas_x_axpby(ZERO, &z21, beta, &a12, conf);
+        armas_axpby(ZERO, &z21, beta, &a12, conf);
         // w00 = Y20.T*u
-        armas_x_mvmult(ZERO, &w00, ONE, &Y20, &a21, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w00, ONE, &Y20, &a21, ARMAS_TRANS, conf);
         // z21 = z21 + V20*w00 (V20 == A02.T)
-        armas_x_mvmult(ONE, &z21, ONE, &A02, &w00, ARMAS_TRANS, conf);
+        armas_mvmult(ONE, &z21, ONE, &A02, &w00, ARMAS_TRANS, conf);
         // w00 := U20.T*v  (U20.T == A20.T)
-        armas_x_mvmult(ZERO, &w00, ONE, &A20, &a21, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w00, ONE, &A20, &a21, ARMAS_TRANS, conf);
         // z21 := z21 + Z20*w00
-        armas_x_mvmult(ONE, &z21, ONE, &Z20, &w00, ARMAS_NONE, conf);
+        armas_mvmult(ONE, &z21, ONE, &Z20, &w00, ARMAS_NONE, conf);
 
         // z21 := -tauq*z21 + tauq*A22*v
-        armas_x_mvmult(-tauqv, &z21, tauqv, &A22, &a21, ARMAS_TRANS, conf);
+        armas_mvmult(-tauqv, &z21, tauqv, &A22, &a21, ARMAS_TRANS, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -711,27 +711,27 @@ int unblk_bdbuild_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
             &tpB, /**/ &tp0, &tp1, /**/ taup, ARMAS_PBOTTOM);
     }
     // restore bidiagonal entry
-    armas_x_set(&ABL, 0, ABL.cols - 1, v0);
+    armas_set(&ABL, 0, ABL.cols - 1, v0);
     return 0;
 }
 
 static
-int blk_bdreduce_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
-                         armas_x_dense_t * taup, armas_x_dense_t * W,
+int blk_bdreduce_right(armas_dense_t * A, armas_dense_t * tauq,
+                         armas_dense_t * taup, armas_dense_t * W,
                          int lb, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A11, A12, A21, A22;
-    armas_x_dense_t Y, YT, YB, Y0, Y1, Y2;
-    armas_x_dense_t Z, ZT, ZB, Z0, Z1, Z2;
-    armas_x_dense_t tqT, tqB, tq0, tq1, tq2;
-    armas_x_dense_t tpT, tpB, tp0, tp1, tp2;
+    armas_dense_t ATL, ABR, A00, A11, A12, A21, A22;
+    armas_dense_t Y, YT, YB, Y0, Y1, Y2;
+    armas_dense_t Z, ZT, ZB, Z0, Z1, Z2;
+    armas_dense_t tqT, tqB, tq0, tq1, tq2;
+    armas_dense_t tpT, tpB, tp0, tp1, tp2;
     DTYPE v0;
 
     EMPTY(A00);
     EMPTY(A11);
 
-    armas_x_make(&Z, A->cols, lb, A->cols, armas_x_data(W));
-    armas_x_make(&Y, A->rows, lb, A->rows, &armas_x_data(W)[armas_x_size(&Z)]);
+    armas_make(&Z, A->cols, lb, A->cols, armas_data(W));
+    armas_make(&Y, A->rows, lb, A->rows, &armas_data(W)[armas_size(&Z)]);
 
     mat_partition_2x2(
         &ATL, __nil,
@@ -771,16 +771,16 @@ int blk_bdreduce_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
         unblk_bdbuild_right(&ABR, &tq1, &tp1, &YB, &ZB, conf);
 
         // set superdiagonal entry to one
-        v0 = armas_x_get(&A21, 0, A21.cols - 1);
-        armas_x_set(&A21, 0, A21.cols - 1, 1.0);
+        v0 = armas_get(&A21, 0, A21.cols - 1);
+        armas_set(&A21, 0, A21.cols - 1, 1.0);
 
         // A22 := A22 - U2*Z2.T
-        armas_x_mult(ONE, &A22, -ONE, &A21, &Z2, ARMAS_TRANSB, conf);
+        armas_mult(ONE, &A22, -ONE, &A21, &Z2, ARMAS_TRANSB, conf);
         // A22 := A22 - Y2*V2.T
-        armas_x_mult(ONE, &A22, -ONE, &Y2, &A12, ARMAS_NONE, conf);
+        armas_mult(ONE, &A22, -ONE, &Y2, &A12, ARMAS_NONE, conf);
 
         // restore super-diagonal entry
-        armas_x_set(&A21, 0, A21.cols - 1, v0);
+        armas_set(&A21, 0, A21.cols - 1, v0);
 
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -811,13 +811,13 @@ int blk_bdreduce_right(armas_x_dense_t * A, armas_x_dense_t * tauq,
 /**
  * @brief Bidiagonal reduction of general matrix
  *
- * @see armas_x_bdreduce_w
+ * @see armas_bdreduce_w
  *
  * @ingroup lapack
  */
-int armas_x_bdreduce(armas_x_dense_t * A,
-                     armas_x_dense_t * tauq,
-                     armas_x_dense_t * taup, armas_conf_t * conf)
+int armas_bdreduce(armas_dense_t * A,
+                     armas_dense_t * tauq,
+                     armas_dense_t * taup, armas_conf_t * conf)
 {
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
@@ -825,7 +825,7 @@ int armas_x_bdreduce(armas_x_dense_t * A,
     if (!conf)
         conf = armas_conf_default();
 
-    if ((err = armas_x_bdreduce_w(A, tauq, taup, &wb, conf)) < 0)
+    if ((err = armas_bdreduce_w(A, tauq, taup, &wb, conf)) < 0)
         return err;
 
     wbs = &wb;
@@ -837,7 +837,7 @@ int armas_x_bdreduce(armas_x_dense_t * A,
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_bdreduce_w(A, tauq, taup, wbs, conf);
+    err = armas_bdreduce_w(A, tauq, taup, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }
@@ -917,13 +917,13 @@ int armas_x_bdreduce(armas_x_dense_t * A,
  *
  * @ingroup lapack
  */
-int armas_x_bdreduce_w(armas_x_dense_t * A,
-                       armas_x_dense_t * tauq,
-                       armas_x_dense_t * taup,
+int armas_bdreduce_w(armas_dense_t * A,
+                       armas_dense_t * tauq,
+                       armas_dense_t * taup,
                        armas_wbuf_t * wb, armas_conf_t * conf)
 {
 
-    armas_x_dense_t W;
+    armas_dense_t W;
     armas_env_t *env;
     size_t wsmin, wsz = 0;
     int lb;
@@ -963,7 +963,7 @@ int armas_x_bdreduce_w(armas_x_dense_t * A,
 
     buf = (DTYPE *) armas_wptr(wb);
     wsz = armas_wbytes(wb) / sizeof(DTYPE);
-    armas_x_make(&W, wsz, 1, wsz, buf);
+    armas_make(&W, wsz, 1, wsz, buf);
 
     wsz = armas_wpos(wb);
     if (A->rows >= A->cols) {

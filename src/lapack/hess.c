@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -11,17 +11,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_hessreduce)  && defined(armas_x_hessreduce_w)
+// this file provides following type dependent functions
+#if defined(armas_hessreduce)  && defined(armas_hessreduce_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_householder) && defined(armas_x_update_qr_left)
+#if defined(armas_householder) && defined(armas_update_qr_left)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -30,7 +30,7 @@
 #include "partition.h"
 
 #ifndef ARMAS_NIL
-#define ARMAS_NIL (armas_x_dense_t *)0
+#define ARMAS_NIL (armas_dense_t *)0
 #endif
 
 /*
@@ -72,12 +72,12 @@
  * Compatible with lapack.DGEHD2.
  */
 static
-int unblk_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * tau,
-                     armas_x_dense_t * W, int row, armas_conf_t * conf)
+int unblk_hess_gqvdg(armas_dense_t * A, armas_dense_t * tau,
+                     armas_dense_t * W, int row, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a12, a21, A22;
-    armas_x_dense_t AL, AR, A0, a1, A2;
-    armas_x_dense_t tT, tB, t0, t1, t2, w12, v1;
+    armas_dense_t ATL, ABR, A00, a11, a12, a21, A22;
+    armas_dense_t AL, AR, A0, a1, A2;
+    armas_dense_t tT, tB, t0, t1, t2, w12, v1;
     DTYPE tauval, beta;
 
     EMPTY(A00);
@@ -95,7 +95,7 @@ int unblk_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * tau,
         &tT,
         &tB, /**/ tau, 0, ARMAS_PTOP);
 
-    armas_x_submatrix(&v1, W, 0, 0, A->rows, 1);
+    armas_submatrix(&v1, W, 0, 0, A->rows, 1);
 
     while (ABR.rows > 1 && ABR.cols > 0) {
         mat_repartition_2x2to3x3(
@@ -109,25 +109,25 @@ int unblk_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * tau,
             &tT,
             &t0, &t1, &t2, /**/ tau, 1, ARMAS_PBOTTOM);
         // ---------------------------------------------------------------------
-        armas_x_compute_householder_vec(&a21, &t1, conf);
-        tauval = armas_x_get(&t1, 0, 0);
-        beta = armas_x_get(&a21, 0, 0);
-        armas_x_set(&a21, 0, 0, 1.0);
+        armas_compute_householder_vec(&a21, &t1, conf);
+        tauval = armas_get(&t1, 0, 0);
+        beta = armas_get(&a21, 0, 0);
+        armas_set(&a21, 0, 0, 1.0);
 
         // v1 := A2*a21
-        armas_x_mvmult(ZERO, &v1, ONE, &A2, &a21, ARMAS_NONE, conf);
+        armas_mvmult(ZERO, &v1, ONE, &A2, &a21, ARMAS_NONE, conf);
 
         // A2 := A2 - tau*v1*a21  (A2 = A2*H(k))
-        armas_x_mvupdate(ONE, &A2, -tauval, &v1, &a21, conf);
+        armas_mvupdate(ONE, &A2, -tauval, &v1, &a21, conf);
 
-        armas_x_submatrix(&w12, W, 0, 0, A22.cols, 1);
+        armas_submatrix(&w12, W, 0, 0, A22.cols, 1);
         // w12 := a21.T*A22 = A22.T*a21
-        armas_x_mvmult(ZERO, &w12, ONE, &A22, &a21, ARMAS_TRANS, conf);
+        armas_mvmult(ZERO, &w12, ONE, &A22, &a21, ARMAS_TRANS, conf);
         // A22 := A22 - tau*a21*w12  (A22 = H(k)*A22)
-        armas_x_mvupdate(ONE, &A22, -tauval, &a21, &w12, conf);
+        armas_mvupdate(ONE, &A22, -tauval, &a21, &w12, conf);
 
         // restore a21[0]
-        armas_x_set(&a21, 0, 0, beta);
+        armas_set(&a21, 0, 0, beta);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -153,31 +153,31 @@ int unblk_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * tau,
  *    0 | Q.T   v1   Q.T*v1 = v1 - Y*T.T*Y.T*v1
  */
 static
-int update_vec_left_wy(armas_x_dense_t * v, armas_x_dense_t * Y1,
-                       armas_x_dense_t * Y2, armas_x_dense_t * T,
-                       armas_x_dense_t * W, int bits, armas_conf_t * conf)
+int update_vec_left_wy(armas_dense_t * v, armas_dense_t * Y1,
+                       armas_dense_t * Y2, armas_dense_t * T,
+                       armas_dense_t * W, int bits, armas_conf_t * conf)
 {
-    armas_x_dense_t v1, v2, w0;
+    armas_dense_t v1, v2, w0;
 
-    armas_x_submatrix(&v1, v, 1, 0, Y1->cols, 1);
-    armas_x_submatrix(&v2, v, 1 + Y1->cols, 0, Y2->rows, 1);
-    armas_x_submatrix(&w0, W, 0, 0, Y1->rows, 1);
+    armas_submatrix(&v1, v, 1, 0, Y1->cols, 1);
+    armas_submatrix(&v2, v, 1 + Y1->cols, 0, Y2->rows, 1);
+    armas_submatrix(&w0, W, 0, 0, Y1->rows, 1);
 
     // w0 = Y1.T*v1 + Y2.T*v2
-    armas_x_axpby(ZERO, &w0, ONE, &v1, conf);
-    armas_x_mvmult_trm(&w0, ONE, Y1, ARMAS_LOWER | ARMAS_UNIT | ARMAS_TRANS,
+    armas_axpby(ZERO, &w0, ONE, &v1, conf);
+    armas_mvmult_trm(&w0, ONE, Y1, ARMAS_LOWER | ARMAS_UNIT | ARMAS_TRANS,
                        conf);
-    armas_x_mvmult(ONE, &w0, ONE, Y2, &v2, ARMAS_TRANS, conf);
+    armas_mvmult(ONE, &w0, ONE, Y2, &v2, ARMAS_TRANS, conf);
 
     // w0 = opt(T)*w0
-    armas_x_mvmult_trm(&w0, ONE, T, bits | ARMAS_UPPER, conf);
+    armas_mvmult_trm(&w0, ONE, T, bits | ARMAS_UPPER, conf);
 
     // v2 = v2 - Y2*w0
-    armas_x_mvmult(ONE, &v2, -ONE, Y2, &w0, ARMAS_NONE, conf);
+    armas_mvmult(ONE, &v2, -ONE, Y2, &w0, ARMAS_NONE, conf);
 
     // v1 = v1 - Y1*w0
-    armas_x_mvmult_trm(&w0, ONE, Y1, ARMAS_LOWER | ARMAS_UNIT, conf);
-    armas_x_axpy(&v1, -ONE, &w0, conf);
+    armas_mvmult_trm(&w0, ONE, Y1, ARMAS_LOWER | ARMAS_UNIT, conf);
+    armas_axpy(&v1, -ONE, &w0, conf);
     return 0;
 }
 
@@ -203,13 +203,13 @@ int update_vec_left_wy(armas_x_dense_t * v, armas_x_dense_t * Y1,
  *    t11 :=  t11
  */
 static
-int unblk_build_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * T,
-                           armas_x_dense_t * V, armas_conf_t * conf)
+int unblk_build_hess_gqvdg(armas_dense_t * A, armas_dense_t * T,
+                           armas_dense_t * V, armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a10, a11, A20, a21, A22;
-    armas_x_dense_t AL, AR, A0, a1, A2;
-    armas_x_dense_t VL, VR, V0, v1, V2, Y0;
-    armas_x_dense_t TTL, TBR, T00, t01, t11, T22;
+    armas_dense_t ATL, ABR, A00, a10, a11, A20, a21, A22;
+    armas_dense_t AL, AR, A0, a1, A2;
+    armas_dense_t VL, VR, V0, v1, V2, Y0;
+    armas_dense_t TTL, TBR, T00, t01, t11, T22;
     DTYPE beta, tauval;
 
     EMPTY(a11);
@@ -250,33 +250,33 @@ int unblk_build_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * T,
         // ---------------------------------------------------------------------
         if (V0.cols > 0) {
             // y10 := T00*a10 (t01 is workspace)
-            armas_x_axpby(ZERO, &t01, ONE, &a10, conf);
-            armas_x_mvmult_trm(&t01, ONE, &T00, ARMAS_UPPER, conf);
+            armas_axpby(ZERO, &t01, ONE, &a10, conf);
+            armas_mvmult_trm(&t01, ONE, &T00, ARMAS_UPPER, conf);
 
             // a1 = a1 - V0*T00*a10
-            armas_x_mvmult(ONE, &a1, -ONE, &V0, &t01, ARMAS_NONE, conf);
+            armas_mvmult(ONE, &a1, -ONE, &V0, &t01, ARMAS_NONE, conf);
 
             // update a1 = (I - Y*T*Y.T).T*a1
-            armas_x_submatrix(&Y0, A, 1, 0, A00.cols, A00.cols);
+            armas_submatrix(&Y0, A, 1, 0, A00.cols, A00.cols);
             update_vec_left_wy(&a1, &Y0, &A20, &T00, &t01, ARMAS_TRANS, conf);
             // restore last entry of a10
-            armas_x_set(&a10, 0, a10.cols - 1, beta);
+            armas_set(&a10, 0, a10.cols - 1, beta);
         }
         // compute householder
-        armas_x_compute_householder_vec(&a21, &t11, conf);
-        beta = armas_x_get(&a21, 0, 0);
-        armas_x_set(&a21, 0, 0, 1.0);
+        armas_compute_householder_vec(&a21, &t11, conf);
+        beta = armas_get(&a21, 0, 0);
+        armas_set(&a21, 0, 0, 1.0);
 
         // v1 = A2*a21
-        armas_x_mvmult(ZERO, &v1, ONE, &A2, &a21, ARMAS_NONE, conf);
+        armas_mvmult(ZERO, &v1, ONE, &A2, &a21, ARMAS_NONE, conf);
         // update T
-        tauval = armas_x_get(&t11, 0, 0);
+        tauval = armas_get(&t11, 0, 0);
         if (tauval != 0) {
             // t01 := -tauval*A20.T*a21
-            armas_x_mvmult(ZERO, &t01, -tauval, &A20, &a21, ARMAS_TRANS,
+            armas_mvmult(ZERO, &t01, -tauval, &A20, &a21, ARMAS_TRANS,
                            conf);
             // t01 := T00*t01
-            armas_x_mvmult_trm(&t01, ONE, &T00, ARMAS_UPPER, conf);
+            armas_mvmult_trm(&t01, ONE, &T00, ARMAS_UPPER, conf);
         }
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -291,41 +291,41 @@ int unblk_build_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * T,
             &VL, &VR, /**/ &V0, &v1, V, ARMAS_PRIGHT);
     }
 
-    armas_x_set(A, V->cols, V->cols - 1, beta);
+    armas_set(A, V->cols, V->cols - 1, beta);
     return 0;
 }
 
 // compute: (I - Y*T*Y.T).T*C
 static
-int update_hess_left_wy(armas_x_dense_t * C, armas_x_dense_t * Y1,
-                        armas_x_dense_t * Y2, armas_x_dense_t * T,
-                        armas_x_dense_t * V, armas_conf_t * conf)
+int update_hess_left_wy(armas_dense_t * C, armas_dense_t * Y1,
+                        armas_dense_t * Y2, armas_dense_t * T,
+                        armas_dense_t * V, armas_conf_t * conf)
 {
-    armas_x_dense_t C1, C2;
-    if (armas_x_size(C) == 0) {
+    armas_dense_t C1, C2;
+    if (armas_size(C) == 0) {
         return 0;
     }
-    armas_x_submatrix(&C1, C, 1, 0, Y1->rows, C->cols);
-    armas_x_submatrix(&C2, C, 1 + Y1->cols, 0, Y2->rows, C->cols);
+    armas_submatrix(&C1, C, 1, 0, Y1->rows, C->cols);
+    armas_submatrix(&C2, C, 1 + Y1->cols, 0, Y2->rows, C->cols);
 
-    armas_x_update_qr_left(&C1, &C2, Y1, Y2, T, V, TRUE, conf);
+    armas_update_qr_left(&C1, &C2, Y1, Y2, T, V, TRUE, conf);
     return 0;
 }
 
 // compute: C*(I - Y*T*Y.T)
 static
-int update_hess_right_wy(armas_x_dense_t * C, armas_x_dense_t * Y1,
-                           armas_x_dense_t * Y2, armas_x_dense_t * T,
-                           armas_x_dense_t * V, armas_conf_t * conf)
+int update_hess_right_wy(armas_dense_t * C, armas_dense_t * Y1,
+                           armas_dense_t * Y2, armas_dense_t * T,
+                           armas_dense_t * V, armas_conf_t * conf)
 {
-    armas_x_dense_t C1, C2;
-    if (armas_x_size(C) == 0) {
+    armas_dense_t C1, C2;
+    if (armas_size(C) == 0) {
         return 0;
     }
-    armas_x_submatrix(&C1, C, 0, 1, C->rows, Y1->cols);
-    armas_x_submatrix(&C2, C, 0, 1 + Y1->cols, C->rows, Y2->rows);
+    armas_submatrix(&C1, C, 0, 1, C->rows, Y1->cols);
+    armas_submatrix(&C2, C, 0, 1 + Y1->cols, C->rows, Y2->rows);
 
-    armas_x_update_qr_right(&C1, &C2, Y1, Y2, T, V, FALSE, conf);
+    armas_update_qr_right(&C1, &C2, Y1, Y2, T, V, FALSE, conf);
     return 0;
 }
 
@@ -353,13 +353,13 @@ int update_hess_right_wy(armas_x_dense_t * C, armas_x_dense_t * Y1,
  *
  */
 static
-int blk_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * tau,
-                   armas_x_dense_t * T, armas_x_dense_t * V, int lb,
+int blk_hess_gqvdg(armas_dense_t * A, armas_dense_t * tau,
+                   armas_dense_t * T, armas_dense_t * V, int lb,
                    armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ATR, ABR, A00, A11, A12, A21, A22, A2;
-    armas_x_dense_t VT, VB, Y1, Y2, W0;
-    armas_x_dense_t tT, tB, t0, t1, t2, td;
+    armas_dense_t ATL, ATR, ABR, A00, A11, A12, A21, A22, A2;
+    armas_dense_t VT, VB, Y1, Y2, W0;
+    armas_dense_t tT, tB, t0, t1, t2, td;
     DTYPE beta;
 
     EMPTY(A12);
@@ -375,7 +375,7 @@ int blk_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * tau,
         &tT,
         &tB, /**/ tau, 0, ARMAS_PTOP);
 
-    armas_x_diag(&td, T, 0);
+    armas_diag(&td, T, 0);
     while (ABR.rows > lb + 1 && ABR.cols > lb) {
         mat_repartition_2x2to3x3(
             &ATL,
@@ -391,24 +391,24 @@ int blk_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * tau,
         // ---------------------------------------------------------------------
         unblk_build_hess_gqvdg(&ABR, T, &VB, conf);
         // t1 = diag(T)
-        armas_x_axpby(ZERO, &t1, ONE, &td, conf);
+        armas_axpby(ZERO, &t1, ONE, &td, conf);
 
-        armas_x_submatrix(&Y1, &ABR, 1, 0, A11.cols, A11.cols);
-        armas_x_submatrix(&Y2, &ABR, 1 + A11.cols, 0, A21.rows - 1, A11.cols);
+        armas_submatrix(&Y1, &ABR, 1, 0, A11.cols, A11.cols);
+        armas_submatrix(&Y2, &ABR, 1 + A11.cols, 0, A21.rows - 1, A11.cols);
 
         // [A01, A02] == ATR := ATR*(I - Y*T*Y.T);
         update_hess_right_wy(&ATR, &Y1, &Y2, T, &VT, conf);
         mat_merge2x1(&A2, &A12, &A22);
 
         // A2 := A2 - VB*T*A21.T
-        beta = armas_x_get(&A21, 0, -1);
-        armas_x_set(&A21, 0, -1, 1.0);
-        armas_x_mult_trm(&VB, ONE, T, ARMAS_UPPER | ARMAS_RIGHT, conf);
-        armas_x_mult(ONE, &A2, -ONE, &VB, &A21, ARMAS_TRANSB, conf);
-        armas_x_set(&A21, 0, -1, beta);
+        beta = armas_get(&A21, 0, -1);
+        armas_set(&A21, 0, -1, 1.0);
+        armas_mult_trm(&VB, ONE, T, ARMAS_UPPER | ARMAS_RIGHT, conf);
+        armas_mult(ONE, &A2, -ONE, &VB, &A21, ARMAS_TRANSB, conf);
+        armas_set(&A21, 0, -1, beta);
 
         // A2 := (I - Y*T*Y.T).T * A2
-        armas_x_submatrix(&W0, V, 0, 0, A2.cols, Y2.cols);
+        armas_submatrix(&W0, V, 0, 0, A2.cols, Y2.cols);
         update_hess_left_wy(&A2, &Y1, &Y2, T, &W0, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -421,7 +421,7 @@ int blk_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * tau,
 
     if (ABR.rows > 1) {
         mat_merge2x1(&A2, &ATR, &ABR);
-        armas_x_make(&W0, A->rows, 1, A->rows, armas_x_data(V));
+        armas_make(&W0, A->rows, 1, A->rows, armas_data(V));
         unblk_hess_gqvdg(&A2, &tB, &W0, ATR.rows, conf);
     }
     return 0;
@@ -430,11 +430,11 @@ int blk_hess_gqvdg(armas_x_dense_t * A, armas_x_dense_t * tau,
 /**
  * @brief Hessenberg reduction of general matrix.
  *
- * @see armas_x_hessreduce_w
+ * @see armas_hessreduce_w
  * @ingroup lapack
  */
-int armas_x_hessreduce(armas_x_dense_t * A,
-                       armas_x_dense_t * tau, armas_conf_t * conf)
+int armas_hessreduce(armas_dense_t * A,
+                       armas_dense_t * tau, armas_conf_t * conf)
 {
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
@@ -442,7 +442,7 @@ int armas_x_hessreduce(armas_x_dense_t * A,
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_hessreduce_w(A, tau, &wb, conf) < 0)
+    if (armas_hessreduce_w(A, tau, &wb, conf) < 0)
         return -1;
 
     wbs = &wb;
@@ -454,7 +454,7 @@ int armas_x_hessreduce(armas_x_dense_t * A,
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_hessreduce_w(A, tau, wbs, conf);
+    err = armas_hessreduce_w(A, tau, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }
@@ -487,11 +487,11 @@ int armas_x_hessreduce(armas_x_dense_t * A,
  * Compatible with lapack.DGEHRD.
  * @ingroup lapack
  */
-int armas_x_hessreduce_w(armas_x_dense_t * A,
-                         armas_x_dense_t * tau,
+int armas_hessreduce_w(armas_dense_t * A,
+                         armas_dense_t * tau,
                          armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t T, V;
+    armas_dense_t T, V;
     armas_env_t *env;
     size_t wsmin, wsz;
     int lb;
@@ -517,7 +517,7 @@ int armas_x_hessreduce_w(armas_x_dense_t * A,
         conf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
-    if (!armas_x_isvector(tau) || armas_x_size(tau) != A->rows - 1) {
+    if (!armas_isvector(tau) || armas_size(tau) != A->rows - 1) {
         conf->error = ARMAS_EINVAL;
         return -ARMAS_EINVAL;
     }
@@ -544,12 +544,12 @@ int armas_x_hessreduce_w(armas_x_dense_t * A,
 
 
     if (lb == 0 || A->cols <= lb) {
-        armas_x_make(&V, A->rows, 1, A->rows, buf);
+        armas_make(&V, A->rows, 1, A->rows, buf);
         unblk_hess_gqvdg(A, tau, &V, 0, conf);
     } else {
         // block reflector; temporary space, [n(A), lb] matrix
-        armas_x_make(&T, lb, lb, lb, buf);
-        armas_x_make(&V, A->rows, lb, A->rows, &buf[armas_x_size(&T)]);
+        armas_make(&T, lb, lb, lb, buf);
+        armas_make(&V, A->rows, lb, A->rows, &buf[armas_size(&T)]);
         blk_hess_gqvdg(A, tau, &T, &V, lb, conf);
     }
     armas_wsetpos(wb, wsz);

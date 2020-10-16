@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -11,17 +11,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_hessmult)  && defined(armas_x_hessmult_w)
+// this file provides following type dependent functions
+#if defined(armas_hessmult)  && defined(armas_hessmult_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_qrmult_w)
+#if defined(armas_qrmult_w)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -32,12 +32,12 @@
 /**
  * @brief Multiply with the orthogonal matrix Q of Hessenberg reduction.
  *
- * @see armas_x_hessmult_w
+ * @see armas_hessmult_w
  * @ingroup lapack
  */
-int armas_x_hessmult(armas_x_dense_t * C,
-                     const armas_x_dense_t * A,
-                     const armas_x_dense_t * tau,
+int armas_hessmult(armas_dense_t * C,
+                     const armas_dense_t * A,
+                     const armas_dense_t * tau,
                      int flags, armas_conf_t * conf)
 {
     int err;
@@ -46,7 +46,7 @@ int armas_x_hessmult(armas_x_dense_t * C,
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_hessmult_w(C, A, tau, flags, &wb, conf) < 0)
+    if (armas_hessmult_w(C, A, tau, flags, &wb, conf) < 0)
         return -1;
 
     wbs = &wb;
@@ -58,7 +58,7 @@ int armas_x_hessmult(armas_x_dense_t * C,
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_hessmult_w(C, A, tau, flags, wbs, conf);
+    err = armas_hessmult_w(C, A, tau, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 }
@@ -105,12 +105,12 @@ int armas_x_hessmult(armas_x_dense_t * C,
  *
  * @ingroup lapack
  */
-int armas_x_hessmult_w(armas_x_dense_t * C,
-                       const armas_x_dense_t * A,
-                       const armas_x_dense_t * tau,
+int armas_hessmult_w(armas_dense_t * C,
+                       const armas_dense_t * A,
+                       const armas_dense_t * tau,
                        int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
-    armas_x_dense_t Qh, Ch, tauh;
+    armas_dense_t Qh, Ch, tauh;
     if (!conf)
         conf = armas_conf_default();
 
@@ -119,18 +119,18 @@ int armas_x_hessmult_w(armas_x_dense_t * C,
         return -1;
     }
 
-    armas_x_submatrix(&Qh, A, 1, 0, A->rows - 1, A->cols - 1);
-    armas_x_submatrix(&tauh, tau, 0, 0, A->rows - 1, 1);
+    armas_submatrix(&Qh, A, 1, 0, A->rows - 1, A->cols - 1);
+    armas_submatrix(&tauh, tau, 0, 0, A->rows - 1, 1);
     if (flags & ARMAS_RIGHT) {
-        armas_x_submatrix(&Ch, C, 0, 1, C->rows, C->cols - 1);
+        armas_submatrix(&Ch, C, 0, 1, C->rows, C->cols - 1);
     } else {
-        armas_x_submatrix(&Ch, C, 1, 0, C->rows - 1, C->cols);
+        armas_submatrix(&Ch, C, 1, 0, C->rows - 1, C->cols);
     }
 
     if (wb && wb->bytes == 0) {
-        return armas_x_qrmult_w(&Ch, __nil, __nil, flags, wb, conf);
+        return armas_qrmult_w(&Ch, __nil, __nil, flags, wb, conf);
     }
-    return armas_x_qrmult_w(&Ch, &Qh, &tauh, flags, wb, conf);
+    return armas_qrmult_w(&Ch, &Qh, &tauh, flags, wb, conf);
 }
 #else
 #warning "Missing defines. No code."

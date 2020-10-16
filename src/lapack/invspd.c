@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,17 +9,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_cholinverse) && defined(armas_x_cholinverse_w)
+// this file provides following type dependent functions
+#if defined(armas_cholinverse) && defined(armas_cholinverse_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_blas)
+#if defined(armas_blas)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -32,10 +32,10 @@
 
 // symmetric positive definite matrix inverse
 static
-int unblk_invpsd_lower(armas_x_dense_t * A, armas_x_dense_t * W,
+int unblk_invpsd_lower(armas_dense_t * A, armas_dense_t * W,
                        armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a21, A22, l21;
+    armas_dense_t ATL, ABR, A00, a11, a21, A22, l21;
     int err = 0;
     DTYPE a11val, udot;
 
@@ -55,23 +55,23 @@ int unblk_invpsd_lower(armas_x_dense_t * A, armas_x_dense_t * W,
             __nil, &a21, &A22, /**/ A, 1, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------
         // inverse upper part; 
-        a11val = armas_x_get_unsafe(&a11, 0, 0);
+        a11val = armas_get_unsafe(&a11, 0, 0);
         if (a11val == ZERO) {
             conf->error = ARMAS_ESINGULAR;
             return -1;
         }
 
-        armas_x_submatrix(&l21, W, 0, 0, armas_x_size(&a21), 1);
-        armas_x_copy(&l21, &a21, conf);
+        armas_submatrix(&l21, W, 0, 0, armas_size(&a21), 1);
+        armas_copy(&l21, &a21, conf);
 
         // a21 = - A22*l21 / l11
-        armas_x_mvmult_sym(ZERO, &a21, -ONE / a11val, &A22, &l21,
+        armas_mvmult_sym(ZERO, &a21, -ONE / a11val, &A22, &l21,
                            ARMAS_LOWER, conf);
 
         // a11 = (u11.-1 - a21.T*l21)/l11 ; l11 = u11 = a11
-        udot = armas_x_dot(&a21, &l21, conf);
+        udot = armas_dot(&a21, &l21, conf);
         a11val = (ONE / a11val - udot) / a11val;
-        armas_x_set_unsafe(&a11, 0, 0, a11val);
+        armas_set_unsafe(&a11, 0, 0, a11val);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -97,10 +97,10 @@ int unblk_invpsd_lower(armas_x_dense_t * A, armas_x_dense_t * W,
  *               A21 = (-A22*L21)*L11.-1
  */
 static
-int blk_invpsd_lower(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
+int blk_invpsd_lower(armas_dense_t * A, armas_dense_t * W, int lb,
                      armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A11, A21, A22, L21, w2;
+    armas_dense_t ATL, ABR, A00, A11, A21, A22, L21, w2;
     int err = 0;
 
     EMPTY(A00);
@@ -118,20 +118,20 @@ int blk_invpsd_lower(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
             __nil, &A21, &A22, /**/ A, lb, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------
         // workspaces;
-        armas_x_make(&w2, lb, 1, lb, armas_x_data(W));
-        armas_x_make(&L21, A21.rows, A11.cols, A21.rows, &armas_x_data(W)[lb]);
-        armas_x_mcopy(&L21, &A21, 0, conf);
+        armas_make(&w2, lb, 1, lb, armas_data(W));
+        armas_make(&L21, A21.rows, A11.cols, A21.rows, &armas_data(W)[lb]);
+        armas_mcopy(&L21, &A21, 0, conf);
 
         // A21 = - A22*L21*L11.-1
-        armas_x_mult_sym(ZERO, &A21, -ONE, &A22, &L21, ARMAS_LOWER, conf);
-        armas_x_solve_trm(&A21, ONE, &A11, ARMAS_LOWER | ARMAS_RIGHT, conf);
+        armas_mult_sym(ZERO, &A21, -ONE, &A22, &L21, ARMAS_LOWER, conf);
+        armas_solve_trm(&A21, ONE, &A11, ARMAS_LOWER | ARMAS_RIGHT, conf);
 
         // A11*L11 + A21.T*L21 = L11.-T -> A11 = inv(A11) - A21.T*L21*L11.-1
-        armas_x_solve_trm(&L21, ONE, &A11, ARMAS_LOWER | ARMAS_RIGHT, conf);
+        armas_solve_trm(&L21, ONE, &A11, ARMAS_LOWER | ARMAS_RIGHT, conf);
         if (unblk_invpsd_lower(&A11, &w2, conf) < 0 && err == 0)
             err = -1;
         // rank update
-        armas_x_update_trm(ONE, &A11, -ONE, &A21, &L21,
+        armas_update_trm(ONE, &A11, -ONE, &A21, &L21,
                            ARMAS_TRANSA | ARMAS_LOWER, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -143,10 +143,10 @@ int blk_invpsd_lower(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
 
 
 static
-int unblk_invpsd_upper(armas_x_dense_t * A, armas_x_dense_t * W,
+int unblk_invpsd_upper(armas_dense_t * A, armas_dense_t * W,
                        armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, a11, a12, A22, u12;
+    armas_dense_t ATL, ABR, A00, a11, a12, A22, u12;
     int err = 0;
     DTYPE a11val, udot;
 
@@ -166,23 +166,23 @@ int unblk_invpsd_upper(armas_x_dense_t * A, armas_x_dense_t * W,
             __nil, __nil, &A22, /**/ A, 1, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------
         // inverse upper part; 
-        a11val = armas_x_get_unsafe(&a11, 0, 0);
+        a11val = armas_get_unsafe(&a11, 0, 0);
         if (a11val == ZERO) {
             conf->error = ARMAS_ESINGULAR;
             return -1;
         }
 
-        armas_x_submatrix(&u12, W, 0, 0, armas_x_size(&a12), 1);
-        armas_x_copy(&u12, &a12, conf);
+        armas_submatrix(&u12, W, 0, 0, armas_size(&a12), 1);
+        armas_copy(&u12, &a12, conf);
 
         // a12 = - A22.T*u12 / u11
-        armas_x_mvmult_sym(ZERO, &a12, -ONE / a11val, &A22, &u12,
+        armas_mvmult_sym(ZERO, &a12, -ONE / a11val, &A22, &u12,
                            ARMAS_UPPER | ARMAS_TRANSA, conf);
 
         // a11 = (u11.-1 - a12.T*u12)/l11 ; l11 = u11 = a11
-        udot = armas_x_dot(&a12, &u12, conf);
+        udot = armas_dot(&a12, &u12, conf);
         a11val = (ONE / a11val - udot) / a11val;
-        armas_x_set_unsafe(&a11, 0, 0, a11val);
+        armas_set_unsafe(&a11, 0, 0, a11val);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -208,10 +208,10 @@ int unblk_invpsd_upper(armas_x_dense_t * A, armas_x_dense_t * W,
  *               A12 = U11.-1*(-U12*A22)
  */
 static
-int blk_invpsd_upper(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
+int blk_invpsd_upper(armas_dense_t * A, armas_dense_t * W, int lb,
                      armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABR, A00, A11, A12, A22, U12, w2;
+    armas_dense_t ATL, ABR, A00, A11, A12, A22, U12, w2;
     int err = 0;
 
     EMPTY(A00);
@@ -229,20 +229,20 @@ int blk_invpsd_upper(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
             __nil, __nil, &A22, /**/ A, lb, ARMAS_PTOPLEFT);
         // ---------------------------------------------------------------------
         // workspaces;
-        armas_x_make(&w2, lb, 1, lb, armas_x_data(W));
-        armas_x_make(&U12, A11.rows, A12.cols, A11.rows, &armas_x_data(W)[lb]);
-        armas_x_mcopy(&U12, &A12, 0, conf);
+        armas_make(&w2, lb, 1, lb, armas_data(W));
+        armas_make(&U12, A11.rows, A12.cols, A11.rows, &armas_data(W)[lb]);
+        armas_mcopy(&U12, &A12, 0, conf);
 
         // A12 = - U11.-1*U12*A22
-        armas_x_mult_sym(ZERO, &A12, -ONE, &A22, &U12,
+        armas_mult_sym(ZERO, &A12, -ONE, &A22, &U12,
                          ARMAS_RIGHT | ARMAS_UPPER, conf);
-        armas_x_solve_trm(&A12, ONE, &A11, ARMAS_LEFT | ARMAS_UPPER, conf);
+        armas_solve_trm(&A12, ONE, &A11, ARMAS_LEFT | ARMAS_UPPER, conf);
 
         // A11 = inv(A11) - U11.-1*U12*A12.T
-        armas_x_solve_trm(&U12, ONE, &A11, ARMAS_LEFT | ARMAS_UPPER, conf);
+        armas_solve_trm(&U12, ONE, &A11, ARMAS_LEFT | ARMAS_UPPER, conf);
         if (unblk_invpsd_upper(&A11, &w2, conf) < 0 && err == 0)
             err = -1;
-        armas_x_update_trm(ONE, &A11, -ONE, &U12, &A12,
+        armas_update_trm(ONE, &A11, -ONE, &U12, &A12,
                            ARMAS_UPPER | ARMAS_TRANSB, conf);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -269,12 +269,12 @@ int blk_invpsd_upper(armas_x_dense_t * A, armas_x_dense_t * W, int lb,
  * \retval -1 Error, error code set in conf.error
  *
  */
-int armas_x_cholinverse_w(armas_x_dense_t * A,
+int armas_cholinverse_w(armas_dense_t * A,
                           int flags, armas_wbuf_t * wb, armas_conf_t * conf)
 {
     int lb, err = 0;
     size_t wsmin, wsz;
-    armas_x_dense_t Wt;
+    armas_dense_t Wt;
     armas_env_t *env;
 
     if (!conf)
@@ -315,7 +315,7 @@ int armas_x_cholinverse_w(armas_x_dense_t * A,
         }
     }
 
-    armas_x_make(&Wt, wsz, 1, wsz, (DTYPE *) armas_wptr(wb));
+    armas_make(&Wt, wsz, 1, wsz, (DTYPE *) armas_wptr(wb));
     wsz = armas_wpos(wb);
 
     if (lb == 0 || A->rows <= lb) {
@@ -332,14 +332,14 @@ int armas_x_cholinverse_w(armas_x_dense_t * A,
     return err;
 }
 
-int armas_x_cholinverse(armas_x_dense_t * A, int flags, armas_conf_t * conf)
+int armas_cholinverse(armas_dense_t * A, int flags, armas_conf_t * conf)
 {
     int err;
     armas_wbuf_t *wbs, wb = ARMAS_WBNULL;
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_cholinverse_w(A, flags, &wb, conf) < 0)
+    if (armas_cholinverse_w(A, flags, &wb, conf) < 0)
         return -1;
 
     wbs = &wb;
@@ -351,7 +351,7 @@ int armas_x_cholinverse(armas_x_dense_t * A, int flags, armas_conf_t * conf)
     } else
         wbs = ARMAS_NOWORK;
 
-    err = armas_x_cholinverse_w(A, flags, wbs, conf);
+    err = armas_cholinverse_w(A, flags, wbs, conf);
     armas_wrelease(&wb);
     return err;
 

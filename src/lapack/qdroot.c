@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,15 +12,15 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_qdroots) && defined(armas_x_discriminant)
+// this file provides following type dependent functions
+#if defined(armas_qdroots) && defined(armas_discriminant)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 //! \cond
@@ -133,7 +133,7 @@ DTYPE discriminant(DTYPE a, DTYPE b, DTYPE c)
  * For details see
  *   W. Kahan, 2004
  */
-int armas_x_qdroots(DTYPE * x1, DTYPE * x2, DTYPE a, DTYPE b, DTYPE c)
+int armas_qdroots(DTYPE * x1, DTYPE * x2, DTYPE a, DTYPE b, DTYPE c)
 {
     DTYPE d, r, s, signb;
     d = discriminant(a, b, c);
@@ -162,7 +162,7 @@ int armas_x_qdroots(DTYPE * x1, DTYPE * x2, DTYPE a, DTYPE b, DTYPE c)
  * For details see
  *   W. Kahan, On the Cost of Floating-Point Computation Without Extra-Precise Arithmetic, 2004
  */
-void armas_x_discriminant(DTYPE * dval, DTYPE a, DTYPE b, DTYPE c)
+void armas_discriminant(DTYPE * dval, DTYPE a, DTYPE b, DTYPE c)
 {
     *dval = discriminant(a, b, c);
 }

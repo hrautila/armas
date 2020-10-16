@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,17 +12,17 @@
 #include "dlpack.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_mult_diag) && defined(armas_x_solve_diag)
+// this file provides following type dependent functions
+#if defined(armas_mult_diag) && defined(armas_solve_diag)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_scale)
+#if defined(armas_scale)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -48,63 +48,63 @@
  *
  * @ingroup lapack
  */
-int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
-                      const armas_x_dense_t * D, int flags, armas_conf_t * conf)
+int armas_mult_diag(armas_dense_t * A, DTYPE alpha,
+                      const armas_dense_t * D, int flags, armas_conf_t * conf)
 {
-    armas_x_dense_t c, d0;
-    const armas_x_dense_t *d;
+    armas_dense_t c, d0;
+    const armas_dense_t *d;
     int k;
 
     if (!conf)
         conf = armas_conf_default();
 
     d = D;
-    if (!armas_x_isvector(D)) {
-        armas_x_diag(&d0, D, 0);
+    if (!armas_isvector(D)) {
+        armas_diag(&d0, D, 0);
         d = &d0;
     }
 
-    if (armas_x_isvector(A)) {
-        if (armas_x_size(d) != armas_x_size(A)) {
+    if (armas_isvector(A)) {
+        if (armas_size(d) != armas_size(A)) {
             conf->error = ARMAS_ESIZE;
             return -ARMAS_ESIZE;
         }
-        if (armas_x_size(A) == 0)
+        if (armas_size(A) == 0)
             return 0;
-        for (k = 0; k < armas_x_size(d); k++) {
+        for (k = 0; k < armas_size(d); k++) {
             DTYPE aval =
-                armas_x_get_at_unsafe(A, k) * armas_x_get_at_unsafe(d, k);
-            armas_x_set_at_unsafe(A, k, alpha * aval);
+                armas_get_at_unsafe(A, k) * armas_get_at_unsafe(d, k);
+            armas_set_at_unsafe(A, k, alpha * aval);
         }
         return 0;
     }
 
     switch (flags & (ARMAS_LEFT | ARMAS_RIGHT)) {
     case ARMAS_RIGHT:
-        if (armas_x_size(d) != A->cols) {
+        if (armas_size(d) != A->cols) {
             conf->error = ARMAS_ESIZE;
             return -ARMAS_ESIZE;
         }
-        if (armas_x_size(A) == 0)
+        if (armas_size(A) == 0)
             return 0;
         // scale columns; 
-        for (k = 0; k < armas_x_size(d); k++) {
-            armas_x_column(&c, A, k);
-            armas_x_scale(&c, alpha * armas_x_get_at_unsafe(d, k), conf);
+        for (k = 0; k < armas_size(d); k++) {
+            armas_column(&c, A, k);
+            armas_scale(&c, alpha * armas_get_at_unsafe(d, k), conf);
         }
         break;
     case ARMAS_LEFT:
     default:
-        if (armas_x_size(d) != A->rows) {
+        if (armas_size(d) != A->rows) {
             conf->error = ARMAS_ESIZE;
             return -ARMAS_ESIZE;
         }
-        if (armas_x_size(A) == 0)
+        if (armas_size(A) == 0)
             return 0;
         // scale rows; for each column element-wise multiply of D element
-        for (k = 0; k < armas_x_size(d); k++) {
-            armas_x_row(&c, A, k);
-            armas_x_scale(&c, alpha * armas_x_get_at_unsafe(d, k), conf);
+        for (k = 0; k < armas_size(d); k++) {
+            armas_row(&c, A, k);
+            armas_scale(&c, alpha * armas_get_at_unsafe(d, k), conf);
         }
         break;
     }
@@ -130,66 +130,66 @@ int armas_x_mult_diag(armas_x_dense_t * A, DTYPE alpha,
  *
  * @ingroup lapack
  */
-int armas_x_solve_diag(armas_x_dense_t * A, DTYPE alpha,
-                       const armas_x_dense_t * D, int flags,
+int armas_solve_diag(armas_dense_t * A, DTYPE alpha,
+                       const armas_dense_t * D, int flags,
                        armas_conf_t * conf)
 {
-    armas_x_dense_t c, d0;
-    const armas_x_dense_t *d;
+    armas_dense_t c, d0;
+    const armas_dense_t *d;
     int k;
 
     if (!conf)
         conf = armas_conf_default();
 
     d = D;
-    if (!armas_x_isvector(D)) {
-        armas_x_diag(&d0, D, 0);
+    if (!armas_isvector(D)) {
+        armas_diag(&d0, D, 0);
         d = &d0;
     }
 
-    if (armas_x_isvector(A)) {
-        if (armas_x_size(d) != armas_x_size(A)) {
+    if (armas_isvector(A)) {
+        if (armas_size(d) != armas_size(A)) {
             conf->error = ARMAS_ESIZE;
             return -ARMAS_ESIZE;
         }
-        if (armas_x_size(A) == 0)
+        if (armas_size(A) == 0)
             return 0;
-        for (k = 0; k < armas_x_size(d); k++) {
+        for (k = 0; k < armas_size(d); k++) {
             DTYPE aval =
-                armas_x_get_at_unsafe(A, k) / armas_x_get_at_unsafe(d, k);
-            armas_x_set_at_unsafe(A, k, alpha * aval);
+                armas_get_at_unsafe(A, k) / armas_get_at_unsafe(d, k);
+            armas_set_at_unsafe(A, k, alpha * aval);
         }
         return 0;
     }
 
     switch (flags & (ARMAS_LEFT | ARMAS_RIGHT)) {
     case ARMAS_RIGHT:
-        if (armas_x_size(d) != A->cols) {
+        if (armas_size(d) != A->cols) {
             conf->error = ARMAS_ESIZE;
             return -ARMAS_ESIZE;
         }
-        if (armas_x_size(A) == 0)
+        if (armas_size(A) == 0)
             return 0;
         // scale columns; 
-        for (k = 0; k < armas_x_size(d); k++) {
-            DTYPE aval = alpha * armas_x_get_at_unsafe(d, k);
-            armas_x_column(&c, A, k);
-            armas_x_scale(&c, ONE/aval, conf);
+        for (k = 0; k < armas_size(d); k++) {
+            DTYPE aval = alpha * armas_get_at_unsafe(d, k);
+            armas_column(&c, A, k);
+            armas_scale(&c, ONE/aval, conf);
         }
         break;
     case ARMAS_LEFT:
     default:
-        if (armas_x_size(d) != A->rows) {
+        if (armas_size(d) != A->rows) {
             conf->error = ARMAS_ESIZE;
             return -ARMAS_ESIZE;
         }
-        if (armas_x_size(A) == 0)
+        if (armas_size(A) == 0)
             return 0;
         // scale rows; for each column element-wise multiply of D element
-        for (k = 0; k < armas_x_size(d); k++) {
-            DTYPE aval = alpha * armas_x_get_at_unsafe(d, k);
-            armas_x_row(&c, A, k);
-            armas_x_scale(&c, ONE/aval, conf);
+        for (k = 0; k < armas_size(d); k++) {
+            DTYPE aval = alpha * armas_get_at_unsafe(d, k);
+            armas_row(&c, A, k);
+            armas_scale(&c, ONE/aval, conf);
         }
         break;
     }

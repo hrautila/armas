@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2016-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,17 +12,17 @@
 #include "dlpack.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_cholupdate)
+// this file provides following type dependent functions
+#if defined(armas_cholupdate)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_blas) && defined(armas_x_gvrot_vec)
+#if defined(armas_blas) && defined(armas_gvrot_vec)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -40,11 +40,11 @@
  *                        (x^T)
  */
 static
-int unblk_cholupdate_lower(armas_x_dense_t * A, armas_x_dense_t * X,
+int unblk_cholupdate_lower(armas_dense_t * A, armas_dense_t * X,
                            armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABL, ABR, A00, a11, a21, A22;
-    armas_x_dense_t XL, XR, X0, x1, X2;
+    armas_dense_t ATL, ABL, ABR, A00, a11, a21, A22;
+    armas_dense_t XL, XR, X0, x1, X2;
     DTYPE c, s, r, a11val, x1val;
 
     EMPTY(x1);
@@ -68,12 +68,12 @@ int unblk_cholupdate_lower(armas_x_dense_t * A, armas_x_dense_t * X,
         mat_repartition_1x2to1x3(
             &XL, /**/ &X0, &x1, &X2, /**/ X, 1, ARMAS_PRIGHT);
         // ---------------------------------------------------------------------
-        a11val = armas_x_get_unsafe(&a11, 0, 0);
-        x1val = armas_x_get_unsafe(&x1, 0, 0);
-        armas_x_gvcompute(&c, &s, &r, a11val, x1val);
+        a11val = armas_get_unsafe(&a11, 0, 0);
+        x1val = armas_get_unsafe(&x1, 0, 0);
+        armas_gvcompute(&c, &s, &r, a11val, x1val);
 
-        armas_x_set_unsafe(&a11, 0, 0, r);
-        armas_x_gvrot_vec(&a21, &X2, c, s);
+        armas_set_unsafe(&a11, 0, 0, r);
+        armas_gvrot_vec(&a21, &X2, c, s);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -86,11 +86,11 @@ int unblk_cholupdate_lower(armas_x_dense_t * A, armas_x_dense_t * X,
 
 
 static
-int unblk_cholupdate_upper(armas_x_dense_t * A, armas_x_dense_t * X,
+int unblk_cholupdate_upper(armas_dense_t * A, armas_dense_t * X,
                            armas_conf_t * conf)
 {
-    armas_x_dense_t ATL, ABL, ABR, A00, a11, a12, A22;
-    armas_x_dense_t XL, XR, X0, x1, X2;
+    armas_dense_t ATL, ABL, ABR, A00, a11, a12, A22;
+    armas_dense_t XL, XR, X0, x1, X2;
     DTYPE c, s, r, a11val, x1val;
 
     EMPTY(x1);
@@ -114,12 +114,12 @@ int unblk_cholupdate_upper(armas_x_dense_t * A, armas_x_dense_t * X,
         mat_repartition_1x2to1x3(
             &XL, /**/ &X0, &x1, &X2, /**/ X, 1, ARMAS_PRIGHT);
         // ---------------------------------------------------------------------
-        a11val = armas_x_get_unsafe(&a11, 0, 0);
-        x1val = armas_x_get_unsafe(&x1, 0, 0);
-        armas_x_gvcompute(&c, &s, &r, a11val, x1val);
+        a11val = armas_get_unsafe(&a11, 0, 0);
+        x1val = armas_get_unsafe(&x1, 0, 0);
+        armas_gvcompute(&c, &s, &r, a11val, x1val);
 
-        armas_x_set_unsafe(&a11, 0, 0, r);
-        armas_x_gvrot_vec(&a12, &X2, c, s);
+        armas_set_unsafe(&a11, 0, 0, r);
+        armas_gvrot_vec(&a12, &X2, c, s);
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &ATL, __nil,
@@ -150,22 +150,22 @@ int unblk_cholupdate_upper(armas_x_dense_t * A, armas_x_dense_t * X,
  * @retval <0 Failure
  * @ingroup lapack
  */
-int armas_x_cholupdate(armas_x_dense_t * A, armas_x_dense_t * X, int flags,
+int armas_cholupdate(armas_dense_t * A, armas_dense_t * X, int flags,
                        armas_conf_t * conf)
 {
-    armas_x_dense_t Xrow;
+    armas_dense_t Xrow;
 
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_size(A) == 0 || armas_x_size(X) == 0)
+    if (armas_size(A) == 0 || armas_size(X) == 0)
         return 0;
 
     // private functions expect row vector
     if (X->cols == 1) {
-        armas_x_col_as_row(&Xrow, X);
+        armas_col_as_row(&Xrow, X);
     } else {
-        armas_x_make(&Xrow, X->rows, X->cols, X->step, armas_x_data(X));
+        armas_make(&Xrow, X->rows, X->cols, X->step, armas_data(X));
     }
 
     if (flags & ARMAS_UPPER) {
