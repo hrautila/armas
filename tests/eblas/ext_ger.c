@@ -21,29 +21,29 @@
  */
 int test_ext(int M, int N, int verbose, DTYPE d, armas_conf_t *cf)
 {
-    armas_d_dense_t X, Y, A, A0;
+    armas_dense_t X, Y, A, A0;
     DTYPE n0, n1, alpha, beta;
     // EPS defined in lapack style as largest number with 1+eps == 1
     DTYPE ulp = 2.0*EPS;
     int ok, fails = 0;
 
-    armas_d_init(&A, M, N);
-    armas_d_init(&A0, M, N);
-    armas_d_init(&X, M, 1);
-    armas_d_init(&Y, N, 1);
+    armas_init(&A, M, N);
+    armas_init(&A0, M, N);
+    armas_init(&X, M, 1);
+    armas_init(&Y, N, 1);
 
     for (int i = 0; i < M; i++) {
-        armas_d_set_at(&X, i, ONE + ulp);
+        armas_set_at(&X, i, ONE + ulp);
         for (int j = 0; j < N; j++) {
-            armas_d_set(&A0, i, j, d);
-            armas_d_set(&A,  i, j, d/SQRT(ulp));
-            armas_d_set_at(&Y, j, SQRT(d/ulp));
+            armas_set(&A0, i, j, d);
+            armas_set(&A,  i, j, d/SQRT(ulp));
+            armas_set_at(&Y, j, SQRT(d/ulp));
         }
     }
     alpha = - ONE/SQRT(ulp);
     beta = SQRT(d/ulp);
 
-    armas_x_ext_mvupdate(alpha, &A, beta, &X, &Y, cf);
+    armas_ext_mvupdate(alpha, &A, beta, &X, &Y, cf);
     if (verbose > 2) {
         MAT_PRINT("A", &A);
     }
@@ -57,10 +57,10 @@ int test_ext(int M, int N, int verbose, DTYPE d, armas_conf_t *cf)
     if (verbose > 1) {
         for (int i = 0; i < M; i++) {
             for (int j = 0; j < N; j++) {
-                armas_d_set(&A,  i, j, d/SQRT(ulp));
+                armas_set(&A,  i, j, d/SQRT(ulp));
             }
         }
-        armas_x_mvupdate(alpha, &A, beta, &X, &Y, cf);
+        armas_mvupdate(alpha, &A, beta, &X, &Y, cf);
         if (verbose > 2) {
             MAT_PRINT("A", &A);
         }

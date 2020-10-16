@@ -31,27 +31,27 @@ DTYPE constant(int i, int j)
 int test_left_right(int N, int verbose, int unit)
 {
     int ok;
-    armas_x_dense_t A, B, Bt;
+    armas_dense_t A, B, Bt;
     DTYPE n0, n1;
     armas_conf_t cf = *armas_conf_default();
     armas_ac_handle_t ac;
 
-    armas_x_init(&A, N, N);
-    armas_x_init(&B, N, N);
-    armas_x_init(&Bt, N, N);
+    armas_init(&A, N, N);
+    armas_init(&B, N, N);
+    armas_init(&Bt, N, N);
     armas_ac_init(&ac, ARMAS_AC_THREADED);
     cf.accel = ac;
 
     printf("** trsm: left-and-right, %s\n", unit ? "unit diagonal" : "");
 
-    armas_x_set_values(&A, one, ARMAS_SYMM);
-    armas_x_set_values(&B, one, 0);
-    armas_x_mult_trm(&B, 0.5, &A, ARMAS_UPPER, 0);
-    armas_x_mcopy(&Bt, &B, ARMAS_TRANS, &cf);
+    armas_set_values(&A, one, ARMAS_SYMM);
+    armas_set_values(&B, one, 0);
+    armas_mult_trm(&B, 0.5, &A, ARMAS_UPPER, 0);
+    armas_mcopy(&Bt, &B, ARMAS_TRANS, &cf);
 
     // ||k*A.-1*B + (B.T*-k*A.-T).T|| ~ eps
-    armas_x_solve_trm(&B, 2.0, &A, ARMAS_LEFT | ARMAS_UPPER, &cf);
-    armas_x_solve_trm(&Bt, 2.0, &A, ARMAS_RIGHT | ARMAS_UPPER | ARMAS_TRANS, &cf);
+    armas_solve_trm(&B, 2.0, &A, ARMAS_LEFT | ARMAS_UPPER, &cf);
+    armas_solve_trm(&Bt, 2.0, &A, ARMAS_RIGHT | ARMAS_UPPER | ARMAS_TRANS, &cf);
     n0 = rel_error(&n1, &B, &Bt, ARMAS_NORM_INF, ARMAS_TRANS, &cf);
 
     ok = isOK(n0, N) || n0 == 0.0;
@@ -59,9 +59,9 @@ int test_left_right(int N, int verbose, int unit)
     printf("    || rel error || : %e [%d]\n", n0, ndigits(n0));
 
     armas_ac_release(ac);
-    armas_x_release(&A);
-    armas_x_release(&B);
-    armas_x_release(&Bt);
+    armas_release(&A);
+    armas_release(&B);
+    armas_release(&Bt);
     return 1 - ok;
 }
 
@@ -72,27 +72,27 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
     int ok, fails = 0;
     armas_ac_handle_t ac;
 
-    armas_x_init(&Y, N, K);
-    armas_x_init(&X0, N, K);
-    armas_x_init(&X, N, K);
-    armas_x_init(&A, N, N);
+    armas_init(&Y, N, K);
+    armas_init(&X0, N, K);
+    armas_init(&X, N, K);
+    armas_init(&A, N, N);
     armas_ac_init(&ac, ARMAS_AC_THREADED);
     cf->accel = ac;
 
-    armas_x_set_values(&X0, unitrand, ARMAS_NULL);
-    armas_x_set_values(&X, zero, ARMAS_NULL);
-    armas_x_set_values(&A, one, ARMAS_SYMM);
+    armas_set_values(&X0, unitrand, ARMAS_NULL);
+    armas_set_values(&X, zero, ARMAS_NULL);
+    armas_set_values(&A, one, ARMAS_SYMM);
     if (unit) {
         for (int i = 0; i < N; i++) {
-            armas_x_set(&A, i, i, 1.0);
+            armas_set(&A, i, i, 1.0);
         }
     }
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     printf("** trsm: left, %s\n", unit ? "unit diagonal" : "");
     // upper
-    armas_x_mult_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_UPPER | unit, cf);
-    armas_x_solve_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_UPPER | unit, cf);
+    armas_mult_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_UPPER | unit, cf);
+    armas_solve_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_UPPER | unit, cf);
 
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_INF, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, 10 * N) ? 1 : 0;
@@ -102,11 +102,11 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // upper,trans
-    armas_x_mult_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_UPPER | ARMAS_TRANSA | unit, cf);
-    armas_x_solve_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_UPPER | ARMAS_TRANSA | unit, cf);
+    armas_mult_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_UPPER | ARMAS_TRANSA | unit, cf);
+    armas_solve_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_UPPER | ARMAS_TRANSA | unit, cf);
 
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_INF, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -117,11 +117,11 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // lower
-    armas_x_mult_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_LOWER | unit, cf);
-    armas_x_solve_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_LOWER | unit, cf);
+    armas_mult_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_LOWER | unit, cf);
+    armas_solve_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_LOWER | unit, cf);
 
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_INF, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -131,11 +131,11 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // lower,trans
-    armas_x_mult_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_LOWER | ARMAS_TRANSA | unit, cf);
-    armas_x_solve_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_LOWER | ARMAS_TRANSA | unit, cf);
+    armas_mult_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_LOWER | ARMAS_TRANSA | unit, cf);
+    armas_solve_trm(&X, 1.0, &A, ARMAS_LEFT | ARMAS_LOWER | ARMAS_TRANSA | unit, cf);
 
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_INF, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -146,10 +146,10 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     armas_ac_release(ac);
-    armas_x_release(&A);
-    armas_x_release(&X);
-    armas_x_release(&Y);
-    armas_x_release(&X0);
+    armas_release(&A);
+    armas_release(&X);
+    armas_release(&Y);
+    armas_release(&X0);
     return fails;
 }
 
@@ -160,28 +160,28 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     int ok, fails = 0;
     armas_ac_handle_t ac;
 
-    armas_x_init(&Y, K, N);
-    armas_x_init(&X0, K, N);
-    armas_x_init(&X, K, N);
-    armas_x_init(&A, N, N);
-    armas_x_init(&At, N, N);
+    armas_init(&Y, K, N);
+    armas_init(&X0, K, N);
+    armas_init(&X, K, N);
+    armas_init(&A, N, N);
+    armas_init(&At, N, N);
     armas_ac_init(&ac, ARMAS_AC_THREADED);
     cf->accel = ac;
 
-    armas_x_set_values(&X0, unitrand, ARMAS_NULL);
-    armas_x_set_values(&X, zero, ARMAS_NULL);
-    armas_x_set_values(&A, one, ARMAS_SYMM);
+    armas_set_values(&X0, unitrand, ARMAS_NULL);
+    armas_set_values(&X, zero, ARMAS_NULL);
+    armas_set_values(&A, one, ARMAS_SYMM);
     if (unit) {
         for (int i = 0; i < N; i++) {
-            armas_x_set(&A, i, i, 1.0);
+            armas_set(&A, i, i, 1.0);
         }
     }
 
     printf("** trsm: right, %s\n", unit ? "unit diagonal" : "");
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
     // upper
-    armas_x_mult_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_UPPER | unit, cf);
-    armas_x_solve_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_UPPER | unit, cf);
+    armas_mult_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_UPPER | unit, cf);
+    armas_solve_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_UPPER | unit, cf);
 
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_INF, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -191,11 +191,11 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // upper,trans
-    armas_x_mult_trm( &X, 1.0, &A, ARMAS_RIGHT | ARMAS_UPPER | ARMAS_TRANSA | unit, cf);
-    armas_x_solve_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_UPPER | ARMAS_TRANSA | unit, cf);
+    armas_mult_trm( &X, 1.0, &A, ARMAS_RIGHT | ARMAS_UPPER | ARMAS_TRANSA | unit, cf);
+    armas_solve_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_UPPER | ARMAS_TRANSA | unit, cf);
 
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_INF, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -206,11 +206,11 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // lower
-    armas_x_mult_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_LOWER | unit, cf);
-    armas_x_solve_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_LOWER | unit, cf);
+    armas_mult_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_LOWER | unit, cf);
+    armas_solve_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_LOWER | unit, cf);
 
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_INF, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -220,11 +220,11 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // lower,trans
-    armas_x_mult_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_LOWER | ARMAS_TRANSA | unit, cf);
-    armas_x_solve_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_LOWER | ARMAS_TRANSA | unit, cf);
+    armas_mult_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_LOWER | ARMAS_TRANSA | unit, cf);
+    armas_solve_trm(&X, 1.0, &A, ARMAS_RIGHT | ARMAS_LOWER | ARMAS_TRANSA | unit, cf);
 
     n0 = rel_error(&n1, &X, &X0, ARMAS_NORM_INF, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -236,11 +236,11 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     armas_ac_release(ac);
-    armas_x_release(&A);
-    armas_x_release(&At);
-    armas_x_release(&X);
-    armas_x_release(&X0);
-    armas_x_release(&Y);
+    armas_release(&A);
+    armas_release(&At);
+    armas_release(&X);
+    armas_release(&X0);
+    armas_release(&Y);
 
     return fails;
 }

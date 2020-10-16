@@ -27,27 +27,27 @@
 
 int test_std(int M, int N, int K, int verbose, armas_conf_t *cf)
 {
-    armas_x_dense_t A, B, C, Ct, T;
+    armas_dense_t A, B, C, Ct, T;
     int ok, fails = 0;
     DTYPE n0, n1;
 
-    armas_x_init(&C, M, N);
-    armas_x_init(&Ct, N, M);
-    armas_x_init(&T, M, N);
-    armas_x_set_values(&C, zero, 0);
-    armas_x_set_values(&Ct, zero, 0);
+    armas_init(&C, M, N);
+    armas_init(&Ct, N, M);
+    armas_init(&T, M, N);
+    armas_set_values(&C, zero, 0);
+    armas_set_values(&Ct, zero, 0);
 
     // test 1: M != N != K
-    armas_x_init(&A, M, K);
-    armas_x_init(&B, K, N);
-    armas_x_set_values(&A, unitrand, 0);
-    armas_x_set_values(&B, unitrand, 0);
+    armas_init(&A, M, K);
+    armas_init(&B, K, N);
+    armas_set_values(&A, unitrand, 0);
+    armas_set_values(&B, unitrand, 0);
 
     // C = A*B; C.T = B.T*A.T
-    armas_x_mult(0.0, &C, 1.0, &A, &B, 0, cf);
-    armas_x_mult(0.0, &Ct,1.0, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB, cf);
+    armas_mult(0.0, &C, 1.0, &A, &B, 0, cf);
+    armas_mult(0.0, &Ct,1.0, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB, cf);
 
-    armas_x_mcopy(&T, &Ct, ARMAS_TRANS, cf);
+    armas_mcopy(&T, &Ct, ARMAS_TRANS, cf);
 
     n0 = rel_error(&n1, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, cf);
 
@@ -60,17 +60,17 @@ int test_std(int M, int N, int K, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     // test 2: M != N == K
-    armas_x_set_values(&Ct, zero, 0);
-    armas_x_release(&A);
-    armas_x_release(&B);
-    armas_x_init(&A, M, N);
-    armas_x_init(&B, N, N);
-    armas_x_set_values(&A, unitrand, 0);
-    armas_x_set_values(&B, unitrand, 0);
+    armas_set_values(&Ct, zero, 0);
+    armas_release(&A);
+    armas_release(&B);
+    armas_init(&A, M, N);
+    armas_init(&B, N, N);
+    armas_set_values(&A, unitrand, 0);
+    armas_set_values(&B, unitrand, 0);
     // C = A*B.T; Ct = B*A.T
-    armas_x_mult(0.0, &C, 1.0, &A, &B, ARMAS_TRANSB, cf);
-    armas_x_mult(0.0, &Ct, 1.0, &B, &A, ARMAS_TRANSB, cf);
-    armas_x_mcopy(&T, &Ct, ARMAS_TRANS, cf);
+    armas_mult(0.0, &C, 1.0, &A, &B, ARMAS_TRANSB, cf);
+    armas_mult(0.0, &Ct, 1.0, &B, &A, ARMAS_TRANSB, cf);
+    armas_mcopy(&T, &Ct, ARMAS_TRANS, cf);
 
     n0 = rel_error((DTYPE *)0, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, cf);
 
@@ -82,17 +82,17 @@ int test_std(int M, int N, int K, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     // test 3: M == K != N
-    armas_x_set_values(&Ct, zero, ARMAS_NONE);
-    armas_x_release(&A);
-    armas_x_release(&B);
-    armas_x_init(&A, M, M);
-    armas_x_init(&B, M, N);
-    armas_x_set_values(&A, unitrand, ARMAS_NONE);
-    armas_x_set_values(&B, unitrand, ARMAS_NONE);
+    armas_set_values(&Ct, zero, ARMAS_NONE);
+    armas_release(&A);
+    armas_release(&B);
+    armas_init(&A, M, M);
+    armas_init(&B, M, N);
+    armas_set_values(&A, unitrand, ARMAS_NONE);
+    armas_set_values(&B, unitrand, ARMAS_NONE);
     // C = A.T*B; Ct = B.T*A
-    armas_x_mult(0.0, &C, 1.0, &A, &B, ARMAS_TRANSA, cf);
-    armas_x_mult(0.0, &Ct,1.0, &B, &A, ARMAS_TRANSA, cf);
-    armas_x_mcopy(&T, &Ct, ARMAS_TRANS, cf);
+    armas_mult(0.0, &C, 1.0, &A, &B, ARMAS_TRANSA, cf);
+    armas_mult(0.0, &Ct,1.0, &B, &A, ARMAS_TRANSA, cf);
+    armas_mcopy(&T, &Ct, ARMAS_TRANS, cf);
 
     n0 = rel_error(&n1, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, cf);
 
@@ -104,16 +104,16 @@ int test_std(int M, int N, int K, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     // test 1: M != N != K
-    armas_x_init(&A, M, K);
-    armas_x_init(&B, K, N);
-    armas_x_set_values(&A, unitrand, ARMAS_NONE);
-    armas_x_set_values(&B, unitrand, ARMAS_NONE);
+    armas_init(&A, M, K);
+    armas_init(&B, K, N);
+    armas_set_values(&A, unitrand, ARMAS_NONE);
+    armas_set_values(&B, unitrand, ARMAS_NONE);
 
     // C = A*B; C.T = B.T*A.T
-    armas_x_mult(0.0, &C, 1.0, &A, &B, 0, cf);
-    //armas_x_mscale(&A, -1.0, 0, cf);
-    armas_x_mult(0.0, &Ct, 1.0, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB/*|ARMAS_ABSB*/, cf);
-    armas_x_mcopy(&T, &Ct, ARMAS_TRANS, cf);
+    armas_mult(0.0, &C, 1.0, &A, &B, 0, cf);
+    //armas_mscale(&A, -1.0, 0, cf);
+    armas_mult(0.0, &Ct, 1.0, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB/*|ARMAS_ABSB*/, cf);
+    armas_mcopy(&T, &Ct, ARMAS_TRANS, cf);
 
     n0 = rel_error(&n1, &T, &C, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;

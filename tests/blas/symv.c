@@ -8,25 +8,25 @@
 
 int test_std(int N, int verbose, int flags, armas_conf_t *cf)
 {
-    armas_x_dense_t X, Y0, A0, tmp;
+    armas_dense_t X, Y0, A0, tmp;
     const char *uplo = (flags & ARMAS_LOWER) ? "lower" : "upper";
     DTYPE nrm_y, nrm_z;
     int ok;
 
-    armas_x_init(&Y0, N, 1);
-    armas_x_init(&X, N, 1);
-    armas_x_init(&A0, N, N);
+    armas_init(&Y0, N, 1);
+    armas_init(&X, N, 1);
+    armas_init(&A0, N, N);
 
-    armas_x_set_values(&Y0, zero, ARMAS_NULL);
-    armas_x_set_values(&X, unitrand, ARMAS_NULL);
-    armas_x_set_values(&A0, unitrand, ARMAS_SYMM);
+    armas_set_values(&Y0, zero, ARMAS_NULL);
+    armas_set_values(&X, unitrand, ARMAS_NULL);
+    armas_set_values(&A0, unitrand, ARMAS_SYMM);
 
     // Y = A*X
-    armas_x_mvmult_sym(0.0, &Y0, 1.0, &A0, &X, flags, cf);
-    nrm_y = armas_x_nrm2(&Y0, cf);
+    armas_mvmult_sym(0.0, &Y0, 1.0, &A0, &X, flags, cf);
+    nrm_y = armas_nrm2(&Y0, cf);
     // Y = Y - A*X
-    armas_x_mvmult(1.0, &Y0, -1.0, &A0, &X, 0, cf);
-    nrm_z = armas_x_nrm2(&Y0, cf);
+    armas_mvmult(1.0, &Y0, -1.0, &A0, &X, 0, cf);
+    nrm_z = armas_nrm2(&Y0, cf);
     ok = nrm_z == 0.0 || isOK(nrm_z/nrm_y, N) ? 1 : 0;
     printf("%6s : %s.symv(A, X) == %s(gemv(A, X))\n", PASS(ok), uplo, uplo);
     if (verbose > 0) {

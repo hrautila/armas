@@ -8,26 +8,26 @@
 
 int test_ext(int N, int verbose, armas_conf_t *cf)
 {
-    armas_d_dense_t X, Y;
+    armas_dense_t X, Y;
     DTYPE n0, n1, e1;
     int ok, fails = 0;
 
-    armas_d_init(&Y, N, 1);
-    armas_d_init(&X, N, 1);
+    armas_init(&Y, N, 1);
+    armas_init(&X, N, 1);
     for (int i = 0; i < N; ++i) {
-        armas_d_set_at(&X, i, EPS);
-        armas_d_set_at(&Y, i, 2.0);
+        armas_set_at(&X, i, EPS);
+        armas_set_at(&Y, i, 2.0);
     }
-    armas_d_set_at(&X, 0, N*1000.0);
-    armas_d_set_at(&X, N-1, -N*1000.0);
+    armas_set_at(&X, 0, N*1000.0);
+    armas_set_at(&X, N-1, -N*1000.0);
     // expect result:
     // - extended precision: (2N-4)*epsilon
     // - standard precision: < (2N-4)*epsilon due to cancelation
     e1 = (2.0*N - 4.0)*EPS;
     n0 = ZERO;
-    armas_x_adot(&n0, ONE, &X, &Y, cf);
+    armas_adot(&n0, ONE, &X, &Y, cf);
     n1 = ZERO;
-    armas_x_ext_adot(&n1, ONE, &X, &Y, cf);
+    armas_ext_adot(&n1, ONE, &X, &Y, cf);
     if (verbose > 1) {
         printf("computed: dot: %.16e, ext_dot: %.16e\n", n0, n1);
     }

@@ -8,47 +8,47 @@
 
 int test_std(int M, int N, int verbose, int flags, armas_conf_t *cf)
 {
-    armas_x_dense_t X, Y, Y0, A, At;
+    armas_dense_t X, Y, Y0, A, At;
     DTYPE n0, n1;
     int ok;
     const char *test = (flags & ARMAS_TRANS)
         ? "gemv(A^T, x) == A^T*x" : "gemv(A, x) == A*x";
 
-    armas_x_init(&Y, M, 1);
-    armas_x_init(&Y0, M, 1);
-    armas_x_init(&X, N, 1);
-    armas_x_init(&A, M, N);
-    armas_x_init(&At, N, M);
+    armas_init(&Y, M, 1);
+    armas_init(&Y0, M, 1);
+    armas_init(&X, N, 1);
+    armas_init(&A, M, N);
+    armas_init(&At, N, M);
 
-    armas_x_set_values(&Y, unitrand, ARMAS_NULL);
-    armas_x_set_values(&X, unitrand, ARMAS_NULL);
-    armas_x_set_values(&A, unitrand, ARMAS_NULL);
-    armas_x_mcopy(&At, &A, ARMAS_TRANS, cf);
-    armas_x_mcopy(&Y0, &Y, 0, cf);
+    armas_set_values(&Y, unitrand, ARMAS_NULL);
+    armas_set_values(&X, unitrand, ARMAS_NULL);
+    armas_set_values(&A, unitrand, ARMAS_NULL);
+    armas_mcopy(&At, &A, ARMAS_TRANS, cf);
+    armas_mcopy(&Y0, &Y, 0, cf);
 
     // Y = A*X
     if (flags & ARMAS_TRANS) {
-        armas_x_mvmult(2.0, &Y, ONE, &At, &X, ARMAS_TRANS, cf);
+        armas_mvmult(2.0, &Y, ONE, &At, &X, ARMAS_TRANS, cf);
         for (int i = 0; i < M; i++) {
-            armas_x_dense_t a0;
-            armas_x_column(&a0, &At, i);
-            DTYPE yk = 2.0 * armas_x_get_at_unsafe(&Y0, i);
-            armas_x_adot(&yk, ONE, &a0, &X, cf);
-            armas_x_set_at_unsafe(&Y0, i, yk);
+            armas_dense_t a0;
+            armas_column(&a0, &At, i);
+            DTYPE yk = 2.0 * armas_get_at_unsafe(&Y0, i);
+            armas_adot(&yk, ONE, &a0, &X, cf);
+            armas_set_at_unsafe(&Y0, i, yk);
         }
     } else {
-        armas_x_mvmult(2.0, &Y, ONE, &A, &X, 0, cf);
+        armas_mvmult(2.0, &Y, ONE, &A, &X, 0, cf);
         for (int i = 0; i < M; i++) {
-            armas_x_dense_t a0;
-            armas_x_row(&a0, &A, i);
-            DTYPE yk = 2.0 * armas_x_get_at_unsafe(&Y0, i);
-            armas_x_adot(&yk, ONE, &a0, &X, cf);
-            armas_x_set_at_unsafe(&Y0, i, yk);
+            armas_dense_t a0;
+            armas_row(&a0, &A, i);
+            DTYPE yk = 2.0 * armas_get_at_unsafe(&Y0, i);
+            armas_adot(&yk, ONE, &a0, &X, cf);
+            armas_set_at_unsafe(&Y0, i, yk);
         }
     }
-    // armas_x_mvmult(1.0, &Y, -1.0, &At, &X, ARMAS_TRANS, cf);
+    // armas_mvmult(1.0, &Y, -1.0, &At, &X, ARMAS_TRANS, cf);
     if (N < 10 && verbose > 1) {
-        printf("Y\n"); armas_x_printf(stdout, "%5.2f", &Y);
+        printf("Y\n"); armas_printf(stdout, "%5.2f", &Y);
     }
     n0 = rel_error(&n1, &Y, &Y0, ARMAS_NORM_TWO, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -57,11 +57,11 @@ int test_std(int M, int N, int verbose, int flags, armas_conf_t *cf)
         printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
 
-    armas_x_release(&Y);
-    armas_x_release(&Y0);
-    armas_x_release(&X);
-    armas_x_release(&A);
-    armas_x_release(&At);
+    armas_release(&Y);
+    armas_release(&Y0);
+    armas_release(&X);
+    armas_release(&A);
+    armas_release(&At);
     return 1 - ok;
 }
 

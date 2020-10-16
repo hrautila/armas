@@ -12,29 +12,29 @@
  */
 int test_std(int M, int N, int K, int verbose, armas_conf_t *cf)
 {
-    armas_x_dense_t A, B, C, Ct, T;
+    armas_dense_t A, B, C, Ct, T;
     int ok, fails = 0;
     DTYPE n0, n1;
     armas_ac_handle_t ac;
     char *ac_name = getenv("ARMAS_ACCELERATOR");
     armas_ac_init(&ac, ac_name);
 
-    armas_x_init(&C, M, N);
-    armas_x_init(&Ct, N, M);
-    armas_x_init(&T, M, N);
-    armas_x_set_values(&C, zero, 0);
-    armas_x_set_values(&Ct, zero, 0);
+    armas_init(&C, M, N);
+    armas_init(&Ct, N, M);
+    armas_init(&T, M, N);
+    armas_set_values(&C, zero, 0);
+    armas_set_values(&Ct, zero, 0);
 
-    armas_x_init(&A, M, K);
-    armas_x_init(&B, K, N);
-    armas_x_set_values(&A, unitrand, 0);
-    armas_x_set_values(&B, unitrand, 0);
+    armas_init(&A, M, K);
+    armas_init(&B, K, N);
+    armas_set_values(&A, unitrand, 0);
+    armas_set_values(&B, unitrand, 0);
 
     // C = A*B; C.T = B.T*A.T
     cf->accel = ac;
-    armas_x_mult(ZERO, &C, ONE, &A, &B, 0, cf);
+    armas_mult(ZERO, &C, ONE, &A, &B, 0, cf);
     cf->accel = (armas_ac_handle_t *)0;
-    armas_x_mult(ZERO, &Ct, ONE, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB, cf);
+    armas_mult(ZERO, &Ct, ONE, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB, cf);
     n0 = rel_error(&n1, &Ct, &C, ARMAS_NORM_ONE, ARMAS_TRANS, cf);
 
     // accept zero error
@@ -46,9 +46,9 @@ int test_std(int M, int N, int K, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     cf->accel = ac;
-    armas_x_mult(ZERO, &Ct, ONE, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB, cf);
+    armas_mult(ZERO, &Ct, ONE, &B, &A, ARMAS_TRANSA|ARMAS_TRANSB, cf);
     cf->accel = (struct armas_accel *)0;
-    armas_x_mult(ZERO, &C, ONE, &A, &B, 0, cf);
+    armas_mult(ZERO, &C, ONE, &A, &B, 0, cf);
 
     n0 = rel_error(&n1, &Ct, &C, ARMAS_NORM_ONE, ARMAS_TRANS, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -59,15 +59,15 @@ int test_std(int M, int N, int K, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     // B = B.T
-    armas_x_release(&B);
-    armas_x_init(&B, N, K);
-    armas_x_set_values(&B, unitrand, 0);
+    armas_release(&B);
+    armas_init(&B, N, K);
+    armas_set_values(&B, unitrand, 0);
 
     // C = A*B.T
     cf->accel = ac;
-    armas_x_mult(ZERO, &C, ONE, &A, &B, ARMAS_TRANSB, cf);
+    armas_mult(ZERO, &C, ONE, &A, &B, ARMAS_TRANSB, cf);
     cf->accel = (struct armas_accel *)0;
-    armas_x_mult(ZERO, &Ct, ONE, &B, &A, ARMAS_TRANSB, cf);
+    armas_mult(ZERO, &Ct, ONE, &B, &A, ARMAS_TRANSB, cf);
     n0 = rel_error(&n1, &Ct, &C, ARMAS_NORM_ONE, ARMAS_TRANS, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
     printf("%6s: gemm(A, B.T)[Ncpu]   == transpose(gemm(B, A.T))[1cpu]\n", PASS(ok));
@@ -77,18 +77,18 @@ int test_std(int M, int N, int K, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     // A = A.T
-    armas_x_release(&B);
-    armas_x_release(&A);
-    armas_x_init(&A, K, M);
-    armas_x_init(&B, K, N);
-    armas_x_set_values(&A, unitrand, 0);
-    armas_x_set_values(&B, unitrand, 0);
+    armas_release(&B);
+    armas_release(&A);
+    armas_init(&A, K, M);
+    armas_init(&B, K, N);
+    armas_set_values(&A, unitrand, 0);
+    armas_set_values(&B, unitrand, 0);
 
     // C = A.T*B
     cf->accel = ac;
-    armas_x_mult(ZERO, &C, ONE, &A, &B, ARMAS_TRANSA, cf);
+    armas_mult(ZERO, &C, ONE, &A, &B, ARMAS_TRANSA, cf);
     cf->accel = (struct armas_accel *)0;
-    armas_x_mult(ZERO, &Ct, ONE, &B, &A, ARMAS_TRANSA, cf);
+    armas_mult(ZERO, &Ct, ONE, &B, &A, ARMAS_TRANSA, cf);
     n0 = rel_error(&n1, &Ct, &C, ARMAS_NORM_ONE, ARMAS_TRANS, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
     printf("%6s: gemm(A.T, B)[Ncpu]   == transpose(gemm(B.T, A)[1cpu])\n", PASS(ok));
@@ -98,10 +98,10 @@ int test_std(int M, int N, int K, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     armas_ac_release(ac);
-    armas_x_release(&A);
-    armas_x_release(&B);
-    armas_x_release(&C);
-    armas_x_release(&Ct);
+    armas_release(&A);
+    armas_release(&B);
+    armas_release(&C);
+    armas_release(&Ct);
     return fails;
 }
 

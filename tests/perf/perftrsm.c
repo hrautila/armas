@@ -23,7 +23,7 @@ int main(int argc, char **argv)
   int verbose = 0;
   double rt, min, max, avg;
   armas_conf_t conf;
-  armas_x_dense_t B0, A, B;
+  armas_dense_t B0, A, B;
 
   while ((opt = getopt(argc, argv, "vc:P:a:s:t:T:")) != -1) {
     switch (opt) {
@@ -75,14 +75,14 @@ int main(int argc, char **argv)
     conf.optflags |= ARMAS_ORECURSIVE;
   }
 
-  armas_x_init(&A, N, N);
-  armas_x_init(&B, N, N);
-  armas_x_init(&B0, N, N);
+  armas_init(&A, N, N);
+  armas_init(&B, N, N);
+  armas_init(&B0, N, N);
   
-  armas_x_set_values(&A, zeromean, flags);
-  armas_x_set_values(&B, one, ARMAS_NULL);
-  armas_x_mult_trm(&B, &A, 1.0, flags, &conf);
-  armas_x_mcopy(&B0, &B);
+  armas_set_values(&A, zeromean, flags);
+  armas_set_values(&B, one, ARMAS_NULL);
+  armas_mult_trm(&B, &A, 1.0, flags, &conf);
+  armas_mcopy(&B0, &B);
 
   // C = A*B
   min = max = avg = 0.0;
@@ -90,11 +90,11 @@ int main(int argc, char **argv)
     flush();
     rt = time_msec();
 
-    armas_x_solve_trm(&B, 1.0, &A, flags, &conf);
+    armas_solve_trm(&B, 1.0, &A, flags, &conf);
     
     rt = time_msec() - rt;
 
-    armas_x_mcopy(&B, &B0);
+    armas_mcopy(&B, &B0);
     
     if (i == 0) {
       min = max = avg = rt;

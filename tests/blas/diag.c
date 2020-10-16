@@ -13,20 +13,20 @@
 static
 int test_left(int M, int N, int verbose, armas_conf_t *cf)
 {
-    armas_x_dense_t A0, A1, D;
+    armas_dense_t A0, A1, D;
     int ok;
     DTYPE nrm, n1;
 
-    armas_x_init(&A0, M, N);
-    armas_x_init(&A1, M, N);
-    armas_x_init(&D, M, 1);
+    armas_init(&A0, M, N);
+    armas_init(&A1, M, N);
+    armas_init(&D, M, 1);
 
-    armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mcopy(&A1, &A0, 0, cf);
-    armas_x_set_values(&D, unitrand, 0);
+    armas_set_values(&A0, unitrand, 0);
+    armas_mcopy(&A1, &A0, 0, cf);
+    armas_set_values(&D, unitrand, 0);
 
-    armas_x_mult_diag(&A1, 1.0, &D, ARMAS_LEFT, cf);
-    armas_x_solve_diag(&A1, 1.0, &D, ARMAS_LEFT, cf);
+    armas_mult_diag(&A1, 1.0, &D, ARMAS_LEFT, cf);
+    armas_solve_diag(&A1, 1.0, &D, ARMAS_LEFT, cf);
 
     nrm = rel_error(&n1, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = isOK(nrm, N);
@@ -40,20 +40,20 @@ int test_left(int M, int N, int verbose, armas_conf_t *cf)
 static
 int test_right(int M, int N, int verbose, armas_conf_t *cf)
 {
-    armas_x_dense_t A0, A1, D;
+    armas_dense_t A0, A1, D;
     int ok;
     DTYPE nrm, n1;
 
-    armas_x_init(&A0, M, N);
-    armas_x_init(&A1, M, N);
-    armas_x_init(&D, N, 1);
+    armas_init(&A0, M, N);
+    armas_init(&A1, M, N);
+    armas_init(&D, N, 1);
 
-    armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mcopy(&A1, &A0, 0, cf);
-    armas_x_set_values(&D, unitrand, 0);
+    armas_set_values(&A0, unitrand, 0);
+    armas_mcopy(&A1, &A0, 0, cf);
+    armas_set_values(&D, unitrand, 0);
 
-    armas_x_mult_diag(&A1, 1.0, &D, ARMAS_RIGHT, cf);
-    armas_x_solve_diag(&A1, 1.0, &D, ARMAS_RIGHT, cf);
+    armas_mult_diag(&A1, 1.0, &D, ARMAS_RIGHT, cf);
+    armas_solve_diag(&A1, 1.0, &D, ARMAS_RIGHT, cf);
 
     nrm = rel_error(&n1, &A1, &A0, ARMAS_NORM_ONE, 0, cf);
     ok = isOK(nrm, N);

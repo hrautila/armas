@@ -5,39 +5,39 @@
 #include <time.h>
 
 #include "testing.h"
-#define __null (armas_x_dense_t *)0
+#define __null (armas_dense_t *)0
 
 int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
 {
-    armas_x_dense_t X, Xg, Y, X0, A, At;
+    armas_dense_t X, Xg, Y, X0, A, At;
     DTYPE n0, n1;
     int ok, fails = 0;
     armas_ac_handle_t ac;
 
-    armas_x_init(&Y, N, K);
-    armas_x_init(&X0, N, K);
-    armas_x_init(&X, N, K);
-    armas_x_init(&Xg, N, K);
-    armas_x_init(&A, N, N);
-    armas_x_init(&At, N, N);
+    armas_init(&Y, N, K);
+    armas_init(&X0, N, K);
+    armas_init(&X, N, K);
+    armas_init(&Xg, N, K);
+    armas_init(&A, N, N);
+    armas_init(&At, N, N);
     armas_ac_init(&ac, ARMAS_AC_THREADED);
     cf->accel = ac;
 
-    armas_x_set_values(&X, unitrand, 0);
-    armas_x_set_values(&Y, zero, 0);
-    armas_x_mcopy(&X0, &X, 0, cf);
-    armas_x_set_values(&A, unitrand, ARMAS_UPPER);
+    armas_set_values(&X, unitrand, 0);
+    armas_set_values(&Y, zero, 0);
+    armas_mcopy(&X0, &X, 0, cf);
+    armas_set_values(&A, unitrand, ARMAS_UPPER);
     if (unit) {
         for (int i = 0; i < N; i++) {
-            armas_x_set(&A, i, i, 1.0);
+            armas_set(&A, i, i, 1.0);
         }
     }
-    armas_x_mcopy(&At, &A, ARMAS_TRANS, cf);
+    armas_mcopy(&At, &A, ARMAS_TRANS, cf);
 
     printf("** trmm: left, %s\n", unit ? "unit diagonal" : "");
     // trmm(A, X) == gemm(A, X)
-    armas_x_mult_trm(&X, -2.0, &A, ARMAS_LEFT|ARMAS_UPPER|unit, cf);
-    armas_x_mult(0.0, &Xg, -2.0, &A, &X0, 0, cf);
+    armas_mult_trm(&X, -2.0, &A, ARMAS_LEFT|ARMAS_UPPER|unit, cf);
+    armas_mult(0.0, &Xg, -2.0, &A, &X0, 0, cf);
     n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
     printf("%6s : trmm(X, A, U|N) == gemm(upper(A), X)\n", PASS(ok));
@@ -45,11 +45,11 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
         printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
     fails += 1 - ok;
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // trmm(A.T, X) == gemm(A.T, X)
-    armas_x_mult_trm(&X, -2.0, &A,  ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA|unit, cf);
-    armas_x_mult(0.0, &Xg, -2.0, &A, &X0, ARMAS_TRANSA, cf);
+    armas_mult_trm(&X, -2.0, &A,  ARMAS_LEFT|ARMAS_UPPER|ARMAS_TRANSA|unit, cf);
+    armas_mult(0.0, &Xg, -2.0, &A, &X0, ARMAS_TRANSA, cf);
 
     n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -59,11 +59,11 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // trmv(A, X) == gemv(A, X)
-    armas_x_mult_trm(&X, -2.0, &At,  ARMAS_LEFT|ARMAS_LOWER|unit, cf);
-    armas_x_mult(0.0, &Xg, -2.0, &At, &X0, 0, cf);
+    armas_mult_trm(&X, -2.0, &At,  ARMAS_LEFT|ARMAS_LOWER|unit, cf);
+    armas_mult(0.0, &Xg, -2.0, &At, &X0, 0, cf);
 
     n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -73,11 +73,11 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // trmv(A.T, X) == gemv(A.T, X)
-    armas_x_mult_trm(&X, -2.0, &At,  ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA|unit, cf);
-    armas_x_mult(0.0, &Xg, -2.0, &At, &X0, ARMAS_TRANSA, cf);
+    armas_mult_trm(&X, -2.0, &At,  ARMAS_LEFT|ARMAS_LOWER|ARMAS_TRANSA|unit, cf);
+    armas_mult(0.0, &Xg, -2.0, &At, &X0, ARMAS_TRANSA, cf);
 
     n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -88,47 +88,47 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     armas_ac_release(ac);
-    armas_x_release(&Y);
-    armas_x_release(&X0);
-    armas_x_release(&X);
-    armas_x_release(&Xg);
-    armas_x_release(&A);
-    armas_x_release(&At);
+    armas_release(&Y);
+    armas_release(&X0);
+    armas_release(&X);
+    armas_release(&Xg);
+    armas_release(&A);
+    armas_release(&At);
 
     return fails;
 }
 
 int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
 {
-    armas_x_dense_t X, Y, X0, Xg, A, At;
+    armas_dense_t X, Y, X0, Xg, A, At;
     DTYPE n0, n1;
     int ok, fails = 0;
     armas_ac_handle_t ac;
 
-    armas_x_init(&Y, K, N);
-    armas_x_init(&X0, K, N);
-    armas_x_init(&X, K, N);
-    armas_x_init(&Xg, K, N);
-    armas_x_init(&A, N, N);
-    armas_x_init(&At, N, N);
+    armas_init(&Y, K, N);
+    armas_init(&X0, K, N);
+    armas_init(&X, K, N);
+    armas_init(&Xg, K, N);
+    armas_init(&A, N, N);
+    armas_init(&At, N, N);
     armas_ac_init(&ac, ARMAS_AC_THREADED);
     cf->accel = ac;
 
-    armas_x_set_values(&X, unitrand, 0);
-    armas_x_set_values(&Y, zero, 0);
-    armas_x_mcopy(&X0, &X, 0, cf);
-    armas_x_set_values(&A, unitrand, ARMAS_UPPER);
+    armas_set_values(&X, unitrand, 0);
+    armas_set_values(&Y, zero, 0);
+    armas_mcopy(&X0, &X, 0, cf);
+    armas_set_values(&A, unitrand, ARMAS_UPPER);
     if (unit) {
         for (int i = 0; i < N; i++) {
-            armas_x_set(&A, i, i, 1.0);
+            armas_set(&A, i, i, 1.0);
         }
     }
-    armas_x_mcopy(&At, &A, ARMAS_TRANS, cf);
+    armas_mcopy(&At, &A, ARMAS_TRANS, cf);
 
     printf("** trmm: right, %s\n", unit ? "unit diagonal" : "");
     // trmm(A, X) == gemm(A, X)
-    armas_x_mult_trm(&X, -2.0, &A, ARMAS_RIGHT|ARMAS_UPPER|unit, cf);
-    armas_x_mult(0.0, &Xg, -2.0, &X0, &A, 0, cf);
+    armas_mult_trm(&X, -2.0, &A, ARMAS_RIGHT|ARMAS_UPPER|unit, cf);
+    armas_mult(0.0, &Xg, -2.0, &X0, &A, 0, cf);
 
     n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -138,10 +138,10 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
     // trmm(A.T, X) == gemm(A.T, X)
-    armas_x_mult_trm(&X, -2.0, &A,  ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANSA|unit, cf);
-    armas_x_mult(0.0, &Xg, -2.0, &X0, &A, ARMAS_TRANSB, cf);
+    armas_mult_trm(&X, -2.0, &A,  ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANSA|unit, cf);
+    armas_mult(0.0, &Xg, -2.0, &X0, &A, ARMAS_TRANSB, cf);
 
     n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -151,11 +151,11 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // trmv(A, X) == gemv(A, X)
-    armas_x_mult_trm(&X, -2.0, &At,  ARMAS_RIGHT|ARMAS_LOWER|unit, cf);
-    armas_x_mult(0.0, &Xg, -2.0, &X0, &At, 0, cf);
+    armas_mult_trm(&X, -2.0, &At,  ARMAS_RIGHT|ARMAS_LOWER|unit, cf);
+    armas_mult(0.0, &Xg, -2.0, &X0, &At, 0, cf);
 
     n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -165,11 +165,11 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     }
     fails += 1 - ok;
 
-    armas_x_mcopy(&X, &X0, 0, cf);
+    armas_mcopy(&X, &X0, 0, cf);
 
     // trmv(A.T, X) == gemv(A.T, X)
-    armas_x_mult_trm(&X, -2.0, &At,  ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA|unit, cf);
-    armas_x_mult(0.0, &Xg, -2.0, &X0, &At, ARMAS_TRANSB, cf);
+    armas_mult_trm(&X, -2.0, &At,  ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANSA|unit, cf);
+    armas_mult(0.0, &Xg, -2.0, &X0, &At, ARMAS_TRANSB, cf);
 
     n0 = rel_error(&n1, &X, &Xg, ARMAS_NORM_ONE, ARMAS_NONE, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -180,12 +180,12 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     fails += 1 - ok;
 
     armas_ac_release(ac);
-    armas_x_release(&Y);
-    armas_x_release(&X0);
-    armas_x_release(&X);
-    armas_x_release(&Xg);
-    armas_x_release(&A);
-    armas_x_release(&At);
+    armas_release(&Y);
+    armas_release(&X0);
+    armas_release(&X);
+    armas_release(&Xg);
+    armas_release(&A);
+    armas_release(&At);
 
     return fails;
 }

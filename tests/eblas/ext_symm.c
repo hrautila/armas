@@ -10,29 +10,29 @@
 int test_unit_b(int M, int N, int verbose, int flags, armas_conf_t *cf)
 {
     int fails = 0;
-    armas_x_dense_t A, B, Bt, C, Ct, T, tcol, tc;
+    armas_dense_t A, B, Bt, C, Ct, T, tcol, tc;
     int ok;
     DTYPE n0, n1;
     const char *uplo = (flags &ARMAS_UPPER) ? "upper" : "lower";
 
-    armas_x_init(&C, M, N);
-    armas_x_init(&Ct, N, M);
-    armas_x_init(&T, M, N);
-    armas_x_set_values(&C, zero, 0);
-    armas_x_set_values(&Ct, zero, 0);
+    armas_init(&C, M, N);
+    armas_init(&Ct, N, M);
+    armas_init(&T, M, N);
+    armas_set_values(&C, zero, 0);
+    armas_set_values(&Ct, zero, 0);
 
-    armas_x_init(&A, M, M);
-    armas_x_init(&B, M, N);
-    armas_x_init(&Bt, N, M);
+    armas_init(&A, M, M);
+    armas_init(&B, M, N);
+    armas_init(&Bt, N, M);
 
-    armas_x_row(&tcol, &T, 0);
+    armas_row(&tcol, &T, 0);
     make_ext_matrix_data(&B, 1.0, &tcol, ARMAS_RIGHT);
     for (int i = 1; i < M; i++) {
-        armas_x_row(&tc, &T, i);
-        armas_x_copy(&tc, &tcol, cf);
+        armas_row(&tc, &T, i);
+        armas_copy(&tc, &tcol, cf);
     }
-    armas_x_mcopy(&Bt, &B, ARMAS_TRANS, cf);
-    armas_x_set_values(&A, one, 0);
+    armas_mcopy(&Bt, &B, ARMAS_TRANS, cf);
+    armas_set_values(&A, one, 0);
     if (verbose > 2) {
         MAT_PRINT("T", &T);
         MAT_PRINT("B", &B);
@@ -41,7 +41,7 @@ int test_unit_b(int M, int N, int verbose, int flags, armas_conf_t *cf)
 
     // ------------------------------------------------------------
     //  C = A*B
-    armas_x_ext_mult_sym(ZERO, &C, ONE, &A, &B, flags|ARMAS_LEFT, cf);
+    armas_ext_mult_sym(ZERO, &C, ONE, &A, &B, flags|ARMAS_LEFT, cf);
     if (verbose > 2) {
         MAT_PRINT("A*B", &C);
     }
@@ -54,7 +54,7 @@ int test_unit_b(int M, int N, int verbose, int flags, armas_conf_t *cf)
     }
     // ------------------------------------------------------------
     //  C = A*B^T
-    armas_x_ext_mult_sym(ZERO, &C, ONE, &A, &Bt, flags|ARMAS_LEFT|ARMAS_TRANSB, cf);
+    armas_ext_mult_sym(ZERO, &C, ONE, &A, &Bt, flags|ARMAS_LEFT|ARMAS_TRANSB, cf);
     if (verbose > 2) {
         MAT_PRINT("A*B^T", &C);
     }
@@ -67,7 +67,7 @@ int test_unit_b(int M, int N, int verbose, int flags, armas_conf_t *cf)
     }
     // ------------------------------------------------------------
     //  C = B*A
-    armas_x_ext_mult_sym(ZERO, &Ct, ONE, &A, &Bt, flags|ARMAS_RIGHT, cf);
+    armas_ext_mult_sym(ZERO, &Ct, ONE, &A, &Bt, flags|ARMAS_RIGHT, cf);
     if (verbose > 2) {
         MAT_PRINT("B*A", &Ct);
     }
@@ -80,7 +80,7 @@ int test_unit_b(int M, int N, int verbose, int flags, armas_conf_t *cf)
     }
     // ------------------------------------------------------------
     //  C^T = B^T*A
-    armas_x_ext_mult_sym(ZERO, &Ct, ONE, &A, &B, flags|ARMAS_RIGHT|ARMAS_TRANSB, cf);
+    armas_ext_mult_sym(ZERO, &Ct, ONE, &A, &B, flags|ARMAS_RIGHT|ARMAS_TRANSB, cf);
     n0 = rel_error(&n1, &Ct, &T, ARMAS_NORM_INF, ARMAS_TRANS, cf);
     ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
     fails += 1 - ok;
@@ -89,36 +89,36 @@ int test_unit_b(int M, int N, int verbose, int flags, armas_conf_t *cf)
         printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
 
-    armas_x_release(&A);
-    armas_x_release(&B);
-    armas_x_release(&Bt);
-    armas_x_release(&C);
-    armas_x_release(&Ct);
-    armas_x_release(&T);
+    armas_release(&A);
+    armas_release(&B);
+    armas_release(&Bt);
+    armas_release(&C);
+    armas_release(&Ct);
+    armas_release(&T);
     return fails;
 }
 
 int test_almost_one(int M, int N, int verbose, int flags, armas_conf_t *cf)
 {
-    armas_x_dense_t A, B, Bt, C, Ct, tc;
+    armas_dense_t A, B, Bt, C, Ct, tc;
     int fails = 0;
     int ok;
     DTYPE n0, n1;
     const char *uplo = (flags & ARMAS_UPPER) ? "upper" : "lower";
 
-    armas_x_init(&C, M, N);
-    armas_x_init(&Ct, N, M);
-    armas_x_set_values(&C, zero, 0);
-    armas_x_set_values(&Ct, zero, 0);
+    armas_init(&C, M, N);
+    armas_init(&Ct, N, M);
+    armas_set_values(&C, zero, 0);
+    armas_set_values(&Ct, zero, 0);
 
-    armas_x_init(&A, M, M);
-    armas_x_init(&B, M, N);
-    armas_x_init(&Bt, N, M);
-    armas_x_init(&tc, M, 1);
+    armas_init(&A, M, M);
+    armas_init(&B, M, N);
+    armas_init(&Bt, N, M);
+    armas_init(&tc, M, 1);
 
     make_ext_matrix_data(&B, 1.0, &tc, ARMAS_RIGHT);
-    armas_x_mcopy(&Bt, &B, ARMAS_TRANS, cf);
-    armas_x_set_values(&A, almost_one, ARMAS_SYMM);
+    armas_mcopy(&Bt, &B, ARMAS_TRANS, cf);
+    armas_set_values(&A, almost_one, ARMAS_SYMM);
     if (verbose > 2) {
         MAT_PRINT("A", &A);
         MAT_PRINT("B", &B);
@@ -127,9 +127,9 @@ int test_almost_one(int M, int N, int verbose, int flags, armas_conf_t *cf)
 
     // ------------------------------------------------------------
     //  C = A*B
-    armas_x_ext_mult_sym(ZERO, &C, ONE, &A, &B, flags|ARMAS_LEFT, cf);
+    armas_ext_mult_sym(ZERO, &C, ONE, &A, &B, flags|ARMAS_LEFT, cf);
     //  C^T = B^T*A
-    armas_x_ext_mult_sym(ZERO, &Ct, ONE, &A, &Bt, flags|ARMAS_RIGHT, cf);
+    armas_ext_mult_sym(ZERO, &Ct, ONE, &A, &Bt, flags|ARMAS_RIGHT, cf);
     n0 = rel_error(&n1, &C, &Ct, ARMAS_NORM_INF, ARMAS_TRANS, cf);
     ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
     fails += 1 - ok;
@@ -140,8 +140,8 @@ int test_almost_one(int M, int N, int verbose, int flags, armas_conf_t *cf)
 
     // ------------------------------------------------------------
     //  C = A*B^T
-    armas_x_ext_mult_sym(ZERO, &C, ONE, &A, &Bt, flags|ARMAS_LEFT|ARMAS_TRANSB, cf);
-    armas_x_ext_mult_sym(ZERO, &Ct, ONE, &A, &B, flags|ARMAS_RIGHT|ARMAS_TRANSB, cf);
+    armas_ext_mult_sym(ZERO, &C, ONE, &A, &Bt, flags|ARMAS_LEFT|ARMAS_TRANSB, cf);
+    armas_ext_mult_sym(ZERO, &Ct, ONE, &A, &B, flags|ARMAS_RIGHT|ARMAS_TRANSB, cf);
     n0 = rel_error(&n1, &C, &Ct, ARMAS_NORM_INF, ARMAS_TRANS, cf);
     ok = (n0 == 0.0 || isOK(n0, N)) ? 1 : 0;
     fails += 1 - ok;
@@ -150,12 +150,12 @@ int test_almost_one(int M, int N, int verbose, int flags, armas_conf_t *cf)
         printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
 
-    armas_x_release(&A);
-    armas_x_release(&B);
-    armas_x_release(&Bt);
-    armas_x_release(&C);
-    armas_x_release(&Ct);
-    armas_x_release(&tc);
+    armas_release(&A);
+    armas_release(&B);
+    armas_release(&Bt);
+    armas_release(&C);
+    armas_release(&Ct);
+    armas_release(&tc);
     return fails;
 }
 

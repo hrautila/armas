@@ -8,28 +8,28 @@
 
 int test_std(int N, int verbose, int flags, armas_conf_t *cf)
 {
-    armas_d_dense_t X, Y, A, A0;
+    armas_dense_t X, Y, A, A0;
     int ok;
     DTYPE n0, n1;
     const char *uplo = (flags & ARMAS_UPPER) ? "upper" : "lower";
 
-    armas_d_init(&Y, N, 1);
-    armas_d_init(&A, N, N);
-    armas_d_init(&A0, N, N);
+    armas_init(&Y, N, 1);
+    armas_init(&A, N, N);
+    armas_init(&A0, N, N);
 
-    armas_d_set_values(&Y, unitrand, 0);
-    armas_d_set_values(&X, unitrand, 0);
-    armas_d_set_values(&A, unitrand, flags);
-    armas_d_mcopy(&A0, &A, 0, cf);
+    armas_set_values(&Y, unitrand, 0);
+    armas_set_values(&X, unitrand, 0);
+    armas_set_values(&A, unitrand, flags);
+    armas_mcopy(&A0, &A, 0, cf);
 
     printf("** symmetric rank-2 update: %s\n", uplo);
 
     // compute 2 ways; sym update/update + make upper
-    armas_d_mvupdate2_sym(2.0, &A, 2.0, &X, &Y, flags, cf);
+    armas_mvupdate2_sym(2.0, &A, 2.0, &X, &Y, flags, cf);
 
-    armas_d_mvupdate(2.0, &A0, 2.0, &X, &Y, cf);
-    armas_d_mvupdate(1.0, &A0, 2.0, &Y, &X, cf);
-    armas_d_make_trm(&A0, flags);
+    armas_mvupdate(2.0, &A0, 2.0, &X, &Y, cf);
+    armas_mvupdate(1.0, &A0, 2.0, &Y, &X, cf);
+    armas_make_trm(&A0, flags);
 
     n0 = rel_error(&n1, &A, &A0, ARMAS_NORM_ONE, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;

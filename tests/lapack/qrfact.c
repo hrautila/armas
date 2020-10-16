@@ -16,7 +16,7 @@
  */
 int test_factor(int M, int N, int lb, int verbose)
 {
-    armas_x_dense_t A0, A1, tau0, tau1, row;
+    armas_dense_t A0, A1, tau0, tau1, row;
     DTYPE n0, n1;
     armas_env_t *env = armas_getenv();
     armas_conf_t conf = *armas_conf_default();
@@ -24,31 +24,31 @@ int test_factor(int M, int N, int lb, int verbose)
     if (lb == 0)
         lb = 4;
 
-    armas_x_init(&A0, M, N);
-    armas_x_init(&A1, M, N);
-    armas_x_init(&tau0, imin(M, N), 1);
-    armas_x_init(&tau1, imin(M, N), 1);
+    armas_init(&A0, M, N);
+    armas_init(&A1, M, N);
+    armas_init(&tau0, imin(M, N), 1);
+    armas_init(&tau1, imin(M, N), 1);
 
     // set source data
-    armas_x_set_values(&A0, unitrand, ARMAS_ANY);
-    armas_x_mcopy(&A1, &A0, 0, &conf);
+    armas_set_values(&A0, unitrand, ARMAS_ANY);
+    armas_mcopy(&A1, &A0, 0, &conf);
 
     // factorize
     env->lb = 0;
-    armas_x_qrfactor(&A0, &tau0, &conf);
+    armas_qrfactor(&A0, &tau0, &conf);
 
     env->lb = lb;
-    armas_x_qrfactor(&A1, &tau1, &conf);
+    armas_qrfactor(&A1, &tau1, &conf);
 
     if (verbose > 1 && N < 10) {
         printf("unblk.QR(A):\n");
-        armas_x_printf(stdout, "%9.2e", &A0);
+        armas_printf(stdout, "%9.2e", &A0);
         printf("unblk.tau:\n");
-        armas_x_printf(stdout, "%9.2e", col_as_row(&row, &tau0));
+        armas_printf(stdout, "%9.2e", col_as_row(&row, &tau0));
         printf("  blk.tau:\n");
-        armas_x_printf(stdout, "%9.2e", col_as_row(&row, &tau1));
+        armas_printf(stdout, "%9.2e", col_as_row(&row, &tau1));
         printf("  blk.QR(A):\n");
-        armas_x_printf(stdout, "%9.2e", &A1);
+        armas_printf(stdout, "%9.2e", &A1);
     }
 
     n0 = rel_error(
@@ -62,10 +62,10 @@ int test_factor(int M, int N, int lb, int verbose)
         printf("  || error.tau ||_2: %e [%d]\n", n1, ndigits(n1));
     }
 
-    armas_x_release(&A0);
-    armas_x_release(&A1);
-    armas_x_release(&tau0);
-    armas_x_release(&tau1);
+    armas_release(&A0);
+    armas_release(&A1);
+    armas_release(&tau0);
+    armas_release(&tau1);
 
     return isOK(n0, N) && isOK(n1, N);
 }

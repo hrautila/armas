@@ -9,7 +9,7 @@
 
 int test_mvmult(int N, int verbose, int flags, armas_conf_t *cf)
 {
-    armas_x_dense_t X1, Y, X0, A;
+    armas_dense_t X1, Y, X0, A;
     armas_env_t *env = armas_getenv();
     DTYPE n0, n1;
     int ok;
@@ -19,23 +19,23 @@ int test_mvmult(int N, int verbose, int flags, armas_conf_t *cf)
     const char *t = (flags & ARMAS_TRANS) ? "^T" : "";
     const char *u = (flags & ARMAS_UNIT) ? "unit-diag" : "non-unit";
 
-    armas_x_init(&X0, N, 1);
-    armas_x_init(&X1, N, 1);
-    armas_x_init(&Y, N, 1);
-    armas_x_init(&A, N, N);
+    armas_init(&X0, N, 1);
+    armas_init(&X1, N, 1);
+    armas_init(&Y, N, 1);
+    armas_init(&A, N, N);
 
-    armas_x_set_values(&X0, one, 0);
-    armas_x_mcopy(&Y, &X0, 0, cf);
-    armas_x_set_values(&A, unitrand, flags);
+    armas_set_values(&X0, one, 0);
+    armas_mcopy(&Y, &X0, 0, cf);
+    armas_set_values(&A, unitrand, flags);
     if (unit) {
         for (int i = 0; i < N; i++) {
-            armas_x_set(&A, i, i, ONE);
+            armas_set(&A, i, i, ONE);
         }
     }
 
     env->blas2min = 0;
-    armas_x_mvmult_trm(&X0, 2.0, &A, flags, cf);
-    armas_x_mvmult(ZERO, &X1, 2.0, &A, &Y, flags, cf);
+    armas_mvmult_trm(&X0, 2.0, &A, flags, cf);
+    armas_mvmult(ZERO, &X1, 2.0, &A, &Y, flags, cf);
 
     n0 = rel_error(&n1, &X0, &X1, ARMAS_NORM_TWO, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -43,16 +43,16 @@ int test_mvmult(int N, int verbose, int flags, armas_conf_t *cf)
     if (verbose > 0) {
         printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
-    armas_x_release(&X0);
-    armas_x_release(&X1);
-    armas_x_release(&A);
-    armas_x_release(&Y);
+    armas_release(&X0);
+    armas_release(&X1);
+    armas_release(&A);
+    armas_release(&Y);
     return 1 - ok;
 }
 
 int test_blocked(int N, int verbose, int lb, int flags, armas_conf_t *cf)
 {
-    armas_x_dense_t X1, X0, A;
+    armas_dense_t X1, X0, A;
     armas_env_t *env = armas_getenv();
     DTYPE n0, n1;
     int ok;
@@ -61,23 +61,23 @@ int test_blocked(int N, int verbose, int lb, int flags, armas_conf_t *cf)
     const char *t = (flags & ARMAS_TRANS) ? "^T" : "";
     const char *u = (flags & ARMAS_UNIT) ? "unit-diag" : "non-unit";
 
-    armas_x_init(&X0, N, 1);
-    armas_x_init(&X1, N, 1);
-    armas_x_init(&A, N, N);
+    armas_init(&X0, N, 1);
+    armas_init(&X1, N, 1);
+    armas_init(&A, N, N);
 
-    armas_x_set_values(&X0, one, 0);
-    armas_x_mcopy(&X1, &X0, 0, cf);
-    armas_x_set_values(&A, unitrand, flags);
+    armas_set_values(&X0, one, 0);
+    armas_mcopy(&X1, &X0, 0, cf);
+    armas_set_values(&A, unitrand, flags);
     if (unit) {
         for (int i = 0; i < N; i++) {
-            armas_x_set(&A, i, i, ONE);
+            armas_set(&A, i, i, ONE);
         }
     }
 
     env->blas2min = 0;
-    armas_x_mvmult_trm(&X0, 2.0, &A, flags, cf);
+    armas_mvmult_trm(&X0, 2.0, &A, flags, cf);
     env->blas2min = lb;
-    armas_x_mvmult_trm(&X1, 2.0, &A, flags, cf);
+    armas_mvmult_trm(&X1, 2.0, &A, flags, cf);
 
 
     n0 = rel_error(&n1, &X0, &X1, ARMAS_NORM_TWO, 0, cf);
@@ -87,9 +87,9 @@ int test_blocked(int N, int verbose, int lb, int flags, armas_conf_t *cf)
     if (verbose > 0) {
         printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
-    armas_x_release(&X0);
-    armas_x_release(&X1);
-    armas_x_release(&A);
+    armas_release(&X0);
+    armas_release(&X1);
+    armas_release(&A);
     return 1 - ok;
 }
 

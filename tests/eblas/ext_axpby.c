@@ -19,30 +19,30 @@
  */
 int test_ext(int N, int verbose, DTYPE d, armas_conf_t *cf)
 {
-    armas_d_dense_t X, Y;
+    armas_dense_t X, Y;
     DTYPE n0, alpha, beta;
     // EPS defined in lapack style as largest number with 1+eps == 1
     DTYPE ulp = 2.0*EPS;
     int ok, fails = 0;
 
-    armas_d_init(&Y, N, 1);
-    armas_d_init(&X, N, 1);
+    armas_init(&Y, N, 1);
+    armas_init(&X, N, 1);
     for (int i = 0; i < N; ++i) {
-        armas_d_set_at(&X, i, d/SQRT(ulp));
-        armas_d_set_at(&Y, i, d/SQRT(ulp));
+        armas_set_at(&X, i, d/SQRT(ulp));
+        armas_set_at(&Y, i, d/SQRT(ulp));
     }
     alpha = - ONE/SQRT(ulp);
     beta = (ONE + ulp)/SQRT(ulp);
     // expect result:
     // - extended precision: Y = d^T
     n0 = ZERO;
-    armas_x_ext_axpby(beta, &Y, alpha, &X, cf);
+    armas_ext_axpby(beta, &Y, alpha, &X, cf);
     if (verbose > 2) {
-        armas_x_dense_t r;
-        MAT_PRINT("Y", armas_x_col_as_row(&r, &Y));
+        armas_dense_t r;
+        MAT_PRINT("Y", armas_col_as_row(&r, &Y));
     }
-    armas_x_madd(&Y, -d, 0, cf);
-    n0 = armas_x_nrm2(&Y, cf);
+    armas_madd(&Y, -d, 0, cf);
+    n0 = armas_nrm2(&Y, cf);
     ok = n0 == ZERO || isOK(n0, N);
     fails += 1 - ok;
     printf("%6s: b*y + a*x == d\n", PASS(ok));
@@ -51,16 +51,16 @@ int test_ext(int N, int verbose, DTYPE d, armas_conf_t *cf)
     }
     if (verbose > 1) {
         for (int i = 0; i < N; ++i) {
-            armas_d_set_at(&Y, i, d/SQRT(ulp));
+            armas_set_at(&Y, i, d/SQRT(ulp));
         }
-        armas_x_axpby(beta, &Y, alpha, &X, cf);
+        armas_axpby(beta, &Y, alpha, &X, cf);
         if (verbose > 2) {
-            armas_x_dense_t r;
-            MAT_PRINT("Y", armas_x_col_as_row(&r, &Y));
+            armas_dense_t r;
+            MAT_PRINT("Y", armas_col_as_row(&r, &Y));
         }
-        DTYPE e0 = armas_x_get_at(&Y, 0);
-        armas_x_madd(&Y, -d, 0, cf);
-        n0 = armas_x_nrm2(&Y, cf);
+        DTYPE e0 = armas_get_at(&Y, 0);
+        armas_madd(&Y, -d, 0, cf);
+        n0 = armas_nrm2(&Y, cf);
         printf("   || normal precision || = %.6e [y0 = %e]\n", n0, e0);
     }
     return fails;

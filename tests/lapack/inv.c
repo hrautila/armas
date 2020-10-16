@@ -18,86 +18,32 @@
 
 int test_inverse(int N, int lb, int verbose)
 {
-    armas_x_dense_t A0, A1, W, *Aptr = (armas_x_dense_t *)0;
-    DTYPE n0, n1;
-    int ok, fails = 0;;
-    armas_pivot_t P;
-    armas_conf_t conf = *armas_conf_default();
-
-    armas_x_init(&A0, N, N);
-    armas_x_set_values(&A0, unitrand, 0);
-
-    json_read_write(&Aptr, &A0, 0);
-    if (Aptr) {
-        N = Aptr->rows;
-    }
-    armas_x_init(&A1, N, N);
-    armas_x_init(&W, N, lb == 0 ? 1 : lb);
-    armas_pivot_init(&P, N);
-
-    conf.lb = lb;
-    armas_x_lufactor(Aptr, &P, &conf);
-    armas_x_mcopy(&A1, Aptr);
-
-    conf.lb = 0;
-    armas_x_luinverse(&A1, &P, &conf);
-    if (verbose > 1) {
-        MAT_PRINT("unblk.A^-1", &A1);
-    }
-
-#if 0
-    conf.lb = lb;
-    armas_x_luinverse(&A0, &P, &conf);
-    if (verbose > 1) {
-        MAT_PRINT("blk.A^-1", &A0);
-    }
-
-    n0 = rel_error(&n1, &A1, &A0, ARMAS_NORM_INF, 0, &conf);
-    ok = isFINE(n0, N * ERROR);
-    fails += 1 - ok;
-    printf("%s: unblk.A^-1 == blk.A^-1\n", PASS(ok));
-    if (verbose > 0) {
-        printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
-    }
-#endif
-    if (Aptr && Aptr != &A0)
-        armas_x_free(Aptr);
-    armas_x_release(&A0);
-    armas_x_release(&A1);
-    armas_x_release(&W);
-
-    return fails;
-}
-
-
-int test_inverse(int N, int lb, int verbose)
-{
-    armas_x_dense_t A0, A1, W;
+    armas_dense_t A0, A1, W;
     DTYPE n0, n1;
     int ok, fails = 0;;
     armas_pivot_t P;
     armas_conf_t conf = *armas_conf_default();
     armas_env_t *env = armas_getenv();
 
-    armas_x_init(&A0, N, N);
-    armas_x_set_values(&A0, unitrand, 0);
+    armas_init(&A0, N, N);
+    armas_set_values(&A0, unitrand, 0);
 
-    armas_x_init(&A1, N, N);
-    armas_x_init(&W, N, lb == 0 ? 1 : lb);
+    armas_init(&A1, N, N);
+    armas_init(&W, N, lb == 0 ? 1 : lb);
     armas_pivot_init(&P, N);
 
     env->lb = lb;
-    armas_x_lufactor(&A0, &P, &conf);
-    armas_x_mcopy(&A1, &A0, 0, &conf);
+    armas_lufactor(&A0, &P, &conf);
+    armas_mcopy(&A1, &A0, 0, &conf);
 
     env->lb = 0;
-    armas_x_luinverse(&A1, &P, &conf);
+    armas_luinverse(&A1, &P, &conf);
     if (verbose > 1) {
         MAT_PRINT("unblk.A^-1", &A1);
     }
 
     env->lb = lb;
-    armas_x_luinverse(&A0, &P, &conf);
+    armas_luinverse(&A0, &P, &conf);
     if (verbose > 1) {
         MAT_PRINT("blk.A^-1", &A0);
     }
@@ -109,16 +55,16 @@ int test_inverse(int N, int lb, int verbose)
     if (verbose > 0) {
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
-    armas_x_release(&A0);
-    armas_x_release(&A1);
-    armas_x_release(&W);
+    armas_release(&A0);
+    armas_release(&A1);
+    armas_release(&W);
 
     return fails;
 }
 
 int test_equal(int N, int lb, int verbose)
 {
-    armas_x_dense_t A0, A1, W;
+    armas_dense_t A0, A1, W;
     DTYPE n0, n1;
     const char *blk = (lb == 0) ? "unblk" : "  blk";
     int ok, fails = 0;;
@@ -126,34 +72,34 @@ int test_equal(int N, int lb, int verbose)
     armas_conf_t conf = *armas_conf_default();
     armas_env_t *env = armas_getenv();
 
-    armas_x_init(&A0, N, N);
-    armas_x_set_values(&A0, unitrand, 0);
+    armas_init(&A0, N, N);
+    armas_set_values(&A0, unitrand, 0);
 
-    armas_x_init(&A1, N, N);
-    armas_x_init(&W, N, lb == 0 ? 1 : lb);
+    armas_init(&A1, N, N);
+    armas_init(&W, N, lb == 0 ? 1 : lb);
     armas_pivot_init(&P, N);
 
-    armas_x_mcopy(&A1, &A0, 0, &conf);
+    armas_mcopy(&A1, &A0, 0, &conf);
     if (verbose > 1) {
         MAT_PRINT("A", &A1);
     }
 
     env->lb = lb;
-    armas_x_lufactor(&A1, &P, &conf);
+    armas_lufactor(&A1, &P, &conf);
     if (verbose > 1) {
         MAT_PRINT("LU(A)", &A1);
     }
-    if (armas_x_luinverse(&A1, &P, &conf) < 0)
+    if (armas_luinverse(&A1, &P, &conf) < 0)
         printf("inverse.1 error: %d\n", conf.error);
     if (verbose > 1) {
         MAT_PRINT("A^-1", &A1);
     }
 
-    armas_x_lufactor(&A1, &P, &conf);
+    armas_lufactor(&A1, &P, &conf);
     if (verbose > 1) {
         MAT_PRINT("LU(A^-1)", &A1);
     }
-    if (armas_x_luinverse(&A1, &P, &conf) < 0)
+    if (armas_luinverse(&A1, &P, &conf) < 0)
         printf("inverse.2 error: %d\n", conf.error);
     if (verbose > 1) {
         MAT_PRINT("LU(A^-1)^-1", &A1);
@@ -167,15 +113,15 @@ int test_equal(int N, int lb, int verbose)
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
 
-    armas_x_release(&A0);
-    armas_x_release(&A1);
-    armas_x_release(&W);
+    armas_release(&A0);
+    armas_release(&A1);
+    armas_release(&W);
     return fails;
 }
 
 int test_ident(int N, int lb, int verbose)
 {
-    armas_x_dense_t A0, A1, C, W, D;
+    armas_dense_t A0, A1, C, W, D;
     DTYPE n0;
     char *blk = (lb == 0) ? "unblk" : "  blk";
     int ok, fails = 0;;
@@ -183,23 +129,23 @@ int test_ident(int N, int lb, int verbose)
     armas_conf_t conf = *armas_conf_default();
     armas_env_t *env = armas_getenv();
 
-    armas_x_init(&A0, N, N);
-    armas_x_init(&A1, N, N);
-    armas_x_init(&C, N, N);
-    armas_x_init(&W, N, (lb == 0) ? 1 : lb);
+    armas_init(&A0, N, N);
+    armas_init(&A1, N, N);
+    armas_init(&C, N, N);
+    armas_init(&W, N, (lb == 0) ? 1 : lb);
     armas_pivot_init(&P, N);
 
-    armas_x_set_values(&A0, unitrand, 0);
-    armas_x_mcopy(&A1, &A0, 0, &conf);
-    armas_x_diag(&D, &C, 0);
+    armas_set_values(&A0, unitrand, 0);
+    armas_mcopy(&A1, &A0, 0, &conf);
+    armas_diag(&D, &C, 0);
 
     env->lb = lb;
-    armas_x_lufactor(&A1, &P, &conf);
-    armas_x_luinverse(&A1, &P, &conf);
+    armas_lufactor(&A1, &P, &conf);
+    armas_luinverse(&A1, &P, &conf);
 
-    armas_x_mult(ZERO, &C, ONE, &A1, &A0, 0, &conf);
-    armas_x_madd(&D, -ONE, 0, &conf);
-    n0 = armas_x_mnorm(&C, ARMAS_NORM_INF, &conf);
+    armas_mult(ZERO, &C, ONE, &A1, &A0, 0, &conf);
+    armas_madd(&D, -ONE, 0, &conf);
+    n0 = armas_mnorm(&C, ARMAS_NORM_INF, &conf);
     ok = isFINE(n0, N * ERROR);
     fails += 1 - ok;
     printf("%s: %s.A.-1*A == I\n", PASS(ok), blk);
@@ -207,9 +153,9 @@ int test_ident(int N, int lb, int verbose)
         printf("  || rel error ||: %e [%d]\n", n0, ndigits(n0));
     }
 
-    armas_x_release(&A0);
-    armas_x_release(&A1);
-    armas_x_release(&W);
+    armas_release(&A0);
+    armas_release(&A1);
+    armas_release(&W);
     return fails;
 }
 

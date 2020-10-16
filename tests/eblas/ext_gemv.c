@@ -10,28 +10,28 @@ int test_ext_expected(int M, int N, int verbose, armas_conf_t *cf)
 {
     int fails = 0;
 
-    armas_x_dense_t X, Y, Y0, A, At;
+    armas_dense_t X, Y, Y0, A, At;
     DTYPE n0, n1;
     int ok;
 
-    armas_x_init(&Y, M, 1);
-    armas_x_init(&Y0, M, 1);
-    armas_x_init(&X, N, 1);
-    armas_x_init(&A, M, N);
-    armas_x_init(&At, N, M);
+    armas_init(&Y, M, 1);
+    armas_init(&Y0, M, 1);
+    armas_init(&X, N, 1);
+    armas_init(&A, M, N);
+    armas_init(&At, N, M);
 
-    armas_x_set_values(&Y, zero, ARMAS_NULL);
-    armas_x_set_values(&Y0, zero, ARMAS_NULL);
-    armas_x_set_values(&X, one, ARMAS_NULL);
+    armas_set_values(&Y, zero, ARMAS_NULL);
+    armas_set_values(&Y0, zero, ARMAS_NULL);
+    armas_set_values(&X, one, ARMAS_NULL);
     make_ext_matrix_data(&A, 1.0, &Y0, ARMAS_LEFT);
-    armas_x_mcopy(&At, &A, ARMAS_TRANS, cf);
+    armas_mcopy(&At, &A, ARMAS_TRANS, cf);
     if (verbose > 2) {
         MAT_PRINT("A", &A);
         MAT_PRINT("Y0", &Y0);
     }
 
     // Y = A*X
-    armas_x_ext_mvmult(ZERO, &Y, ONE, &A, &X, 0, cf);
+    armas_ext_mvmult(ZERO, &Y, ONE, &A, &X, 0, cf);
     n0 = rel_error(&n1, &Y, &Y0, ARMAS_NORM_INF, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N);
     printf("%6s : expected == ext_gemv(A, X)\n", PASS(ok));
@@ -39,13 +39,13 @@ int test_ext_expected(int M, int N, int verbose, armas_conf_t *cf)
         printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
     if (verbose > 1) {
-        armas_x_mvmult(ZERO, &Y, ONE, &A, &X, 0, cf);
+        armas_mvmult(ZERO, &Y, ONE, &A, &X, 0, cf);
         n0 = rel_error(&n1, &Y, &Y0, ARMAS_NORM_INF, 0, cf);
         printf("   || rel error || : %e, [%d] for standard precision\n", n0, ndigits(n0));
     }
 
     // Y = A^T*X
-    armas_x_ext_mvmult(ZERO, &Y, ONE, &At, &X, ARMAS_TRANS, cf);
+    armas_ext_mvmult(ZERO, &Y, ONE, &At, &X, ARMAS_TRANS, cf);
     n0 = rel_error(&n1, &Y, &Y0, ARMAS_NORM_INF, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N);
     fails += 1 - ok;
@@ -55,15 +55,15 @@ int test_ext_expected(int M, int N, int verbose, armas_conf_t *cf)
     }
 
     if (verbose > 1) {
-        armas_x_mvmult(ZERO, &Y, ONE, &At, &X, ARMAS_TRANS, cf);
+        armas_mvmult(ZERO, &Y, ONE, &At, &X, ARMAS_TRANS, cf);
         n0 = rel_error(&n1, &Y, &Y0, ARMAS_NORM_INF, 0, cf);
         printf("   || rel error || : %e, [%d] for standard precision\n", n0, ndigits(n0));
     }
-    armas_x_release(&Y);
-    armas_x_release(&Y0);
-    armas_x_release(&X);
-    armas_x_release(&A);
-    armas_x_release(&At);
+    armas_release(&Y);
+    armas_release(&Y0);
+    armas_release(&X);
+    armas_release(&A);
+    armas_release(&At);
 
     return fails;
 }
@@ -73,42 +73,42 @@ int test_ext_trans(int M, int N, int verbose, armas_conf_t *cf)
 {
     int fails = 0;
 
-    armas_x_dense_t X, Y, Y0, A, At, t;
+    armas_dense_t X, Y, Y0, A, At, t;
     DTYPE n0;
     int ok;
 
-    armas_x_init(&Y, M, 1);
-    armas_x_init(&Y0, M, 1);
-    armas_x_init(&X, N, 1);
-    armas_x_init(&A, M, N);
-    armas_x_init(&At, N, M);
+    armas_init(&Y, M, 1);
+    armas_init(&Y0, M, 1);
+    armas_init(&X, N, 1);
+    armas_init(&A, M, N);
+    armas_init(&At, N, M);
 
-    armas_x_set_values(&Y, zero, ARMAS_NULL);
-    armas_x_set_values(&Y0, zero, ARMAS_NULL);
-    armas_x_set_values(&X, almost_one, ARMAS_NULL);
+    armas_set_values(&Y, zero, ARMAS_NULL);
+    armas_set_values(&Y0, zero, ARMAS_NULL);
+    armas_set_values(&X, almost_one, ARMAS_NULL);
     make_ext_matrix_data(&A, 1.0, &Y0, ARMAS_LEFT);
-    armas_x_mcopy(&At, &A, ARMAS_TRANS, cf);
+    armas_mcopy(&At, &A, ARMAS_TRANS, cf);
     if (verbose > 2) {
         MAT_PRINT("A", &A);
     }
 
     // Y = A*x; Y = Y - A^T*x
-    armas_x_ext_mvmult(ZERO, &Y, ONE, &A, &X, 0, cf);
-    armas_x_ext_mvmult(ONE, &Y, -ONE, &At, &X, ARMAS_TRANS, cf);
-    n0 = armas_x_nrm2(&Y, cf);
+    armas_ext_mvmult(ZERO, &Y, ONE, &A, &X, 0, cf);
+    armas_ext_mvmult(ONE, &Y, -ONE, &At, &X, ARMAS_TRANS, cf);
+    n0 = armas_nrm2(&Y, cf);
     if (verbose > 1) {
-        MAT_PRINT("Y", armas_x_col_as_row(&t, &Y));
+        MAT_PRINT("Y", armas_col_as_row(&t, &Y));
     }
     ok = n0 == 0.0 || isOK(n0, N);
     printf("%6s : ext_gemv(A, X) == ext_gemv(A^T, X)\n", PASS(ok));
     if (verbose > 0) {
         printf("   || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
-    armas_x_release(&Y);
-    armas_x_release(&Y0);
-    armas_x_release(&X);
-    armas_x_release(&A);
-    armas_x_release(&At);
+    armas_release(&Y);
+    armas_release(&Y0);
+    armas_release(&X);
+    armas_release(&A);
+    armas_release(&At);
     return fails;
 }
 

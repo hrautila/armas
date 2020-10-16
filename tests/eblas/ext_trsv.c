@@ -9,42 +9,42 @@
 
 int test_ext(int N, int verbose, int unit, armas_conf_t *cf)
 {
-    armas_d_dense_t Y0, Y, A, At, L, Lt, E, Et;
+    armas_dense_t Y0, Y, A, At, L, Lt, E, Et;
     DTYPE n0;
     int ok;
     int fails = 0;
 
-    armas_d_init(&Y, N, 1);
-    armas_d_init(&Y0, N, 1);
-    armas_d_init(&E, N, 1);
-    armas_d_init(&Et, N, 1);
-    armas_d_init(&A, N, N);
-    armas_d_init(&At, N, N);
-    armas_d_init(&L, N, N);
-    armas_d_init(&Lt, N, N);
+    armas_init(&Y, N, 1);
+    armas_init(&Y0, N, 1);
+    armas_init(&E, N, 1);
+    armas_init(&Et, N, 1);
+    armas_init(&A, N, N);
+    armas_init(&At, N, N);
+    armas_init(&L, N, N);
+    armas_init(&Lt, N, N);
 
     // expect: [0, N-1*1]
-    armas_d_set_values(&Y, one, ARMAS_NULL);
+    armas_set_values(&Y, one, ARMAS_NULL);
     make_ext_trsv_data(N, 0, &A, &At, &E, &Et);
-    armas_d_mcopy(&Y0, &E, 0, cf);
+    armas_mcopy(&Y0, &E, 0, cf);
 
-    armas_d_mcopy(&Lt, &A, ARMAS_TRANS, cf);
-    armas_d_mcopy(&L, &At, ARMAS_TRANS, cf);
+    armas_mcopy(&Lt, &A, ARMAS_TRANS, cf);
+    armas_mcopy(&L, &At, ARMAS_TRANS, cf);
 
     if (verbose > 2) {
-        armas_x_dense_t row;
+        armas_dense_t row;
         MAT_PRINT("A", &A);
-        MAT_PRINT("E", armas_d_col_as_row(&row, &E));
+        MAT_PRINT("E", armas_col_as_row(&row, &E));
         MAT_PRINT("A^T", &At);
-        MAT_PRINT("E^T", armas_d_col_as_row(&row, &Et));
+        MAT_PRINT("E^T", armas_col_as_row(&row, &Et));
     }
 
     // -------------------------------------------------------------
     // compute ||A^*Y - 1||
 
-    armas_d_ext_mvsolve_trm(&Y0, 2.0, &A, ARMAS_UPPER, cf);
-    armas_d_madd(&Y0, -2.0, 0, cf);
-    n0 = armas_x_nrm2(&Y0, cf) / N;
+    armas_ext_mvsolve_trm(&Y0, 2.0, &A, ARMAS_UPPER, cf);
+    armas_madd(&Y0, -2.0, 0, cf);
+    n0 = armas_nrm2(&Y0, cf) / N;
 
     ok = !isNAN(n0) && (n0 == 0.0 || isOK(n0, N));
     fails += (1 - ok);
@@ -54,10 +54,10 @@ int test_ext(int N, int verbose, int unit, armas_conf_t *cf)
     }
 
     // -------------------------------------------------------------
-    armas_d_mcopy(&Y0, &Et, 0, cf);
-    armas_d_ext_mvsolve_trm(&Y0, -2.0, &At, ARMAS_UPPER | ARMAS_TRANS, cf);
-    armas_d_madd(&Y0, 2.0, 0, cf);
-    n0 = armas_x_nrm2(&Y0, cf) / N;
+    armas_mcopy(&Y0, &Et, 0, cf);
+    armas_ext_mvsolve_trm(&Y0, -2.0, &At, ARMAS_UPPER | ARMAS_TRANS, cf);
+    armas_madd(&Y0, 2.0, 0, cf);
+    n0 = armas_nrm2(&Y0, cf) / N;
 
     ok = !isNAN(n0) && (n0 == 0.0 || isOK(n0, N));
     fails += (1 - ok);
@@ -68,10 +68,10 @@ int test_ext(int N, int verbose, int unit, armas_conf_t *cf)
 
     // -------------------------------------------------------------
     // compute ||A^*Y - 1||
-    armas_d_mcopy(&Y0, &Et, 0, cf);
-    armas_d_ext_mvsolve_trm(&Y0, 0.5, &L, ARMAS_LOWER, cf);
-    armas_d_madd(&Y0, -0.5, 0, cf);
-    n0 = armas_x_nrm2(&Y0, cf) / N;
+    armas_mcopy(&Y0, &Et, 0, cf);
+    armas_ext_mvsolve_trm(&Y0, 0.5, &L, ARMAS_LOWER, cf);
+    armas_madd(&Y0, -0.5, 0, cf);
+    n0 = armas_nrm2(&Y0, cf) / N;
 
     ok = !isNAN(n0) && (n0 == 0.0 || isOK(n0, N));
     fails += (1 - ok);
@@ -82,10 +82,10 @@ int test_ext(int N, int verbose, int unit, armas_conf_t *cf)
 
     // -------------------------------------------------------------
     // compute sum(A^*Y - 1)
-    armas_d_mcopy(&Y0, &E, 0, cf);
-    armas_d_ext_mvsolve_trm(&Y0, -0.5, &Lt, ARMAS_LOWER | ARMAS_TRANS, cf);
-    armas_d_madd(&Y0, 0.5, 0, cf);
-    n0 = armas_x_nrm2(&Y0, cf) / N;
+    armas_mcopy(&Y0, &E, 0, cf);
+    armas_ext_mvsolve_trm(&Y0, -0.5, &Lt, ARMAS_LOWER | ARMAS_TRANS, cf);
+    armas_madd(&Y0, 0.5, 0, cf);
+    n0 = armas_nrm2(&Y0, cf) / N;
 
     ok = !isNAN(n0) && (n0 == 0.0 || isOK(n0, N));
     fails += (1 - ok);
@@ -94,14 +94,14 @@ int test_ext(int N, int verbose, int unit, armas_conf_t *cf)
         printf("    || rel error || : %e, [%d]\n", n0, ndigits(n0));
     }
 
-    armas_d_release(&Y);
-    armas_d_release(&Y0);
-    armas_d_release(&E);
-    armas_d_release(&Et);
-    armas_d_release(&A);
-    armas_d_release(&At);
-    armas_d_release(&L);
-    armas_d_release(&Lt);
+    armas_release(&Y);
+    armas_release(&Y0);
+    armas_release(&E);
+    armas_release(&Et);
+    armas_release(&A);
+    armas_release(&At);
+    armas_release(&L);
+    armas_release(&Lt);
 
     return fails;
 }

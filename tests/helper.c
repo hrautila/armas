@@ -145,42 +145,42 @@ int in_tolerance(double a, double b)
 // Compute relative error: ||computed - expected||/||expected||
 // Returns norm ||computed - exptected|| in dnorm. 
 // Note: contents of computed is destroyed.
-DTYPE rel_error(DTYPE * dnorm, armas_x_dense_t * computed,
-                armas_x_dense_t * expected, int norm, int flags,
+DTYPE rel_error(DTYPE * dnorm, armas_dense_t * computed,
+                armas_dense_t * expected, int norm, int flags,
                 armas_conf_t * conf)
 {
     double cnrm, enrm;
-    if (armas_x_isvector(computed)) {
-        armas_x_axpy(computed, -1.0, expected, conf);
+    if (armas_isvector(computed)) {
+        armas_axpy(computed, -1.0, expected, conf);
     } else {
         // computed = computed - expected
         if (expected)
-            armas_x_mplus(1.0, computed, -1.0, expected, flags, conf);
+            armas_mplus(1.0, computed, -1.0, expected, flags, conf);
     }
     // ||computed - expected||
-    cnrm = armas_x_mnorm(computed, norm, conf);
+    cnrm = armas_mnorm(computed, norm, conf);
     if (dnorm)
         *dnorm = cnrm;
     // ||expected||
     enrm = ONE;
     if (expected)
-        enrm = armas_x_mnorm(expected, norm, conf);
+        enrm = armas_mnorm(expected, norm, conf);
     return cnrm / enrm;
 }
 
-armas_x_dense_t *col_as_row(armas_x_dense_t * row, armas_x_dense_t * col)
+armas_dense_t *col_as_row(armas_dense_t * row, armas_dense_t * col)
 {
-    armas_x_make(row, 1, armas_x_size(col), 1, armas_x_data(col));
+    armas_make(row, 1, armas_size(col), 1, armas_data(col));
     return row;
 }
 
-void json_read_write(armas_x_dense_t **Aptr, armas_x_dense_t *A, int flags)
+void json_read_write(armas_dense_t **Aptr, armas_dense_t *A, int flags)
 {
     const char *write_name = getenv("JSON_WRITE");
     if (write_name && A) {
         FILE *fp = fopen(write_name, "w");
         if (fp) {
-            armas_x_json_dump(fp, A, flags);
+            armas_json_dump(fp, A, flags);
             fclose(fp);
         }
         if (Aptr) {
@@ -194,37 +194,7 @@ void json_read_write(armas_x_dense_t **Aptr, armas_x_dense_t *A, int flags)
         if (Aptr) {
             FILE *fp = fopen(read_name, "r");
             if (fp) {
-                armas_x_json_load(Aptr, fp);
-                fclose(fp);
-            }
-        }
-    } else {
-        if (Aptr)
-            *Aptr = A;
-    }
-}
-
-void json_read_write(armas_x_dense_t **Aptr, armas_x_dense_t *A, int flags)
-{
-    const char *write_name = getenv("JSON_WRITE");
-    if (write_name && A) {
-        FILE *fp = fopen(write_name, "w");
-        if (fp) {
-            armas_d_json_dump(fp, A, flags);
-            fclose(fp);
-        }
-        if (Aptr) {
-            *Aptr = A;
-        }
-        return;
-    }
-
-    const char *read_name = getenv("JSON_READ");
-    if (read_name) {
-        if (Aptr) {
-            FILE *fp = fopen(read_name, "r");
-            if (fp) {
-                armas_d_json_load(Aptr, fp);
+                armas_json_load(Aptr, fp);
                 fclose(fp);
             }
         }
@@ -236,16 +206,16 @@ void json_read_write(armas_x_dense_t **Aptr, armas_x_dense_t *A, int flags)
 
 #if !defined(FLOAT32)
 // search from top-left
-void find_from_bottom_right(armas_d_dense_t * a, armas_d_dense_t * b, int *row,
+void find_from_bottom_right(armas_dense_t * a, armas_dense_t * b, int *row,
                             int *col)
 {
     int k;
-    armas_d_dense_t aC, bC;
+    armas_dense_t aC, bC;
 
     for (k = a->rows - 1; k >= 0; k--) {
-        armas_d_row(&aC, a, k);
-        armas_d_row(&bC, b, k);
-        if (!armas_d_allclose(&aC, &bC)) {
+        armas_row(&aC, a, k);
+        armas_row(&bC, b, k);
+        if (!armas_allclose(&aC, &bC)) {
             *row = k;
             break;
         }
@@ -254,8 +224,8 @@ void find_from_bottom_right(armas_d_dense_t * a, armas_d_dense_t * b, int *row,
         return;
 
     for (k = 0; k < a->rows; k++) {
-        double a = armas_d_get(&aC, 0, k);
-        double b = armas_d_get(&bC, 0, k);
+        double a = armas_get(&aC, 0, k);
+        double b = armas_get(&bC, 0, k);
         if (!in_tolerance(a, b)) {
             *col = k;
             break;
@@ -263,16 +233,16 @@ void find_from_bottom_right(armas_d_dense_t * a, armas_d_dense_t * b, int *row,
     }
 }
 
-void find_from_top_left(armas_d_dense_t * a, armas_d_dense_t * b, int *row,
+void find_from_top_left(armas_dense_t * a, armas_dense_t * b, int *row,
                         int *col)
 {
     int k;
-    armas_d_dense_t aC, bC;
+    armas_dense_t aC, bC;
 
     for (k = 0; k < a->cols; k++) {
-        armas_d_column(&aC, a, k);
-        armas_d_column(&bC, b, k);
-        if (!armas_d_allclose(&aC, &bC)) {
+        armas_column(&aC, a, k);
+        armas_column(&bC, b, k);
+        if (!armas_allclose(&aC, &bC)) {
             *col = k;
             break;
         }
@@ -282,8 +252,8 @@ void find_from_top_left(armas_d_dense_t * a, armas_d_dense_t * b, int *row,
 
     // search row on column
     for (k = 0; k < a->rows; k++) {
-        double a = armas_d_get(&aC, k, 0);
-        double b = armas_d_get(&bC, k, 0);
+        double a = armas_get(&aC, k, 0);
+        double b = armas_get(&bC, k, 0);
         if (!in_tolerance(a, b)) {
             *row = k;
             break;
@@ -291,14 +261,14 @@ void find_from_top_left(armas_d_dense_t * a, armas_d_dense_t * b, int *row,
     }
 }
 
-int check(armas_d_dense_t * A, armas_d_dense_t * B, int chkdir, const char *msg)
+int check(armas_dense_t * A, armas_dense_t * B, int chkdir, const char *msg)
 {
-    int ok = armas_d_allclose(A, B);
+    int ok = armas_allclose(A, B);
     printf("%6s: %s\n", ok ? "OK" : "FAILED", msg);
     if (ok)
         return ok;
 
-    armas_d_dense_t S;
+    armas_dense_t S;
     int row = -1, col = -1;
     if (chkdir > 0) {
         // from top-left to bottom-right
@@ -308,16 +278,16 @@ int check(armas_d_dense_t * A, armas_d_dense_t * B, int chkdir, const char *msg)
         find_from_bottom_right(A, B, &row, &col);
     }
     printf("1: first difference at [%d, %d]\n", row, col);
-    armas_d_submatrix(&S, A, row, col,
+    armas_submatrix(&S, A, row, col,
                       min(9, A->rows - row), min(9, A->cols - col));
     printf("A, [%d, %d]\n", row, col);
-    armas_d_printf(stdout, "%9.2e", &S);
+    armas_printf(stdout, "%9.2e", &S);
 
     return ok;
 }
 
 #if 0
-void armas_x_printf(FILE * out, const char *efmt, const armas_d_dense_t * m,
+void armas_printf(FILE * out, const char *efmt, const armas_dense_t * m,
                     int partial)
 {
     int i, j;

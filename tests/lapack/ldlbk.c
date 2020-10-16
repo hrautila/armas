@@ -17,7 +17,7 @@
 
 int test_factor(int M, int N, int lb, int verbose, int flags)
 {
-    armas_x_dense_t A0, A1;
+    armas_dense_t A0, A1;
     armas_pivot_t P0, P1;
     armas_env_t *env = armas_getenv();
     armas_conf_t cf = *armas_conf_default();
@@ -25,26 +25,26 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
     char uplo = (flags & ARMAS_UPPER) ? 'U' : 'L';
     DTYPE nrm;
 
-    armas_x_init(&A0, N, N);
-    armas_x_init(&A1, N, N);
+    armas_init(&A0, N, N);
+    armas_init(&A1, N, N);
     armas_pivot_init(&P0, N);
     armas_pivot_init(&P1, N);
 
     // set source data
-    armas_x_set_values(&A0, unitrand, flags);
-    armas_x_mcopy(&A1, &A0, 0, &cf);
+    armas_set_values(&A0, unitrand, flags);
+    armas_mcopy(&A1, &A0, 0, &cf);
 
     cf.error = 0;
     env->lb = 0;
-    armas_x_bkfactor(&A0, &P0, flags, &cf);
-    //armas_x_bkfactor_w(&A0, &P0, flags, &wb, &cf);
+    armas_bkfactor(&A0, &P0, flags, &cf);
+    //armas_bkfactor_w(&A0, &P0, flags, &wb, &cf);
     if (verbose > 1 && cf.error != 0)
         printf("1. error=%d\n", cf.error);
 
     cf.error = 0;
     env->lb = lb;
-    armas_x_bkfactor(&A1, &P1, flags, &cf);
-    //armas_x_bkfactor_w(&A1, &P1, flags, &wb, &cf);
+    armas_bkfactor(&A1, &P1, flags, &cf);
+    //armas_bkfactor_w(&A1, &P1, flags, &wb, &cf);
     if (verbose > 1 && cf.error != 0)
         printf("1. error=%d\n", cf.error);
 
@@ -57,8 +57,8 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
                ndigits(nrm));
     }
 
-    armas_x_release(&A0);
-    armas_x_release(&A1);
+    armas_release(&A0);
+    armas_release(&A1);
     armas_pivot_release(&P0);
     armas_pivot_release(&P1);
 
@@ -67,8 +67,8 @@ int test_factor(int M, int N, int lb, int verbose, int flags)
 
 int test_solve(int M, int N, int lb, int verbose, int flags)
 {
-    armas_x_dense_t A0, A1;
-    armas_x_dense_t B0, X0;
+    armas_dense_t A0, A1;
+    armas_dense_t B0, X0;
     armas_pivot_t P0;
     armas_env_t *env = armas_getenv();
     armas_conf_t cf = *armas_conf_default();
@@ -76,28 +76,28 @@ int test_solve(int M, int N, int lb, int verbose, int flags)
     int ok;
     DTYPE nrm, nrm_A;
 
-    armas_x_init(&A0, N, N);
-    armas_x_init(&A1, N, N);
-    armas_x_init(&B0, N, M);
-    armas_x_init(&X0, N, M);
+    armas_init(&A0, N, N);
+    armas_init(&A1, N, N);
+    armas_init(&B0, N, M);
+    armas_init(&X0, N, M);
     armas_pivot_init(&P0, N);
 
     // set source data
-    armas_x_set_values(&A0, unitrand, flags);
-    armas_x_mcopy(&A1, &A0, 0, &cf);
+    armas_set_values(&A0, unitrand, flags);
+    armas_mcopy(&A1, &A0, 0, &cf);
 
-    armas_x_set_values(&B0, unitrand, 0);
-    armas_x_mcopy(&X0, &B0, 0, &cf);
-    nrm_A = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &cf);
+    armas_set_values(&B0, unitrand, 0);
+    armas_mcopy(&X0, &B0, 0, &cf);
+    nrm_A = armas_mnorm(&B0, ARMAS_NORM_ONE, &cf);
 
     env->lb = lb;
-    armas_x_bkfactor(&A0, &P0, flags, &cf);
+    armas_bkfactor(&A0, &P0, flags, &cf);
 
     // solve
-    armas_x_bksolve(&X0, &A0, &P0, flags, &cf);
+    armas_bksolve(&X0, &A0, &P0, flags, &cf);
     // B0 = B0 - A*X0
-    armas_x_mult_sym(1.0, &B0, -1.0, &A1, &X0, ARMAS_LEFT | flags, &cf);
-    nrm = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &cf);
+    armas_mult_sym(1.0, &B0, -1.0, &A1, &X0, ARMAS_LEFT | flags, &cf);
+    nrm = armas_mnorm(&B0, ARMAS_NORM_ONE, &cf);
     nrm /= nrm_A;
 
     ok = isFINE(nrm, N * REL_ERROR);

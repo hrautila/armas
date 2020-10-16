@@ -9,40 +9,40 @@
 
 int test_left_ext(int N, int K, int unit, int verbose, armas_conf_t *cf)
 {
-    armas_d_dense_t Y, Y1, Y0, A, At, L, Lt, E, Et;
+    armas_dense_t Y, Y1, Y0, A, At, L, Lt, E, Et;
     DTYPE n0, n1;
     int ok, fails = 0;
 
-    armas_d_init(&Y, N, K);
-    armas_d_init(&Y0, N, K);
-    armas_d_init(&Y1, N, K);
-    armas_d_init(&E, N, K);
-    armas_d_init(&Et, N, K);
-    armas_d_init(&A, N, N);
-    armas_d_init(&At, N, N);
-    armas_d_init(&L, N, N);
-    armas_d_init(&Lt, N, N);
+    armas_init(&Y, N, K);
+    armas_init(&Y0, N, K);
+    armas_init(&Y1, N, K);
+    armas_init(&E, N, K);
+    armas_init(&Et, N, K);
+    armas_init(&A, N, N);
+    armas_init(&At, N, N);
+    armas_init(&L, N, N);
+    armas_init(&Lt, N, N);
 
-    armas_d_set_values(&Y, one, ARMAS_NULL);
-    armas_d_mcopy(&Y1, &Y, 0, cf);
+    armas_set_values(&Y, one, ARMAS_NULL);
+    armas_mcopy(&Y1, &Y, 0, cf);
     make_ext_trsm_matrix(N, ARMAS_LEFT, &A, &At, &E, &Et, cf);
-    armas_d_mcopy(&Lt, &A, ARMAS_TRANS, cf);
-    armas_d_mcopy(&L, &At, ARMAS_TRANS, cf);
+    armas_mcopy(&Lt, &A, ARMAS_TRANS, cf);
+    armas_mcopy(&L, &At, ARMAS_TRANS, cf);
 
     if (verbose > 2 && N < 10) {
-        printf("U\n"); armas_d_printf(stdout, "%9.2e", &A);
-        printf("E\n"); armas_d_printf(stdout, "%9.2e", &E);
-        printf("Ut\n"); armas_d_printf(stdout, "%9.2e", &At);
-        printf("Et\n"); armas_d_printf(stdout, "%9.2e", &Et);
-        printf("L\n"); armas_d_printf(stdout, "%9.2e", &L);
-        printf("Lt\n"); armas_d_printf(stdout, "%9.2e", &Lt);
+        printf("U\n"); armas_printf(stdout, "%9.2e", &A);
+        printf("E\n"); armas_printf(stdout, "%9.2e", &E);
+        printf("Ut\n"); armas_printf(stdout, "%9.2e", &At);
+        printf("Et\n"); armas_printf(stdout, "%9.2e", &Et);
+        printf("L\n"); armas_printf(stdout, "%9.2e", &L);
+        printf("Lt\n"); armas_printf(stdout, "%9.2e", &Lt);
     }
 
     // ---------------------------------------------------------
 #if 1
-    armas_d_mcopy(&Y0, &E, 0, cf);
-    armas_x_ext_solve_trm(&Y0, -1.0, &A, ARMAS_UPPER, cf);
-    armas_x_madd(&Y0, 1.0, 0, cf);
+    armas_mcopy(&Y0, &E, 0, cf);
+    armas_ext_solve_trm(&Y0, -1.0, &A, ARMAS_UPPER, cf);
+    armas_madd(&Y0, 1.0, 0, cf);
 
     n0 = rel_error(&n1, &Y0, __nil, ARMAS_NORM_INF, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N);
@@ -54,9 +54,9 @@ int test_left_ext(int N, int K, int unit, int verbose, armas_conf_t *cf)
 #endif
     // ---------------------------------------------------------
 #if 1
-    armas_d_mcopy(&Y0, &Et, 0, cf);
-    armas_x_ext_solve_trm(&Y0, -1.0, &At, ARMAS_UPPER|ARMAS_TRANS, cf);
-    armas_x_madd(&Y0, 1.0, 0, cf);
+    armas_mcopy(&Y0, &Et, 0, cf);
+    armas_ext_solve_trm(&Y0, -1.0, &At, ARMAS_UPPER|ARMAS_TRANS, cf);
+    armas_madd(&Y0, 1.0, 0, cf);
     n0 = rel_error(&n1, &Y0, __nil, ARMAS_NORM_INF, 0, cf);
 
     ok = n0 == 0.0 || isOK(n0, N);
@@ -69,9 +69,9 @@ int test_left_ext(int N, int K, int unit, int verbose, armas_conf_t *cf)
     // ---------------------------------------------------------
     // ---------------------------------------------------------
 #if 1
-    armas_d_mcopy(&Y0, &Et, 0, cf);
-    armas_x_ext_solve_trm(&Y0, -1.0, &L, ARMAS_LOWER, cf);
-    armas_x_madd(&Y0, 1.0, 0, cf);
+    armas_mcopy(&Y0, &Et, 0, cf);
+    armas_ext_solve_trm(&Y0, -1.0, &L, ARMAS_LOWER, cf);
+    armas_madd(&Y0, 1.0, 0, cf);
     n0 = rel_error(&n1, &Y0, __nil, ARMAS_NORM_INF, 0, cf);
 
     ok = n0 == 0.0 || isOK(n0, N);
@@ -83,9 +83,9 @@ int test_left_ext(int N, int K, int unit, int verbose, armas_conf_t *cf)
 #endif
     // ---------------------------------------------------------
 #if 1
-    armas_d_mcopy(&Y0, &E, 0, cf);
-    armas_x_ext_solve_trm(&Y0, -1.0, &Lt, ARMAS_LOWER|ARMAS_TRANS, cf);
-    armas_x_madd(&Y0, 1.0, 0, cf);
+    armas_mcopy(&Y0, &E, 0, cf);
+    armas_ext_solve_trm(&Y0, -1.0, &Lt, ARMAS_LOWER|ARMAS_TRANS, cf);
+    armas_madd(&Y0, 1.0, 0, cf);
     n0 = rel_error(&n1, &Y0, __nil, ARMAS_NORM_INF, 0, cf);
 
     ok = n0 == 0.0 || isOK(n0, N);
@@ -100,40 +100,40 @@ int test_left_ext(int N, int K, int unit, int verbose, armas_conf_t *cf)
 
 int test_right_ext(int N, int K, int unit, int verbose, armas_conf_t *cf)
 {
-    armas_d_dense_t Y0, A, At, L, Lt, E, Et;
+    armas_dense_t Y0, A, At, L, Lt, E, Et;
     DTYPE n0, n1;
     int ok, fails = 0;
 
-    armas_d_init(&Y0, K, N);
-    armas_d_init(&E, K, N);
-    armas_d_init(&Et, K, N);
-    armas_d_init(&A, N, N);
-    armas_d_init(&At, N, N);
-    armas_d_init(&L, N, N);
-    armas_d_init(&Lt, N, N);
+    armas_init(&Y0, K, N);
+    armas_init(&E, K, N);
+    armas_init(&Et, K, N);
+    armas_init(&A, N, N);
+    armas_init(&At, N, N);
+    armas_init(&L, N, N);
+    armas_init(&Lt, N, N);
 
-    armas_d_set_values(&Y0, one, ARMAS_NULL);
+    armas_set_values(&Y0, one, ARMAS_NULL);
     make_ext_trsm_matrix(N, ARMAS_RIGHT, &A, &At, &E, &Et, cf);
-    armas_d_mcopy(&Lt, &A, ARMAS_TRANS, cf);
-    armas_d_mcopy(&L, &At, ARMAS_TRANS, cf);
+    armas_mcopy(&Lt, &A, ARMAS_TRANS, cf);
+    armas_mcopy(&L, &At, ARMAS_TRANS, cf);
 
     if (verbose > 2 && N < 10) {
-        printf("U\n"); armas_d_printf(stdout, "%9.2e", &A);
-        printf("E\n"); armas_d_printf(stdout, "%9.2e", &E);
-        printf("Ut\n"); armas_d_printf(stdout, "%9.2e", &At);
-        printf("Et\n"); armas_d_printf(stdout, "%9.2e", &Et);
-        printf("L\n"); armas_d_printf(stdout, "%9.2e", &L);
-        printf("Lt\n"); armas_d_printf(stdout, "%9.2e", &Lt);
+        printf("U\n"); armas_printf(stdout, "%9.2e", &A);
+        printf("E\n"); armas_printf(stdout, "%9.2e", &E);
+        printf("Ut\n"); armas_printf(stdout, "%9.2e", &At);
+        printf("Et\n"); armas_printf(stdout, "%9.2e", &Et);
+        printf("L\n"); armas_printf(stdout, "%9.2e", &L);
+        printf("Lt\n"); armas_printf(stdout, "%9.2e", &Lt);
     }
 
     // ---------------------------------------------------------
 #if 1
-    armas_d_mcopy(&Y0, &E, 0, cf);
-    armas_x_ext_solve_trm(&Y0, -1.0, &A, ARMAS_RIGHT|ARMAS_UPPER, cf);
+    armas_mcopy(&Y0, &E, 0, cf);
+    armas_ext_solve_trm(&Y0, -1.0, &A, ARMAS_RIGHT|ARMAS_UPPER, cf);
     if (verbose > 2 && N < 10) {
-        printf("Y*A^-1:\n"); armas_d_printf(stdout, "%9.2e", &Y0);
+        printf("Y*A^-1:\n"); armas_printf(stdout, "%9.2e", &Y0);
     }
-    armas_x_madd(&Y0, 1.0, 0, cf);
+    armas_madd(&Y0, 1.0, 0, cf);
 
     n0 = rel_error(&n1, &Y0, __nil, ARMAS_NORM_INF, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N);
@@ -145,9 +145,9 @@ int test_right_ext(int N, int K, int unit, int verbose, armas_conf_t *cf)
 #endif
     // ---------------------------------------------------------
 #if 1
-    armas_d_mcopy(&Y0, &Et, 0, cf);
-    armas_x_ext_solve_trm(&Y0, -1.0, &At, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANS, cf);
-    armas_x_madd(&Y0, 1.0, 0, cf);
+    armas_mcopy(&Y0, &Et, 0, cf);
+    armas_ext_solve_trm(&Y0, -1.0, &At, ARMAS_RIGHT|ARMAS_UPPER|ARMAS_TRANS, cf);
+    armas_madd(&Y0, 1.0, 0, cf);
     n0 = rel_error(&n1, &Y0, __nil, ARMAS_NORM_INF, 0, cf);
 
     ok = n0 == 0.0 || isOK(n0, N);
@@ -160,9 +160,9 @@ int test_right_ext(int N, int K, int unit, int verbose, armas_conf_t *cf)
     // ---------------------------------------------------------
     // ---------------------------------------------------------
 #if 1
-    armas_d_mcopy(&Y0, &Et, 0, cf);
-    armas_x_ext_solve_trm(&Y0, -1.0, &L, ARMAS_RIGHT|ARMAS_LOWER, cf);
-    armas_x_madd(&Y0, 1.0, 0, cf);
+    armas_mcopy(&Y0, &Et, 0, cf);
+    armas_ext_solve_trm(&Y0, -1.0, &L, ARMAS_RIGHT|ARMAS_LOWER, cf);
+    armas_madd(&Y0, 1.0, 0, cf);
     n0 = rel_error(&n1, &Y0, __nil, ARMAS_NORM_INF, 0, cf);
 
     ok = n0 == 0.0 || isOK(n0, N);
@@ -174,9 +174,9 @@ int test_right_ext(int N, int K, int unit, int verbose, armas_conf_t *cf)
 #endif
     // ---------------------------------------------------------
 #if 1
-    armas_d_mcopy(&Y0, &E, 0, cf);
-    armas_x_ext_solve_trm(&Y0, -1.0, &Lt, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANS, cf);
-    armas_x_madd(&Y0, 1.0, 0, cf);
+    armas_mcopy(&Y0, &E, 0, cf);
+    armas_ext_solve_trm(&Y0, -1.0, &Lt, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_TRANS, cf);
+    armas_madd(&Y0, 1.0, 0, cf);
     n0 = rel_error(&n1, &Y0, __nil, ARMAS_NORM_INF, 0, cf);
 
     ok = n0 == 0.0 || isOK(n0, N);

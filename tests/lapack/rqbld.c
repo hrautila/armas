@@ -17,29 +17,29 @@
 int test_build(int M, int N, int K, int lb, int verbose)
 {
     char ct = N == K ? 'N' : 'K';
-    armas_x_dense_t A0, A1, tau0;
+    armas_dense_t A0, A1, tau0;
     int ok;
     DTYPE n0;
     armas_env_t *env = armas_getenv();
     armas_conf_t conf = *armas_conf_default();
 
-    armas_x_init(&A0, M, N);
-    armas_x_init(&A1, M, N);
-    armas_x_init(&tau0, imin(M, N), 1);
+    armas_init(&A0, M, N);
+    armas_init(&A1, M, N);
+    armas_init(&tau0, imin(M, N), 1);
 
     // set source data
-    armas_x_set_values(&A0, unitrand, ARMAS_ANY);
+    armas_set_values(&A0, unitrand, ARMAS_ANY);
 
     // factorize
     env->lb = lb;
-    armas_x_rqfactor(&A0, &tau0, &conf);
-    armas_x_mcopy(&A1, &A0, 0, &conf);
+    armas_rqfactor(&A0, &tau0, &conf);
+    armas_mcopy(&A1, &A0, 0, &conf);
 
     // compute Q = buildQ(rq(A))
     env->lb = 0;
-    armas_x_rqbuild(&A0, &tau0, K, &conf);
+    armas_rqbuild(&A0, &tau0, K, &conf);
     env->lb = lb;
-    armas_x_rqbuild(&A1, &tau0, K, &conf);
+    armas_rqbuild(&A1, &tau0, K, &conf);
 
     // ||A1 - A0||/||A0||
     n0 = rel_error((DTYPE *) 0, &A1, &A0, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
@@ -50,9 +50,9 @@ int test_build(int M, int N, int K, int lb, int verbose)
         printf("  || rel_error ||_1: %e [%d]\n", n0, ndigits(n0));
     }
 
-    armas_x_release(&A0);
-    armas_x_release(&A1);
-    armas_x_release(&tau0);
+    armas_release(&A0);
+    armas_release(&A1);
+    armas_release(&tau0);
     return ok;
 }
 
@@ -64,43 +64,43 @@ int test_build_identity(int M, int N, int K, int lb, int verbose)
 {
     const char *blk = (lb > 0) ? "  blk" : "unblk";
     char ct = M == K ? 'M' : 'K';
-    armas_x_dense_t A0, C0, tau0, D;
+    armas_dense_t A0, C0, tau0, D;
     int ok;
     DTYPE n0;
     armas_env_t *env = armas_getenv();
     armas_conf_t conf = *armas_conf_default();
 
-    armas_x_init(&A0, M, N);
-    armas_x_init(&C0, M, M);
-    armas_x_init(&tau0, imin(M, N), 1);
+    armas_init(&A0, M, N);
+    armas_init(&C0, M, M);
+    armas_init(&tau0, imin(M, N), 1);
 
     // set source data
-    armas_x_set_values(&A0, unitrand, ARMAS_ANY);
+    armas_set_values(&A0, unitrand, ARMAS_ANY);
 
     // factorize
     env->lb = lb;
-    armas_x_rqfactor(&A0, &tau0, &conf);
+    armas_rqfactor(&A0, &tau0, &conf);
 
     // compute Q = buildQ(rq(A)), K first columns
     env->lb = lb;
-    if (armas_x_rqbuild(&A0, &tau0, K, &conf) < 0)
+    if (armas_rqbuild(&A0, &tau0, K, &conf) < 0)
         printf("build error: %d\n", conf.error);
 
     // C0 = Q.T*Q - I
-    armas_x_mult(ZERO, &C0, ONE, &A0, &A0, ARMAS_TRANSB, &conf);
-    armas_x_diag(&D, &C0, 0);
-    armas_x_madd(&D, -ONE, 0, &conf);
+    armas_mult(ZERO, &C0, ONE, &A0, &A0, ARMAS_TRANSB, &conf);
+    armas_diag(&D, &C0, 0);
+    armas_madd(&D, -ONE, 0, &conf);
 
-    n0 = armas_x_mnorm(&C0, ARMAS_NORM_ONE, &conf);
+    n0 = armas_mnorm(&C0, ARMAS_NORM_ONE, &conf);
 
     ok = isOK(n0, N);
     printf("%s: %s Q(rq(A),%c).T * Q(rq(A),%c) == I\n", PASS(ok), blk, ct, ct);
     if (verbose > 0) {
         printf("  || rel error ||_1: %e [%d]\n", n0, ndigits(n0));
     }
-    //armas_x_release(&A0);
-    armas_x_release(&C0);
-    armas_x_release(&tau0);
+    //armas_release(&A0);
+    armas_release(&C0);
+    armas_release(&tau0);
     return ok;
 }
 

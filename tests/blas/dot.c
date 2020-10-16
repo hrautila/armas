@@ -8,24 +8,24 @@
 
 int test_std(int N, int verbose, armas_conf_t *cf)
 {
-    armas_x_dense_t X, Y;
+    armas_dense_t X, Y;
     int ok, fails = 0;
     DTYPE n0, n1;
 
-    armas_x_init(&Y, N, 1);
-    armas_x_init(&X, N, 1);
+    armas_init(&Y, N, 1);
+    armas_init(&X, N, 1);
 
-    armas_x_set_values(&X, one, ARMAS_NULL);
-    armas_x_set_values(&Y, unitrand, ARMAS_NULL);
+    armas_set_values(&X, one, ARMAS_NULL);
+    armas_set_values(&Y, unitrand, ARMAS_NULL);
 
-    n0 = armas_x_dot(&X, &X, cf);
+    n0 = armas_dot(&X, &X, cf);
     n0 = (double)N - n0;
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
     printf("%6s : 1*1^T - N == 0\n", PASS(ok));
     fails += 1 - ok;
 
-    n0 = armas_x_dot(&X, &Y, cf);
-    n1 = armas_x_asum(&Y, cf);
+    n0 = armas_dot(&X, &Y, cf);
+    n1 = armas_asum(&Y, cf);
 
     n0 = n1 - n0;
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;

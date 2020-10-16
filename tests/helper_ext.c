@@ -39,12 +39,12 @@ static void seed()
 
 void make_ext_trsv_data(
     int N, int right,
-    armas_x_dense_t *Aa,
-    armas_x_dense_t *Aat,
-    armas_x_dense_t *Ee,
-    armas_x_dense_t *Eet)
+    armas_dense_t *Aa,
+    armas_dense_t *Aat,
+    armas_dense_t *Ee,
+    armas_dense_t *Eet)
 {
-    armas_x_dense_t row, col, *A, *At, *E, *Et;
+    armas_dense_t row, col, *A, *At, *E, *Et;
     DTYPE z;
 
     A  = right ? Aat : Aa;
@@ -53,60 +53,60 @@ void make_ext_trsv_data(
     Et = right ? Ee : Eet;
 
     for (int i = 0; i < N; i++) {
-        armas_x_row(&row, A, i);
-        armas_x_column(&col, At, N - 1 - i);
+        armas_row(&row, A, i);
+        armas_column(&col, At, N - 1 - i);
         if (i < N - 3) {
             for (int j = i; j < N; ++j) {
-                armas_x_set_at(&row, j, EPS);
-                armas_x_set_at(&col, N - 1 - j, EPS);
+                armas_set_at(&row, j, EPS);
+                armas_set_at(&col, N - 1 - j, EPS);
             }
             z = (N - 3 - i) * EPS;
-            armas_x_set_at(&row, N - 1, -N);
-            armas_x_set_at(&row, i, z);
-            armas_x_set_at(&row, i + 1, N);
-            armas_x_set_at(&col, 0, -N);
-            armas_x_set_at(&col, N - 2 - i, N);
-            armas_x_set_at(&col, N - 1 - i, z);
+            armas_set_at(&row, N - 1, -N);
+            armas_set_at(&row, i, z);
+            armas_set_at(&row, i + 1, N);
+            armas_set_at(&col, 0, -N);
+            armas_set_at(&col, N - 2 - i, N);
+            armas_set_at(&col, N - 1 - i, z);
 
-            armas_x_set_at(E, i, 2 * z);
-            armas_x_set_at(Et, N - 1 - i, 2 * z);
+            armas_set_at(E, i, 2 * z);
+            armas_set_at(Et, N - 1 - i, 2 * z);
         } else {
-            armas_x_set_at(&row, i, N);
-            armas_x_set_at(&col, N - 1 - i, N);
-            armas_x_set_at(E, i, N);
-            armas_x_set_at(Et, N - 1 - i, N);
+            armas_set_at(&row, i, N);
+            armas_set_at(&col, N - 1 - i, N);
+            armas_set_at(E, i, N);
+            armas_set_at(Et, N - 1 - i, N);
         }
     }
 }
 
 void make_ext_trsm_matrix(
     int N, int flags,
-    armas_x_dense_t *A, armas_x_dense_t *At,
-    armas_x_dense_t *E, armas_x_dense_t *Et,
+    armas_dense_t *A, armas_dense_t *At,
+    armas_dense_t *E, armas_dense_t *Et,
     armas_conf_t *cf)
 {
-    armas_x_dense_t e0, e1, c0, c1;
+    armas_dense_t e0, e1, c0, c1;
 
     if (flags & ARMAS_RIGHT) {
-        armas_x_row(&e0, E, 0);
-        armas_x_row(&e1, Et, 0);
+        armas_row(&e0, E, 0);
+        armas_row(&e1, Et, 0);
     } else {
-        armas_x_column(&e0, E, 0);
-        armas_x_column(&e1, Et, 0);
+        armas_column(&e0, E, 0);
+        armas_column(&e1, Et, 0);
     }
     make_ext_trsv_data(N, (flags & ARMAS_RIGHT) != 0, A, At, &e0, &e1);
 
     int K = (flags & ARMAS_RIGHT) != 0 ? E->rows : E->cols;
     for (int j = 1; j < K; ++j) {
         if (flags & ARMAS_RIGHT) {
-            armas_x_row(&c0, E, j);
-            armas_x_row(&c1, Et, j);
+            armas_row(&c0, E, j);
+            armas_row(&c1, Et, j);
         } else {
-            armas_x_column(&c0, E, j);
-            armas_x_column(&c1, Et, j);
+            armas_column(&c0, E, j);
+            armas_column(&c1, Et, j);
         }
-        armas_x_copy(&c0, &e0, cf);
-        armas_x_copy(&c1, &e1, cf);
+        armas_copy(&c0, &e0, cf);
+        armas_copy(&c1, &e1, cf);
     }
 }
 
@@ -126,66 +126,66 @@ void make_ext_trsm_matrix(
 
 void make_ext_trmv_data(
     int N,
-    armas_x_dense_t *A,
-    armas_x_dense_t *At,
-    armas_x_dense_t *E,
-    armas_x_dense_t *Et)
+    armas_dense_t *A,
+    armas_dense_t *At,
+    armas_dense_t *E,
+    armas_dense_t *Et)
 {
-    armas_x_dense_t row, col;
+    armas_dense_t row, col;
 
     for (int i = 0; i < N; i++) {
-        armas_x_row(&row, A, i);
-        armas_x_column(&col, At, N - 1 - i);
+        armas_row(&row, A, i);
+        armas_column(&col, At, N - 1 - i);
         for (int j = i; j < N; ++j) {
-            armas_x_set_at(&row, j, EPS);
-            armas_x_set_at(&col, N - 1 - j, EPS);
+            armas_set_at(&row, j, EPS);
+            armas_set_at(&col, N - 1 - j, EPS);
         }
-        armas_x_set_at(&row, i, N * C);
-        armas_x_set_at(&row, N - 1, -N * C);
-        armas_x_set_at(&col, N - 1 - i, N * C);
-        armas_x_set_at(&col, 0, -N * C);
+        armas_set_at(&row, i, N * C);
+        armas_set_at(&row, N - 1, -N * C);
+        armas_set_at(&col, N - 1 - i, N * C);
+        armas_set_at(&col, 0, -N * C);
 
         if (i == 0) {
-            armas_x_set_at(E, i, (N - 2 - i) * EPS);
-            armas_x_set_at(Et, i, -N * C);
+            armas_set_at(E, i, (N - 2 - i) * EPS);
+            armas_set_at(Et, i, -N * C);
         } else if (i == N - 1) {
-            armas_x_set_at(E, i, -N * C);
-            armas_x_set_at(Et, i, (i - 1) * EPS);
+            armas_set_at(E, i, -N * C);
+            armas_set_at(Et, i, (i - 1) * EPS);
         } else {
-            armas_x_set_at(E, i, (N - 2 - i) * EPS);
-            armas_x_set_at(Et, N - 1 - i, (N - 2 - i) * EPS);
+            armas_set_at(E, i, (N - 2 - i) * EPS);
+            armas_set_at(Et, N - 1 - i, (N - 2 - i) * EPS);
         }
     }
 }
 
 void make_ext_trmm_matrix(
     int N, int flags,
-    armas_x_dense_t *A, armas_x_dense_t *At,
-    armas_x_dense_t *E, armas_x_dense_t *Et,
+    armas_dense_t *A, armas_dense_t *At,
+    armas_dense_t *E, armas_dense_t *Et,
     armas_conf_t *cf)
 {
-    armas_x_dense_t e0, e1, c0, c1;
+    armas_dense_t e0, e1, c0, c1;
 
     if (flags & ARMAS_RIGHT) {
-        armas_x_row(&e0, E, 0);
-        armas_x_row(&e1, Et, 0);
+        armas_row(&e0, E, 0);
+        armas_row(&e1, Et, 0);
     } else {
-        armas_x_column(&e0, E, 0);
-        armas_x_column(&e1, Et, 0);
+        armas_column(&e0, E, 0);
+        armas_column(&e1, Et, 0);
     }
     make_ext_trmv_data(N, A, At, &e0, &e1);
 
     int K = (flags & ARMAS_RIGHT) != 0 ? E->rows : E->cols;
     for (int j = 1; j < K; ++j) {
         if (flags & ARMAS_RIGHT) {
-            armas_x_row(&c0, E, j);
-            armas_x_row(&c1, Et, j);
+            armas_row(&c0, E, j);
+            armas_row(&c1, Et, j);
         } else {
-            armas_x_column(&c0, E, j);
-            armas_x_column(&c1, Et, j);
+            armas_column(&c0, E, j);
+            armas_column(&c1, Et, j);
         }
-        armas_x_copy(&c0, &e0, cf);
-        armas_x_copy(&c1, &e1, cf);
+        armas_copy(&c0, &e0, cf);
+        armas_copy(&c1, &e1, cf);
     }
 }
 
@@ -201,13 +201,13 @@ static int rnd_index(int N)
 }
 
 void make_ext_matrix_data(
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    armas_x_dense_t *E,
+    armas_dense_t *E,
     int flags)
 {
     int k;
-    armas_x_set_values(A, eps, 0);
+    armas_set_values(A, eps, 0);
     seed();
     if (flags & ARMAS_RIGHT) {
         for (int i = 0; i < A->cols; ++i) {
@@ -215,9 +215,9 @@ void make_ext_matrix_data(
             if (k == A->rows - 1 - k) {
                 k += 1;
             }
-            armas_x_set_unsafe(A, k, i, (DTYPE)A->rows);
-            armas_x_set_unsafe(A, A->rows - 1 - k, i, (DTYPE)(-A->rows));
-            armas_x_set_at_unsafe(E, i, alpha * (A->rows - 2) * EPS);
+            armas_set_unsafe(A, k, i, (DTYPE)A->rows);
+            armas_set_unsafe(A, A->rows - 1 - k, i, (DTYPE)(-A->rows));
+            armas_set_at_unsafe(E, i, alpha * (A->rows - 2) * EPS);
         }
     } else {
         for (int i = 0; i < A->rows; ++i) {
@@ -225,9 +225,9 @@ void make_ext_matrix_data(
             if (k == A->cols - 1 - k) {
                 k += 1;
             }
-            armas_x_set_unsafe(A, i, k, (DTYPE)A->cols);
-            armas_x_set_unsafe(A, i, A->cols - 1 - k, (DTYPE)(-A->cols));
-            armas_x_set_at_unsafe(E, i, alpha * (A->cols - 2) * EPS);
+            armas_set_unsafe(A, i, k, (DTYPE)A->cols);
+            armas_set_unsafe(A, i, A->cols - 1 - k, (DTYPE)(-A->cols));
+            armas_set_at_unsafe(E, i, alpha * (A->cols - 2) * EPS);
         }
     }
 }

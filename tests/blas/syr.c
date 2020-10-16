@@ -9,24 +9,24 @@
 static
 int test_std(int N, int verbose, int flags, armas_conf_t *cf)
 {
-    armas_x_dense_t X, A, A0;
+    armas_dense_t X, A, A0;
     int ok;
     DTYPE n0, n1;
     const char *uplo = (flags & ARMAS_UPPER) != 0 ? "upper" : "lower";
 
-    armas_x_init(&X, N, 1);
-    armas_x_init(&A, N, N);
-    armas_x_init(&A0, N, N);
+    armas_init(&X, N, 1);
+    armas_init(&A, N, N);
+    armas_init(&A0, N, N);
 
-    armas_x_set_values(&X, unitrand, 0);
-    armas_x_set_values(&A, unitrand, flags);
-    armas_x_mcopy(&A0, &A, 0, cf);
+    armas_set_values(&X, unitrand, 0);
+    armas_set_values(&A, unitrand, flags);
+    armas_mcopy(&A0, &A, 0, cf);
 
     printf("** symmetric rank-1 update: %s\n", uplo);
 
-    armas_x_mvupdate_sym(2.0, &A, 2.0, &X, flags, cf);
-    armas_x_mvupdate(2.0, &A0, 2.0, &X, &X, cf);
-    armas_x_make_trm(&A0, flags);
+    armas_mvupdate_sym(2.0, &A, 2.0, &X, flags, cf);
+    armas_mvupdate(2.0, &A0, 2.0, &X, &X, cf);
+    armas_make_trm(&A0, flags);
     n0 = rel_error(&n1, &A, &A0, ARMAS_NORM_ONE, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
     printf("%6s : update(%s(A), x) == %s(A + x*x^T)\n", PASS(ok), uplo, uplo);

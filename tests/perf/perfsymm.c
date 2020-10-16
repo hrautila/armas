@@ -18,7 +18,7 @@ int main(int argc, char **argv)
   int verbose = 0;
   double rt, min, max, avg;
   armas_conf_t conf;
-  armas_x_dense_t C, A, B;
+  armas_dense_t C, A, B;
 
   armas_init();
   conf = *armas_conf_default();
@@ -48,13 +48,13 @@ int main(int argc, char **argv)
   //conf.mb = 96; conf.nb = 128; conf.kb = 160;
   //conf.maxproc = nproc;
 
-  armas_x_init(&C, N, N);
-  armas_x_init(&A, N, N);
-  armas_x_init(&B, N, N);
+  armas_init(&C, N, N);
+  armas_init(&A, N, N);
+  armas_init(&B, N, N);
   
-  armas_x_set_values(&C, zero, ARMAS_NULL);
-  armas_x_set_values(&A, unitrand, ARMAS_SYMM);
-  armas_x_set_values(&B, unitrand, ARMAS_NULL);
+  armas_set_values(&C, zero, ARMAS_NULL);
+  armas_set_values(&A, unitrand, ARMAS_SYMM);
+  armas_set_values(&B, unitrand, ARMAS_NULL);
 
   // C = A*B
   min = max = avg = 0.0;
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     flush();
     rt = time_msec();
 
-    armas_x_mult_sym(0.0, &C, 1.0, &A, &B, ARMAS_LEFT|ARMAS_UPPER, &conf);
+    armas_mult_sym(0.0, &C, 1.0, &A, &B, ARMAS_LEFT|ARMAS_UPPER, &conf);
     
     rt = time_msec() - rt;
 

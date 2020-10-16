@@ -8,27 +8,27 @@
 
 int test_std(int M, int N, int verbose, armas_conf_t *cf)
 {
-    armas_x_dense_t X, Y, A, A0, a0;
+    armas_dense_t X, Y, A, A0, a0;
     int ok;
     DTYPE n0, n1;
 
-    armas_x_init(&Y, N, 1);
-    armas_x_init(&X, M, 1);
-    armas_x_init(&A, M, N);
-    armas_x_init(&A0, M, N);
+    armas_init(&Y, N, 1);
+    armas_init(&X, M, 1);
+    armas_init(&A, M, N);
+    armas_init(&A0, M, N);
 
-    armas_x_set_values(&X, unitrand, 0);
-    armas_x_set_values(&Y, unitrand, 0);
-    armas_x_set_values(&A, unitrand, 0);
-    armas_x_mcopy(&A0, &A, 0, cf);
+    armas_set_values(&X, unitrand, 0);
+    armas_set_values(&Y, unitrand, 0);
+    armas_set_values(&A, unitrand, 0);
+    armas_mcopy(&A0, &A, 0, cf);
 
-    armas_x_mvupdate(2.0, &A, 2.0, &X, &Y, cf);
+    armas_mvupdate(2.0, &A, 2.0, &X, &Y, cf);
     for (int j = 0; j < A0.cols; j++) {
-        armas_x_column(&a0, &A0, j);
-        DTYPE yk = armas_x_get_at(&Y, j);
-        armas_x_axpby(2.0, &a0, 2.0*yk, &X, cf);
+        armas_column(&a0, &A0, j);
+        DTYPE yk = armas_get_at(&Y, j);
+        armas_axpby(2.0, &a0, 2.0*yk, &X, cf);
     }
-    // armas_x_mvupdate(1.0, &A, -1.0, &X, &Y, cf);
+    // armas_mvupdate(1.0, &A, -1.0, &X, &Y, cf);
 
     n0 = rel_error(&n1, &A, &A0, ARMAS_NORM_ONE, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;

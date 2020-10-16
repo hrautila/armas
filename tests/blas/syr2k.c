@@ -9,35 +9,35 @@
 static
 int test_std(int N, int verbose, int flags, armas_conf_t *cf)
 {
-    armas_x_dense_t C, C0, A, At, B, Bt;
+    armas_dense_t C, C0, A, At, B, Bt;
     int ok, fails = 0;
     DTYPE n0, n1, alpha = 2.0;
     const char *uplo = (flags & ARMAS_UPPER) ? "U" : "L";
 
-    armas_x_init(&C, N, N);
-    armas_x_init(&C0, N, N);
-    armas_x_init(&A, N, N / 2);
-    armas_x_init(&At, N / 2, N);
-    armas_x_init(&B, N, N / 2);
-    armas_x_init(&Bt, N / 2, N);
+    armas_init(&C, N, N);
+    armas_init(&C0, N, N);
+    armas_init(&A, N, N / 2);
+    armas_init(&At, N / 2, N);
+    armas_init(&B, N, N / 2);
+    armas_init(&Bt, N / 2, N);
 
-    armas_x_set_values(&A, zeromean, 0);
-    armas_x_set_values(&B, zeromean, 0);
-    armas_x_mcopy(&At, &A, ARMAS_TRANS, cf);
-    armas_x_mcopy(&Bt, &B, ARMAS_TRANS, cf);
+    armas_set_values(&A, zeromean, 0);
+    armas_set_values(&B, zeromean, 0);
+    armas_mcopy(&At, &A, ARMAS_TRANS, cf);
+    armas_mcopy(&Bt, &B, ARMAS_TRANS, cf);
 
     printf("** symmetric rank-2k update: %s\n",
            (flags & ARMAS_UPPER) ? "upper" : "lower");
     // 1. C = C + A*B.T + B*A.T;
-    armas_x_set_values(&C, one, ARMAS_SYMM);
-    armas_x_mcopy(&C0, &C, 0, cf);
+    armas_set_values(&C, one, ARMAS_SYMM);
+    armas_mcopy(&C0, &C, 0, cf);
 
-    armas_x_make_trm(&C, flags);
-    armas_x_update2_sym(0.0, &C, alpha, &A, &B, flags, cf);
+    armas_make_trm(&C, flags);
+    armas_update2_sym(0.0, &C, alpha, &A, &B, flags, cf);
 
-    armas_x_mult(0.0, &C0, alpha, &A, &Bt, 0, cf);
-    armas_x_mult(1.0, &C0, alpha, &B, &At, 0, cf);
-    armas_x_make_trm(&C0, flags);
+    armas_mult(0.0, &C0, alpha, &A, &Bt, 0, cf);
+    armas_mult(1.0, &C0, alpha, &B, &At, 0, cf);
+    armas_make_trm(&C0, flags);
 
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;
@@ -49,15 +49,15 @@ int test_std(int N, int verbose, int flags, armas_conf_t *cf)
     fails += 1 - ok;
 
     // 2. C = C + B.T*A + A,T*B
-    armas_x_set_values(&C, one, ARMAS_SYMM);
-    armas_x_mcopy(&C0, &C, 0, cf);
+    armas_set_values(&C, one, ARMAS_SYMM);
+    armas_mcopy(&C0, &C, 0, cf);
 
-    armas_x_make_trm(&C, flags);
-    armas_x_update2_sym(0.0, &C, alpha, &At, &Bt, flags | ARMAS_TRANSA, cf);
+    armas_make_trm(&C, flags);
+    armas_update2_sym(0.0, &C, alpha, &At, &Bt, flags | ARMAS_TRANSA, cf);
 
-    armas_x_mult(0.0, &C0, alpha, &Bt, &A, ARMAS_TRANSA | ARMAS_TRANSB, cf);
-    armas_x_mult(1.0, &C0, alpha, &At, &B, ARMAS_TRANSA | ARMAS_TRANSB, cf);
-    armas_x_make_trm(&C0, flags);
+    armas_mult(0.0, &C0, alpha, &Bt, &A, ARMAS_TRANSA | ARMAS_TRANSB, cf);
+    armas_mult(1.0, &C0, alpha, &At, &B, ARMAS_TRANSA | ARMAS_TRANSB, cf);
+    armas_make_trm(&C0, flags);
 
     n0 = rel_error(&n1, &C, &C0, ARMAS_NORM_ONE, 0, cf);
     ok = n0 == 0.0 || isOK(n0, N) ? 1 : 0;

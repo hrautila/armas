@@ -17,8 +17,8 @@
 
 int test_solve(int M, int N, int lb, int verbose)
 {
-    armas_x_dense_t A0, A1;
-    armas_x_dense_t B0, X0;
+    armas_dense_t A0, A1;
+    armas_dense_t B0, X0;
     armas_pivot_t P0;
     armas_env_t *env = armas_getenv();
     armas_conf_t conf = *armas_conf_default();
@@ -26,29 +26,29 @@ int test_solve(int M, int N, int lb, int verbose)
     int ok;
     DTYPE nrm, nrm0;
 
-    armas_x_init(&A0, N, N);
-    armas_x_init(&A1, N, N);
-    armas_x_init(&B0, N, M);
-    armas_x_init(&X0, N, M);
+    armas_init(&A0, N, N);
+    armas_init(&A1, N, N);
+    armas_init(&B0, N, M);
+    armas_init(&X0, N, M);
     armas_pivot_init(&P0, N);
 
     // set source data
-    armas_x_set_values(&A0, unitrand, ARMAS_ANY);
-    armas_x_mcopy(&A1, &A0, 0, &conf);
+    armas_set_values(&A0, unitrand, ARMAS_ANY);
+    armas_mcopy(&A1, &A0, 0, &conf);
 
-    armas_x_set_values(&B0, unitrand, ARMAS_ANY);
-    armas_x_mcopy(&X0, &B0, 0, &conf);
-    nrm0 = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &conf);
+    armas_set_values(&B0, unitrand, ARMAS_ANY);
+    armas_mcopy(&X0, &B0, 0, &conf);
+    nrm0 = armas_mnorm(&B0, ARMAS_NORM_ONE, &conf);
 
     env->lb = lb;
-    armas_x_lufactor(&A0, &P0, &conf);
+    armas_lufactor(&A0, &P0, &conf);
 
     // solve
-    armas_x_lusolve(&X0, &A0, &P0, ARMAS_NONE, &conf);
+    armas_lusolve(&X0, &A0, &P0, ARMAS_NONE, &conf);
 
     // B0 = B0 - A*X0
-    armas_x_mult(1.0, &B0, -1.0, &A1, &X0, ARMAS_NONE, &conf);
-    nrm = armas_x_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
+    armas_mult(1.0, &B0, -1.0, &A1, &X0, ARMAS_NONE, &conf);
+    nrm = armas_mnorm(&B0, ARMAS_NORM_ONE, &conf) / nrm0;
 
     ok = isFINE(nrm, N * MAX_ERROR);
 
@@ -61,27 +61,27 @@ int test_solve(int M, int N, int lb, int verbose)
 
 int test_factor(int M, int N, int lb, int verbose)
 {
-    armas_x_dense_t A0, A1;
+    armas_dense_t A0, A1;
     armas_pivot_t P0, P1;
     armas_env_t *env = armas_getenv();
     armas_conf_t conf = *armas_conf_default();
     int ok;
     DTYPE nrm;
 
-    armas_x_init(&A0, M, N);
-    armas_x_init(&A1, M, N);
+    armas_init(&A0, M, N);
+    armas_init(&A1, M, N);
     armas_pivot_init(&P0, N);
     armas_pivot_init(&P1, N);
 
     // set source data
-    armas_x_set_values(&A0, unitrand, ARMAS_ANY);
-    armas_x_mcopy(&A1, &A0, 0, &conf);
+    armas_set_values(&A0, unitrand, ARMAS_ANY);
+    armas_mcopy(&A1, &A0, 0, &conf);
 
-    //armas_x_lufactor(&A0, &P0, &conf);
+    //armas_lufactor(&A0, &P0, &conf);
     env->lb = 0;
-    armas_x_lufactor(&A0, &P0, &conf);
+    armas_lufactor(&A0, &P0, &conf);
     env->lb = lb;
-    armas_x_lufactor(&A1, &P1, &conf);
+    armas_lufactor(&A1, &P1, &conf);
 
     nrm = rel_error((DTYPE *) 0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
     ok = isOK(nrm, N);
@@ -91,8 +91,8 @@ int test_factor(int M, int N, int lb, int verbose)
         printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
     }
 
-    armas_x_release(&A0);
-    armas_x_release(&A1);
+    armas_release(&A0);
+    armas_release(&A1);
     armas_pivot_release(&P0);
     armas_pivot_release(&P1);
     return ok;
