@@ -1,24 +1,24 @@
 
-// Copyright (c) Harri Rautila, 2012-202020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "compat.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
+// this file provides following type dependent functions
 #if defined(blas_gemmf) || defined(cblas_gemm)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_mult)
+#if defined(armas_mult)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
@@ -29,19 +29,19 @@ void blas_gemmf(char *transa, char *transb, int *m, int *n, int *k,
                 DTYPE * beta, DTYPE * C, int *ldc)
 {
     armas_conf_t *conf = armas_conf_default();
-    armas_x_dense_t c, a, b;
+    armas_dense_t c, a, b;
     int flags = 0;
 
-    armas_x_make(&c, *m, *n, *ldc, C);
-    armas_x_make(&a, *m, *k, *lda, A);
-    armas_x_make(&b, *k, *n, *ldb, B);
+    armas_make(&c, *m, *n, *ldc, C);
+    armas_make(&a, *m, *k, *lda, A);
+    armas_make(&b, *k, *n, *ldb, B);
 
     if (toupper(*transa) == 'T')
         flags |= ARMAS_TRANSA;
     if (toupper(*transb) == 'T')
         flags |= ARMAS_TRANSB;
 
-    armas_x_mult(*beta, &c, *alpha, &a, &b, flags, conf);
+    armas_mult(*beta, &c, *alpha, &a, &b, flags, conf);
 }
 #endif
 
@@ -51,7 +51,7 @@ void cblas_gemm(int order, int transa, int transb, int M, int N,
                 DTYPE beta, DTYPE * C, int ldc)
 {
     armas_conf_t conf = *armas_conf_default();
-    armas_x_dense_t Ca, Aa, Ba;
+    armas_dense_t Ca, Aa, Ba;
     int flags = 0;
 
     switch (order) {
@@ -59,40 +59,40 @@ void cblas_gemm(int order, int transa, int transb, int M, int N,
         if (transa == CblasTrans) {
             flags |= ARMAS_TRANSA;
             // error: K > lda
-            armas_x_make(&Aa, K, M, lda, A);
+            armas_make(&Aa, K, M, lda, A);
         } else {
             // error: M > lda
-            armas_x_make(&Aa, M, K, lda, A);
+            armas_make(&Aa, M, K, lda, A);
         }
         if (transb == CblasTrans) {
             flags |= ARMAS_TRANSB;
-            armas_x_make(&Ba, N, K, ldb, B);
+            armas_make(&Ba, N, K, ldb, B);
         } else {
-            armas_x_make(&Ba, K, N, ldb, B);
+            armas_make(&Ba, K, N, ldb, B);
         }
-        armas_x_make(&Ca, M, N, ldc, C);
+        armas_make(&Ca, M, N, ldc, C);
         break;
     case CblasRowMajor:
         if (transa == CblasNoTrans) {
             flags |= ARMAS_TRANSA;
             // error: M > lda
-            armas_x_make(&Aa, M, K, lda, A);
+            armas_make(&Aa, M, K, lda, A);
         } else {
             // error: K > lda
-            armas_x_make(&Aa, K, M, lda, A);
+            armas_make(&Aa, K, M, lda, A);
         }
         if (transb == CblasNoTrans) {
             flags |= ARMAS_TRANSB;
-            armas_x_make(&Ba, K, N, ldb, B);
+            armas_make(&Ba, K, N, ldb, B);
         } else {
-            armas_x_make(&Ba, N, K, ldb, B);
+            armas_make(&Ba, N, K, ldb, B);
         }
-        armas_x_make(&Ca, N, M, ldc, C);
+        armas_make(&Ca, N, M, ldc, C);
         break;
     default:
         return;
     }
-    armas_x_mult(beta, &Ca, alpha, &Aa, &Ba, flags, &conf);
+    armas_mult(beta, &Ca, alpha, &Aa, &Ba, flags, &conf);
 }
 #endif
 

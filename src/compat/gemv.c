@@ -1,24 +1,24 @@
 
-// Copyright (c) Harri Rautila, 2014-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "compat.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
+// this file provides following type dependent functions
 #if defined(gemvf) || defined(cblas_gemv)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_gemv)
+#if defined(armas_gemv)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
@@ -29,7 +29,7 @@ void blas_gemvf(char *trans, int *m, int *n, DTYPE * alpha, DTYPE * A,
                 DTYPE * Y, int *incy)
 {
     armas_conf_t *conf = armas_conf_default();
-    armas_x_dense_t y, a, x;
+    armas_dense_t y, a, x;
     int ylen, xlen, flags = 0;
 
     if (toupper(*trans) == 'T')
@@ -37,20 +37,20 @@ void blas_gemvf(char *trans, int *m, int *n, DTYPE * alpha, DTYPE * A,
 
     ylen = flags & ARMAS_TRANS ? *n : *m;
     xlen = flags & ARMAS_TRANS ? *m : *n;
-    armas_x_make(&a, *m, *n, *lda, A);
+    armas_make(&a, *m, *n, *lda, A);
     if (*incy == 1) {
         // column vector
-        armas_x_make(&y, ylen, 1, ylen, Y);
+        armas_make(&y, ylen, 1, ylen, Y);
     } else {
         // row vector
-        armas_x_make(&y, 1, ylen, *incy, Y);
+        armas_make(&y, 1, ylen, *incy, Y);
     }
     if (*incx == 1) {
-        armas_x_make(&x, xlen, 1, xlen, X);
+        armas_make(&x, xlen, 1, xlen, X);
     } else {
-        armas_x_make(&x, 1, xlen, *incx, X);
+        armas_make(&x, 1, xlen, *incx, X);
     }
-    armas_x_mvmult(*beta, &y, *alpha, &a, &x, flags, conf);
+    armas_mvmult(*beta, &y, *alpha, &a, &x, flags, conf);
 }
 #endif
 
@@ -61,7 +61,7 @@ void cblas_gemv(const enum CBLAS_ORDER order, const enum CBLAS_TRANS trans,
                 DTYPE * Y, const int incy)
 {
     armas_conf_t *conf = armas_conf_default();
-    armas_x_dense_t y, Aa, x;
+    armas_dense_t y, Aa, x;
     int ylen, xlen, flags = 0;
 
     switch (order) {
@@ -70,7 +70,7 @@ void cblas_gemv(const enum CBLAS_ORDER order, const enum CBLAS_TRANS trans,
             flags |= ARMAS_TRANS;
         ylen = flags & ARMAS_TRANS ? M : N;
         xlen = flags & ARMAS_TRANS ? N : M;
-        armas_x_make(&Aa, N, M, lda, A);
+        armas_make(&Aa, N, M, lda, A);
         break;
     case CblasColMajor:
     default:
@@ -78,23 +78,23 @@ void cblas_gemv(const enum CBLAS_ORDER order, const enum CBLAS_TRANS trans,
             flags |= ARMAS_TRANS;
         ylen = flags & ARMAS_TRANS ? N : M;
         xlen = flags & ARMAS_TRANS ? M : N;
-        armas_x_make(&Aa, M, N, lda, A);
+        armas_make(&Aa, M, N, lda, A);
         break;
     }
 
     if (incy == 1) {
         // column vector
-        armas_x_make(&y, ylen, 1, ylen, Y);
+        armas_make(&y, ylen, 1, ylen, Y);
     } else {
         // row vector
-        armas_x_make(&y, 1, ylen, incy, Y);
+        armas_make(&y, 1, ylen, incy, Y);
     }
     if (incx == 1) {
-        armas_x_make(&x, xlen, 1, xlen, X);
+        armas_make(&x, xlen, 1, xlen, X);
     } else {
-        armas_x_make(&x, 1, xlen, incx, X);
+        armas_make(&x, 1, xlen, incx, X);
     }
-    armas_x_mvmult(beta, &y, alpha, &Aa, &x, flags, conf);
+    armas_mvmult(beta, &y, alpha, &Aa, &x, flags, conf);
 }
 #endif
 

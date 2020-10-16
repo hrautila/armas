@@ -1,24 +1,24 @@
 
-// Copyright (c) Harri Rautila, 2014-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "compat.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
+// this file provides following type dependent functions
 #if defined(blas_symvf) || defined(cblas_symv)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_mvmult_sym)
+#if defined(armas_mvmult_sym)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 #include <ctype.h>
 #include "matrix.h"
@@ -29,7 +29,7 @@ void blas_symvf(char *uplo, int *n, DTYPE * alpha, DTYPE * A,
                 int *incy)
 {
     armas_conf_t *conf = armas_conf_default();
-    armas_x_dense_t y, a, x;
+    armas_dense_t y, a, x;
     int flags = 0;
 
     switch (toupper(*uplo)) {
@@ -42,20 +42,20 @@ void blas_symvf(char *uplo, int *n, DTYPE * alpha, DTYPE * A,
         break;
     }
 
-    armas_x_make(&a, *n, *n, *lda, A);
+    armas_make(&a, *n, *n, *lda, A);
     if (*incy == 1) {
         // column vector
-        armas_x_make(&y, *n, 1, *n, Y);
+        armas_make(&y, *n, 1, *n, Y);
     } else {
         // row vector
-        armas_x_make(&y, 1, *n, *incy, Y);
+        armas_make(&y, 1, *n, *incy, Y);
     }
     if (*incx == 1) {
-        armas_x_make(&x, *n, 1, *n, X);
+        armas_make(&x, *n, 1, *n, X);
     } else {
-        armas_x_make(&x, 1, *n, *incx, X);
+        armas_make(&x, 1, *n, *incx, X);
     }
-    armas_x_mvmult_sym(*beta, &y, *alpha, &a, &x, flags, conf);
+    armas_mvmult_sym(*beta, &y, *alpha, &a, &x, flags, conf);
 }
 #endif
 
@@ -64,7 +64,7 @@ void cblas_symv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
                 int N, DTYPE alpha, DTYPE * A, int lda,
                 DTYPE * X, int incx, DTYPE beta, DTYPE * Y, int incy)
 {
-    armas_x_dense_t Aa, x, y;
+    armas_dense_t Aa, x, y;
     armas_conf_t conf = *armas_conf_default();
     int flags;
 
@@ -77,18 +77,18 @@ void cblas_symv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO uplo,
         flags = uplo == CblasUpper ? ARMAS_UPPER : ARMAS_LOWER;
         break;
     }
-    armas_x_make(&Aa, N, N, lda, A);
+    armas_make(&Aa, N, N, lda, A);
     if (incx == 1) {
-        armas_x_make(&x, N, 1, N, X);
+        armas_make(&x, N, 1, N, X);
     } else {
-        armas_x_make(&x, 1, N, incx, X);
+        armas_make(&x, 1, N, incx, X);
     }
     if (incy == 1) {
-        armas_x_make(&y, N, 1, N, Y);
+        armas_make(&y, N, 1, N, Y);
     } else {
-        armas_x_make(&y, 1, N, incy, Y);
+        armas_make(&y, 1, N, incy, Y);
     }
-    armas_x_mvmult_sym(beta, &y, alpha, &Aa, &x, flags, &conf);
+    armas_mvmult_sym(beta, &y, alpha, &Aa, &x, flags, &conf);
 }
 #endif
 
