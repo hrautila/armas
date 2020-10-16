@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,14 +12,14 @@
 #include "dtype.h"
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_json_load)
+#if defined(armas_json_load)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external type dependnet public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 //! \cond
@@ -69,12 +69,12 @@ armas_iostream_vtable_t file_vtable = (armas_iostream_vtable_t){
  *
  * @ingroup matrix
  */
-int armas_x_json_load(armas_x_dense_t **A, FILE *fp)
+int armas_json_load(armas_dense_t **A, FILE *fp)
 {
     armas_iostream_t reader;
 
     armas_ios_init(&reader, &file_vtable, fp);
-    return armas_x_json_read(A, &reader);
+    return armas_json_read(A, &reader);
 }
 
 /**
@@ -86,12 +86,12 @@ int armas_x_json_load(armas_x_dense_t **A, FILE *fp)
  *
  * @ingroup matrix
  */
-int armas_x_json_dump(FILE *fp, const armas_x_dense_t *A, int flags)
+int armas_json_dump(FILE *fp, const armas_dense_t *A, int flags)
 {
     armas_iostream_t writer;
 
     armas_ios_init(&writer, &file_vtable, fp);
-    return armas_x_json_write(&writer, A, flags);
+    return armas_json_write(&writer, A, flags);
 }
 #else
 #warning "Missing defines. No code."

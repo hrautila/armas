@@ -1,21 +1,21 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "dtype.h"
 // ----------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_json_write) && defined(armas_x_json_read)
+#if defined(armas_json_write) && defined(armas_json_read)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external type dependent public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ----------------------------------------------------------------------------
 
 //! @cond
@@ -42,7 +42,7 @@
  *
  * @ingroup matrix
  */
-int armas_x_json_write(armas_iostream_t *ios, const armas_x_dense_t *A, int flags)
+int armas_json_write(armas_iostream_t *ios, const armas_dense_t *A, int flags)
 {
     if (!ios)
         return -1;
@@ -81,7 +81,7 @@ int armas_x_json_write(armas_iostream_t *ios, const armas_x_dense_t *A, int flag
             if (n > 0)
                 JSON_ONERROR(armas_json_write_simple_token(',', ios));
 
-            double val = armas_x_get_unsafe(A, i, j);
+            double val = armas_get_unsafe(A, i, j);
             JSON_ONERROR(armas_json_write_token(ARMAS_JSON_NUMBER, &val, sizeof(val), ios));
         }
     }
@@ -125,7 +125,7 @@ enum {
  *  serialization of matrix.
  *
  * TODO: null matrix? is it: null | "{}"? Is it same as {"rows":0, "cols":0,...}
- * Should we return pointer to new matrix? Maybe A is armas_x_dense_t ** and
+ * Should we return pointer to new matrix? Maybe A is armas_dense_t ** and
  * if *A == null we allocate, otherwise we deserialize into provided space.
  * 
  * @retval  0  Success
@@ -133,14 +133,14 @@ enum {
  *
  * @ingroup matrix
  */
-int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
+int armas_json_read(armas_dense_t **A, armas_iostream_t *ios)
 {
     char iob[64];
     int tok;
     int member_bits = 0;
     int state = MEMBER_KEY;
     int rows, cols, nnz, flags, ntok;
-    armas_x_dense_t *aa;
+    armas_dense_t *aa;
 
     rows = cols = nnz = flags = 0;
 
@@ -149,7 +149,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
     if (tok == ARMAS_JSON_NULL) {
         // if pointer to matrix provided set it to null.
         if (aa)
-            *A = (armas_x_dense_t *)0;
+            *A = (armas_dense_t *)0;
         return 0;
     }
     if (tok != '{') {
@@ -164,7 +164,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
                 if (ntok == 0 && tok == '}') {
                     // we have null matrix
                     if (aa)
-                        *A = (armas_x_dense_t *)0;
+                        *A = (armas_dense_t *)0;
                     return 0;
                 }
                 return -1;
@@ -279,11 +279,11 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
 
     int have_new = aa ? 0 : 1;
     if (have_new) {
-        aa = (armas_x_dense_t *)calloc(1, sizeof(armas_x_dense_t));
+        aa = (armas_dense_t *)calloc(1, sizeof(armas_dense_t));
         if (!aa)
             return -1;
     }
-    armas_x_init(aa, rows, cols);
+    armas_init(aa, rows, cols);
 
     int n = 0;
     double dval;
@@ -304,7 +304,7 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
                 dval = strtod(iob, (char **)0);
                 break;
             }
-            armas_x_set_unsafe(aa, i, j, dval);
+            armas_set_unsafe(aa, i, j, dval);
         }
     }
     // end of array
@@ -322,9 +322,9 @@ int armas_x_json_read(armas_x_dense_t **A, armas_iostream_t *ios)
  error_exit:
     // release reserved space
     if (have_new)
-        armas_x_free(aa);
+        armas_free(aa);
     else
-        armas_x_release(aa);
+        armas_release(aa);
     return -1;
 }
 #else

@@ -1,6 +1,6 @@
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,15 +12,15 @@
 #include "dtype.h"
 
 // ----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_mmload) && defined(armas_x_mmdump)
+// this file provides following type dependent functions
+#if defined(armas_mmload) && defined(armas_mmdump)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ----------------------------------------------------------------------------
 
 //! \cond
@@ -259,7 +259,7 @@ int __mmread_size(FILE *f, int typecode, int *m, int *n, int *nnz)
  * 
  * @ingroup matrix
  */
-int armas_x_mmload(armas_x_dense_t *A, int *flags,  FILE *f)
+int armas_mmload(armas_dense_t *A, int *flags,  FILE *f)
 {
     int typecode;
     int m, n, nc, nnz, r, c, nelem, nread, k;
@@ -284,7 +284,7 @@ int armas_x_mmload(armas_x_dense_t *A, int *flags,  FILE *f)
         return -1;
     }
 
-    armas_x_init(A, m, n);
+    armas_init(A, m, n);
 
     // number of elements to expect
     nelem = nnz;
@@ -324,7 +324,7 @@ int armas_x_mmload(armas_x_dense_t *A, int *flags,  FILE *f)
             if (read_line(iobuf, &r, &c, &v) < 0)
                 goto endloop;
         }
-        armas_x_set_unsafe(A, r, c, v);
+        armas_set_unsafe(A, r, c, v);
         k++;
     }
  endloop:
@@ -340,7 +340,7 @@ int armas_x_mmload(armas_x_dense_t *A, int *flags,  FILE *f)
 }
 
 
-int armas_x_mmdump(FILE *f, const armas_x_dense_t *A, int flags)
+int armas_mmdump(FILE *f, const armas_dense_t *A, int flags)
 {
     char *s = "general";
     char *t = TYPE_STRING;
@@ -355,7 +355,7 @@ int armas_x_mmdump(FILE *f, const armas_x_dense_t *A, int flags)
     for (j = 0; j < A->cols; j++) {
         k = (flags & ARMAS_SYMM) != 0 ? j : 0;
         for ( ; k < A->rows; k++) {
-            n += fprintf(f, "%.13e\n", armas_x_get_unsafe(A, k, j));
+            n += fprintf(f, "%.13e\n", armas_get_unsafe(A, k, j));
         }
     }
     return n;
