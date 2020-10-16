@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2012-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -264,8 +264,6 @@ extern const char *armas_version();
 extern const char *armas_name();
 extern const char **armas_config_options();
 extern armas_conf_t *armas_conf_default();
-extern int armas_last_error();
-extern void armas_init(void);
 
 extern int armas_ac_init(armas_ac_handle_t *handle, const char *name);
 extern void armas_ac_release(armas_ac_handle_t handle);
