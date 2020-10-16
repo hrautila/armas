@@ -66,17 +66,16 @@ case "$TYPE" in
     *)
 	;;
 esac
-set -x
+##set -x
 MATRIXH="armas/${CODE}dense.h"
 
 if [[ "$NOTYPENAME" = "no" ]]; then
-	MATRIX_DEF=ARMAS_DENSE_H
-	LINALG_DEF=ARMAS_LINALG_H
-	SPARSE_DEF=ARMAS_SPARSE_H
 
     SUBST="\
-s/armas_x_/${PREFIX}/g;\
-s/armassp_x_/${PREFIX_SP}/g;"
+s/armas_/${PREFIX}/g;\
+s/armassp_/${PREFIX_SP}/g;
+s/armas_d_conf/armas_conf/g;\
+s/armas_d_iostream/armas_iostream/g;"
 
 fi
 
@@ -90,10 +89,11 @@ s/ABSTYPE/${ABSTYPE}/g;\
 s/ZERO/${ZERO}/;\
 s/ABSZERO/${ABSZERO}/;\
 s/ONE/${ONE}/;\
+s/^__ARMAS_INLINE/extern inline/;\
 s:\"matrix.h\":<${MATRIXH}>:;\
 s:/\* COMPLEX_H \*/:${COMPLEX_H}:;"
 
-echo sed-command "$SUBST"
+#echo sed-command "$SUBST"
 
 sed "$SUBST" <$SRC >$DST
 
