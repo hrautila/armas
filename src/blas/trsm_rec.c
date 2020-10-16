@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -14,16 +14,16 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_solve_recursive)
+#if defined(armas_solve_recursive)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_solve_unb) && defined(armas_x_mult_kernel_nc)
+#if defined(armas_solve_unb) && defined(armas_mult_kernel_nc)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -50,17 +50,17 @@
  */
 static
 void solve_left_forward(
-    armas_x_dense_t *B,
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, BT, BB;
+    armas_dense_t ATL, ATR, ABL, ABR, BT, BB;
 
     if (A->cols < min_mblock_size) {
-        armas_x_solve_unb(B, alpha, A, flags|ARMAS_LEFT);
+        armas_solve_unb(B, alpha, A, flags|ARMAS_LEFT);
         return;
     }
 
@@ -73,9 +73,9 @@ void solve_left_forward(
 
     solve_left_forward(&BT, alpha, &ATL, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_mult_kernel_nc(&BB, -ONE, &ATR, &BT, ARMAS_TRANSA, cache);
+        armas_mult_kernel_nc(&BB, -ONE, &ATR, &BT, ARMAS_TRANSA, cache);
     } else {
-        armas_x_mult_kernel_nc(&BB, -ONE, &ABL, &BT, 0, cache);
+        armas_mult_kernel_nc(&BB, -ONE, &ABL, &BT, 0, cache);
     }
     solve_left_forward(&BB, alpha, &ABR, flags, min_mblock_size, cache);
 }
@@ -99,17 +99,17 @@ void solve_left_forward(
  */
 static
 void solve_left_backward(
-    armas_x_dense_t *B,
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, BT, BB;
+    armas_dense_t ATL, ATR, ABL, ABR, BT, BB;
 
     if (A->cols < min_mblock_size) {
-        armas_x_solve_unb(B, alpha, A, flags|ARMAS_LEFT);
+        armas_solve_unb(B, alpha, A, flags|ARMAS_LEFT);
         return;
     }
     mat_partition_2x2(
@@ -121,9 +121,9 @@ void solve_left_backward(
 
     solve_left_backward(&BB, alpha, &ABR, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_mult_kernel_nc(&BT, -ONE, &ATR, &BB, 0, cache);
+        armas_mult_kernel_nc(&BT, -ONE, &ATR, &BB, 0, cache);
     } else {
-        armas_x_mult_kernel_nc(&BT, -ONE, &ABL, &BB, ARMAS_TRANSA, cache);
+        armas_mult_kernel_nc(&BT, -ONE, &ABL, &BB, ARMAS_TRANSA, cache);
     }
     solve_left_backward(&BT, alpha, &ATL, flags, min_mblock_size, cache);
 }
@@ -134,17 +134,17 @@ void solve_left_backward(
  */
 static
 void solve_right_forward(
-    armas_x_dense_t *B,
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, BL, BR;
+    armas_dense_t ATL, ATR, ABL, ABR, BL, BR;
 
     if (A->cols < min_mblock_size) {
-        armas_x_solve_unb(B, alpha, A, flags|ARMAS_RIGHT);
+        armas_solve_unb(B, alpha, A, flags|ARMAS_RIGHT);
         return;
     }
 
@@ -156,9 +156,9 @@ void solve_right_forward(
 
     solve_right_forward(&BL, alpha, &ATL, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_mult_kernel_nc(&BR, -ONE, &BL, &ATR, 0, cache);
+        armas_mult_kernel_nc(&BR, -ONE, &BL, &ATR, 0, cache);
     } else {
-        armas_x_mult_kernel_nc(&BR, -ONE, &BL, &ABL, ARMAS_TRANSB, cache);
+        armas_mult_kernel_nc(&BR, -ONE, &BL, &ABL, ARMAS_TRANSB, cache);
     }
     solve_right_forward(&BR, alpha, &ABR, flags, min_mblock_size, cache);
 }
@@ -168,17 +168,17 @@ void solve_right_forward(
  */
 static
 void solve_right_backward(
-    armas_x_dense_t *B,
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, BL, BR;
+    armas_dense_t ATL, ATR, ABL, ABR, BL, BR;
 
     if (A->cols < min_mblock_size) {
-        armas_x_solve_unb(B, alpha, A, flags|ARMAS_RIGHT);
+        armas_solve_unb(B, alpha, A, flags|ARMAS_RIGHT);
         return;
     }
 
@@ -190,17 +190,17 @@ void solve_right_backward(
 
     solve_right_backward(&BR, alpha, &ABR, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_mult_kernel_nc(&BL, -ONE, &BR, &ATR, ARMAS_TRANSB, cache);
+        armas_mult_kernel_nc(&BL, -ONE, &BR, &ATR, ARMAS_TRANSB, cache);
     } else {
-        armas_x_mult_kernel_nc(&BL, -ONE, &BR, &ABL, 0, cache);
+        armas_mult_kernel_nc(&BL, -ONE, &BR, &ABL, 0, cache);
     }
     solve_right_backward(&BL, alpha, &ATL, flags, min_mblock_size, cache);
 }
 
-void armas_x_solve_recursive(
-    armas_x_dense_t *B,
+void armas_solve_recursive(
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     cache_t *mcache)
 {

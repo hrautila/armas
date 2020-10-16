@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -11,22 +11,22 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_dot) && defined(armas_x_adot)
+// this file provides following type dependent functions
+#if defined(armas_dot) && defined(armas_adot)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
 #include "internal.h"
 
 static
-DTYPE vec_dot(const armas_x_dense_t *X,  const armas_x_dense_t *Y, int N)
+DTYPE vec_dot(const armas_dense_t *X,  const armas_dense_t *Y, int N)
 {
     register int i, kx, ky;
     register DTYPE c0, c1, c2, c3, x0, x1, x2, x3;
@@ -64,16 +64,16 @@ update:
 }
 
 static inline
-armas_x_dense_t *__subvec(armas_x_dense_t *x, const armas_x_dense_t *y, int K, int N)
+armas_dense_t *__subvec(armas_dense_t *x, const armas_dense_t *y, int K, int N)
 {
-    return armas_x_subvector_unsafe(x, y, K, N);
+    return armas_subvector_unsafe(x, y, K, N);
 }
 
 static
-DTYPE vec_dot_recursive(const armas_x_dense_t *X, const armas_x_dense_t *Y, int n, int min_mvec_size)
+DTYPE vec_dot_recursive(const armas_dense_t *X, const armas_dense_t *Y, int n, int min_mvec_size)
 {
     register DTYPE c0, c1, c2, c3;
-    armas_x_dense_t x0, y0;
+    armas_dense_t x0, y0;
     int n2 = n/2;
     int n4 = n/4;
     int nn = n - n2 - n4;
@@ -102,22 +102,22 @@ DTYPE vec_dot_recursive(const armas_x_dense_t *X, const armas_x_dense_t *Y, int 
     return c0 + c1 + c2 + c3;
 }
 
-void armas_x_adot_unsafe(DTYPE *value, DTYPE alpha, const armas_x_dense_t *x, const armas_x_dense_t *y)
+void armas_adot_unsafe(DTYPE *value, DTYPE alpha, const armas_dense_t *x, const armas_dense_t *y)
 {
     DTYPE dval;
     armas_env_t *env = armas_getenv();
     if (env->blas1min == 0) {
-        dval = vec_dot(x, y, armas_x_size(y));
+        dval = vec_dot(x, y, armas_size(y));
     } else {
-        dval = vec_dot_recursive(y, x, armas_x_size(y), env->blas1min);
+        dval = vec_dot_recursive(y, x, armas_size(y), env->blas1min);
     }
     *value += dval * alpha;
 }
 
-DTYPE armas_x_dot_unsafe(const armas_x_dense_t *x, const armas_x_dense_t *y)
+DTYPE armas_dot_unsafe(const armas_dense_t *x, const armas_dense_t *y)
 {
     DTYPE dval = ZERO;
-    armas_x_adot_unsafe(&dval, ONE, x, y);
+    armas_adot_unsafe(&dval, ONE, x, y);
     return dval;
 }
 
@@ -136,8 +136,8 @@ DTYPE armas_x_dot_unsafe(const armas_x_dense_t *x, const armas_x_dense_t *y)
  *
  * @ingroup blas
  */
-int armas_x_adot(DTYPE *value, DTYPE alpha, 
-        const armas_x_dense_t *x, const armas_x_dense_t *y, armas_conf_t *conf)
+int armas_adot(DTYPE *value, DTYPE alpha, 
+        const armas_dense_t *x, const armas_dense_t *y, armas_conf_t *conf)
 {
     DTYPE dval;
 
@@ -145,15 +145,15 @@ int armas_x_adot(DTYPE *value, DTYPE alpha,
         conf = armas_conf_default();
 
     // only for column or row vectors
-    if (!armas_x_isvector(x)) {
+    if (!armas_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -1;
     }
-    if (!armas_x_isvector(y)) {
+    if (!armas_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -1;
     }
-    if (armas_x_size(x) != armas_x_size(y)) {
+    if (armas_size(x) != armas_size(y)) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
@@ -164,9 +164,9 @@ int armas_x_adot(DTYPE *value, DTYPE alpha,
 
     armas_env_t *env = armas_getenv();
     if (conf->optflags & ARMAS_ONAIVE || env->blas1min == 0) {
-        dval = vec_dot(y, x, armas_x_size(y));
+        dval = vec_dot(y, x, armas_size(y));
     } else {
-        dval = vec_dot_recursive(y, x, armas_x_size(y), env->blas1min);
+        dval = vec_dot_recursive(y, x, armas_size(y), env->blas1min);
     }
     *value += alpha*dval;
     return 0;
@@ -181,10 +181,10 @@ int armas_x_adot(DTYPE *value, DTYPE alpha,
  *
  * @ingroup blas
  */
-DTYPE armas_x_dot(const armas_x_dense_t *x, const armas_x_dense_t *y, armas_conf_t *conf)
+DTYPE armas_dot(const armas_dense_t *x, const armas_dense_t *y, armas_conf_t *conf)
 {
     DTYPE dval = ZERO;
-    if (armas_x_adot(&dval, ONE, x, y, conf) < 0) {
+    if (armas_adot(&dval, ONE, x, y, conf) < 0) {
         return ZERO;
     }
     return dval;

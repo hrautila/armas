@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -11,15 +11,15 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_nrm2)
+// this file provides following type dependent functions
+#if defined(armas_nrm2)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -78,7 +78,7 @@
  * @return Norm of the vector
  * @ingroup blas
  */
-ABSTYPE armas_x_nrm2(const armas_x_dense_t *x, armas_conf_t *conf)
+ABSTYPE armas_nrm2(const armas_dense_t *x, armas_conf_t *conf)
 {
     register int i;
     register ABSTYPE a0, sum, scale;
@@ -92,17 +92,17 @@ ABSTYPE armas_x_nrm2(const armas_x_dense_t *x, armas_conf_t *conf)
         return ABSZERO;
     }
 
-    if (armas_x_size(x) == 0) {
+    if (armas_size(x) == 0) {
         return ABSZERO;
     }
-    if (armas_x_size(x) == 1) {
+    if (armas_size(x) == 1) {
         return ABS(x->elems[0]);
     }
 
     int inc  = x->rows == 1 ? x->step : 1;
     sum = ABSONE;
     scale = ABSZERO;
-    for (i = 0; i < armas_x_size(x); i += 1) {
+    for (i = 0; i < armas_size(x); i += 1) {
         if (x->elems[(i+0)*inc] != ZERO) {
             a0 = ABS(x->elems[(i+0)*inc]);
             if (a0 > scale) {

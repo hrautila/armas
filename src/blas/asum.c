@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -15,15 +15,15 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_asum)
+// this file provides following type dependent functions
+#if defined(armas_asum)
 #define ARMAS_PROVIDES 1
 #endif
 // this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -31,7 +31,7 @@
 
 // return sum of absolute values
 static
-ABSTYPE vec_asum(const armas_x_dense_t *X,  int N)
+ABSTYPE vec_asum(const armas_dense_t *X,  int N)
 {
     register int i, k, xinc;
     register ABSTYPE c0, c1, c2, c3;
@@ -68,7 +68,7 @@ update:
 }
 
 static
-DTYPE vec_asum_kahan(const armas_x_dense_t *X, int N)
+DTYPE vec_asum_kahan(const armas_dense_t *X, int N)
 {
     register int k, xinc;
     register ABSTYPE c0, s0, c1, s1;
@@ -98,16 +98,16 @@ DTYPE vec_asum_kahan(const armas_x_dense_t *X, int N)
 }
 
 static inline
-armas_x_dense_t *__subvec(armas_x_dense_t *x, const armas_x_dense_t *y, int K, int N)
+armas_dense_t *__subvec(armas_dense_t *x, const armas_dense_t *y, int K, int N)
 {
-    return armas_x_subvector_unsafe(x, y, K, N);
+    return armas_subvector_unsafe(x, y, K, N);
 }
 
 static
-DTYPE vec_asum_recursive(const armas_x_dense_t *X, int n, int min_mvec)
+DTYPE vec_asum_recursive(const armas_dense_t *X, int n, int min_mvec)
 {
     register DTYPE c0, c1, c2, c3;
-    armas_x_dense_t x0;
+    armas_dense_t x0;
     int n2 = n/2;
     int n4 = n/4;
     int nn = n - n2 - n4;
@@ -141,13 +141,13 @@ DTYPE vec_asum_recursive(const armas_x_dense_t *X, int n, int min_mvec)
  *
  * @retval Sum of absolute values of x elements
  */
-ABSTYPE armas_x_asum(const armas_x_dense_t *x, armas_conf_t *conf)
+ABSTYPE armas_asum(const armas_dense_t *x, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
 
     // only for column or row vectors
-    if (!armas_x_isvector(x)) {
+    if (!armas_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return ZERO;
     }
@@ -156,12 +156,12 @@ ABSTYPE armas_x_asum(const armas_x_dense_t *x, armas_conf_t *conf)
     // this executed if extended precision not requested
     switch (conf->optflags & (ARMAS_ONAIVE|ARMAS_OKAHAN|ARMAS_ORECURSIVE)) {
     case ARMAS_OKAHAN:
-        return vec_asum_kahan(x, armas_x_size(x));
+        return vec_asum_kahan(x, armas_size(x));
 
     case ARMAS_ONAIVE:
-        return vec_asum(x, armas_x_size(x));
+        return vec_asum(x, armas_size(x));
     }
-    return vec_asum_recursive(x, armas_x_size(x), env->blas1min);
+    return vec_asum_recursive(x, armas_size(x), env->blas1min);
 }
 
 #else

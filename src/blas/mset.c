@@ -1,6 +1,6 @@
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -13,14 +13,14 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_set_values) && defined(armas_x_make_trm)
+#if defined(armas_set_values) && defined(armas_make_trm)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -51,26 +51,26 @@
  * @returns <0 Failure
  * @ingroup matrix
  */
-int armas_x_set_values(armas_x_dense_t *A, armas_x_valuefunc_t value, int flags)
+int armas_set_values(armas_dense_t *A, armas_valuefunc_t value, int flags)
 {
     int i, j;
     switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_SYMM)) {
     case ARMAS_UPPER:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < j && i < A->rows; i++) {
-                armas_x_set_unsafe(A, i, j, value(i, j));
+                armas_set_unsafe(A, i, j, value(i, j));
             }
             // don't set diagonal on upper trapezoidal matrix (cols > rows)
             if (j < A->rows && !(flags & ARMAS_UNIT))
-                armas_x_set_unsafe(A, j, j, value(j, j));
+                armas_set_unsafe(A, j, j, value(j, j));
         }
         break;
     case ARMAS_LOWER:
         for (j = 0; j < A->cols; j++) {
             if (j < A->rows && !(flags & ARMAS_UNIT))
-                armas_x_set_unsafe(A, j, j, value(j, j));
+                armas_set_unsafe(A, j, j, value(j, j));
             for (i = j+1; i < A->rows; i++) {
-                armas_x_set_unsafe(A, i, j, value(i, j));
+                armas_set_unsafe(A, i, j, value(i, j));
             }
         }
         break;
@@ -80,15 +80,15 @@ int armas_x_set_values(armas_x_dense_t *A, armas_x_valuefunc_t value, int flags)
         for (j = 0; j < A->cols; j++) {
             A->elems[j*A->step + j] = flags & ARMAS_UNIT ? ONE : value(j, j);
             for (i = j+1; i < A->rows; i++) {
-                armas_x_set_unsafe(A, i, j, value(i, j));
-                armas_x_set_unsafe(A, j, i, armas_x_get_unsafe(A, i, j));
+                armas_set_unsafe(A, i, j, value(i, j));
+                armas_set_unsafe(A, j, i, armas_get_unsafe(A, i, j));
             }
         }
         break;
     default:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < A->rows; i++) {
-                armas_x_set_unsafe(A, i, j, value(i, j));
+                armas_set_unsafe(A, i, j, value(i, j));
             }
         }
     }
@@ -109,16 +109,16 @@ int armas_x_set_values(armas_x_dense_t *A, armas_x_valuefunc_t value, int flags)
  *
  * @ingroup matrix
  */
-void armas_x_make_trm(armas_x_dense_t *A, int flags)
+void armas_make_trm(armas_dense_t *A, int flags)
 {
     int i, j;
     if (flags & ARMAS_UPPER) {
         // clear lower triangular/trapezoidial part
         for (j = 0; j < A->cols; j++) {
             if (flags & ARMAS_UNIT)
-                armas_x_set_unsafe(A, j, j, ONE);
+                armas_set_unsafe(A, j, j, ONE);
             for (i = j+1; i < A->rows; i++) {
-                armas_x_set_unsafe(A, i, j, ZERO);
+                armas_set_unsafe(A, i, j, ZERO);
             }
         }
     }
@@ -126,10 +126,10 @@ void armas_x_make_trm(armas_x_dense_t *A, int flags)
         // clear upper triangular/trapezoidial part
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < A->rows && i < j; i++) {
-                armas_x_set_unsafe(A, i, j, ZERO);
+                armas_set_unsafe(A, i, j, ZERO);
             }
             if (flags & ARMAS_UNIT && j < A->rows)
-                armas_x_set_unsafe(A, j, j, ONE);
+                armas_set_unsafe(A, j, j, ONE);
         }
     }
 }

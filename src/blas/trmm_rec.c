@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -13,17 +13,17 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_trmm_recursive)
+// this file provides following type dependent functions
+#if defined(armas_trmm_recursive)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_mult_kernel_nc) && defined(armas_x_trmm_unb)
+#if defined(armas_mult_kernel_nc) && defined(armas_trmm_unb)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -45,17 +45,17 @@
  */
 static
 void mult_left_forward(
-    armas_x_dense_t *B,
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, BT, BB;
+    armas_dense_t ATL, ATR, ABL, ABR, BT, BB;
 
     if (A->cols < min_mblock_size) {
-        armas_x_trmm_unb(B, alpha, A, flags);
+        armas_trmm_unb(B, alpha, A, flags);
         return;
     }
 
@@ -68,9 +68,9 @@ void mult_left_forward(
 
     mult_left_forward(&BT, alpha, &ATL, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_mult_kernel_nc(&BT, alpha, &ATR, &BB, 0, cache);
+        armas_mult_kernel_nc(&BT, alpha, &ATR, &BB, 0, cache);
     } else {
-        armas_x_mult_kernel_nc(&BT, alpha, &ABL, &BB, ARMAS_TRANSA, cache);
+        armas_mult_kernel_nc(&BT, alpha, &ABL, &BB, ARMAS_TRANSA, cache);
     }
     mult_left_forward(&BB, alpha, &ABR, flags, min_mblock_size, cache);
 }
@@ -88,17 +88,17 @@ void mult_left_forward(
  */
 static
 void mult_left_backward(
-    armas_x_dense_t *B,
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, BT, BB;
+    armas_dense_t ATL, ATR, ABL, ABR, BT, BB;
 
     if (A->cols < min_mblock_size) {
-        armas_x_trmm_unb(B, alpha, A, flags);
+        armas_trmm_unb(B, alpha, A, flags);
         return;
     }
 
@@ -111,9 +111,9 @@ void mult_left_backward(
 
     mult_left_backward(&BB, alpha, &ABR, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_mult_kernel_nc(&BB, alpha, &ATR, &BT, ARMAS_TRANSA, cache);
+        armas_mult_kernel_nc(&BB, alpha, &ATR, &BT, ARMAS_TRANSA, cache);
     } else {
-        armas_x_mult_kernel_nc(&BB, alpha, &ABL, &BT, 0, cache);
+        armas_mult_kernel_nc(&BB, alpha, &ABL, &BT, 0, cache);
     }
     mult_left_backward(&BT, alpha, &ATL, flags, min_mblock_size, cache);
 }
@@ -130,20 +130,20 @@ void mult_left_backward(
  */
 static
 void mult_right_forward(
-    armas_x_dense_t *B,
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, BL, BR;
-    //armas_x_dense_t b0, b1, a0, a1;
+    armas_dense_t ATL, ATR, ABL, ABR, BL, BR;
+    //armas_dense_t b0, b1, a0, a1;
     //int ops;
     //int N = A->cols;
 
     if (A->cols < min_mblock_size) {
-        armas_x_trmm_unb(B, alpha, A, flags);
+        armas_trmm_unb(B, alpha, A, flags);
         return;
     }
 
@@ -155,9 +155,9 @@ void mult_right_forward(
 
     mult_right_forward(&BL, alpha, &ATL, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_mult_kernel_nc(&BL, alpha, &BR, &ATR, ARMAS_TRANSB, cache);
+        armas_mult_kernel_nc(&BL, alpha, &BR, &ATR, ARMAS_TRANSB, cache);
     } else {
-        armas_x_mult_kernel_nc(&BL, alpha, &BR, &ABL, 0, cache);
+        armas_mult_kernel_nc(&BL, alpha, &BR, &ABL, 0, cache);
     }
     mult_right_forward(&BR, alpha, &ABR, flags, min_mblock_size, cache);
 }
@@ -175,19 +175,19 @@ void mult_right_forward(
  */
 static
 void mult_right_backward(
-    armas_x_dense_t *B,
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     int min_mblock_size,
     cache_t *cache)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, BL, BR;
-    //armas_x_dense_t b0, b1, a0, a1;
+    armas_dense_t ATL, ATR, ABL, ABR, BL, BR;
+    //armas_dense_t b0, b1, a0, a1;
     //int N = A->cols;
 
     if (A->cols < min_mblock_size) {
-        armas_x_trmm_unb(B, alpha, A, flags);
+        armas_trmm_unb(B, alpha, A, flags);
         return;
     }
 
@@ -199,17 +199,17 @@ void mult_right_backward(
 
     mult_right_backward(&BR, alpha, &ABR, flags, min_mblock_size, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_mult_kernel_nc(&BR, alpha, &BL, &ATR, 0, cache);
+        armas_mult_kernel_nc(&BR, alpha, &BL, &ATR, 0, cache);
     } else {
-        armas_x_mult_kernel_nc(&BR, alpha, &BL, &ABL, ARMAS_TRANSB, cache);
+        armas_mult_kernel_nc(&BR, alpha, &BL, &ABL, ARMAS_TRANSB, cache);
     }
     mult_right_backward(&BL, alpha, &ATL, flags, min_mblock_size, cache);
 }
 
-void armas_x_trmm_recursive(
-    armas_x_dense_t *B,
+void armas_trmm_recursive(
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     cache_t *mcache)
 {

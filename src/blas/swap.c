@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -11,15 +11,15 @@
 #include "dtype.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_swap)
+// this file provides following type dependent functions
+#if defined(armas_swap)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -27,7 +27,7 @@
 
 
 static
-void vec_swap(armas_x_dense_t * X, armas_x_dense_t * Y, int N)
+void vec_swap(armas_dense_t * X, armas_dense_t * Y, int N)
 {
     register int i, kx, ky;
     register double y0, y1, y2, y3, x0, x1, x2, x3;
@@ -88,7 +88,7 @@ void vec_swap(armas_x_dense_t * X, armas_x_dense_t * Y, int N)
  *
  * @ingroup blas
  */
-int armas_x_swap(armas_x_dense_t * Y, armas_x_dense_t * X, armas_conf_t * conf)
+int armas_swap(armas_dense_t * Y, armas_dense_t * X, armas_conf_t * conf)
 {
     if (!conf)
         conf = armas_conf_default();
@@ -102,15 +102,15 @@ int armas_x_swap(armas_x_dense_t * Y, armas_x_dense_t * X, armas_conf_t * conf)
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
-    if (armas_x_size(X) != armas_x_size(Y)) {
+    if (armas_size(X) != armas_size(Y)) {
         conf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
-    if (armas_x_size(X) == 0 || armas_x_size(Y) == 0) {
+    if (armas_size(X) == 0 || armas_size(Y) == 0) {
         return 0;
     }
 
-    vec_swap(Y, X, armas_x_size(Y));
+    vec_swap(Y, X, armas_size(Y));
     return 0;
 }
 #else

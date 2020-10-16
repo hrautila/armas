@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -11,17 +11,17 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_mvsolve_trm) && defined(armas_x_mvsolve_trm_unsafe)
+// this file provides following type dependent functions
+#if defined(armas_mvsolve_trm) && defined(armas_mvsolve_trm_unsafe)
 #define ARMAS_PROVIDES 1
 #endif
 // this module requires external public functions
-#if defined(armas_x_mvmult_unsafe)
+#if defined(armas_mvmult_unsafe)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -41,31 +41,31 @@
  */
 static
 void trsv_lu(
-    armas_x_dense_t *x,
+    armas_dense_t *x,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags)
 {
     int i, unit = flags & ARMAS_UNIT ? 1 : 0;
     DTYPE xk, dot;
-    armas_x_dense_t a0, x0;
+    armas_dense_t a0, x0;
 
-    xk = alpha * armas_x_get_at_unsafe(x, A->cols-1);
+    xk = alpha * armas_get_at_unsafe(x, A->cols-1);
     if (!unit) {
-        xk /= armas_x_get_unsafe(A, A->cols-1, A->cols-1);
+        xk /= armas_get_unsafe(A, A->cols-1, A->cols-1);
     }
-    armas_x_set_at_unsafe(x, A->cols-1, xk);
+    armas_set_at_unsafe(x, A->cols-1, xk);
 
     for (i = A->cols-2; i >= 0; --i) {
-        xk = armas_x_get_at_unsafe(x, i);
-        armas_x_subvector_unsafe(&x0, x, i+1, A->cols-1-i);
-        armas_x_submatrix_unsafe(&a0, A, i, i+1, 1, A->cols-1-i);
-        dot = armas_x_dot_unsafe(&a0, &x0);
+        xk = armas_get_at_unsafe(x, i);
+        armas_subvector_unsafe(&x0, x, i+1, A->cols-1-i);
+        armas_submatrix_unsafe(&a0, A, i, i+1, 1, A->cols-1-i);
+        dot = armas_dot_unsafe(&a0, &x0);
         xk = (alpha*xk - dot);
         if (!unit) {
-            xk /= armas_x_get_unsafe(A, i, i);
+            xk /= armas_get_unsafe(A, i, i);
         }
-        armas_x_set_at_unsafe(x, i, xk);
+        armas_set_at_unsafe(x, i, xk);
     }
 }
 
@@ -82,30 +82,30 @@ void trsv_lu(
  */
 static
 void trsv_lut(
-    armas_x_dense_t *x,
+    armas_dense_t *x,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags)
 {
     int i, unit = flags & ARMAS_UNIT ? 1 : 0;
     DTYPE xk, dot;
-    armas_x_dense_t a0, x0;
+    armas_dense_t a0, x0;
 
-    xk = alpha * armas_x_get_at_unsafe(x, 0);
+    xk = alpha * armas_get_at_unsafe(x, 0);
     if (!unit)
-        xk /= armas_x_get_unsafe(A, 0, 0);
-    armas_x_set_at_unsafe(x, 0, xk);
+        xk /= armas_get_unsafe(A, 0, 0);
+    armas_set_at_unsafe(x, 0, xk);
 
     for (i = 1; i < A->cols; ++i) {
-        xk = armas_x_get_at_unsafe(x, i);
-        armas_x_subvector_unsafe(&x0, x, 0, i);
-        armas_x_submatrix_unsafe(&a0, A, 0, i, i, 1);
-        dot = armas_x_dot_unsafe(&a0, &x0);
+        xk = armas_get_at_unsafe(x, i);
+        armas_subvector_unsafe(&x0, x, 0, i);
+        armas_submatrix_unsafe(&a0, A, 0, i, i, 1);
+        dot = armas_dot_unsafe(&a0, &x0);
         xk = (alpha*xk - dot);
         if (!unit) {
-            xk /= armas_x_get_unsafe(A, i, i);
+            xk /= armas_get_unsafe(A, i, i);
         }
-        armas_x_set_at_unsafe(x, i, xk);
+        armas_set_at_unsafe(x, i, xk);
     }
 }
 
@@ -122,30 +122,30 @@ void trsv_lut(
  */
 static
 void trsv_ll(
-    armas_x_dense_t *x,
+    armas_dense_t *x,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags)
 {
     int i, unit = flags & ARMAS_UNIT ? 1 : 0;
     DTYPE xk, dot;
-    armas_x_dense_t a0, x0;
+    armas_dense_t a0, x0;
 
-    xk = alpha * armas_x_get_at_unsafe(x, 0);
+    xk = alpha * armas_get_at_unsafe(x, 0);
     if (!unit)
-        xk /= armas_x_get_unsafe(A, 0, 0);
-    armas_x_set_at_unsafe(x, 0, xk);
+        xk /= armas_get_unsafe(A, 0, 0);
+    armas_set_at_unsafe(x, 0, xk);
 
     for (i = 1; i < A->cols; ++i) {
-        xk = armas_x_get_at_unsafe(x, i);
-        armas_x_subvector_unsafe(&x0, x, 0, i);
-        armas_x_submatrix_unsafe(&a0, A, i, 0, 1, i);
-        dot = armas_x_dot_unsafe(&a0, &x0);
+        xk = armas_get_at_unsafe(x, i);
+        armas_subvector_unsafe(&x0, x, 0, i);
+        armas_submatrix_unsafe(&a0, A, i, 0, 1, i);
+        dot = armas_dot_unsafe(&a0, &x0);
         xk = (alpha*xk - dot);
         if (!unit) {
-            xk /= armas_x_get_unsafe(A, i, i);
+            xk /= armas_get_unsafe(A, i, i);
         }
-        armas_x_set_at_unsafe(x, i, xk);
+        armas_set_at_unsafe(x, i, xk);
     }
 }
 
@@ -162,39 +162,39 @@ void trsv_ll(
  */
 static
 void trsv_llt(
-    armas_x_dense_t *x,
+    armas_dense_t *x,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags)
 {
     int i, unit = flags & ARMAS_UNIT ? 1 : 0;
     DTYPE xk, dot;
-    armas_x_dense_t a0, x0;
+    armas_dense_t a0, x0;
 
-    xk = alpha * armas_x_get_at_unsafe(x, A->cols-1);
+    xk = alpha * armas_get_at_unsafe(x, A->cols-1);
     if (!unit) {
-        xk /= armas_x_get_unsafe(A, A->cols-1, A->cols-1);
+        xk /= armas_get_unsafe(A, A->cols-1, A->cols-1);
     }
-    armas_x_set_at_unsafe(x, A->cols-1, xk);
+    armas_set_at_unsafe(x, A->cols-1, xk);
 
     for (i = A->cols-2; i >= 0; --i) {
-        xk = armas_x_get_at_unsafe(x, i);
-        armas_x_subvector_unsafe(&x0, x, i+1, A->cols-1-i);
-        armas_x_submatrix_unsafe(&a0, A, i+1, i, A->cols-1-i, 1);
-        dot = armas_x_dot_unsafe(&a0, &x0);
+        xk = armas_get_at_unsafe(x, i);
+        armas_subvector_unsafe(&x0, x, i+1, A->cols-1-i);
+        armas_submatrix_unsafe(&a0, A, i+1, i, A->cols-1-i, 1);
+        dot = armas_dot_unsafe(&a0, &x0);
         xk = (alpha*xk - dot);
         if (!unit) {
-            xk /= armas_x_get_unsafe(A, i, i);
+            xk /= armas_get_unsafe(A, i, i);
         }
-        armas_x_set_at_unsafe(x, i, xk);
+        armas_set_at_unsafe(x, i, xk);
     }
 }
 
 static
 void trsv_unb(
-    armas_x_dense_t *X,
+    armas_dense_t *X,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags)
 {
     switch (flags & (ARMAS_TRANS|ARMAS_UPPER|ARMAS_LOWER)){
@@ -232,13 +232,13 @@ void trsv_unb(
  */
 static
 void trsv_forward_recursive(
-    armas_x_dense_t *X,
+    armas_dense_t *X,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     int min_mvec_size)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, xT, xB;
+    armas_dense_t ATL, ATR, ABL, ABR, xT, xB;
 
     if (A->cols < min_mvec_size) {
         trsv_unb(X, alpha, A, flags);
@@ -256,9 +256,9 @@ void trsv_forward_recursive(
     trsv_forward_recursive(&xT, alpha, &ATL, flags, min_mvec_size);
     // update bottom with top
     if (flags & ARMAS_UPPER) {
-        armas_x_mvmult_unsafe(alpha, &xB, -ONE, &ATR, &xT, ARMAS_TRANS);
+        armas_mvmult_unsafe(alpha, &xB, -ONE, &ATR, &xT, ARMAS_TRANS);
     } else {
-        armas_x_mvmult_unsafe(alpha, &xB, -ONE, &ABL, &xT, 0);
+        armas_mvmult_unsafe(alpha, &xB, -ONE, &ABL, &xT, 0);
     }
     // bottom part
     trsv_forward_recursive(&xB, ONE, &ABR, flags, min_mvec_size);
@@ -282,13 +282,13 @@ void trsv_forward_recursive(
  */
 static
 void trsv_backward_recursive(
-    armas_x_dense_t *X,
+    armas_dense_t *X,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     int min_mvec_size)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR, xT, xB;
+    armas_dense_t ATL, ATR, ABL, ABR, xT, xB;
 
     if (A->cols < min_mvec_size) {
         trsv_unb(X, alpha, A, flags);
@@ -306,18 +306,18 @@ void trsv_backward_recursive(
     trsv_backward_recursive(&xB, alpha, &ABR, flags, min_mvec_size);
     // update top with bottom
     if (flags & ARMAS_UPPER) {
-        armas_x_mvmult_unsafe(alpha, &xT, -ONE, &ATR, &xB, 0);
+        armas_mvmult_unsafe(alpha, &xT, -ONE, &ATR, &xB, 0);
     } else {
-        armas_x_mvmult_unsafe(alpha, &xT, -ONE, &ABL, &xB, ARMAS_TRANS);
+        armas_mvmult_unsafe(alpha, &xT, -ONE, &ABL, &xB, ARMAS_TRANS);
     }
     // top part
     trsv_backward_recursive(&xT, ONE, &ATL, flags, min_mvec_size);
 }
 
-void armas_x_mvsolve_trm_unsafe(
-    armas_x_dense_t *X,
+void armas_mvsolve_trm_unsafe(
+    armas_dense_t *X,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags)
 {
     armas_env_t *env = armas_getenv();
@@ -363,22 +363,22 @@ void armas_x_mvsolve_trm_unsafe(
  *
  * @ingroup blas
  */
-int armas_x_mvsolve_trm(
-    armas_x_dense_t *x,
+int armas_mvsolve_trm(
+    armas_dense_t *x,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     armas_conf_t *conf)
 {
-    int nx = armas_x_size(x);
+    int nx = armas_size(x);
 
-    if (armas_x_size(A) == 0 || nx == 0)
+    if (armas_size(A) == 0 || nx == 0)
         return 0;
 
     if (!conf)
         conf = armas_conf_default();
 
-    if (!armas_x_isvector(x)) {
+    if (!armas_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }

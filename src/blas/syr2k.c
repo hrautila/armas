@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013,2014
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,16 +12,16 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_update2_sym)
+#if defined(armas_update2_sym)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_mvmult_unsafe) && defined(armas_x_mult_kernel)
+#if defined(armas_mvmult_unsafe) && defined(armas_mult_kernel)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -31,16 +31,16 @@
 static
 void update_syr2k_unb(
     DTYPE beta,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y,
+    const armas_dense_t *X,
+    const armas_dense_t *Y,
     int flags)
 {
-    armas_x_dense_t ATL, ABR;
-    armas_x_dense_t A00, a01, a10, a11, A22;
-    armas_x_dense_t XT, XB, X0, x1, X2;
-    armas_x_dense_t YT, YB, Y0, y1, Y2;
+    armas_dense_t ATL, ABR;
+    armas_dense_t A00, a01, a10, a11, A22;
+    armas_dense_t XT, XB, X0, x1, X2;
+    armas_dense_t YT, YB, Y0, y1, Y2;
     DTYPE ak;
 
     mat_partition_2x2(
@@ -65,15 +65,15 @@ void update_syr2k_unb(
             &YT, &Y0, &y1, &Y2, /**/ Y, 1, ARMAS_PBOTTOM);
         // -------------------------------------------------------------------
         ak = ZERO;
-        armas_x_adot_unsafe(&ak, 2.0*alpha, &x1, &y1);
-        ak += armas_x_get_unsafe(&a11, 0, 0) * beta;
-        armas_x_set_unsafe(&a11, 0, 0, ak);
+        armas_adot_unsafe(&ak, 2.0*alpha, &x1, &y1);
+        ak += armas_get_unsafe(&a11, 0, 0) * beta;
+        armas_set_unsafe(&a11, 0, 0, ak);
         if (flags & ARMAS_UPPER) {
-            armas_x_mvmult_unsafe(beta, &a01, alpha, &Y0, &x1, 0);
-            armas_x_mvmult_unsafe(ONE, &a01, alpha, &X0, &y1, 0);
+            armas_mvmult_unsafe(beta, &a01, alpha, &Y0, &x1, 0);
+            armas_mvmult_unsafe(ONE, &a01, alpha, &X0, &y1, 0);
         } else {
-            armas_x_mvmult_unsafe(beta, &a10, alpha, &Y0, &x1, 0);
-            armas_x_mvmult_unsafe(ONE, &a10, alpha, &X0, &y1, 0);
+            armas_mvmult_unsafe(beta, &a10, alpha, &Y0, &x1, 0);
+            armas_mvmult_unsafe(ONE, &a10, alpha, &X0, &y1, 0);
         }
         // -------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -90,16 +90,16 @@ void update_syr2k_unb(
 static
 void update_syr2k_recursive(
     DTYPE beta,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y,
+    const armas_dense_t *X,
+    const armas_dense_t *Y,
     int flags,
     int minblock,
     cache_t *cache)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR;
-    armas_x_dense_t XT, XB, YT, YB;
+    armas_dense_t ATL, ATR, ABL, ABR;
+    armas_dense_t XT, XB, YT, YB;
 
     if (A->rows < minblock) {
         update_syr2k_unb(beta, A, alpha, X, Y, flags);
@@ -116,11 +116,11 @@ void update_syr2k_recursive(
 
     update_syr2k_recursive(beta, &ATL, alpha, &XT, &YT, flags, minblock, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_mult_kernel(beta, &ATR, alpha, &XT, &YB, ARMAS_TRANSB, cache);
-        armas_x_mult_kernel_nc(&ATR, alpha, &YT, &XB, ARMAS_TRANSB, cache);
+        armas_mult_kernel(beta, &ATR, alpha, &XT, &YB, ARMAS_TRANSB, cache);
+        armas_mult_kernel_nc(&ATR, alpha, &YT, &XB, ARMAS_TRANSB, cache);
     } else {
-        armas_x_mult_kernel(beta, &ABL, alpha, &XB, &YT, ARMAS_TRANSB, cache);
-        armas_x_mult_kernel_nc(&ABL, alpha, &YB, &XT, ARMAS_TRANSB, cache);
+        armas_mult_kernel(beta, &ABL, alpha, &XB, &YT, ARMAS_TRANSB, cache);
+        armas_mult_kernel_nc(&ABL, alpha, &YB, &XT, ARMAS_TRANSB, cache);
     }
     update_syr2k_recursive(beta, &ABR, alpha, &XB, &YB, flags, minblock, cache);
 }
@@ -128,16 +128,16 @@ void update_syr2k_recursive(
 static
 void update_syr2k_trans_unb(
     DTYPE beta,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y,
+    const armas_dense_t *X,
+    const armas_dense_t *Y,
     int flags)
 {
-    armas_x_dense_t ATL, ABR;
-    armas_x_dense_t A00, a01, a10, a11, A22;
-    armas_x_dense_t XL, XR, X0, x1, X2;
-    armas_x_dense_t YL, YR, Y0, y1, Y2;
+    armas_dense_t ATL, ABR;
+    armas_dense_t A00, a01, a10, a11, A22;
+    armas_dense_t XL, XR, X0, x1, X2;
+    armas_dense_t YL, YR, Y0, y1, Y2;
     DTYPE ak;
 
     mat_partition_2x2(
@@ -160,15 +160,15 @@ void update_syr2k_trans_unb(
             &YL, &Y0, &y1, &Y2, /**/ Y, 1, ARMAS_PRIGHT);
         // -------------------------------------------------------------------
         ak = ZERO;
-        armas_x_adot_unsafe(&ak, 2.0*alpha, &x1, &y1);
-        ak += armas_x_get_unsafe(&a11, 0, 0) * beta;
-        armas_x_set_unsafe(&a11, 0, 0, ak);
+        armas_adot_unsafe(&ak, 2.0*alpha, &x1, &y1);
+        ak += armas_get_unsafe(&a11, 0, 0) * beta;
+        armas_set_unsafe(&a11, 0, 0, ak);
         if (flags & ARMAS_UPPER) {
-            armas_x_mvmult_unsafe(beta, &a01, alpha, &Y0, &x1, ARMAS_TRANS);
-            armas_x_mvmult_unsafe(ONE, &a01, alpha, &X0, &y1, ARMAS_TRANS);
+            armas_mvmult_unsafe(beta, &a01, alpha, &Y0, &x1, ARMAS_TRANS);
+            armas_mvmult_unsafe(ONE, &a01, alpha, &X0, &y1, ARMAS_TRANS);
         } else {
-            armas_x_mvmult_unsafe(beta, &a10, alpha, &Y0, &x1, ARMAS_TRANS);
-            armas_x_mvmult_unsafe(ONE, &a10, alpha, &X0, &y1, ARMAS_TRANS);
+            armas_mvmult_unsafe(beta, &a10, alpha, &Y0, &x1, ARMAS_TRANS);
+            armas_mvmult_unsafe(ONE, &a10, alpha, &X0, &y1, ARMAS_TRANS);
         }
         // -------------------------------------------------------------------
         mat_continue_3x3to2x2(
@@ -184,16 +184,16 @@ void update_syr2k_trans_unb(
 static
 void update_syr2k_trans_recursive(
     DTYPE beta,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y,
+    const armas_dense_t *X,
+    const armas_dense_t *Y,
     int flags,
     int minblock,
     cache_t *cache)
 {
-    armas_x_dense_t ATL, ATR, ABL, ABR;
-    armas_x_dense_t XL, XR, YL, YR;
+    armas_dense_t ATL, ATR, ABL, ABR;
+    armas_dense_t XL, XR, YL, YR;
 
     if (A->rows < minblock) {
         update_syr2k_trans_unb(beta, A, alpha, X, Y, flags);
@@ -210,11 +210,11 @@ void update_syr2k_trans_recursive(
 
     update_syr2k_trans_recursive(beta, &ATL, alpha, &XL, &YL, flags, minblock, cache);
     if (flags & ARMAS_UPPER) {
-        armas_x_mult_kernel(beta, &ATR, alpha, &XL, &YR, ARMAS_TRANSA, cache);
-        armas_x_mult_kernel_nc(&ATR, alpha, &YL, &XR, ARMAS_TRANSA, cache);
+        armas_mult_kernel(beta, &ATR, alpha, &XL, &YR, ARMAS_TRANSA, cache);
+        armas_mult_kernel_nc(&ATR, alpha, &YL, &XR, ARMAS_TRANSA, cache);
     } else {
-        armas_x_mult_kernel(beta, &ABL, alpha, &XR, &YL, ARMAS_TRANSA, cache);
-        armas_x_mult_kernel_nc(&ABL, alpha, &YR, &XL, ARMAS_TRANSA, cache);
+        armas_mult_kernel(beta, &ABL, alpha, &XR, &YL, ARMAS_TRANSA, cache);
+        armas_mult_kernel_nc(&ABL, alpha, &YR, &XL, ARMAS_TRANSA, cache);
     }
     update_syr2k_trans_recursive(beta, &ABR, alpha, &XR, &YR, flags, minblock, cache);
 }
@@ -243,16 +243,16 @@ void update_syr2k_trans_recursive(
  *
  * @ingroup blas
  */
-int armas_x_update2_sym(
+int armas_update2_sym(
     DTYPE beta,
-    armas_x_dense_t *C,
+    armas_dense_t *C,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *B,
+    const armas_dense_t *A,
+    const armas_dense_t *B,
     int flags,
     armas_conf_t *conf)
 {
-    if (armas_x_size(C) == 0 || armas_x_size(A) == 0 || armas_x_size(B) == 0)
+    if (armas_size(C) == 0 || armas_size(A) == 0 || armas_size(B) == 0)
         return 0;
 
     if (!conf)

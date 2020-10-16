@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2012-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -49,7 +49,7 @@
  * @return Pointer to initialized matrix.
  * \ingroup matrix
  */
-armas_x_dense_t *armas_x_init(armas_x_dense_t *m, int r, int c)
+armas_dense_t *armas_init(armas_dense_t *m, int r, int c)
 {
     int doff;
 
@@ -66,7 +66,7 @@ armas_x_dense_t *armas_x_init(armas_x_dense_t *m, int r, int c)
     m->__data = calloc(m->__nbytes, sizeof(DTYPE));
     if ( !m->__data ) {
         m->__nbytes = 0;
-        return (armas_x_dense_t *)0;
+        return (armas_dense_t *)0;
     }
     // convert to number of bytes
     m->__nbytes *= sizeof(DTYPE);
@@ -90,9 +90,9 @@ armas_x_dense_t *armas_x_init(armas_x_dense_t *m, int r, int c)
  * @retval NULL Failed
  * \ingroup matrix
  */
-armas_x_dense_t *armas_x_newcopy(const armas_x_dense_t *A)
+armas_dense_t *armas_newcopy(const armas_dense_t *A)
 {
-    armas_x_dense_t *Anew = armas_x_alloc(A->rows, A->cols);
+    armas_dense_t *Anew = armas_alloc(A->rows, A->cols);
     if (Anew) {
         CP(Anew->elems, Anew->step, A->elems, A->step, A->rows, A->cols);
     }
@@ -117,7 +117,7 @@ armas_x_dense_t *armas_x_newcopy(const armas_x_dense_t *A)
  * @retval 1 equal
  * \ingroup matrix
  */
-int armas_x_intolerance(const armas_x_dense_t *A, const armas_x_dense_t *B, ABSTYPE atol, ABSTYPE rtol)
+int armas_intolerance(const armas_dense_t *A, const armas_dense_t *B, ABSTYPE atol, ABSTYPE rtol)
 {
     register int i, j;
     ABSTYPE df, ref;
@@ -156,13 +156,13 @@ static const ABSTYPE ATOL = 1e-8;
  * @retval 1 equal
  * \ingroup matrix
  */
-int armas_x_allclose(const armas_x_dense_t *A, const armas_x_dense_t *B)
+int armas_allclose(const armas_dense_t *A, const armas_dense_t *B)
 {
-    return armas_x_intolerance(A, B, ATOL, RTOL);
+    return armas_intolerance(A, B, ATOL, RTOL);
 }
 
 
-void armas_x_printf(FILE *out, const char *efmt, const armas_x_dense_t *m)
+void armas_printf(FILE *out, const char *efmt, const armas_dense_t *m)
 {
     unsigned int i, j;
     if (!m)
@@ -192,8 +192,8 @@ void armas_x_printf(FILE *out, const char *efmt, const armas_x_dense_t *m)
     }
 }
 
-void armas_x_print(const armas_x_dense_t *m, FILE *out)
+void armas_print(const armas_dense_t *m, FILE *out)
 {
-    armas_x_printf(out, "%8.1", m);
+    armas_printf(out, "%8.1", m);
 }
 

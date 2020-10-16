@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -11,17 +11,17 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_mvmult_sym) //&& defined(__symv_recursive)
+// this file provides following type dependent functions
+#if defined(armas_mvmult_sym) //&& defined(__symv_recursive)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
-#if defined(armas_x_adot_unsafe)
+#if defined(armas_adot_unsafe)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -53,13 +53,13 @@
 
 static
 void symv_unb(
-    armas_x_dense_t *Y,
+    armas_dense_t *Y,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *X,
+    const armas_dense_t *A,
+    const armas_dense_t *X,
     int flags)
 {
-    armas_x_dense_t x1, y1, a01;
+    armas_dense_t x1, y1, a01;
     DTYPE x0, y0, a00;
     /*
      *    y0     a00  a01^T  x0
@@ -70,21 +70,21 @@ void symv_unb(
      */
     for (int j = 0; j < A->cols; j++) {
         if (flags & ARMAS_LOWER) {
-            armas_x_submatrix_unsafe(&a01, A, j + 1, j, A->rows - j - 1, 1);
+            armas_submatrix_unsafe(&a01, A, j + 1, j, A->rows - j - 1, 1);
         } else {
-            armas_x_submatrix_unsafe(&a01, A, j, j + 1, 1, A->cols - j - 1);
+            armas_submatrix_unsafe(&a01, A, j, j + 1, 1, A->cols - j - 1);
         }
-        armas_x_subvector_unsafe(&x1, X, j + 1, A->rows - j - 1);
-        armas_x_subvector_unsafe(&y1, Y, j + 1, A->rows - j - 1);
-        y0 = armas_x_get_at_unsafe(Y, j);
-        x0 = armas_x_get_at_unsafe(X, j);
-        a00 = armas_x_get_unsafe(A, j, j);
+        armas_subvector_unsafe(&x1, X, j + 1, A->rows - j - 1);
+        armas_subvector_unsafe(&y1, Y, j + 1, A->rows - j - 1);
+        y0 = armas_get_at_unsafe(Y, j);
+        x0 = armas_get_at_unsafe(X, j);
+        a00 = armas_get_unsafe(A, j, j);
         // y0 = y0 + alpha*x0*a00, + alpha*dot(x1, x01)
         y0 += alpha * x0 * a00;
-        armas_x_adot_unsafe(&y0, alpha, &x1, &a01);
-        armas_x_set_at_unsafe(Y, j, y0);
+        armas_adot_unsafe(&y0, alpha, &x1, &a01);
+        armas_set_at_unsafe(Y, j, y0);
         // y1 = y1 + alpha*a00*x1
-        armas_x_axpby_unsafe(ONE, &y1, alpha * x0, &a01);
+        armas_axpby_unsafe(ONE, &y1, alpha * x0, &a01);
     }
     return;
 }
@@ -107,16 +107,16 @@ void symv_unb(
  */
 static
 void symv_recursive(
-    armas_x_dense_t *Y,
+    armas_dense_t *Y,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *X,
+    const armas_dense_t *A,
+    const armas_dense_t *X,
     int flags,
     int blas2min)
 {
-    armas_x_dense_t xT, xB, yT, yB;
-    armas_x_dense_t ATL, ATR, ABL, ABR;
-    int N = armas_x_size(Y);
+    armas_dense_t xT, xB, yT, yB;
+    armas_dense_t ATL, ATR, ABL, ABR;
+    int N = armas_size(Y);
 
     if (N < blas2min) {
         symv_unb(Y, alpha, A, X, flags);
@@ -135,27 +135,27 @@ void symv_recursive(
 
     if (flags & ARMAS_UPPER) {
         symv_recursive(&yT, alpha, &ATL, &xT, flags, blas2min);
-        armas_x_mvmult_unsafe(ONE, &yT, alpha, &ATR, &xB, 0);
+        armas_mvmult_unsafe(ONE, &yT, alpha, &ATR, &xB, 0);
 
         symv_recursive(&yB, alpha, &ABR, &xB, flags, blas2min);
-        armas_x_mvmult_unsafe(ONE, &yB, alpha, &ATR, &xT, ARMAS_TRANS);
+        armas_mvmult_unsafe(ONE, &yB, alpha, &ATR, &xT, ARMAS_TRANS);
     } else {
         symv_recursive(&yT, alpha, &ATL, &xT, flags, blas2min);
-        armas_x_mvmult_unsafe(ONE, &yT, alpha, &ABL, &xB, ARMAS_TRANS);
+        armas_mvmult_unsafe(ONE, &yT, alpha, &ABL, &xB, ARMAS_TRANS);
 
         symv_recursive(&yB, alpha, &ABR, &xB, flags, blas2min);
-        armas_x_mvmult_unsafe(ONE, &yB, alpha, &ABL, &xT, 0);
+        armas_mvmult_unsafe(ONE, &yB, alpha, &ABL, &xT, 0);
 
     }
 }
 
-void armas_x_mvmult_sym_unsafe(
-    DTYPE beta, armas_x_dense_t *y, DTYPE alpha,
-    const armas_x_dense_t *A, const armas_x_dense_t *x, int flags)
+void armas_mvmult_sym_unsafe(
+    DTYPE beta, armas_dense_t *y, DTYPE alpha,
+    const armas_dense_t *A, const armas_dense_t *x, int flags)
 {
     armas_env_t *env = armas_getenv();
     if (beta != ONE) {
-        armas_x_scale_unsafe(y, beta);
+        armas_scale_unsafe(y, beta);
     }
     symv_recursive(y, alpha, A, x, flags, env->blas2min);
 }
@@ -181,30 +181,30 @@ void armas_x_mvmult_sym_unsafe(
  *
  * @ingroup blas
  */
-int armas_x_mvmult_sym(
+int armas_mvmult_sym(
     DTYPE beta,
-    armas_x_dense_t *y,
+    armas_dense_t *y,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *x,
+    const armas_dense_t *A,
+    const armas_dense_t *x,
     int flags,
     armas_conf_t *conf)
 {
     int ok;
-    int nx = armas_x_size(x);
-    int ny = armas_x_size(y);
+    int nx = armas_size(x);
+    int ny = armas_size(y);
 
-    if (armas_x_size(A) == 0 || nx == 0 || ny == 0)
+    if (armas_size(A) == 0 || nx == 0 || ny == 0)
         return 0;
 
     if (!conf)
         conf = armas_conf_default();
 
-    if (!armas_x_isvector(x)) {
+    if (!armas_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
-    if (!armas_x_isvector(y)) {
+    if (!armas_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
@@ -216,7 +216,7 @@ int armas_x_mvmult_sym(
     }
     armas_env_t *env = armas_getenv();
     if (beta != ONE) {
-        armas_x_scale_unsafe(y, beta);
+        armas_scale_unsafe(y, beta);
     }
     symv_recursive(y, alpha, A, x, flags, env->blas2min);
     return 0;

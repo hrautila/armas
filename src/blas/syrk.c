@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,16 +12,16 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_update_sym)
+#if defined(armas_update_sym)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_update_trm)
+#if defined(armas_update_trm)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -49,17 +49,17 @@
  *
  * @ingroup blas
  */
-int armas_x_update_sym(
+int armas_update_sym(
     DTYPE beta,
-    armas_x_dense_t *C,
+    armas_dense_t *C,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     armas_conf_t *conf)
 {
     int ok;
 
-    if (armas_x_size(A) == 0 || armas_x_size(C) == 0)
+    if (armas_size(A) == 0 || armas_size(C) == 0)
         return 0;
 
     if (!conf)
@@ -80,7 +80,7 @@ int armas_x_update_sym(
     int uflags = flags & (ARMAS_UPPER | ARMAS_LOWER);
     uflags |= (flags & ARMAS_TRANS ? ARMAS_TRANSA : ARMAS_TRANSB);
 
-    return armas_x_update_trm(beta, C, alpha, A, A, uflags, conf);
+    return armas_update_trm(beta, C, alpha, A, A, uflags, conf);
 }
 #else
 #warning "Missing defines. No code."

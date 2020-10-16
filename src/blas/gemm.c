@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
 // This file is part of github.com/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -11,17 +11,17 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_mult) 
+// this file provides following type dependent functions
+#if defined(armas_mult) 
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_mult_kernel)
+#if defined(armas_mult_kernel)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -54,18 +54,18 @@
  *
  * @ingroup blas
  */
-int armas_x_mult(
+int armas_mult(
     DTYPE beta,
-    armas_x_dense_t *C,
+    armas_dense_t *C,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *B,
+    const armas_dense_t *A,
+    const armas_dense_t *B,
     int flags,
     armas_conf_t *conf)
 {
     int ok;
 
-    if (armas_x_size(A) == 0 || armas_x_size(B) == 0 || armas_x_size(C) == 0)
+    if (armas_size(A) == 0 || armas_size(B) == 0 || armas_size(C) == 0)
         return  0;
 
     require(A->step >= A->rows && B->step >= B->rows && C->step >= C->rows);
@@ -117,7 +117,7 @@ int armas_x_mult(
     armas_env_t *env = armas_getenv();
     armas_cache_setup2(&cache, &cbuf, env->mb, env->nb, env->kb, sizeof(DTYPE));
 
-    armas_x_mult_kernel(beta, C, alpha, A, B, flags, &cache);
+    armas_mult_kernel(beta, C, alpha, A, B, flags, &cache);
     armas_cbuf_release(&cbuf);
 
     return 0;

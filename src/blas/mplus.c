@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2015
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas. It is free software,
+// This file is part of libARMAS. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -12,27 +12,27 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_mplus)
+#if defined(armas_mplus)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
 #include "internal.h"
 
 static
-void madd_lower(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
+void madd_lower(DTYPE alpha, armas_dense_t *A, DTYPE beta, const armas_dense_t *B, int nR, int nC)
 {
     register int i, j, k, lda, ldb;
     DTYPE *a, *b;
 
-    a = armas_x_data(A);
-    b = armas_x_data(B);
+    a = armas_data(A);
+    b = armas_data(B);
     lda = A->step; ldb = B->step;
 
     for (j = 0; j < nC-3; j += 4) {
@@ -60,13 +60,13 @@ void madd_lower(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense
 }
 
 static
-void madd_lower_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
+void madd_lower_abs(DTYPE alpha, armas_dense_t *A, DTYPE beta, const armas_dense_t *B, int nR, int nC)
 {
     register int i, j, k, lda, ldb;
     DTYPE *a, *b;
 
-    a = armas_x_data(A);
-    b = armas_x_data(B);
+    a = armas_data(A);
+    b = armas_data(B);
     lda = A->step; ldb = B->step;
 
     for (j = 0; j < nC-3; j += 4) {
@@ -94,13 +94,13 @@ void madd_lower_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_d
 }
 
 static
-void madd_upper(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
+void madd_upper(DTYPE alpha, armas_dense_t *A, DTYPE beta, const armas_dense_t *B, int nR, int nC)
 {
     register int i, j, k, lda, ldb;
     DTYPE *a, *b;
 
-    a = armas_x_data(A);
-    b = armas_x_data(B);
+    a = armas_data(A);
+    b = armas_data(B);
     lda = A->step; ldb = B->step;
 
     for (j = 0; j < nC-3; j += 4) {
@@ -128,13 +128,13 @@ void madd_upper(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense
 }
 
 static
-void madd_upper_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC)
+void madd_upper_abs(DTYPE alpha, armas_dense_t *A, DTYPE beta, const armas_dense_t *B, int nR, int nC)
 {
     register int i, j, k, lda, ldb;
     DTYPE *a, *b;
 
-    a = armas_x_data(A);
-    b = armas_x_data(B);
+    a = armas_data(A);
+    b = armas_data(B);
     lda = A->step; ldb = B->step;
 
     for (j = 0; j < nC-3; j += 4) {
@@ -163,13 +163,13 @@ void madd_upper_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_d
 
 
 static
-void madd(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC, int flags)
+void madd(DTYPE alpha, armas_dense_t *A, DTYPE beta, const armas_dense_t *B, int nR, int nC, int flags)
 {
     register int i, j, lda, ldb;
     DTYPE *a, *b;
 
-    a = armas_x_data(A);
-    b = armas_x_data(B);
+    a = armas_data(A);
+    b = armas_data(B);
     lda = A->step; ldb = B->step;
 
     if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
@@ -211,13 +211,13 @@ void madd(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B,
 }
 
 static
-void madd_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t *B, int nR, int nC, int flags)
+void madd_abs(DTYPE alpha, armas_dense_t *A, DTYPE beta, const armas_dense_t *B, int nR, int nC, int flags)
 {
     register int i, j, lda, ldb;
     DTYPE *a, *b;
 
-    a = armas_x_data(A);
-    b = armas_x_data(B);
+    a = armas_data(A);
+    b = armas_data(B);
     lda = A->step; ldb = B->step;
 
     if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
@@ -283,11 +283,11 @@ void madd_abs(DTYPE alpha, armas_x_dense_t *A, DTYPE beta, const armas_x_dense_t
  * @ingroup matrix
  */
 
-int armas_x_mplus(
+int armas_mplus(
     DTYPE alpha,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE beta,
-    const armas_x_dense_t *B,
+    const armas_dense_t *B,
     int flags,
     armas_conf_t *cf)
 {
@@ -296,12 +296,12 @@ int armas_x_mplus(
 
     require(A->step >= A->rows && B->step >= B->rows);
 
-    if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
+    if (armas_size(A) == 0 || armas_size(B) == 0)
         return 0;
-    if (armas_x_size(B) == 1)
-        return armas_x_madd(A, beta*armas_x_get_unsafe(B, 0, 0), flags, cf);
-    if (armas_x_isvector(A) && armas_x_isvector(B))
-        return armas_x_axpby(alpha, A, beta, B, cf);
+    if (armas_size(B) == 1)
+        return armas_madd(A, beta*armas_get_unsafe(B, 0, 0), flags, cf);
+    if (armas_isvector(A) && armas_isvector(B))
+        return armas_axpby(alpha, A, beta, B, cf);
 
     if (flags & (ARMAS_TRANS|ARMAS_TRANSB)) {
         if (A->rows != B->cols || A->cols != B->rows) {

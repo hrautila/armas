@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -11,15 +11,15 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_iamax) && defined(armas_x_amax)
+// this file provides following type dependent functions
+#if defined(armas_iamax) && defined(armas_amax)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -27,7 +27,7 @@
 
 // return index of max absolute value
 static
-int vec_iamax(const armas_x_dense_t *X,  int N)
+int vec_iamax(const armas_dense_t *X,  int N)
 {
     int i, ix, n, xinc;
     register ABSTYPE max, c0, c1;
@@ -59,7 +59,7 @@ int vec_iamax(const armas_x_dense_t *X,  int N)
 }
 
 static
-int vec_iamin(const armas_x_dense_t *X,  int N)
+int vec_iamin(const armas_dense_t *X,  int N)
 {
     register int i, ix, n, xinc;
     register ABSTYPE min, c0, c1;
@@ -92,7 +92,7 @@ int vec_iamin(const armas_x_dense_t *X,  int N)
 
 
 static
-int vec_iamax2(const armas_x_dense_t *X,  int N)
+int vec_iamax2(const armas_dense_t *X,  int N)
 {
     int i, ix, xinc;
     DTYPE *ep;
@@ -115,7 +115,7 @@ int vec_iamax2(const armas_x_dense_t *X,  int N)
 }
 
 static
-int vec_iamin2(const armas_x_dense_t *X,  int N)
+int vec_iamin2(const armas_dense_t *X,  int N)
 {
     int i, ix, xinc;
     DTYPE *ep;
@@ -149,34 +149,34 @@ int vec_iamin2(const armas_x_dense_t *X,  int N)
  *
  * @ingroup blas
  */
-int armas_x_iamax(const armas_x_dense_t *x, armas_conf_t *conf)
+int armas_iamax(const armas_dense_t *x, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
 
     // only for column or row vectors
-    if (!armas_x_isvector(x)) {
+    if (!armas_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
-    if (armas_x_size(x) == 0) {
+    if (armas_size(x) == 0) {
         conf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
-    return vec_iamax2(x, armas_x_size(x));
+    return vec_iamax2(x, armas_size(x));
 }
 
 /**
  * @brief Maximum absolute value of vector.
  */
-ABSTYPE armas_x_amax(const armas_x_dense_t *x, armas_conf_t *conf)
+ABSTYPE armas_amax(const armas_dense_t *x, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
 
-    int imax = armas_x_iamax(x, conf);
+    int imax = armas_iamax(x, conf);
     if (imax >= 0) {
-        return ABS(armas_x_get_at_unsafe(x, imax));
+        return ABS(armas_get_at_unsafe(x, imax));
     }
     return ZERO;
 }
@@ -193,21 +193,21 @@ ABSTYPE armas_x_amax(const armas_x_dense_t *x, armas_conf_t *conf)
  *
  * @ingroup blas1
  */
-int armas_x_iamin(const armas_x_dense_t *x, armas_conf_t *conf)
+int armas_iamin(const armas_dense_t *x, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
 
     // only for column or row vectors
-    if (!armas_x_isvector(x)) {
+    if (!armas_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -1;
     }
-    if (armas_x_size(x) == 0) {
+    if (armas_size(x) == 0) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
-    return vec_iamin2(x, armas_x_size(x));
+    return vec_iamin2(x, armas_size(x));
 }
 #else
 #warning "Missing defines; no code!"

@@ -1,6 +1,6 @@
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -15,21 +15,21 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_mcopy) && defined(armas_x_copy)
+#if defined(armas_mcopy) && defined(armas_copy)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
 #include "matcpy.h"
 
 static
-void vector_copy(armas_x_dense_t *X,  const armas_x_dense_t *Y, int N)
+void vector_copy(armas_dense_t *X,  const armas_dense_t *Y, int N)
 {
     register int i, kx, ky;
     register DTYPE f0, f1, f2, f3;
@@ -75,20 +75,20 @@ void vector_copy(armas_x_dense_t *X,  const armas_x_dense_t *Y, int N)
  *
  * @ingroup blas
  */
-int armas_x_copy(armas_x_dense_t *Y, const armas_x_dense_t *X, armas_conf_t *conf)
+int armas_copy(armas_dense_t *Y, const armas_dense_t *X, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
 
-    if (armas_x_size(X) == 0 || armas_x_size(Y) == 0) {
+    if (armas_size(X) == 0 || armas_size(Y) == 0) {
         return 0;
     }
     // only for column or row vectors
-    if (!(armas_x_isvector(X) && armas_x_isvector(Y))) {
+    if (!(armas_isvector(X) && armas_isvector(Y))) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
-    int N = armas_x_size(X) < armas_x_size(Y) ? armas_x_size(X) : armas_x_size(Y);
+    int N = armas_size(X) < armas_size(Y) ? armas_size(X) : armas_size(Y);
 
     vector_copy(Y, X, N);
     return 0;
@@ -114,20 +114,20 @@ int armas_x_copy(armas_x_dense_t *Y, const armas_x_dense_t *X, armas_conf_t *con
  *
  * @ingroup matrix
  */
-int armas_x_mcopy(armas_x_dense_t *A, const armas_x_dense_t *B, int flags, armas_conf_t *cf)
+int armas_mcopy(armas_dense_t *A, const armas_dense_t *B, int flags, armas_conf_t *cf)
 {
     int ok;
 
     if (!cf)
         cf = armas_conf_default();
 
-    if (armas_x_isvector(A) && armas_x_isvector(B)) {
-        if (armas_x_size(A) != armas_x_size(B)) {
+    if (armas_isvector(A) && armas_isvector(B)) {
+        if (armas_size(A) != armas_size(B)) {
             cf->error = ARMAS_ESIZE;
             return -ARMAS_ESIZE;
         }
         // blas1 vector copy
-        vector_copy(A, B, armas_x_size(A));
+        vector_copy(A, B, armas_size(A));
         return 0;
     }
     switch (flags & ARMAS_TRANS) {

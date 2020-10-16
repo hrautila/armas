@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2012-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -11,15 +11,15 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_mvupdate) && defined(armas_x_mvupdate_unsafe)
+// this file provides following type dependent functions
+#if defined(armas_mvupdate) && defined(armas_mvupdate_unsafe)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -29,10 +29,10 @@
 static
 void update4axpy(
     DTYPE beta,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y,
+    const armas_dense_t *X,
+    const armas_dense_t *Y,
     int M)
 {
     register int i;
@@ -96,10 +96,10 @@ void update4axpy(
 static
 void update1axpy(
     DTYPE beta,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y,
+    const armas_dense_t *X,
+    const armas_dense_t *Y,
     int M)
 {
     register int i;
@@ -135,25 +135,25 @@ void update1axpy(
 static
 void update_ger_unb(
     DTYPE beta,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y)
+    const armas_dense_t *X,
+    const armas_dense_t *Y)
 {
-    armas_x_dense_t y0;
-    armas_x_dense_t A0;
+    armas_dense_t y0;
+    armas_dense_t A0;
     register int j;
     for (j = 0; j < A->cols-3; j += 4) {
-        armas_x_submatrix_unsafe(&A0, A, 0, j, A->rows, 4);
-        armas_x_subvector_unsafe(&y0, Y, j, 4);
+        armas_submatrix_unsafe(&A0, A, 0, j, A->rows, 4);
+        armas_subvector_unsafe(&y0, Y, j, 4);
         update4axpy(beta, &A0, alpha, X, &y0, A->rows);
     }
     if (j == A->cols)
         return;
 
     for (; j < A->cols; j++) {
-        armas_x_submatrix_unsafe(&A0, A, 0, j, A->rows, 1);
-        armas_x_subvector_unsafe(&y0, Y, j, 1);
+        armas_submatrix_unsafe(&A0, A, 0, j, A->rows, 1);
+        armas_subvector_unsafe(&y0, Y, j, 1);
         update1axpy(beta, &A0, alpha, X, &y0, A->rows);
     }
 }
@@ -161,14 +161,14 @@ void update_ger_unb(
 static
 void update_ger_recursive(
     DTYPE beta,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y,
+    const armas_dense_t *X,
+    const armas_dense_t *Y,
     int min_mvec_size)
 {
-    armas_x_dense_t xT, xB, yT, yB;
-    armas_x_dense_t ATL, ATR, ABL, ABR;
+    armas_dense_t xT, xB, yT, yB;
+    armas_dense_t ATL, ATR, ABL, ABR;
 
     if (A->rows < min_mvec_size || A->cols < min_mvec_size) {
         update_ger_unb(beta, A, alpha, X, Y);
@@ -191,12 +191,12 @@ void update_ger_recursive(
     update_ger_recursive(beta, &ABR, alpha, &xB, &yB, min_mvec_size);
 }
 
-void armas_x_mvupdate_unsafe(
+void armas_mvupdate_unsafe(
     DTYPE beta,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    const armas_x_dense_t *X,
-    const armas_x_dense_t *Y)
+    const armas_dense_t *X,
+    const armas_dense_t *Y)
 {
     armas_env_t *env = armas_getenv();
     update_ger_recursive(beta, A, alpha, X, Y, env->blas2min);
@@ -216,28 +216,28 @@ void armas_x_mvupdate_unsafe(
  *
  * @ingroup blas
  */
-int armas_x_mvupdate(
+int armas_mvupdate(
     DTYPE beta,
-    armas_x_dense_t *A,
+    armas_dense_t *A,
     DTYPE alpha,
-    const armas_x_dense_t *x,
-    const armas_x_dense_t *y,
+    const armas_dense_t *x,
+    const armas_dense_t *y,
     armas_conf_t *conf)
 {
-    int nx = armas_x_size(x);
-    int ny = armas_x_size(y);
+    int nx = armas_size(x);
+    int ny = armas_size(y);
 
-    if (armas_x_size(A) == 0 || nx == 0 || ny == 0)
+    if (armas_size(A) == 0 || nx == 0 || ny == 0)
         return 0;
 
     if (!conf)
         conf = armas_conf_default();
 
-    if (!armas_x_isvector(x)) {
+    if (!armas_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
-    if (!armas_x_isvector(y)) {
+    if (!armas_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }

@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
 // This file is part of github.com/hrautila/matops package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -11,17 +11,17 @@
 #include "dtype.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_mult_sym) 
+// this file provides following type dependent functions
+#if defined(armas_mult_sym) 
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_mult_kernel_inner) && defined(armas_x_mult_kernel_nc)
+#if defined(armas_mult_kernel_inner) && defined(armas_mult_kernel_nc)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -32,70 +32,70 @@
 // C += A*B; A is the diagonal block
 static
 void mult_symm_diag(
-    armas_x_dense_t *C,
+    armas_dense_t *C,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *B,
+    const armas_dense_t *A,
+    const armas_dense_t *B,
     int flags,
     cache_t *cache)
 {
-    armas_x_dense_t Acpy, Bcpy;
+    armas_dense_t Acpy, Bcpy;
     int unit = flags & ARMAS_UNIT ? 1 : 0;
     /*
      * upper/lower part of source A untouchable, copy triangular block and fill
      * lower/upper part
      */
     if (flags & ARMAS_RIGHT) {
-        armas_x_make(&Acpy, A->rows, A->cols, cache->ab_step, cache->Acpy);
+        armas_make(&Acpy, A->rows, A->cols, cache->ab_step, cache->Acpy);
         if (flags & ARMAS_LOWER) {
             CPTRIL_UFILL(&Acpy, A, A->rows, A->cols, unit);
         } else {
             CPTRIU_LFILL(&Acpy, A, A->rows, A->cols, unit);
         }
         if ((flags & ARMAS_TRANSB) != 0) {
-            armas_x_make(&Bcpy, B->rows, B->cols, cache->ab_step, cache->Bcpy);
+            armas_make(&Bcpy, B->rows, B->cols, cache->ab_step, cache->Bcpy);
             CPBLK(&Bcpy, B, B->rows, B->cols, flags);
         } else {
-            armas_x_make(&Bcpy, B->cols, B->rows, cache->ab_step, cache->Bcpy);
+            armas_make(&Bcpy, B->cols, B->rows, cache->ab_step, cache->Bcpy);
             CPBLK_TRANS(&Bcpy, B, B->rows, B->cols, flags);
         }
-        armas_x_mult_kernel_inner(C, alpha, &Bcpy, &Acpy, cache->rb);
+        armas_mult_kernel_inner(C, alpha, &Bcpy, &Acpy, cache->rb);
     } else {
-        armas_x_make(&Acpy, A->rows, A->cols, cache->ab_step, cache->Acpy);
+        armas_make(&Acpy, A->rows, A->cols, cache->ab_step, cache->Acpy);
         if (flags & ARMAS_LOWER) {
             CPTRIL_UFILL(&Acpy, A, A->rows, A->cols, unit);
         } else {
             CPTRIU_LFILL(&Acpy, A, A->rows, A->cols, unit);
         }
         if ((flags & ARMAS_TRANSB) != 0) {
-            armas_x_make(&Bcpy, B->cols, B->rows, cache->ab_step, cache->Bcpy);
+            armas_make(&Bcpy, B->cols, B->rows, cache->ab_step, cache->Bcpy);
             CPBLK_TRANS(&Bcpy, B, B->rows, B->cols, flags);
         } else {
-            armas_x_make(&Bcpy, B->rows, B->cols, cache->ab_step, cache->Bcpy);
+            armas_make(&Bcpy, B->rows, B->cols, cache->ab_step, cache->Bcpy);
             CPBLK(&Bcpy, B, B->rows, B->cols, flags);
         }
-        armas_x_mult_kernel_inner(C, alpha, &Acpy, &Bcpy, cache->rb);
+        armas_mult_kernel_inner(C, alpha, &Acpy, &Bcpy, cache->rb);
     }
 }
 
 static
-void armas_x_mult_symm_left(
+void armas_mult_symm_left(
     DTYPE beta,
-    armas_x_dense_t *C,
+    armas_dense_t *C,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *B,
+    const armas_dense_t *A,
+    const armas_dense_t *B,
     int flags,
     int P,
     cache_t *mcache)
 {
     int i, j, nI, nJ, flags1, flags2, r, c, nr, nc;
     int mb, nb;
-    armas_x_dense_t A0, B0, C0;
+    armas_dense_t A0, B0, C0;
 
     if (alpha == 0.0) {
         if (beta != 1.0) {
-            armas_x_scale_unsafe(C, beta);
+            armas_scale_unsafe(C, beta);
         }
         return;
     }
@@ -127,10 +127,10 @@ void armas_x_mult_symm_left(
         // for all column of C, B ...
         for (j = 0; j < C->cols; j += nb) {
             nJ = C->cols - j < nb ? C->cols - j : nb;
-            armas_x_submatrix_unsafe(&C0, C, i, j, nI, nJ);
+            armas_submatrix_unsafe(&C0, C, i, j, nI, nJ);
 
             // block of C upper left at [i,j], lower right at [i+nI, j+nj]
-            armas_x_scale_unsafe(&C0, beta);
+            armas_scale_unsafe(&C0, beta);
 
             // off diagonal block in A; if UPPER then above [i,j]; if LOWER then
             // left of [i,j] above|left diagonal
@@ -138,21 +138,21 @@ void armas_x_mult_symm_left(
             c  = (flags & ARMAS_UPPER) != 0 ? P+i : 0;
             nr = (flags & ARMAS_UPPER) != 0 ? P+i : nI;
             nc = (flags & ARMAS_UPPER) != 0 ? nI : P+i;
-            armas_x_submatrix_unsafe(&A0, A, r, c, nr, nc);
+            armas_submatrix_unsafe(&A0, A, r, c, nr, nc);
             if ((flags & ARMAS_TRANSB) != 0) {
-                armas_x_submatrix_unsafe(&B0, B, j, 0, nJ, P+i);
+                armas_submatrix_unsafe(&B0, B, j, 0, nJ, P+i);
             } else {
-                armas_x_submatrix_unsafe(&B0, B, 0, j, P+i, nJ);
+                armas_submatrix_unsafe(&B0, B, 0, j, P+i, nJ);
             }
 
-            armas_x_mult_kernel_nc(&C0, alpha, &A0, &B0, flags1, mcache);
+            armas_mult_kernel_nc(&C0, alpha, &A0, &B0, flags1, mcache);
 
             // on-diagonal block in A;
-            armas_x_submatrix_unsafe(&A0, A, P+i, P+i, nI, nI);
+            armas_submatrix_unsafe(&A0, A, P+i, P+i, nI, nI);
             if ((flags & ARMAS_TRANSB) != 0) {
-                armas_x_submatrix_unsafe(&B0, B, j, i, nJ, nI);
+                armas_submatrix_unsafe(&B0, B, j, i, nJ, nI);
             } else {
-                armas_x_submatrix_unsafe(&B0, B, i, j, nI, nJ);
+                armas_submatrix_unsafe(&B0, B, i, j, nI, nJ);
             }
             mult_symm_diag(&C0, alpha, &A0, &B0, flags, mcache);
 
@@ -162,36 +162,36 @@ void armas_x_mult_symm_left(
             c  = P + ((flags & ARMAS_UPPER) != 0 ? i + nI : i);
             nr = (flags & ARMAS_UPPER) != 0 ? nI : A->cols - r;
             nc = (flags & ARMAS_UPPER) != 0 ? A->cols - c : nI;
-            armas_x_submatrix_unsafe(&A0, A, r, c, nr, nc);
+            armas_submatrix_unsafe(&A0, A, r, c, nr, nc);
             if ((flags & ARMAS_TRANSB) != 0) {
-                armas_x_submatrix_unsafe(&B0, B, j, i+nI, nJ, B->cols - i - nI);
+                armas_submatrix_unsafe(&B0, B, j, i+nI, nJ, B->cols - i - nI);
             } else {
-                armas_x_submatrix_unsafe(&B0, B, i+nI, j, B->rows - i - nI, nJ);
+                armas_submatrix_unsafe(&B0, B, i+nI, j, B->rows - i - nI, nJ);
             }
-            armas_x_mult_kernel_nc(&C0, alpha, &A0, &B0, flags2, mcache);
+            armas_mult_kernel_nc(&C0, alpha, &A0, &B0, flags2, mcache);
         }
     }
 }
 
 
 static
-void armas_x_mult_symm_right(
+void armas_mult_symm_right(
     DTYPE beta,
-    armas_x_dense_t *C,
+    armas_dense_t *C,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *B,
+    const armas_dense_t *A,
+    const armas_dense_t *B,
     int flags,
     int P,
     cache_t *mcache)
 {
     int flags1, flags2;
     register int nR, nC, ic, ir, r, c, nr, nc;
-    armas_x_dense_t A0, B0, C0;
+    armas_dense_t A0, B0, C0;
 
     if (alpha == 0.0) {
         if (beta != 1.0) {
-            armas_x_scale_unsafe(C, beta);
+            armas_scale_unsafe(C, beta);
         }
         return;
     }
@@ -227,28 +227,28 @@ void armas_x_mult_symm_right(
         for (ir = 0; ir < C->rows; ir += mb) {
             nR = C->rows - ir < mb ? C->rows - ir : mb;
 
-            armas_x_submatrix_unsafe(&C0, C, ir, ic, nR, nC);
-            armas_x_scale_unsafe(&C0, beta);
+            armas_submatrix_unsafe(&C0, C, ir, ic, nR, nC);
+            armas_scale_unsafe(&C0, beta);
 
             // above|left diagonal
             r  = (flags & ARMAS_UPPER) != 0 ? 0 : P + ic;
             c  = (flags & ARMAS_UPPER) != 0 ? P + ic : 0;
             nr = (flags & ARMAS_UPPER) != 0 ? P + ic : nC;
             nc = (flags & ARMAS_UPPER) != 0 ? nC : P + ic;
-            armas_x_submatrix_unsafe(&A0, A, r, c, nr, nc);
+            armas_submatrix_unsafe(&A0, A, r, c, nr, nc);
             if ((flags & ARMAS_TRANSB) != 0) {
-                armas_x_submatrix_unsafe(&B0, B, 0, ir, P + ic, nR);
+                armas_submatrix_unsafe(&B0, B, 0, ir, P + ic, nR);
             } else {
-                armas_x_submatrix_unsafe(&B0, B, ir, 0, nR, P + ic);
+                armas_submatrix_unsafe(&B0, B, ir, 0, nR, P + ic);
             }
-            armas_x_mult_kernel_nc(&C0, alpha, &B0, &A0, flags1, mcache);
+            armas_mult_kernel_nc(&C0, alpha, &B0, &A0, flags1, mcache);
 
             // diagonal block
-            armas_x_submatrix_unsafe(&A0, A, P+ic, P+ic, nC, nC);
+            armas_submatrix_unsafe(&A0, A, P+ic, P+ic, nC, nC);
             if ((flags & ARMAS_TRANSB) != 0) {
-                armas_x_submatrix(&B0, B, ic, ir, nC, nR);
+                armas_submatrix(&B0, B, ic, ir, nC, nR);
             } else {
-                armas_x_submatrix(&B0, B, ir, ic, nR, nC);
+                armas_submatrix(&B0, B, ir, ic, nR, nC);
             }
             mult_symm_diag(&C0, alpha, &A0, &B0, flags, mcache);
 
@@ -257,15 +257,15 @@ void armas_x_mult_symm_right(
             c  = (flags & ARMAS_UPPER) != 0 ? P + ic + nC : P + ic;
             nr = (flags & ARMAS_UPPER) != 0 ? nC : A->cols - (P + ic + nC);
             nc = (flags & ARMAS_UPPER) != 0 ? A->cols - (P + ic + nC) : nC;
-            armas_x_submatrix_unsafe(&A0, A, r, c, nr, nc);
+            armas_submatrix_unsafe(&A0, A, r, c, nr, nc);
             if ((flags & ARMAS_TRANSB) != 0) {
-                armas_x_submatrix_unsafe(&B0, B, ic+nC, ir,
+                armas_submatrix_unsafe(&B0, B, ic+nC, ir,
                                          B->rows - (P + ic + nC), nR);
             } else {
-                armas_x_submatrix_unsafe(&B0, B, ir, ic+nC,
+                armas_submatrix_unsafe(&B0, B, ir, ic+nC,
                                          nR, B->cols - (P + ic + nC));
             }
-            armas_x_mult_kernel_nc(&C0, alpha, &B0, &A0, flags2, mcache);
+            armas_mult_kernel_nc(&C0, alpha, &B0, &A0, flags2, mcache);
         }
     }
 }
@@ -300,12 +300,12 @@ void armas_x_mult_symm_right(
  *
  * @ingroup blas
  */
-int armas_x_mult_sym(
+int armas_mult_sym(
     DTYPE beta,
-    armas_x_dense_t *C,
+    armas_dense_t *C,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *B,
+    const armas_dense_t *A,
+    const armas_dense_t *B,
     int flags,
     armas_conf_t *conf)
 {
@@ -313,7 +313,7 @@ int armas_x_mult_sym(
 
     if (C->rows == 0 || C->cols == 0)
         return 0;
-    if (armas_x_size(A) == 0 || armas_x_size(B) == 0)
+    if (armas_size(A) == 0 || armas_size(B) == 0)
         return 0;
 
     if (!conf)
@@ -373,28 +373,28 @@ int armas_x_mult_sym(
     armas_cache_setup2(&cache, &cbuf, env->mb, env->nb, env->kb, sizeof(DTYPE));
 
     if (flags & ARMAS_RIGHT) {
-        armas_x_mult_symm_right(beta, C, alpha, A, B, flags, 0, &cache);
+        armas_mult_symm_right(beta, C, alpha, A, B, flags, 0, &cache);
     } else {
-        armas_x_mult_symm_left(beta, C, alpha, A, B, flags, 0, &cache);
+        armas_mult_symm_left(beta, C, alpha, A, B, flags, 0, &cache);
     }
     armas_cbuf_release(&cbuf);
     return 0;
 }
 
-void armas_x_mult_sym_unsafe(
+void armas_mult_sym_unsafe(
     DTYPE beta,
-    armas_x_dense_t *C,
+    armas_dense_t *C,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *B,
+    const armas_dense_t *A,
+    const armas_dense_t *B,
     int flags,
     int K,
     cache_t *cache)
 {
     if (flags & ARMAS_RIGHT) {
-        armas_x_mult_symm_right(beta, C, alpha, A, B, flags, K, cache);
+        armas_mult_symm_right(beta, C, alpha, A, B, flags, K, cache);
     } else {
-        armas_x_mult_symm_left(beta, C, alpha, A, B, flags, K, cache);
+        armas_mult_symm_left(beta, C, alpha, A, B, flags, K, cache);
     }
 }
 

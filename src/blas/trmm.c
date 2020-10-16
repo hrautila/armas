@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -11,19 +11,19 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_mult_trm) 
+// this file provides following type dependent functions
+#if defined(armas_mult_trm) 
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_trmm_unb) && \
-  defined(armas_x_trmm_recursive) && \
-  defined(armas_x_trmm_blk)
+#if defined(armas_trmm_unb) && \
+  defined(armas_trmm_recursive) && \
+  defined(armas_trmm_blk)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -57,16 +57,16 @@
  *
  * @ingroup blas
  */
-int armas_x_mult_trm(
-    armas_x_dense_t *B,
+int armas_mult_trm(
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     armas_conf_t *conf)
 {
     int ok;
 
-    if (armas_x_size(B) == 0 || armas_x_size(A) == 0)
+    if (armas_size(B) == 0 || armas_size(A) == 0)
         return 0;
 
     if (!conf)
@@ -89,7 +89,7 @@ int armas_x_mult_trm(
     }
 
     if (conf->optflags & ARMAS_ONAIVE) {
-        armas_x_trmm_unb(B, alpha, A, flags);
+        armas_trmm_unb(B, alpha, A, flags);
         return 0;
     }
 
@@ -113,24 +113,24 @@ int armas_x_mult_trm(
 
     switch (conf->optflags & ARMAS_ORECURSIVE) {
     case ARMAS_ORECURSIVE:
-        armas_x_trmm_recursive(B, alpha, A, flags, &cache);
+        armas_trmm_recursive(B, alpha, A, flags, &cache);
         break;
     default:
-        armas_x_trmm_blk(B, alpha, A, flags, &cache);
+        armas_trmm_blk(B, alpha, A, flags, &cache);
         break;
     }
     armas_cbuf_release(&cbuf);
     return 0;
 }
 
-void armas_x_mult_trm_unsafe(
-    armas_x_dense_t *B,
+void armas_mult_trm_unsafe(
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     cache_t *cache)
 {
-    armas_x_trmm_blk(B, alpha, A, flags, cache);
+    armas_trmm_blk(B, alpha, A, flags, cache);
 }
 
 #else

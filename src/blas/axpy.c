@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -13,29 +13,29 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_axpy) && defined(armas_x_axpby) && defined(armas_x_axpby_unsafe)
+// this file provides following type dependent functions
+#if defined(armas_axpy) && defined(armas_axpby) && defined(armas_axpby_unsafe)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
 #include "internal.h"
 
-void armas_x_axpby_unsafe(
+void armas_axpby_unsafe(
     DTYPE beta,
-    armas_x_dense_t *y,
+    armas_dense_t *y,
     DTYPE alpha,
-    const armas_x_dense_t *x)
+    const armas_dense_t *x)
 {
     int i, kx, ky;
     DTYPE y0, y1, y2, y3;
-    int N = armas_x_size(y);
+    int N = armas_size(y);
     int yinc = y->rows == 1 ? y->step : 1;
     int xinc = x->rows == 1 ? x->step : 1;
 
@@ -80,27 +80,27 @@ void armas_x_axpby_unsafe(
  * @retval 0 Ok
  * @retval < 0 Failed, conf->error holds error code
  */
-int armas_x_axpby(
+int armas_axpby(
     DTYPE beta,
-    armas_x_dense_t *y,
+    armas_dense_t *y,
     DTYPE alpha,
-    const armas_x_dense_t *x,
+    const armas_dense_t *x,
     armas_conf_t *conf)
 {
     // only for column or row vectors
     if (!conf)
         conf = armas_conf_default();
 
-    if (!(armas_x_isvector(x) && armas_x_isvector(y))) {
+    if (!(armas_isvector(x) && armas_isvector(y))) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
-    if (armas_x_size(x) != armas_x_size(y)) {
+    if (armas_size(x) != armas_size(y)) {
         conf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
 
-    armas_x_axpby_unsafe(beta, y, alpha, x);
+    armas_axpby_unsafe(beta, y, alpha, x);
     return 0;
 }
 
@@ -115,13 +115,13 @@ int armas_x_axpby(
  * @retval 0 Ok
  * @retval < 0 Failed, conf->error holds error code
  */
-int armas_x_axpy(
-    armas_x_dense_t *y,
+int armas_axpy(
+    armas_dense_t *y,
     DTYPE alpha,
-    const armas_x_dense_t *x,
+    const armas_dense_t *x,
     armas_conf_t *conf)
 {
-    return armas_x_axpby(ONE, y, alpha, x, conf);
+    return armas_axpby(ONE, y, alpha, x, conf);
 }
 //! @}
 #else

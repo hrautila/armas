@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2015
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas. It is free software,
+// This file is part of libARMAS. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -10,14 +10,14 @@
 #include "dtype.h"
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_apply) && defined(armas_x_apply2)
+#if defined(armas_apply) && defined(armas_apply2)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -39,32 +39,32 @@
  * @retval <0 Error
  * @ingroup matrix
  */
-int armas_x_apply(armas_x_dense_t *A, armas_x_operator_t oper, int flags)
+int armas_apply(armas_dense_t *A, armas_operator_t oper, int flags)
 {
     int i, j;
 
-    if (armas_x_size(A) == 0)
+    if (armas_size(A) == 0)
         return 0;
 
     switch (flags & (ARMAS_LOWER | ARMAS_UPPER)) {
     case ARMAS_LOWER:
         for (j = 0; j < A->cols; j++) {
             for (i = j; i < A->rows; i++) {
-                armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j)));
+                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j)));
             }
         }
         break;
     case ARMAS_UPPER:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i <= j; i++) {
-                armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j)));
+                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j)));
             }
         }
         break;
     default:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < A->rows; i++) {
-                armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j)));
+                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j)));
             }
         }
         break;
@@ -91,32 +91,32 @@ int armas_x_apply(armas_x_dense_t *A, armas_x_operator_t oper, int flags)
  * 
  * @ingroup matrix
  */
-int armas_x_apply2(armas_x_dense_t *A, armas_x_operator2_t oper, DTYPE alpha, int flags)
+int armas_apply2(armas_dense_t *A, armas_operator2_t oper, DTYPE alpha, int flags)
 {
     int i, j;
 
-    if (armas_x_size(A) == 0)
+    if (armas_size(A) == 0)
         return 0;
 
     switch (flags & (ARMAS_LOWER | ARMAS_UPPER)) {
     case ARMAS_LOWER:
         for (j = 0; j < A->cols; j++) {
             for (i = j; i < A->rows; i++) {
-                armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j), alpha));
+                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j), alpha));
             }
         }
         break;
     case ARMAS_UPPER:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i <= j; i++) {
-                armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j), alpha));
+                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j), alpha));
             }
         }
         break;
     default:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < A->rows; i++) {
-                armas_x_set_unsafe(A, i, j, oper(armas_x_get_unsafe(A, i, j), alpha));
+                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j), alpha));
             }
         }
         break;

@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2015
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -15,16 +15,16 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_solve_blocked)
+#if defined(armas_solve_blocked)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_mult_kernel) && defined(armas_x_solve_recursive)
+#if defined(armas_mult_kernel) && defined(armas_solve_recursive)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -51,38 +51,38 @@
  */
 static
 void solve_blk_lu_llt(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     const  DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI, cI;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
 
     nI = NB < A->cols ? NB : A->cols;
     cI = NB < A->cols ? A->cols-NB : 0;
-    armas_x_submatrix_unsafe(&A1, A, cI, cI, nI, nI);
-    armas_x_submatrix_unsafe(&B1, B, cI, 0,  nI, B->cols);
-    armas_x_solve_recursive(&B1, alpha, &A1, flags|ARMAS_LEFT, cache);
+    armas_submatrix_unsafe(&A1, A, cI, cI, nI, nI);
+    armas_submatrix_unsafe(&B1, B, cI, 0,  nI, B->cols);
+    armas_solve_recursive(&B1, alpha, &A1, flags|ARMAS_LEFT, cache);
 
     for (i = A->cols-NB; i > 0; i -= NB) {
         nI = i < NB ? i : NB;
         cI = i < NB ? 0 : i-NB;
 
-        armas_x_submatrix_unsafe(&B0, B, i,  0, A->cols-i, B->cols);
-        armas_x_submatrix_unsafe(&B1, B, cI, 0, nI, B->cols);
+        armas_submatrix_unsafe(&B0, B, i,  0, A->cols-i, B->cols);
+        armas_submatrix_unsafe(&B1, B, cI, 0, nI, B->cols);
         if (flags & ARMAS_UPPER) {
-            armas_x_submatrix_unsafe(&A0, A, cI, i, nI, A->cols-i);
+            armas_submatrix_unsafe(&A0, A, cI, i, nI, A->cols-i);
         } else {
-            armas_x_submatrix_unsafe(&A0, A, i, cI, A->cols-i, nI);
+            armas_submatrix_unsafe(&A0, A, i, cI, A->cols-i, nI);
         }
-        armas_x_submatrix_unsafe(&A1, A, cI, cI, nI, nI);
+        armas_submatrix_unsafe(&A1, A, cI, cI, nI, nI);
 
         // update and solve
-        armas_x_mult_kernel(alpha, &B1, -ONE, &A0, &B0, flags, cache);
-        armas_x_solve_recursive(&B1, ONE, &A1, flags|ARMAS_LEFT, cache);
+        armas_mult_kernel(alpha, &B1, -ONE, &A0, &B0, flags, cache);
+        armas_solve_recursive(&B1, ONE, &A1, flags|ARMAS_LEFT, cache);
     }
 }
 
@@ -106,37 +106,37 @@ void solve_blk_lu_llt(
  */
 static
 void solve_blk_lut_ll(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
 
     // solve first block
     nI = NB < A->cols ? NB : A->cols;
-    armas_x_submatrix_unsafe(&A1, A, 0, 0, nI, nI);
-    armas_x_submatrix_unsafe(&B1, B, 0, 0, nI, B->cols);
-    armas_x_solve_recursive(&B1, alpha, &A1, flags|ARMAS_LEFT, cache);
+    armas_submatrix_unsafe(&A1, A, 0, 0, nI, nI);
+    armas_submatrix_unsafe(&B1, B, 0, 0, nI, B->cols);
+    armas_solve_recursive(&B1, alpha, &A1, flags|ARMAS_LEFT, cache);
 
     for (i = NB; i < A->cols; i += NB) {
         nI = i < A->cols - NB ? NB : A->cols - i;
 
-        armas_x_submatrix_unsafe(&B0, B, 0, 0, i,  B->cols);
-        armas_x_submatrix_unsafe(&B1, B, i, 0, nI, B->cols);
+        armas_submatrix_unsafe(&B0, B, 0, 0, i,  B->cols);
+        armas_submatrix_unsafe(&B1, B, i, 0, nI, B->cols);
         if (flags & ARMAS_UPPER) {
-            armas_x_submatrix_unsafe(&A0, A, 0, i, i, nI);
+            armas_submatrix_unsafe(&A0, A, 0, i, i, nI);
         } else {
-            armas_x_submatrix_unsafe(&A0, A, i, 0, nI, i);
+            armas_submatrix_unsafe(&A0, A, i, 0, nI, i);
         }
-        armas_x_submatrix_unsafe(&A1, A, i, i, nI, nI);
+        armas_submatrix_unsafe(&A1, A, i, i, nI, nI);
 
         // update and solve
-        armas_x_mult_kernel(alpha, &B1, -ONE, &A0, &B0, flags, cache);
-        armas_x_solve_recursive(&B1, ONE, &A1, flags|ARMAS_LEFT, cache);
+        armas_mult_kernel(alpha, &B1, -ONE, &A0, &B0, flags, cache);
+        armas_solve_recursive(&B1, ONE, &A1, flags|ARMAS_LEFT, cache);
     }
 }
 
@@ -160,38 +160,38 @@ void solve_blk_lut_ll(
  */
 static
 void solve_blk_ru_rlt(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
     int transB = flags & ARMAS_LOWER ? ARMAS_TRANSB : 0;
 
     // solve first block
     nI = NB < A->cols ? NB : A->cols;
-    armas_x_submatrix_unsafe(&A1, A, 0, 0, nI, nI);
-    armas_x_submatrix_unsafe(&B1, B, 0, 0, B->rows, nI);
-    armas_x_solve_recursive(&B1, alpha, &A1, flags|ARMAS_RIGHT, cache);
+    armas_submatrix_unsafe(&A1, A, 0, 0, nI, nI);
+    armas_submatrix_unsafe(&B1, B, 0, 0, B->rows, nI);
+    armas_solve_recursive(&B1, alpha, &A1, flags|ARMAS_RIGHT, cache);
 
     for (i = NB; i < A->cols; i += NB) {
         nI = i < A->cols - NB ? NB : A->cols - i;
 
-        armas_x_submatrix_unsafe(&B0, B, 0, 0, B->rows, i);
-        armas_x_submatrix_unsafe(&B1, B, 0, i, B->rows, nI);
+        armas_submatrix_unsafe(&B0, B, 0, 0, B->rows, i);
+        armas_submatrix_unsafe(&B1, B, 0, i, B->rows, nI);
         if (flags & ARMAS_UPPER) {
-            armas_x_submatrix_unsafe(&A0, A, 0, i, i, nI);
+            armas_submatrix_unsafe(&A0, A, 0, i, i, nI);
         } else {
-            armas_x_submatrix_unsafe(&A0, A, i, 0, nI, i);
+            armas_submatrix_unsafe(&A0, A, i, 0, nI, i);
         }
-        armas_x_submatrix_unsafe(&A1, A, i, i, nI, nI);
+        armas_submatrix_unsafe(&A1, A, i, i, nI, nI);
 
         // update block and solve;
-        armas_x_mult_kernel(alpha, &B1, -ONE, &B0, &A0, transB, cache);
-        armas_x_solve_recursive(&B1, ONE, &A1, flags|ARMAS_RIGHT, cache);
+        armas_mult_kernel(alpha, &B1, -ONE, &B0, &A0, transB, cache);
+        armas_solve_recursive(&B1, ONE, &A1, flags|ARMAS_RIGHT, cache);
     }
 }
 
@@ -215,47 +215,47 @@ void solve_blk_ru_rlt(
  */
 static
 void solve_blk_rut_rl(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI, cI;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
     int transB = flags & ARMAS_UPPER ? ARMAS_TRANSB : 0;
 
     // solve first block
     nI = NB < A->cols ? NB : A->cols;
     cI = NB < A->cols ? A->cols-NB : 0;
-    armas_x_submatrix_unsafe(&A1, A, cI, cI, nI, nI);
-    armas_x_submatrix_unsafe(&B1, B, 0,  cI, B->rows, nI);
-    armas_x_solve_recursive(&B1, alpha, &A1, flags|ARMAS_RIGHT, cache);
+    armas_submatrix_unsafe(&A1, A, cI, cI, nI, nI);
+    armas_submatrix_unsafe(&B1, B, 0,  cI, B->rows, nI);
+    armas_solve_recursive(&B1, alpha, &A1, flags|ARMAS_RIGHT, cache);
 
     for (i = A->cols-NB; i > 0; i -= NB) {
         nI = i < NB ? i : NB;
         cI = i < NB ? 0 : i-NB;
 
-        armas_x_submatrix_unsafe(&B0, B, 0, i,  B->rows, B->cols-i );
-        armas_x_submatrix_unsafe(&B1, B, 0, cI, B->rows, nI);
+        armas_submatrix_unsafe(&B0, B, 0, i,  B->rows, B->cols-i );
+        armas_submatrix_unsafe(&B1, B, 0, cI, B->rows, nI);
         if (flags & ARMAS_UPPER) {
-            armas_x_submatrix_unsafe(&A0, A, cI, i, A->rows-i, nI);
+            armas_submatrix_unsafe(&A0, A, cI, i, A->rows-i, nI);
         } else {
-            armas_x_submatrix_unsafe(&A0, A, i, cI, nI, A->cols-i);
+            armas_submatrix_unsafe(&A0, A, i, cI, nI, A->cols-i);
         }
-        armas_x_submatrix_unsafe(&A1, A, cI, cI, nI, nI);
+        armas_submatrix_unsafe(&A1, A, cI, cI, nI, nI);
 
         // update and solve
-        armas_x_mult_kernel(alpha, &B1, -1.0, &B0, &A0, transB, cache);
-        armas_x_solve_recursive(&B1, ONE, &A1, flags|ARMAS_RIGHT, cache);
+        armas_mult_kernel(alpha, &B1, -1.0, &B0, &A0, transB, cache);
+        armas_solve_recursive(&B1, ONE, &A1, flags|ARMAS_RIGHT, cache);
     }
 }
 
-void armas_x_solve_blocked(
-    armas_x_dense_t *B,
+void armas_solve_blocked(
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     cache_t *mcache)
 {

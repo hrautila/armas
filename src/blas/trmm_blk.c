@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2015
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,17 +12,17 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_trmm_blk)
+// this file provides following type dependent functions
+#if defined(armas_trmm_blk)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_mult_kernel_nc) && defined(armas_x_trmm_recursive)
+#if defined(armas_mult_kernel_nc) && defined(armas_trmm_recursive)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -47,14 +47,14 @@
  */
 static
 void trmm_blk_upper(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     const DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI, aflags = 0;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
 
     if (flags & ARMAS_ABS)
@@ -65,14 +65,14 @@ void trmm_blk_upper(
 
     for (i = 0; i < A->rows; i += NB) {
         nI = A->rows - i < NB ? A->rows - i : NB;
-        armas_x_submatrix_unsafe(&A0, A, i, i+nI, nI, A->rows-i-nI);
-        armas_x_submatrix_unsafe(&A1, A, i, i, nI, nI);
+        armas_submatrix_unsafe(&A0, A, i, i+nI, nI, A->rows-i-nI);
+        armas_submatrix_unsafe(&A1, A, i, i, nI, nI);
 
-        armas_x_submatrix_unsafe(&B0, B, i+nI, 0, B->rows-i-nI, B->cols);
-        armas_x_submatrix_unsafe(&B1, B, i, 0, nI, B->cols);
+        armas_submatrix_unsafe(&B0, B, i+nI, 0, B->rows-i-nI, B->cols);
+        armas_submatrix_unsafe(&B1, B, i, 0, nI, B->cols);
 
-        armas_x_trmm_recursive(&B1, alpha, &A1, flags, cache);
-        armas_x_mult_kernel_nc(&B1, alpha, &A0, &B0, aflags, cache);
+        armas_trmm_recursive(&B1, alpha, &A1, flags, cache);
+        armas_mult_kernel_nc(&B1, alpha, &A0, &B0, aflags, cache);
     }
 }
 /*  LEFT-UPPER-TRANS
@@ -89,14 +89,14 @@ void trmm_blk_upper(
  */
 static
 void trmm_blk_u_trans(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI, aflags = 0;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
 
     if (flags & ARMAS_ABS)
@@ -107,14 +107,14 @@ void trmm_blk_u_trans(
 
     for (i = A->cols; i > 0; i -= NB) {
         nI = i < NB ? i : NB;
-        armas_x_submatrix_unsafe(&A0, A, 0, i-nI, i-nI, nI);
-        armas_x_submatrix_unsafe(&A1, A, i-nI, i-nI, nI, nI);
+        armas_submatrix_unsafe(&A0, A, 0, i-nI, i-nI, nI);
+        armas_submatrix_unsafe(&A1, A, i-nI, i-nI, nI, nI);
 
-        armas_x_submatrix_unsafe(&B0, B, 0,    0, i-nI, B->cols);
-        armas_x_submatrix_unsafe(&B1, B, i-nI, 0, nI, B->cols);
+        armas_submatrix_unsafe(&B0, B, 0,    0, i-nI, B->cols);
+        armas_submatrix_unsafe(&B1, B, i-nI, 0, nI, B->cols);
 
-        armas_x_trmm_recursive(&B1, alpha, &A1, flags, cache);
-        armas_x_mult_kernel_nc(&B1, alpha, &A0, &B0, ARMAS_TRANSA|aflags, cache);
+        armas_trmm_recursive(&B1, alpha, &A1, flags, cache);
+        armas_mult_kernel_nc(&B1, alpha, &A0, &B0, ARMAS_TRANSA|aflags, cache);
     }
 }
 
@@ -133,14 +133,14 @@ void trmm_blk_u_trans(
  */
 static
 void trmm_blk_lower(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI, aflags = 0;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
 
     if (flags & ARMAS_ABS)
@@ -148,14 +148,14 @@ void trmm_blk_lower(
 
     for (i = A->cols; i > 0; i -= NB) {
         nI = i < NB ? i : NB;
-        armas_x_submatrix_unsafe(&A0, A, i-nI, 0, nI, i-nI);
-        armas_x_submatrix_unsafe(&A1, A, i-nI, i-nI, nI, nI);
+        armas_submatrix_unsafe(&A0, A, i-nI, 0, nI, i-nI);
+        armas_submatrix_unsafe(&A1, A, i-nI, i-nI, nI, nI);
 
-        armas_x_submatrix_unsafe(&B0, B, 0,    0, i-nI, B->cols);
-        armas_x_submatrix_unsafe(&B1, B, i-nI, 0, nI, B->cols);
+        armas_submatrix_unsafe(&B0, B, 0,    0, i-nI, B->cols);
+        armas_submatrix_unsafe(&B1, B, i-nI, 0, nI, B->cols);
 
-        armas_x_trmm_recursive(&B1, alpha, &A1, flags, cache);
-        armas_x_mult_kernel_nc(&B1, alpha, &A0, &B0, aflags, cache);
+        armas_trmm_recursive(&B1, alpha, &A1, flags, cache);
+        armas_mult_kernel_nc(&B1, alpha, &A0, &B0, aflags, cache);
     }
 }
 /*
@@ -173,14 +173,14 @@ void trmm_blk_lower(
  */
 static
 void trmm_blk_l_trans(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI, aflags = 0;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
 
     if (flags & ARMAS_ABS)
@@ -189,14 +189,14 @@ void trmm_blk_l_trans(
     for (i = 0; i < A->cols; i += NB) {
         nI = A->cols - i < NB ? A->cols - i : NB;
 
-        armas_x_submatrix_unsafe(&A0, A, i+nI, i, A->rows-i-nI, nI);
-        armas_x_submatrix_unsafe(&A1, A, i,    i, nI, nI);
+        armas_submatrix_unsafe(&A0, A, i+nI, i, A->rows-i-nI, nI);
+        armas_submatrix_unsafe(&A1, A, i,    i, nI, nI);
 
-        armas_x_submatrix_unsafe(&B0, B, i+nI, 0, A->rows-i-nI, B->cols);
-        armas_x_submatrix_unsafe(&B1, B, i,    0, nI, B->cols);
+        armas_submatrix_unsafe(&B0, B, i+nI, 0, A->rows-i-nI, B->cols);
+        armas_submatrix_unsafe(&B1, B, i,    0, nI, B->cols);
 
-        armas_x_trmm_recursive(&B1, alpha, &A1, flags, cache);
-        armas_x_mult_kernel_nc(&B1, alpha, &A0, &B0, ARMAS_TRANSA|aflags, cache);
+        armas_trmm_recursive(&B1, alpha, &A1, flags, cache);
+        armas_mult_kernel_nc(&B1, alpha, &A0, &B0, ARMAS_TRANSA|aflags, cache);
     }
 }
 
@@ -215,14 +215,14 @@ void trmm_blk_l_trans(
  */
 static
 void trmm_blk_r_upper(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI, aflags = 0;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
 
     if (flags & ARMAS_ABS)
@@ -230,14 +230,14 @@ void trmm_blk_r_upper(
 
     for (i = A->cols; i > 0; i -= NB) {
         nI = i < NB ? i : NB;
-        armas_x_submatrix_unsafe(&A0, A, 0,    i-nI, i-nI, nI);
-        armas_x_submatrix_unsafe(&A1, A, i-nI, i-nI, nI, nI);
+        armas_submatrix_unsafe(&A0, A, 0,    i-nI, i-nI, nI);
+        armas_submatrix_unsafe(&A1, A, i-nI, i-nI, nI, nI);
 
-        armas_x_submatrix_unsafe(&B0, B, 0, 0, B->rows, i-nI);
-        armas_x_submatrix_unsafe(&B1, B, 0, i-nI, B->rows, nI);
+        armas_submatrix_unsafe(&B0, B, 0, 0, B->rows, i-nI);
+        armas_submatrix_unsafe(&B1, B, 0, i-nI, B->rows, nI);
 
-        armas_x_trmm_recursive(&B1, alpha, &A1, flags, cache);
-        armas_x_mult_kernel_nc(&B1, alpha, &B0, &A0, aflags, cache);
+        armas_trmm_recursive(&B1, alpha, &A1, flags, cache);
+        armas_mult_kernel_nc(&B1, alpha, &B0, &A0, aflags, cache);
     }
 }
 
@@ -256,14 +256,14 @@ void trmm_blk_r_upper(
  */
 static
 void trmm_blk_ru_trans(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI, aflags = 0;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
 
     if (flags & ARMAS_ABS)
@@ -271,14 +271,14 @@ void trmm_blk_ru_trans(
 
     for (i = 0; i < A->cols; i += NB) {
         nI = A->cols - i < NB ? A->cols - i : NB;
-        armas_x_submatrix_unsafe(&A0, A, i, i+nI, nI, A->cols-i-nI);
-        armas_x_submatrix_unsafe(&A1, A, i, i, nI, nI);
+        armas_submatrix_unsafe(&A0, A, i, i+nI, nI, A->cols-i-nI);
+        armas_submatrix_unsafe(&A1, A, i, i, nI, nI);
 
-        armas_x_submatrix_unsafe(&B0, B, 0, i+nI, B->rows, B->cols-i-nI);
-        armas_x_submatrix_unsafe(&B1, B, 0, i, B->rows, nI);
+        armas_submatrix_unsafe(&B0, B, 0, i+nI, B->rows, B->cols-i-nI);
+        armas_submatrix_unsafe(&B1, B, 0, i, B->rows, nI);
 
-        armas_x_trmm_recursive(&B1, alpha, &A1, flags, cache);
-        armas_x_mult_kernel_nc(&B1, alpha, &B0, &A0, ARMAS_TRANSB|aflags, cache);
+        armas_trmm_recursive(&B1, alpha, &A1, flags, cache);
+        armas_mult_kernel_nc(&B1, alpha, &B0, &A0, ARMAS_TRANSB|aflags, cache);
     }
 }
 
@@ -297,14 +297,14 @@ void trmm_blk_ru_trans(
  */
 static
 void trmm_blk_r_lower(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI, aflags = 0;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
 
     if (flags & ARMAS_ABS)
@@ -312,14 +312,14 @@ void trmm_blk_r_lower(
 
     for (i = 0; i < A->cols; i += NB) {
         nI = A->cols - i < NB ? A->cols - i : NB;
-        armas_x_submatrix_unsafe(&A0, A, i+nI, i, A->cols-i-nI, nI);
-        armas_x_submatrix_unsafe(&A1, A, i,    i, nI, nI);
+        armas_submatrix_unsafe(&A0, A, i+nI, i, A->cols-i-nI, nI);
+        armas_submatrix_unsafe(&A1, A, i,    i, nI, nI);
 
-        armas_x_submatrix_unsafe(&B0, B, 0, i+nI, B->rows, B->cols-i-nI);
-        armas_x_submatrix_unsafe(&B1, B, 0, i, B->rows, nI);
+        armas_submatrix_unsafe(&B0, B, 0, i+nI, B->rows, B->cols-i-nI);
+        armas_submatrix_unsafe(&B1, B, 0, i, B->rows, nI);
 
-        armas_x_trmm_recursive(&B1, alpha, &A1, flags, cache);
-        armas_x_mult_kernel_nc(&B1, alpha, &B0, &A0, aflags, cache);
+        armas_trmm_recursive(&B1, alpha, &A1, flags, cache);
+        armas_mult_kernel_nc(&B1, alpha, &B0, &A0, aflags, cache);
     }
 }
 
@@ -338,14 +338,14 @@ void trmm_blk_r_lower(
  */
 static
 void trmm_blk_rl_trans(
-    armas_x_dense_t *B,
-    const armas_x_dense_t *A,
+    armas_dense_t *B,
+    const armas_dense_t *A,
     DTYPE alpha,
     int flags,
     cache_t *cache)
 {
     register int i, nI, aflags = 0;
-    armas_x_dense_t A0, A1, B0, B1;
+    armas_dense_t A0, A1, B0, B1;
     int NB = cache->NB;
 
     if (flags & ARMAS_ABS)
@@ -354,21 +354,21 @@ void trmm_blk_rl_trans(
     for (i = A->cols; i > 0; i -= NB) {
         nI = i < NB ? i : NB;
 
-        armas_x_submatrix_unsafe(&A0, A, i-nI, 0, nI, i-nI);
-        armas_x_submatrix_unsafe(&A1, A, i-nI, i-nI, nI, nI);
+        armas_submatrix_unsafe(&A0, A, i-nI, 0, nI, i-nI);
+        armas_submatrix_unsafe(&A1, A, i-nI, i-nI, nI, nI);
 
-        armas_x_submatrix_unsafe(&B0, B, 0, 0, B->rows, i-nI);
-        armas_x_submatrix_unsafe(&B1, B, 0, i-nI, B->rows, nI);
+        armas_submatrix_unsafe(&B0, B, 0, 0, B->rows, i-nI);
+        armas_submatrix_unsafe(&B1, B, 0, i-nI, B->rows, nI);
 
-        armas_x_trmm_recursive(&B1, alpha, &A1, flags, cache);
-        armas_x_mult_kernel_nc(&B1, alpha, &B0, &A0, ARMAS_TRANSB|aflags, cache);
+        armas_trmm_recursive(&B1, alpha, &A1, flags, cache);
+        armas_mult_kernel_nc(&B1, alpha, &B0, &A0, ARMAS_TRANSB|aflags, cache);
     }
 }
 
-void armas_x_trmm_blk(
-    armas_x_dense_t *B,
+void armas_trmm_blk(
+    armas_dense_t *B,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     cache_t *mcache)
 {

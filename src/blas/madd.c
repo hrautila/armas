@@ -1,6 +1,6 @@
-// Copyright (c) Harri Rautila, 2012-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
@@ -8,20 +8,20 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_madd)
+#if defined(armas_madd)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
 
 static
-void vec_add(armas_x_dense_t *X,  const DTYPE alpha, int N)
+void vec_add(armas_dense_t *X,  const DTYPE alpha, int N)
 {
     register int i, k;
     register DTYPE *x0;
@@ -66,16 +66,16 @@ void vec_add(armas_x_dense_t *X,  const DTYPE alpha, int N)
  * 
  * @ingroup matrix
  */
-int armas_x_madd(armas_x_dense_t *A, DTYPE alpha, int flags, armas_conf_t *cf)
+int armas_madd(armas_dense_t *A, DTYPE alpha, int flags, armas_conf_t *cf)
 {
     int c, n;
-    armas_x_dense_t C;
+    armas_dense_t C;
 
     if (!cf)
         cf = armas_conf_default();
 
-    if (armas_x_isvector(A)) {
-        vec_add(A, alpha, armas_x_size(A));
+    if (armas_isvector(A)) {
+        vec_add(A, alpha, armas_size(A));
         return 0;
     }
 
@@ -85,7 +85,7 @@ int armas_x_madd(armas_x_dense_t *A, DTYPE alpha, int flags, armas_conf_t *cf)
         // (works for upper trapezoidal matrix too)
         n = (flags & ARMAS_UNIT) != 0 ? 1 : 0;
         for (c = n; c < A->cols; ++c) {
-            armas_x_submatrix_unsafe(&C, A, 0, c+n, c+1-n, 1);
+            armas_submatrix_unsafe(&C, A, 0, c+n, c+1-n, 1);
             vec_add(&C, alpha, C.rows);
         }
         break;
@@ -95,7 +95,7 @@ int armas_x_madd(armas_x_dense_t *A, DTYPE alpha, int flags, armas_conf_t *cf)
         // (works for lower trapezoidal matrix too)
         n = (flags & ARMAS_UNIT) != 0 ? 1 : 0;
         for (c = 0; c < A->cols-n; ++c) {
-            armas_x_submatrix_unsafe(&C, A, c+n, c, A->rows-c-n, 1);
+            armas_submatrix_unsafe(&C, A, c+n, c, A->rows-c-n, 1);
             vec_add(&C, alpha, C.rows);
         }
         break;
@@ -108,7 +108,7 @@ int armas_x_madd(armas_x_dense_t *A, DTYPE alpha, int flags, armas_conf_t *cf)
         // fall through to do it.
     default:
         for (c = 0; c < A->cols; c++) {
-            armas_x_submatrix_unsafe(&C, A, 0, c, A->rows, 1);
+            armas_submatrix_unsafe(&C, A, 0, c, A->rows, 1);
             vec_add(&C, alpha, C.rows);
         }
         break;
