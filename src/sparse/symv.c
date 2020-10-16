@@ -1,22 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_mvmult_sym)
+// this file provides following type dependent functions
+#if defined(armassp_mvmult_sym)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "armas.h"
@@ -39,7 +39,7 @@
 // CSR lower triangular
 static
 int csr_mvmult_lsym(DTYPE beta, DTYPE * y, DTYPE alpha,
-                    const armas_x_sparse_t * A, const DTYPE * x, int flags)
+                    const armas_sparse_t * A, const DTYPE * x, int flags)
 {
     int j, p;
     DTYPE ax, yk, *Ae = A->elems.v;
@@ -64,7 +64,7 @@ int csr_mvmult_lsym(DTYPE beta, DTYPE * y, DTYPE alpha,
 // CSR storage; upper triangular
 static
 int csr_mvmult_usym(DTYPE beta, DTYPE * y, DTYPE alpha,
-                    const armas_x_sparse_t * A, const DTYPE * x, int flags)
+                    const armas_sparse_t * A, const DTYPE * x, int flags)
 {
     int j, k;
     DTYPE yk, ax, *Ae = A->elems.v;
@@ -97,7 +97,7 @@ int csr_mvmult_usym(DTYPE beta, DTYPE * y, DTYPE alpha,
 // CSC lower triangular == CSR upper triangular
 static
 int csc_mvmult_lsym(DTYPE beta, DTYPE * y, DTYPE alpha,
-                    const armas_x_sparse_t * A, const DTYPE * x, int flags)
+                    const armas_sparse_t * A, const DTYPE * x, int flags)
 {
     int j, k;
     DTYPE yk, ax, *Ae = A->elems.v;
@@ -129,7 +129,7 @@ int csc_mvmult_lsym(DTYPE beta, DTYPE * y, DTYPE alpha,
 // CSC upper triangular == CSR lower triangular
 static
 int csc_mvmult_usym(DTYPE beta, DTYPE * y, DTYPE alpha,
-                    const armas_x_sparse_t * A, const DTYPE * x, int flags)
+                    const armas_sparse_t * A, const DTYPE * x, int flags)
 {
     int i, j, k;
     DTYPE yk, ax, *Ae = A->elems.v;
@@ -179,9 +179,9 @@ int csc_mvmult_usym(DTYPE beta, DTYPE * y, DTYPE alpha,
  * @retval  0  Success
  * @retval <0  Failure
  */
-int armassp_x_mvmult_sym(DTYPE beta, armas_x_dense_t * y,
-                         DTYPE alpha, const armas_x_sparse_t * A,
-                         const armas_x_dense_t * x, int flags,
+int armassp_mvmult_sym(DTYPE beta, armas_dense_t * y,
+                         DTYPE alpha, const armas_sparse_t * A,
+                         const armas_dense_t * x, int flags,
                          armas_conf_t * cf)
 {
     if (!cf)
@@ -193,16 +193,16 @@ int armassp_x_mvmult_sym(DTYPE beta, armas_x_dense_t * y,
     }
 
     int ok = (flags & ARMAS_TRANS) == 0
-        ? armas_x_size(y) == A->rows : armas_x_size(y) == A->cols;
+        ? armas_size(y) == A->rows : armas_size(y) == A->cols;
     ok = ok && (flags & ARMAS_TRANS) == 0
-        ? armas_x_size(x) == A->cols : armas_x_size(x) == A->rows;
+        ? armas_size(x) == A->cols : armas_size(x) == A->rows;
 
     if (!ok) {
         cf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
-    DTYPE *yd = armas_x_data(y);
-    DTYPE *xd = armas_x_data(x);
+    DTYPE *yd = armas_data(y);
+    DTYPE *xd = armas_data(x);
 
     switch (flags & (ARMAS_LOWER | ARMAS_UPPER)) {
     case ARMAS_UPPER:

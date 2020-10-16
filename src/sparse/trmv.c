@@ -1,22 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_mvmult_trm)
+// this file provides following type dependent functions
+#if defined(armassp_mvmult_trm)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "armas.h"
@@ -24,7 +24,7 @@
 
 // b = alpha*A*x; A upper triangular
 static
-int csc_mvmult_un(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
+int csc_mvmult_un(DTYPE * x, DTYPE alpha, const armas_sparse_t * A, int unit)
 {
     DTYPE xj, *Ae = A->elems.v;
     int k;
@@ -46,7 +46,7 @@ int csc_mvmult_un(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
 
 // b = alpha*A*x; A upper triangular
 static
-int csr_mvmult_un(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
+int csr_mvmult_un(DTYPE * x, DTYPE alpha, const armas_sparse_t * A, int unit)
 {
     DTYPE xv, *Ae = A->elems.v;
     int k;
@@ -65,7 +65,7 @@ int csr_mvmult_un(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
 
 // b = alpha*A^T*x; A upper triangular
 static
-int csc_mvmult_ut(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
+int csc_mvmult_ut(DTYPE * x, DTYPE alpha, const armas_sparse_t * A, int unit)
 {
     // start from lower right corner
     DTYPE xv, *Ae = A->elems.v;
@@ -82,7 +82,7 @@ int csc_mvmult_ut(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
 }
 
 static
-int csr_mvmult_ut(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
+int csr_mvmult_ut(DTYPE * x, DTYPE alpha, const armas_sparse_t * A, int unit)
 {
     DTYPE xj, *Ae = A->elems.v;
     int k;
@@ -104,7 +104,7 @@ int csr_mvmult_ut(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
 
 // b = alpha*A*x; A lower triangular
 static
-int csc_mvmult_ln(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
+int csc_mvmult_ln(DTYPE * x, DTYPE alpha, const armas_sparse_t * A, int unit)
 {
     DTYPE xj, *Ae = A->elems.v;
     int i, k;
@@ -129,7 +129,7 @@ int csc_mvmult_ln(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
 
 // b = alpha*A*x; A lower triangular
 static
-int csr_mvmult_ln(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
+int csr_mvmult_ln(DTYPE * x, DTYPE alpha, const armas_sparse_t * A, int unit)
 {
     DTYPE xv, *Ae = A->elems.v;
     int k, j;
@@ -145,7 +145,7 @@ int csr_mvmult_ln(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
 
 // b = alpha*A^T*x; A lower triangular
 static
-int csc_mvmult_lt(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
+int csc_mvmult_lt(DTYPE * x, DTYPE alpha, const armas_sparse_t * A, int unit)
 {
     DTYPE xv;
     int k, j;
@@ -162,7 +162,7 @@ int csc_mvmult_lt(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
 }
 
 static
-int csr_mvmult_lt(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
+int csr_mvmult_lt(DTYPE * x, DTYPE alpha, const armas_sparse_t * A, int unit)
 {
     DTYPE xj, *Ae = A->elems.v;
     int p;
@@ -202,8 +202,8 @@ int csr_mvmult_lt(DTYPE * x, DTYPE alpha, const armas_x_sparse_t * A, int unit)
  * @retval <0  Failure
  * @ingroup sparse
  */
-int armassp_x_mvmult_trm(armas_x_dense_t * x, DTYPE alpha,
-                         const armas_x_sparse_t * A, int flags,
+int armassp_mvmult_trm(armas_dense_t * x, DTYPE alpha,
+                         const armas_sparse_t * A, int flags,
                          armas_conf_t * cf)
 {
     if (!cf)
@@ -213,14 +213,14 @@ int armassp_x_mvmult_trm(armas_x_dense_t * x, DTYPE alpha,
         return -ARMAS_EINVAL;
 
     int ok = (flags & ARMAS_TRANS) == 0
-        ? armas_x_size(x) == A->cols : armas_x_size(x) == A->rows;
+        ? armas_size(x) == A->cols : armas_size(x) == A->rows;
     if (!ok) {
         return -ARMAS_ESIZE;
     }
 
     int unit = (flags & ARMAS_UNIT) != 0 ? 1 : 0;
 
-    DTYPE *y = armas_x_data(x);
+    DTYPE *y = armas_data(x);
 
     // TODO: we assume column vector here; how about a row vector??
     switch (flags & (ARMAS_UPPER | ARMAS_LOWER | ARMAS_TRANS)) {

@@ -1,22 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_mvmult)
+// this file provides following type dependent functions
+#if defined(armassp_mvmult)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "armas.h"
@@ -25,7 +25,7 @@
 
 // CSC storage
 static
-int csc_mvmult(DTYPE beta, DTYPE * y, DTYPE alpha, const armas_x_sparse_t * A,
+int csc_mvmult(DTYPE beta, DTYPE * y, DTYPE alpha, const armas_sparse_t * A,
                const DTYPE * x, int flags)
 {
     DTYPE ax, *Ae = A->elems.v;
@@ -55,7 +55,7 @@ int csc_mvmult(DTYPE beta, DTYPE * y, DTYPE alpha, const armas_x_sparse_t * A,
 }
 
 static
-int csr_mvmult(DTYPE beta, DTYPE * y, DTYPE alpha, const armas_x_sparse_t * A,
+int csr_mvmult(DTYPE beta, DTYPE * y, DTYPE alpha, const armas_sparse_t * A,
                const DTYPE * x, int flags)
 {
     DTYPE ax, *Ae = A->elems.v;
@@ -88,24 +88,24 @@ int csr_mvmult(DTYPE beta, DTYPE * y, DTYPE alpha, const armas_x_sparse_t * A,
  * \brief Compute y = beta*y + alpha*A*x or y = beta*y + alpha*A^T*x
  *
  */
-int armassp_x_mvmult(DTYPE beta, armas_x_dense_t * y,
-                     DTYPE alpha, const armas_x_sparse_t * A,
-                     const armas_x_dense_t * x, int flags, armas_conf_t * cf)
+int armassp_mvmult(DTYPE beta, armas_dense_t * y,
+                     DTYPE alpha, const armas_sparse_t * A,
+                     const armas_dense_t * x, int flags, armas_conf_t * cf)
 {
     if (!cf)
         cf = armas_conf_default();
 
     int ok = (flags & ARMAS_TRANS) == 0
-        ? armas_x_size(y) == A->rows : armas_x_size(y) == A->cols;
+        ? armas_size(y) == A->rows : armas_size(y) == A->cols;
     ok = ok && (flags & ARMAS_TRANS) == 0
-        ? armas_x_size(x) == A->cols : armas_x_size(x) == A->rows;
+        ? armas_size(x) == A->cols : armas_size(x) == A->rows;
 
     if (!ok) {
         cf->error = ARMAS_ESIZE;
         return -1;
     }
-    DTYPE *yd = armas_x_data(y);
-    DTYPE *xd = armas_x_data(x);
+    DTYPE *yd = armas_data(y);
+    DTYPE *xd = armas_data(x);
 
     switch (A->kind) {
     case ARMASSP_CSC:

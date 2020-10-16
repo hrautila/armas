@@ -1,24 +1,24 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_cgrad_w) && defined(armassp_x_cgrad)
+// this file provides following type dependent functions
+#if defined(armassp_cgrad_w) && defined(armassp_cgrad)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armassp_x_mvmult_sym)
+#if defined(armassp_mvmult_sym)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 #include <float.h>
 #include <math.h>
@@ -50,18 +50,18 @@
 #define CGNR_WSIZE(m, n)  ((2*(n) + (m))*sizeof(DTYPE))
 
 static inline
-int check_parms(const armas_x_dense_t * x,
-                const armas_x_sparse_t * A, const armas_x_dense_t * b)
+int check_parms(const armas_dense_t * x,
+                const armas_sparse_t * A, const armas_dense_t * b)
 {
     if (!A)
         return 0;
-    if (!armas_x_isvector(x))
+    if (!armas_isvector(x))
         return 0;
-    if (!armas_x_isvector(b))
+    if (!armas_isvector(b))
         return 0;
-    if (armas_x_size(b) != A->rows)
+    if (armas_size(b) != A->rows)
         return 0;
-    if (armas_x_size(x) != A->cols)
+    if (armas_size(x) != A->cols)
         return 0;
     return 1;
 }
@@ -105,12 +105,12 @@ int check_parms(const armas_x_dense_t * x,
  * @retval <0  Failure
  * @ingroup sparse
  */
-int armassp_x_cgnr_w(armas_x_dense_t * x,
-                     const armas_x_sparse_t * A,
-                     const armas_x_dense_t * b,
+int armassp_cgnr_w(armas_dense_t * x,
+                     const armas_sparse_t * A,
+                     const armas_dense_t * b,
                      armas_wbuf_t * W, armas_conf_t * cf)
 {
-    armas_x_dense_t p, Ap, r, z;
+    armas_dense_t p, Ap, r, z;
     DTYPE dot_z, dot_p, alpha, beta, dot_z1, *t, rstop, rmult;
     int m, n, maxiter, niter;
 
@@ -149,53 +149,53 @@ int armassp_x_cgnr_w(armas_x_dense_t * x,
 
     // r0 = b - A*x
     t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&r, m, 1, m, t);
-    armas_x_mcopy(&r, b, 0, cf);
-    armassp_x_mvmult(ONE, &r, -ONE, A, x, 0, cf);
+    armas_make(&r, m, 1, m, t);
+    armas_mcopy(&r, b, 0, cf);
+    armassp_mvmult(ONE, &r, -ONE, A, x, 0, cf);
 
     // no absolute stopping criteria; make it epsilon^2*(r0, r0) 
     if (rstop == ZERO)
-        rstop = rmult * (rmult * armas_x_dot(&r, &r, cf));
+        rstop = rmult * (rmult * armas_dot(&r, &r, cf));
     else
         // absolute stopping relative to epsilon*nrm2(r0)
         rstop *= rstop;
 
     // z0 = A^T*r0
     t = armas_wreserve(W, n, sizeof(DTYPE));
-    armas_x_make(&z, n, 1, n, t);
-    armassp_x_mvmult(ZERO, &z, ONE, A, &r, ARMAS_TRANS, cf);
+    armas_make(&z, n, 1, n, t);
+    armassp_mvmult(ZERO, &z, ONE, A, &r, ARMAS_TRANS, cf);
 
     t = armas_wreserve(W, n, sizeof(DTYPE));
-    armas_x_make(&p, n, 1, n, t);
-    armas_x_copy(&p, &z, cf);
+    armas_make(&p, n, 1, n, t);
+    armas_copy(&p, &z, cf);
 
     // w = Ap
     t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&Ap, m, 1, m, t);
+    armas_make(&Ap, m, 1, m, t);
 
     // --------------------------------------------------------------------
     dot_z1 = ZERO;
     for (niter = 0; niter < maxiter; niter++) {
         // Ap = A*p
-        armassp_x_mvmult(ZERO, &Ap, ONE, A, &p, 0, cf);
-        dot_z = armas_x_dot(&z, &z, cf);
-        dot_p = armas_x_dot(&Ap, &Ap, cf);
+        armassp_mvmult(ZERO, &Ap, ONE, A, &p, 0, cf);
+        dot_z = armas_dot(&z, &z, cf);
+        dot_p = armas_dot(&Ap, &Ap, cf);
         alpha = dot_z / dot_p;
 
         // x = x + alpha*p
-        armas_x_axpy(x, alpha, &p, cf);
+        armas_axpy(x, alpha, &p, cf);
         // r = r - alpha*w = r - alpha*Ap
-        armas_x_axpy(&r, -alpha, &Ap, cf);
+        armas_axpy(&r, -alpha, &Ap, cf);
         // z = A^T*r
-        armassp_x_mvmult(ZERO, &z, ONE, A, &r, ARMAS_TRANS, cf);
+        armassp_mvmult(ZERO, &z, ONE, A, &r, ARMAS_TRANS, cf);
 
-        dot_z1 = armas_x_dot(&z, &z, cf);
+        dot_z1 = armas_dot(&z, &z, cf);
         if (dot_z1 < rstop) {
             break;
         }
         beta = dot_z1 / dot_z;
         // p = beta*p + z;
-        armas_x_axpby(beta, &p, ONE, &z, cf);
+        armas_axpby(beta, &p, ONE, &z, cf);
     }
 
     cf->numiters = niter;
@@ -207,12 +207,12 @@ int armassp_x_cgnr_w(armas_x_dense_t * x,
 
 /**
  * @brief Solve least-squares problem \f$ min ||b - Ax||_2 \f$
- * @see armassp_x_cgnr_w
+ * @see armassp_cgnr_w
  * @ingroup sparse
  */
-int armassp_x_cgnr(armas_x_dense_t * x,
-                   const armas_x_sparse_t * A,
-                   const armas_x_dense_t * b, armas_conf_t * cf)
+int armassp_cgnr(armas_dense_t * x,
+                   const armas_sparse_t * A,
+                   const armas_dense_t * b, armas_conf_t * cf)
 {
     int stat;
     armas_wbuf_t W = ARMAS_WBNULL;
@@ -228,7 +228,7 @@ int armassp_x_cgnr(armas_x_dense_t * x,
     if (A->rows == 0 || A->cols == 0)
         return 0;
 
-    if (armassp_x_cgnr_w(x, A, b, &W, cf) < 0) {
+    if (armassp_cgnr_w(x, A, b, &W, cf) < 0) {
         cf->error = ARMAS_EWORK;
         return -1;
     }
@@ -237,7 +237,7 @@ int armassp_x_cgnr(armas_x_dense_t * x,
         cf->error = ARMAS_EWORK;
         return -1;
     }
-    stat = armassp_x_cgnr_w(x, A, b, &W, cf);
+    stat = armassp_cgnr_w(x, A, b, &W, cf);
 
     armas_wrelease(&W);
     return stat;

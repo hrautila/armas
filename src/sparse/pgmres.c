@@ -1,24 +1,24 @@
 
-// Copyright (c) Harri Rautila, 2018
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_pgmres_w) && defined(armassp_x_pgmres)
+// this file provides following type dependent functions
+#if defined(armassp_pgmres_w) && defined(armassp_pgmres)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armassp_x_mvmult)
+#if defined(armassp_mvmult)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include <float.h>
@@ -44,16 +44,16 @@
 #endif
 
 static
-void hmult(armas_x_dense_t * y, armas_x_dense_t * H, int k, DTYPE val,
+void hmult(armas_dense_t * y, armas_dense_t * H, int k, DTYPE val,
            armas_conf_t * cnf)
 {
-    armas_x_dense_t Hc, yc;
-    armas_x_submatrix(&Hc, H, k, k, H->rows - k, 1);
-    armas_x_subvector(&yc, y, k, H->rows - k);
-    val += armas_x_get_unsafe(y, k, 0);
-    armas_x_set_unsafe(y, k, 0, val);
+    armas_dense_t Hc, yc;
+    armas_submatrix(&Hc, H, k, k, H->rows - k, 1);
+    armas_subvector(&yc, y, k, H->rows - k);
+    val += armas_get_unsafe(y, k, 0);
+    armas_set_unsafe(y, k, 0, val);
 
-    armas_x_housemult_w(&yc, __nil, &Hc, ARMAS_LEFT, __wbnil, cnf);
+    armas_housemult_w(&yc, __nil, &Hc, ARMAS_LEFT, __wbnil, cnf);
 }
 
 /*
@@ -83,26 +83,26 @@ void hmult(armas_x_dense_t * y, armas_x_dense_t * H, int k, DTYPE val,
  *    Error residual; |beta*e_0 - Hy|
  */
 static
-int pgmres_hh_pfused(armas_x_dense_t * x,
-                     const armas_x_sparse_t * A,
-                     const armas_x_dense_t * b,
-                     const armassp_x_precond_t * M,
-                     armas_x_dense_t * P,
-                     armas_x_dense_t * C,
-                     armas_x_dense_t * S,
-                     armas_x_dense_t * y,
-                     armas_x_dense_t * w,
+int pgmres_hh_pfused(armas_dense_t * x,
+                     const armas_sparse_t * A,
+                     const armas_dense_t * b,
+                     const armassp_precond_t * M,
+                     armas_dense_t * P,
+                     armas_dense_t * C,
+                     armas_dense_t * S,
+                     armas_dense_t * y,
+                     armas_dense_t * w,
                      DTYPE * res, DTYPE stop, armas_conf_t * cnf)
 {
-    armas_x_dense_t PTL, PBL, PBR, P00, p01, p11, p21, P22, PL, PR, P0, p1, P2;
-    armas_x_dense_t T, z, beta;
+    armas_dense_t PTL, PBL, PBR, P00, p01, p11, p21, P22, PL, PR, P0, p1, P2;
+    armas_dense_t T, z, beta;
     DTYPE _beta, u, h0, c, s, r;
     int m = P->cols - 1;
 
     EMPTY(P00);
 
     // w = b - A*x0; z = r0
-    armas_x_make(&beta, 1, 1, 1, &_beta);
+    armas_make(&beta, 1, 1, 1, &_beta);
 
     mat_partition_2x2(
         &PTL, __nil,
@@ -110,8 +110,8 @@ int pgmres_hh_pfused(armas_x_dense_t * x,
     mat_partition_1x2(
         &PL, &PR, /**/ P, 1, ARMAS_PLEFT);
 
-    armas_x_copy(&PL, w, cnf);
-    armas_x_house(&PTL, &PBL, y, 0, cnf);
+    armas_copy(&PL, w, cnf);
+    armas_house(&PTL, &PBL, y, 0, cnf);
     int nrot = 0;
     int converged = 0;
     while (PBR.cols > 0 && converged == 0) {
@@ -124,34 +124,34 @@ int pgmres_hh_pfused(armas_x_dense_t * x,
             &PL, /**/ &P0, &p1, &P2, /**/ P, 1, ARMAS_PRIGHT);
         // ---------------------------------------------------------------------
         // w = v = P_1*..P_j*e_j = Q_j*e_j
-        armas_x_scale(w, ZERO, cnf);
-        armas_x_set_unsafe(w, P00.rows - 1, 0, ONE);
-        armas_x_housemult_w(w, __nil, &P0, ARMAS_LEFT, __wbnil, cnf);
+        armas_scale(w, ZERO, cnf);
+        armas_set_unsafe(w, P00.rows - 1, 0, ONE);
+        armas_housemult_w(w, __nil, &P0, ARMAS_LEFT, __wbnil, cnf);
         // z = AM^-1*v; p1 == z
         M->precond(&p1, M, &p1, cnf);
-        armassp_x_mvmult(ZERO, &p1, ONE, A, w, 0, cnf);
+        armassp_mvmult(ZERO, &p1, ONE, A, w, 0, cnf);
         // z = P_j*...P_1*Av
-        armas_x_housemult_w(&p1, __nil, &P0, ARMAS_LEFT | ARMAS_TRANS, __wbnil,
+        armas_housemult_w(&p1, __nil, &P0, ARMAS_LEFT | ARMAS_TRANS, __wbnil,
                             cnf);
 
         // apply previouse rotations to p01
-        armas_x_gvupdate(&p01, 0, C, S, nrot, ARMAS_LEFT | ARMAS_FORWARD);
+        armas_gvupdate(&p01, 0, C, S, nrot, ARMAS_LEFT | ARMAS_FORWARD);
 
         // unscaled Householder transformation to zero p21
-        armas_x_house(&p11, &p21, &beta, 0, cnf);
+        armas_house(&p11, &p21, &beta, 0, cnf);
 
         // compute rotation to zero new beta 
-        h0 = armas_x_get_unsafe(&p01, p01.rows - 1, 0);
-        armas_x_gvcompute(&c, &s, &r, h0, _beta);
-        armas_x_set_unsafe(&p01, p01.rows - 1, 0, r);
+        h0 = armas_get_unsafe(&p01, p01.rows - 1, 0);
+        armas_gvcompute(&c, &s, &r, h0, _beta);
+        armas_set_unsafe(&p01, p01.rows - 1, 0, r);
         // clear y element from old value and rotate
-        armas_x_set_unsafe(y, nrot + 1, 0, ZERO);
-        armas_x_gvleft(y, c, s, nrot, nrot + 1, 0, 1);
+        armas_set_unsafe(y, nrot + 1, 0, ZERO);
+        armas_gvleft(y, c, s, nrot, nrot + 1, 0, 1);
 
-        armas_x_set_unsafe(C, nrot, 0, c);
-        armas_x_set_unsafe(S, nrot, 0, s);
+        armas_set_unsafe(C, nrot, 0, c);
+        armas_set_unsafe(S, nrot, 0, s);
         nrot++;
-        converged = ABS(armas_x_get_unsafe(y, nrot, 0)) < stop;
+        converged = ABS(armas_get_unsafe(y, nrot, 0)) < stop;
         // ---------------------------------------------------------------------
         mat_continue_3x3to2x2(
             &PTL, __nil,
@@ -164,28 +164,28 @@ int pgmres_hh_pfused(armas_x_dense_t * x,
         m = nrot;
     }
     // residual of |beta*e0 - H*y| in y[m]
-    *res = ABS(armas_x_get_unsafe(y, m, 0));
+    *res = ABS(armas_get_unsafe(y, m, 0));
 
     // 2. solve for y; len(y) == cols(H) == m;
-    armas_x_submatrix(&T, P, 0, 1, m, m);
-    armas_x_make(&z, m, 1, m, armas_x_data(y));
-    armas_x_mvsolve_trm(&z, ONE, &T, ARMAS_UPPER, cnf);
+    armas_submatrix(&T, P, 0, 1, m, m);
+    armas_make(&z, m, 1, m, armas_data(y));
+    armas_mvsolve_trm(&z, ONE, &T, ARMAS_UPPER, cnf);
 
     // Compute:
     // z = 0; z = P_j*(y_j*e_j + z) for j in m ... 1
 
     // z = rightmost column of P
-    armas_x_column(&z, P, P->cols - 1);
-    armas_x_scale(&z, ZERO, cnf);
+    armas_column(&z, P, P->cols - 1);
+    armas_scale(&z, ZERO, cnf);
 
     for (int j = m - 1; j >= 0; j--) {
-        u = armas_x_get_unsafe(y, j, 0);
+        u = armas_get_unsafe(y, j, 0);
         // compute z = P_j*(y_j*e_j + z) ; u = y_j*e_j
         hmult(&z, P, j, u, cnf);
     }
     // x = x + M^-1*z
     M->precond(&z, M, &z, cnf);
-    armas_x_axpy(x, ONE, &z, cnf);
+    armas_axpy(x, ONE, &z, cnf);
     return m;
 }
 
@@ -211,20 +211,20 @@ int compute_m(int n, int w)
 
 
 static inline
-int check_params(const armas_x_dense_t * x,
-                 const armas_x_sparse_t * A, const armas_x_dense_t * b)
+int check_params(const armas_dense_t * x,
+                 const armas_sparse_t * A, const armas_dense_t * b)
 {
     if (!A || !x || !b)
         return 0;
     if (A->rows != A->cols)
         return 0;
-    if (!armas_x_isvector(x))
+    if (!armas_isvector(x))
         return 0;
-    if (!armas_x_isvector(b))
+    if (!armas_isvector(b))
         return 0;
-    if (armas_x_size(x) != A->rows)
+    if (armas_size(x) != A->rows)
         return 0;
-    if (armas_x_size(b) != A->cols)
+    if (armas_size(b) != A->cols)
         return 0;
     return 1;
 }
@@ -262,14 +262,14 @@ int check_params(const armas_x_dense_t * x,
  * @retval <0  Failure
  * @ingroup sparse
  */
-int armassp_x_pgmres_w(armas_x_dense_t * x,
-                       const armas_x_sparse_t * A,
-                       const armas_x_dense_t * b,
-                       const armassp_x_precond_t * M,
+int armassp_pgmres_w(armas_dense_t * x,
+                       const armas_sparse_t * A,
+                       const armas_dense_t * b,
+                       const armassp_precond_t * M,
                        armas_wbuf_t * W, armas_conf_t * cf)
 {
     int n, m, me, maxiter, niter;
-    armas_x_dense_t P, w, C, S, y;
+    armas_dense_t P, w, C, S, y;
     DTYPE nrm_r0, nrm_r1, rstop, *t;
 
     if (!cf)
@@ -301,24 +301,24 @@ int armassp_x_pgmres_w(armas_x_dense_t * x,
     size_t pos = armas_wpos(W);
     // matrix P; Householder vectors
     t = armas_wreserve(W, n * (m + 1), sizeof(DTYPE));
-    armas_x_make(&P, n, m + 1, n, t);
+    armas_make(&P, n, m + 1, n, t);
 
     // Saved rotations
     t = armas_wreserve(W, m + 1, sizeof(DTYPE));
-    armas_x_make(&C, m + 1, 1, m + 1, t);
+    armas_make(&C, m + 1, 1, m + 1, t);
     t = armas_wreserve(W, m + 1, sizeof(DTYPE));
-    armas_x_make(&S, m + 1, 1, m + 1, t);
+    armas_make(&S, m + 1, 1, m + 1, t);
 
     t = armas_wreserve(W, m + 1, sizeof(DTYPE));
-    armas_x_make(&y, m + 1, 1, m + 1, t);
+    armas_make(&y, m + 1, 1, m + 1, t);
 
     t = armas_wreserve(W, n, sizeof(DTYPE));
-    armas_x_make(&w, n, 1, n, t);
+    armas_make(&w, n, 1, n, t);
 
     // w = b - A*x
-    armas_x_copy(&w, b, cf);
-    armassp_x_mvmult(ONE, &w, -ONE, A, x, 0, cf);
-    nrm_r0 = armas_x_nrm2(&w, cf);
+    armas_copy(&w, b, cf);
+    armassp_mvmult(ONE, &w, -ONE, A, x, 0, cf);
+    nrm_r0 = armas_nrm2(&w, cf);
 
     rstop = cf->stop > ZERO ? cf->stop
         : (cf->smult > ZERO ? cf->smult * nrm_r0 : EPS * nrm_r0);
@@ -333,8 +333,8 @@ int armassp_x_pgmres_w(armas_x_dense_t * x,
             break;
         }
         // compute residual; w = b - A*x
-        armas_x_copy(&w, b, cf);
-        armassp_x_mvmult(ONE, &w, -ONE, A, x, 0, cf);
+        armas_copy(&w, b, cf);
+        armassp_mvmult(ONE, &w, -ONE, A, x, 0, cf);
     }
 
     armas_wsetpos(W, pos);
@@ -347,13 +347,13 @@ int armassp_x_pgmres_w(armas_x_dense_t * x,
 
 /**
  * @brief Solve unsymmetric linear system A*x = b with right preconditioned GMRES algorithm
- * @see armassp_x_pgmres_w
+ * @see armassp_pgmres_w
  * @ingroup sparse
  */
-int armassp_x_pgmres(armas_x_dense_t * x,       /*  */
-                     const armas_x_sparse_t * A,
-                     const armas_x_dense_t * b,
-                     const armassp_x_precond_t * M, armas_conf_t * cf)
+int armassp_pgmres(armas_dense_t * x,       /*  */
+                     const armas_sparse_t * A,
+                     const armas_dense_t * b,
+                     const armassp_precond_t * M, armas_conf_t * cf)
 {
     armas_wbuf_t W = ARMAS_WBNULL;
 
@@ -372,7 +372,7 @@ int armassp_x_pgmres(armas_x_dense_t * x,       /*  */
         cf->error = ARMAS_EWORK;
         return -1;
     }
-    int stat = armassp_x_pgmres_w(x, A, b, M, &W, cf);
+    int stat = armassp_pgmres_w(x, A, b, M, &W, cf);
     armas_wrelease(&W);
     return stat;
 }

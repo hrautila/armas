@@ -1,24 +1,24 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_cgne_w) && defined(armassp_x_cgne)
+// this file provides following type dependent functions
+#if defined(armassp_cgne_w) && defined(armassp_cgne)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armassp_x_mvmult)
+#if defined(armassp_mvmult)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include <float.h>
@@ -52,18 +52,18 @@
 #define CGNE_WSIZE(m, n)  ((2*(m) + (n))*sizeof(DTYPE))
 
 static inline
-int check_parms(const armas_x_dense_t * x,
-                const armas_x_sparse_t * A, const armas_x_dense_t * b)
+int check_parms(const armas_dense_t * x,
+                const armas_sparse_t * A, const armas_dense_t * b)
 {
     if (!A)
         return 0;
-    if (!armas_x_isvector(x))
+    if (!armas_isvector(x))
         return 0;
-    if (!armas_x_isvector(b))
+    if (!armas_isvector(b))
         return 0;
-    if (armas_x_size(b) != A->rows)
+    if (armas_size(b) != A->rows)
         return 0;
-    if (armas_x_size(x) != A->cols)
+    if (armas_size(x) != A->cols)
         return 0;
     return 1;
 }
@@ -119,13 +119,13 @@ int check_parms(const armas_x_dense_t * x,
  * @retval <0  Failure
  * @ingroup sparse
  */
-int armassp_x_cgne_w(armas_x_dense_t * x,
-                     const armas_x_sparse_t * A,
-                     const armas_x_dense_t * b,
+int armassp_cgne_w(armas_dense_t * x,
+                     const armas_sparse_t * A,
+                     const armas_dense_t * b,
                      armas_wbuf_t * wb, armas_conf_t * cf)
 {
     DTYPE dot_r, dot_p, alpha, beta, dot_r1, *t, rstop, rmult;
-    armas_x_dense_t p, Ap, r;
+    armas_dense_t p, Ap, r;
     int niter, m, n, maxiter;
 
     if (!cf)
@@ -150,7 +150,7 @@ int armassp_x_cgne_w(armas_x_dense_t * x,
         return -ARMAS_EINVAL;
     }
 
-    if (armas_wbytes(W) < CGNE_WSIZE(A->rows, A->cols)) {
+    if (armas_wbytes(wb) < CGNE_WSIZE(A->rows, A->cols)) {
         cf->error = ARMAS_EWORK;
         return -ARMAS_EWORK;
     }
@@ -166,45 +166,45 @@ int armassp_x_cgne_w(armas_x_dense_t * x,
 
     // r0 = b - A*x
     t = armas_wreserve(wb, m, sizeof(DTYPE));
-    armas_x_make(&r, m, 1, m, t);
-    armas_x_mcopy(&r, b, 0, cf);
-    armassp_x_mvmult(ONE, &r, -ONE, A, x, 0, cf);
+    armas_make(&r, m, 1, m, t);
+    armas_mcopy(&r, b, 0, cf);
+    armassp_mvmult(ONE, &r, -ONE, A, x, 0, cf);
 
     if (rstop == ZERO)
-        rstop = rmult * (rmult * armas_x_dot(&r, &r, cf));
+        rstop = rmult * (rmult * armas_dot(&r, &r, cf));
     else
         rstop *= rstop;
 
     // p0 = A^T*r0
     t = armas_wreserve(wb, n, sizeof(DTYPE));
-    armas_x_make(&p, n, 1, n, t);
-    armassp_x_mvmult(ZERO, &p, ONE, A, &r, ARMAS_TRANS, cf);
+    armas_make(&p, n, 1, n, t);
+    armassp_mvmult(ZERO, &p, ONE, A, &r, ARMAS_TRANS, cf);
 
     // Ap
     t = armas_wreserve(wb, m, sizeof(DTYPE));
-    armas_x_make(&Ap, m, 1, m, t);
+    armas_make(&Ap, m, 1, m, t);
 
     // -------------------------------------------------------------------------
     dot_r1 = ZERO;
     for (niter = 0; niter < maxiter; niter++) {
         // Ap = A*p
-        armassp_x_mvmult(ZERO, &Ap, ONE, A, &p, 0, cf);
-        dot_r = armas_x_dot(&r, &r, cf);
-        dot_p = armas_x_dot(&p, &p, cf);
+        armassp_mvmult(ZERO, &Ap, ONE, A, &p, 0, cf);
+        dot_r = armas_dot(&r, &r, cf);
+        dot_p = armas_dot(&p, &p, cf);
         alpha = dot_r / dot_p;
 
         // x = x + alpha*p
-        armas_x_axpy(x, alpha, &p, cf);
+        armas_axpy(x, alpha, &p, cf);
         // r = r - alpha*Ap
-        armas_x_axpy(&r, -alpha, &Ap, cf);
+        armas_axpy(&r, -alpha, &Ap, cf);
 
-        dot_r1 = armas_x_dot(&r, &r, cf);
+        dot_r1 = armas_dot(&r, &r, cf);
         if (dot_r1 < rstop) {
             break;
         }
         beta = dot_r1 / dot_r;
         // p = beta*p + A^T*r;
-        armassp_x_mvmult(beta, &p, ONE, A, &r, ARMAS_TRANS, cf);
+        armassp_mvmult(beta, &p, ONE, A, &r, ARMAS_TRANS, cf);
     }
 
     // -------------------------------------------------------------------------
@@ -217,12 +217,12 @@ int armassp_x_cgne_w(armas_x_dense_t * x,
 
 /**
  * @brief Solve under-determined system \f$ Ax = b \f$
- * @see armassp_x_cgne_w
+ * @see armassp_cgne_w
  * @ingroup sparse
  */
-int armassp_x_cgne(armas_x_dense_t * x,
-                   const armas_x_sparse_t * A,
-                   const armas_x_dense_t * b, armas_conf_t * cf)
+int armassp_cgne(armas_dense_t * x,
+                   const armas_sparse_t * A,
+                   const armas_dense_t * b, armas_conf_t * cf)
 {
     int stat;
     armas_wbuf_t W = ARMAS_WBNULL;
@@ -238,7 +238,7 @@ int armassp_x_cgne(armas_x_dense_t * x,
     if (A->rows == 0 || A->cols == 0)
         return 0;
 
-    if (armassp_x_cgne_w(x, A, b, &W, cf) < 0) {
+    if (armassp_cgne_w(x, A, b, &W, cf) < 0) {
         cf->error = ARMAS_EWORK;
         return -1;
     }
@@ -247,7 +247,7 @@ int armassp_x_cgne(armas_x_dense_t * x,
         cf->error = ARMAS_EWORK;
         return -1;
     }
-    stat = armassp_x_cgne_w(x, A, b, &W, cf);
+    stat = armassp_cgne_w(x, A, b, &W, cf);
 
     armas_wrelease(&W);
     return stat;

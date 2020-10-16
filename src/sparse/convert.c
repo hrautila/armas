@@ -1,25 +1,25 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_convert_to) && defined(armassp_x_convert) && \
-    defined(armassp_x_transpose_to) && defined(armassp_x_transpose)
+// this file provides following type dependent functions
+#if defined(armassp_convert_to) && defined(armassp_convert) && \
+    defined(armassp_transpose_to) && defined(armassp_transpose)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armassp_x_sort)
+#if defined(armassp_sort)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 #include <stdio.h>
 #include "armas.h"
@@ -32,8 +32,8 @@
  * Runtime O(nnz).
  */
 static
-armas_x_sparse_t *csr_to_csc(armas_x_sparse_t * A,
-                             const armas_x_sparse_t * B)
+armas_sparse_t *csr_to_csc(armas_sparse_t * A,
+                             const armas_sparse_t * B)
 {
     double *Ae, *Be;
 
@@ -81,8 +81,8 @@ armas_x_sparse_t *csr_to_csc(armas_x_sparse_t * A,
  * Runtime O(nnz).
  */
 static
-armas_x_sparse_t *csc_to_csr(armas_x_sparse_t * A,
-                             const armas_x_sparse_t * B)
+armas_sparse_t *csc_to_csr(armas_sparse_t * A,
+                             const armas_sparse_t * B)
 {
     double *Ae, *Be;
 
@@ -128,7 +128,7 @@ armas_x_sparse_t *csc_to_csr(armas_x_sparse_t * A,
 
 
 static
-void csc_convert(armas_x_sparse_t * A, const armas_x_sparse_t * B)
+void csc_convert(armas_sparse_t * A, const armas_sparse_t * B)
 {
     coo_elem_t *Be = B->elems.ep;
     double *Ae = A->elems.v;
@@ -167,7 +167,7 @@ void csc_convert(armas_x_sparse_t * A, const armas_x_sparse_t * B)
 }
 
 static
-void csr_convert(armas_x_sparse_t * A, const armas_x_sparse_t * B)
+void csr_convert(armas_sparse_t * A, const armas_sparse_t * B)
 {
     coo_elem_t *Be = B->elems.ep;
     double *Ae = A->elems.v;
@@ -220,23 +220,23 @@ void csr_convert(armas_x_sparse_t * A, const armas_x_sparse_t * B)
  *      Pointer to target matrix or null if no conversion happened.
  *  @ingroup sparse
  */
-armas_x_sparse_t *armassp_x_convert_to(
-    armas_x_sparse_t * A, const armas_x_sparse_t * B, armassp_type_enum target)
+armas_sparse_t *armassp_convert_to(
+    armas_sparse_t * A, const armas_sparse_t * B, armassp_type_enum target)
 {
     if (!B)
-        return (armas_x_sparse_t *) 0;
+        return (armas_sparse_t *) 0;
 
     // only conversion to CSR or CSC supported
     if (target != ARMASSP_CSC && target != ARMASSP_CSR)
-        return (armas_x_sparse_t *) 0;
+        return (armas_sparse_t *) 0;
 
     // test for space
     if (!armassp_test_alloc(A, B->rows, B->cols, B->nnz, target)) {
-        return (armas_x_sparse_t *) 0;
+        return (armas_sparse_t *) 0;
     }
     // test structure
     if (!armassp_test_structure(A, B->rows, B->cols, B->nnz, target)) {
-        return (armas_x_sparse_t *) 0;
+        return (armas_sparse_t *) 0;
     }
     // init internal arrays
     armassp_init_arrays(A, B->rows, B->cols, B->nnz, target);
@@ -247,7 +247,7 @@ armas_x_sparse_t *armassp_x_convert_to(
             csr_convert(A, B);
         else
             csc_convert(A, B);
-        armassp_x_sort(A);
+        armassp_sort(A);
         break;
     case ARMASSP_CSC:
         if (target == ARMASSP_CSR)
@@ -276,11 +276,11 @@ armas_x_sparse_t *armassp_x_convert_to(
  *    New matrix in request storage format
  * @ingroup sparse
  */
-armas_x_sparse_t *armassp_x_convert(const armas_x_sparse_t * B,
+armas_sparse_t *armassp_convert(const armas_sparse_t * B,
                                     armassp_type_enum target)
 {
-    armas_x_sparse_t *A = armassp_x_new(B->rows, B->cols, B->nnz, target);
-    return armassp_x_convert_to(A, B, target);
+    armas_sparse_t *A = armassp_new(B->rows, B->cols, B->nnz, target);
+    return armassp_convert_to(A, B, target);
 }
 
 /**
@@ -295,21 +295,21 @@ armas_x_sparse_t *armassp_x_convert(const armas_x_sparse_t * B,
  *    Pointer to target matrix or null if no transpose happened.
  * @ingroup sparse
  */
-armas_x_sparse_t *armassp_x_transpose_to(armas_x_sparse_t * A,
-                                         const armas_x_sparse_t * B)
+armas_sparse_t *armassp_transpose_to(armas_sparse_t * A,
+                                         const armas_sparse_t * B)
 {
     if (!B || !A)
-        return (armas_x_sparse_t *) 0;
+        return (armas_sparse_t *) 0;
 
     // transpose of CSR or CSC supported
     if (B->kind != ARMASSP_CSC && B->kind != ARMASSP_CSR)
-        return (armas_x_sparse_t *) 0;
+        return (armas_sparse_t *) 0;
 
     armassp_type_enum t = B->kind == ARMASSP_CSC ? ARMASSP_CSR : ARMASSP_CSC;
 
     // make convertion to other compressed format
-    if (!armassp_x_convert_to(A, B, t))
-        return (armas_x_sparse_t *) 0;
+    if (!armassp_convert_to(A, B, t))
+        return (armas_sparse_t *) 0;
 
     // fix result row,cols sizes and type
     A->rows = B->cols;
@@ -318,12 +318,12 @@ armas_x_sparse_t *armassp_x_transpose_to(armas_x_sparse_t * A,
     return A;
 }
 
-armas_x_sparse_t *armassp_x_transpose(const armas_x_sparse_t * B)
+armas_sparse_t *armassp_transpose(const armas_sparse_t * B)
 {
     armassp_type_enum t = B->kind == ARMASSP_CSC ? ARMASSP_CSR : ARMASSP_CSC;
     // make space reservation as if converted to other storage format
-    armas_x_sparse_t *A = armassp_x_new(B->rows, B->cols, B->nnz, t);
-    return armassp_x_transpose_to(A, B);
+    armas_sparse_t *A = armassp_new(B->rows, B->cols, B->nnz, t);
+    return armassp_transpose_to(A, B);
 }
 #else
 #warning "Missing defines. No code."

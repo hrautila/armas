@@ -1,22 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_mkcopy) && defined(armassp_x_copy_to)
+// this file provides following type dependent functions
+#if defined(armassp_mkcopy) && defined(armassp_copy_to)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -27,14 +27,14 @@
  * @return Pointer to A if success otherwise null pointer.
  * @ingroup sparse
  */
-armas_x_sparse_t *armassp_x_copy_to(armas_x_sparse_t * A,
-                                    const armas_x_sparse_t * B)
+armas_sparse_t *armassp_copy_to(armas_sparse_t * A,
+                                    const armas_sparse_t * B)
 {
     if (!B || !A)
-        return (armas_x_sparse_t *) 0;
+        return (armas_sparse_t *) 0;
 
-    if (armassp_x_nbytes(A) < armassp_x_bytes_for(B)) {
-        return (armas_x_sparse_t *) 0;
+    if (armassp_nbytes(A) < armassp_bytes_for(B)) {
+        return (armas_sparse_t *) 0;
     }
 
     DTYPE *Ae, *Be;
@@ -67,10 +67,10 @@ armas_x_sparse_t *armassp_x_copy_to(armas_x_sparse_t * A,
  * @return Pointer to new matrix if success otherwise null pointer.
  * @ingroup sparse
  */
-armas_x_sparse_t *armassp_x_mkcopy(const armas_x_sparse_t * B)
+armas_sparse_t *armassp_mkcopy(const armas_sparse_t * B)
 {
-    armas_x_sparse_t *A = armassp_x_new(B->rows, B->cols, B->nnz, B->kind);
-    return armassp_x_copy_to(A, B);
+    armas_sparse_t *A = armassp_new(B->rows, B->cols, B->nnz, B->kind);
+    return armassp_copy_to(A, B);
 }
 #else
 #warning "Missing defines. No code!"

@@ -1,22 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_mult_diag) && defined(armassp_x_add_diag)
+// this file provides following type dependent functions
+#if defined(armassp_mult_diag) && defined(armassp_add_diag)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "armas.h"
@@ -27,11 +27,11 @@
 /**
  * \brief Compute A = alpha*diag(x)*A or A = alpha*A*diag(x)
  */
-int armassp_x_mult_diag(armas_x_sparse_t * A, DTYPE alpha,
-                        const armas_x_dense_t * x, int flags)
+int armassp_mult_diag(armas_sparse_t * A, DTYPE alpha,
+                        const armas_dense_t * x, int flags)
 {
     int p;
-    DTYPE *xp = armas_x_data(x);
+    DTYPE *xp = armas_data(x);
     DTYPE *Ae = A->elems.v;
 
     if (A->kind != ARMASSP_CSR && A->kind != ARMASSP_CSC)
@@ -76,7 +76,7 @@ int armassp_x_mult_diag(armas_x_sparse_t * A, DTYPE alpha,
 /**
  * \brief Compute A = A + mu*I
  */
-int armassp_x_add_diag(armas_x_sparse_t * A, DTYPE mu)
+int armassp_add_diag(armas_sparse_t * A, DTYPE mu)
 {
     int p;
     DTYPE *Ae;

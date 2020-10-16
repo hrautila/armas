@@ -1,24 +1,24 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_make) && defined(armassp_x_init) && defined(armassp_x_new)
+// this file provides following type dependent functions
+#if defined(armassp_make) && defined(armassp_init) && defined(armassp_new)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armassp_x_bytes_needed)
+#if defined(armassp_bytes_needed)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include <stdlib.h>
@@ -51,10 +51,10 @@
  * @retval <0  Failure
  * @ingroup sparse
  */
-int armassp_x_make(armas_x_sparse_t * A, int rows, int cols, int nnz,
+int armassp_make(armas_sparse_t * A, int rows, int cols, int nnz,
                    armassp_type_enum storage, void *data, size_t dlen)
 {
-    size_t nbytes = armassp_x_bytes_needed(rows, cols, nnz, storage);
+    size_t nbytes = armassp_bytes_needed(rows, cols, nnz, storage);
     if (dlen < nbytes)
         return -1;
     switch (storage) {
@@ -96,36 +96,36 @@ int armassp_x_make(armas_x_sparse_t * A, int rows, int cols, int nnz,
  *     Pointer to initialized matrix. Null if initialization failed.
  * @ingroup sparse
  */
-armas_x_sparse_t *armassp_x_init(armas_x_sparse_t * A, int rows, int cols,
+armas_sparse_t *armassp_init(armas_sparse_t * A, int rows, int cols,
                                  int nnz, armassp_type_enum storage)
 {
     if (rows == 0 || cols == 0 || nnz == 0) {
-        armassp_x_clear(A);
+        armassp_clear(A);
         return A;
     }
-    size_t nbytes = armassp_x_bytes_needed(rows, cols, nnz, storage);
+    size_t nbytes = armassp_bytes_needed(rows, cols, nnz, storage);
     void *data = calloc(nbytes, 1);
     if (!data)
-        return (armas_x_sparse_t *) 0;
-    armassp_x_make(A, rows, cols, nnz, storage, data, nbytes);
+        return (armas_sparse_t *) 0;
+    armassp_make(A, rows, cols, nnz, storage, data, nbytes);
     return A;
 }
 
-armas_x_sparse_t *armassp_x_new(int rows, int cols, int nnz,
+armas_sparse_t *armassp_new(int rows, int cols, int nnz,
                                 armassp_type_enum kind)
 {
-    armas_x_sparse_t *A =
-        (armas_x_sparse_t *) calloc(1, sizeof(armas_x_sparse_t));
+    armas_sparse_t *A =
+        (armas_sparse_t *) calloc(1, sizeof(armas_sparse_t));
     if (!A)
         return A;
-    return armassp_x_init(A, rows, cols, nnz, kind);
+    return armassp_init(A, rows, cols, nnz, kind);
 }
 
 /**
  * @brief Resize sparse matrix.
  * @ingroup sparse
  */
-int armassp_x_resize(armas_x_sparse_t * A, int newsize)
+int armassp_resize(armas_sparse_t * A, int newsize)
 {
     if (A->kind == ARMASSP_COO) {
         coo_elem_t *nb = (coo_elem_t *) calloc(newsize, sizeof(coo_elem_t));
@@ -145,13 +145,13 @@ int armassp_x_resize(armas_x_sparse_t * A, int newsize)
  * @brief Append element to sparse coo matrix.
  * @ingroup sparse
  */
-int armassp_x_append(armas_x_sparse_t * A, int m, int n, DTYPE v)
+int armassp_append(armas_sparse_t * A, int m, int n, DTYPE v)
 {
     if (A->kind != ARMASSP_COO)
         return -1;
 
     if (A->nnz == A->size) {
-        if (armassp_x_resize(A, A->size + 64) < 0)
+        if (armassp_resize(A, A->size + 64) < 0)
             return -1;
     }
     A->elems.ep[A->nnz].i = m;
@@ -161,12 +161,12 @@ int armassp_x_append(armas_x_sparse_t * A, int m, int n, DTYPE v)
     return 0;
 }
 
-#if defined(armassp_x_hasdiag)
+#if defined(armassp_hasdiag)
 /**
  * @brief Test if matrix has proper diagonal.
  * @ingroup sparse
  */
-int armassp_x_hasdiag(const armas_x_sparse_t * A, int diag)
+int armassp_hasdiag(const armas_sparse_t * A, int diag)
 {
     int i, j, start, end, p, roff, coff;
     int nc = 0;
@@ -193,8 +193,8 @@ int armassp_x_hasdiag(const armas_x_sparse_t * A, int diag)
         end = diag < 0 ? A->cols - diag : A->cols;
         nc = end - start;
         for (i = 0, j = start; j < end; i++, j++) {
-            for (p = armassp_x_index(A, j); p < armassp_x_index(A, j + 1); p++) {
-                if (armassp_x_at(A, p) == i) {
+            for (p = armassp_index(A, j); p < armassp_index(A, j + 1); p++) {
+                if (armassp_at(A, p) == i) {
                     nc--;
                     break;
                 }
@@ -206,8 +206,8 @@ int armassp_x_hasdiag(const armas_x_sparse_t * A, int diag)
         end = diag > 0 ? A->rows - diag : A->rows;
         nc = end - start;
         for (j = 0, i = start; i < end; i++, j++) {
-            for (p = armassp_x_index(A, i); p < armassp_x_index(A, i + 1); p++) {
-                if (armassp_x_at(A, p) == j) {
+            for (p = armassp_index(A, i); p < armassp_index(A, i + 1); p++) {
+                if (armassp_at(A, p) == j) {
                     nc--;
                     break;
                 }
@@ -220,7 +220,7 @@ int armassp_x_hasdiag(const armas_x_sparse_t * A, int diag)
     }
     return nc == 0;
 }
-#endif    // defined(armassp_x_hasdiag)
+#endif    // defined(armassp_hasdiag)
 
 #else
 #warning "Missing defines. No code"

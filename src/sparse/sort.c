@@ -1,22 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2018
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_sort_to) && defined(armassp_x_sort)
+// this file provides following type dependent functions
+#if defined(armassp_sort_to) && defined(armassp_sort)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include <stdio.h>
@@ -73,7 +73,7 @@ void simple_sort(int *index, double *elems, int n)
 }
 
 static
-void compressed_sort(armas_x_sparse_t * A)
+void compressed_sort(armas_sparse_t * A)
 {
     double *Ae = A->elems.v;
     int k, *Ax = A->ix;
@@ -97,7 +97,7 @@ void compressed_sort(armas_x_sparse_t * A)
  *     =0 Ok, matrix sorted
  *     -1 not sorted
  */
-int armassp_x_sort_to(armas_x_sparse_t * A, armassp_order_t order)
+int armassp_sort_to(armas_sparse_t * A, armassp_order_t order)
 {
     switch (A->kind) {
     case ARMASSP_COO:
@@ -125,7 +125,7 @@ int armassp_x_sort_to(armas_x_sparse_t * A, armassp_order_t order)
  *     0 OK
  *    <0 Matrix not changed
  */
-int armassp_x_sort(armas_x_sparse_t * A)
+int armassp_sort(armas_sparse_t * A)
 {
     if (!A || (A->kind != ARMASSP_CSC && A->kind != ARMASSP_CSR))
         return -1;

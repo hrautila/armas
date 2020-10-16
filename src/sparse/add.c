@@ -1,24 +1,24 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_add) && defined(armassp_x_addto_w)
+// this file provides following type dependent functions
+#if defined(armassp_add) && defined(armassp_addto_w)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_accumulator)
+#if defined(armas_accumulator)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -27,28 +27,28 @@
 #include "splocal.h"
 
 static
-void add_csr_nn(armas_x_sparse_t * C,
-                DTYPE alpha, const armas_x_sparse_t * A,
-                DTYPE beta, const armas_x_sparse_t * B,
-                armas_x_accum_t * spa)
+void add_csr_nn(armas_sparse_t * C,
+                DTYPE alpha, const armas_sparse_t * A,
+                DTYPE beta, const armas_sparse_t * B,
+                armas_accum_t * spa)
 {
     int i, p;
     DTYPE val;
 
     C->nnz = 0;
-    armas_x_accum_clear(spa);
+    armas_accum_clear(spa);
 
     for (i = 0; i < A->rows; i++) {
         for (p = A->ptr[i]; p < A->ptr[i + 1]; p++) {
-            val = alpha * armassp_x_value(A, p);
-            armas_x_accum_addpos(spa, armassp_x_at(A, p), val, i);
+            val = alpha * armassp_value(A, p);
+            armas_accum_addpos(spa, armassp_at(A, p), val, i);
         }
         for (p = B->ptr[i]; p < B->ptr[i + 1]; p++) {
-            val = beta * armassp_x_value(B, p);
-            armas_x_accum_addpos(spa, armassp_x_at(B, p), val, i);
+            val = beta * armassp_value(B, p);
+            armas_accum_addpos(spa, armassp_at(B, p), val, i);
         }
         // gather data to C[i,:] row
-        armas_x_accum_gather(C, 1.0, spa, i, C->size);
+        armas_accum_gather(C, 1.0, spa, i, C->size);
         spa->tail = 0;
     }
     C->ptr[A->rows] = C->nnz;
@@ -56,31 +56,31 @@ void add_csr_nn(armas_x_sparse_t * C,
 }
 
 static
-void add_csr_nt(armas_x_sparse_t * C,
-                DTYPE alpha, const armas_x_sparse_t * A,
-                DTYPE beta, const armas_x_sparse_t * B,
-                armas_x_accum_t * spa)
+void add_csr_nt(armas_sparse_t * C,
+                DTYPE alpha, const armas_sparse_t * A,
+                DTYPE beta, const armas_sparse_t * B,
+                armas_accum_t * spa)
 {
     int i, j, p;
     DTYPE val;
 
     C->nnz = 0;
-    armas_x_accum_clear(spa);
+    armas_accum_clear(spa);
 
     for (i = 0; i < A->rows; i++) {
         for (p = A->ptr[i]; p < A->ptr[i + 1]; p++) {
-            val = alpha * armassp_x_value(A, p);
-            armas_x_accum_addpos(spa, armassp_x_at(A, p), val, i);
+            val = alpha * armassp_value(A, p);
+            armas_accum_addpos(spa, armassp_at(A, p), val, i);
         }
 
         for (j = 0; j < B->rows; j++) {
-            if ((p = armassp_x_nz(B, j, i)) < 0)
+            if ((p = armassp_nz(B, j, i)) < 0)
                 continue;
-            val = beta * armassp_x_value(B, p);
-            armas_x_accum_addpos(spa, j, val, i);
+            val = beta * armassp_value(B, p);
+            armas_accum_addpos(spa, j, val, i);
         }
         // gather data to C[i,:] row
-        armas_x_accum_gather(C, 1.0, spa, i, C->size);
+        armas_accum_gather(C, 1.0, spa, i, C->size);
         spa->tail = 0;
     }
     C->ptr[A->rows] = C->nnz;
@@ -88,30 +88,30 @@ void add_csr_nt(armas_x_sparse_t * C,
 }
 
 static
-void add_csr_tn(armas_x_sparse_t * C,
-                DTYPE alpha, const armas_x_sparse_t * A,
-                DTYPE beta, const armas_x_sparse_t * B,
-                armas_x_accum_t * spa)
+void add_csr_tn(armas_sparse_t * C,
+                DTYPE alpha, const armas_sparse_t * A,
+                DTYPE beta, const armas_sparse_t * B,
+                armas_accum_t * spa)
 {
     int i, j, p;
     DTYPE val;
 
     C->nnz = 0;
-    armas_x_accum_clear(spa);
+    armas_accum_clear(spa);
 
     for (i = 0; i < A->rows; i++) {
         for (j = 0; j < A->rows; j++) {
-            if ((p = armassp_x_nz(A, j, i)) < 0)
+            if ((p = armassp_nz(A, j, i)) < 0)
                 continue;
-            val = beta * armassp_x_value(A, p);
-            armas_x_accum_addpos(spa, j, val, i);
+            val = beta * armassp_value(A, p);
+            armas_accum_addpos(spa, j, val, i);
         }
         for (p = B->ptr[i]; p < B->ptr[i + 1]; p++) {
-            val = beta * armassp_x_value(B, p);
-            armas_x_accum_addpos(spa, armassp_x_at(B, p), val, i);
+            val = beta * armassp_value(B, p);
+            armas_accum_addpos(spa, armassp_at(B, p), val, i);
         }
         // gather data to C[i,:] row
-        armas_x_accum_gather(C, 1.0, spa, i, C->size);
+        armas_accum_gather(C, 1.0, spa, i, C->size);
         spa->tail = 0;
     }
     C->ptr[A->rows] = C->nnz;
@@ -120,28 +120,28 @@ void add_csr_tn(armas_x_sparse_t * C,
 
 
 static
-void add_csc_nn(armas_x_sparse_t * C,
-                DTYPE alpha, const armas_x_sparse_t * A,
-                DTYPE beta, const armas_x_sparse_t * B,
-                armas_x_accum_t * spa)
+void add_csc_nn(armas_sparse_t * C,
+                DTYPE alpha, const armas_sparse_t * A,
+                DTYPE beta, const armas_sparse_t * B,
+                armas_accum_t * spa)
 {
     int i, p;
     DTYPE val;
 
     C->nnz = 0;
-    armas_x_accum_clear(spa);
+    armas_accum_clear(spa);
 
     for (i = 0; i < A->cols; i++) {
         for (p = A->ptr[i]; p < A->ptr[i + 1]; p++) {
-            val = alpha * armassp_x_value(A, p);
-            armas_x_accum_addpos(spa, armassp_x_at(A, p), val, i);
+            val = alpha * armassp_value(A, p);
+            armas_accum_addpos(spa, armassp_at(A, p), val, i);
         }
         for (p = B->ptr[i]; p < B->ptr[i + 1]; p++) {
-            val = beta * armassp_x_value(B, p);
-            armas_x_accum_addpos(spa, armassp_x_at(B, p), val, i);
+            val = beta * armassp_value(B, p);
+            armas_accum_addpos(spa, armassp_at(B, p), val, i);
         }
         // gather data to C[i,:] row
-        armas_x_accum_gather(C, 1.0, spa, i, C->size);
+        armas_accum_gather(C, 1.0, spa, i, C->size);
         spa->tail = 0;
     }
     C->ptr[A->cols] = C->nnz;
@@ -149,31 +149,31 @@ void add_csc_nn(armas_x_sparse_t * C,
 }
 
 static
-void add_csc_nt(armas_x_sparse_t * C,
-                DTYPE alpha, const armas_x_sparse_t * A,
-                DTYPE beta, const armas_x_sparse_t * B,
-                armas_x_accum_t * spa)
+void add_csc_nt(armas_sparse_t * C,
+                DTYPE alpha, const armas_sparse_t * A,
+                DTYPE beta, const armas_sparse_t * B,
+                armas_accum_t * spa)
 {
     int i, j, p;
     DTYPE val;
 
     C->nnz = 0;
-    armas_x_accum_clear(spa);
+    armas_accum_clear(spa);
 
     for (i = 0; i < A->cols; i++) {
         for (p = A->ptr[i]; p < A->ptr[i + 1]; p++) {
-            val = alpha * armassp_x_value(A, p);
-            armas_x_accum_addpos(spa, armassp_x_at(A, p), val, i);
+            val = alpha * armassp_value(A, p);
+            armas_accum_addpos(spa, armassp_at(A, p), val, i);
         }
 
         for (j = 0; j < B->cols; j++) {
-            if ((p = armassp_x_nz(B, j, i)) < 0)
+            if ((p = armassp_nz(B, j, i)) < 0)
                 continue;
-            val = beta * armassp_x_value(B, p);
-            armas_x_accum_addpos(spa, j, val, i);
+            val = beta * armassp_value(B, p);
+            armas_accum_addpos(spa, j, val, i);
         }
         // gather data to C[i,:] row
-        armas_x_accum_gather(C, 1.0, spa, i, C->size);
+        armas_accum_gather(C, 1.0, spa, i, C->size);
         spa->tail = 0;
     }
     C->ptr[A->cols] = C->nnz;
@@ -196,11 +196,11 @@ void add_csc_nt(armas_x_sparse_t * C,
  * @retval <0  Failure
  * @ingroup sparse
  */
-int armassp_x_addto_w(armas_x_sparse_t * C,
+int armassp_addto_w(armas_sparse_t * C,
                       DTYPE alpha,
-                      const armas_x_sparse_t * A,
+                      const armas_sparse_t * A,
                       DTYPE beta,
-                      const armas_x_sparse_t * B,
+                      const armas_sparse_t * B,
                       int bits, armas_wbuf_t * wb, armas_conf_t * cf)
 {
     if (!A || !B)
@@ -214,18 +214,18 @@ int armassp_x_addto_w(armas_x_sparse_t * C,
     }
 
     if (wb && wb->bytes == 0) {
-        wb->bytes = armas_x_accum_need(C);
+        wb->bytes = armas_accum_need(C);
         return 0;
     }
-    if (armas_wbytes(wb) < armas_x_accum_need(C)) {
+    if (armas_wbytes(wb) < armas_accum_need(C)) {
         cf->error = ARMAS_EWORK;
         return -ARMAS_EWORK;
     }
-    armas_x_accum_t spa;
+    armas_accum_t spa;
     // get current position in wb space
     size_t pos = armas_wpos(wb);
     // make sparse accumulator 
-    armas_x_accum_make(&spa, armas_x_accum_dim(C),
+    armas_accum_make(&spa, armas_accum_dim(C),
                        armas_wptr(wb), armas_wbytes(wb));
 
     switch (bits & (ARMAS_TRANSA | ARMAS_TRANSB)) {
@@ -261,19 +261,19 @@ int armassp_x_addto_w(armas_x_sparse_t * C,
  * @return Pointer to new sparse matrix or null pointer on error.
  * @ingroup sparse
  */
-armas_x_sparse_t *armassp_x_add(DTYPE alpha,
-                                const armas_x_sparse_t * A,
+armas_sparse_t *armassp_add(DTYPE alpha,
+                                const armas_sparse_t * A,
                                 DTYPE beta,
-                                const armas_x_sparse_t * B,
+                                const armas_sparse_t * B,
                                 int bits, armas_conf_t * cf)
 {
-    armas_x_sparse_t *C = (armas_x_sparse_t *) 0;
+    armas_sparse_t *C = (armas_sparse_t *) 0;
     armas_wbuf_t work = ARMAS_WBNULL;
 
     if (!A || !B)
         return C;
 
-    if (armassp_x_addto_w(C, alpha, A, beta, B, bits, &work, cf) < 0)
+    if (armassp_addto_w(C, alpha, A, beta, B, bits, &work, cf) < 0)
         return C;
 
     if (!armas_walloc(&work, work.bytes)) {
@@ -282,13 +282,13 @@ armas_x_sparse_t *armassp_x_add(DTYPE alpha,
     }
     // allocate target matrix; size estimate 
     int cnz = A->nnz + B->nnz;
-    C = armassp_x_new(A->rows, A->cols, cnz, A->kind);
+    C = armassp_new(A->rows, A->cols, cnz, A->kind);
     if (!C) {
         armas_wrelease(&work);
         return C;
     }
 
-    armassp_x_addto_w(C, alpha, A, beta, B, bits, &work, cf);
+    armassp_addto_w(C, alpha, A, beta, B, bits, &work, cf);
     armas_wrelease(&work);
     return C;
 }

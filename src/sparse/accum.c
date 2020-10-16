@@ -1,22 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_accum_t)
+// this file provides following type dependent functions
+#if defined(armas_accum_t)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 #include <assert.h>
@@ -26,7 +26,7 @@
 // -----------------------------------------------------------------------------
 // sparse accumulator
 
-static inline void armas_x_accum_init(armas_x_accum_t * acc, int n, void *ptr)
+static inline void armas_accum_init(armas_accum_t * acc, int n, void *ptr)
 {
     acc->elems = (DTYPE *) ptr;
     acc->mark = (int *) &acc->elems[n];
@@ -39,12 +39,12 @@ static inline void armas_x_accum_init(armas_x_accum_t * acc, int n, void *ptr)
  * @brief Use provided buffer space as accumulator.
  * @ingroup sparse
  */
-size_t armas_x_accum_make(armas_x_accum_t * acc, int n, void *ptr, size_t len)
+size_t armas_accum_make(armas_accum_t * acc, int n, void *ptr, size_t len)
 {
-    size_t nb = armas_x_accum_bytes(n);
+    size_t nb = armas_accum_bytes(n);
     if (nb > len)
         return 0;
-    armas_x_accum_init(acc, n, ptr);
+    armas_accum_init(acc, n, ptr);
     return nb;
 }
 
@@ -52,14 +52,14 @@ size_t armas_x_accum_make(armas_x_accum_t * acc, int n, void *ptr, size_t len)
  * @brief Allocate resources for accumulator of order n.
  * @ingroup sparse
  */
-int armas_x_accum_allocate(armas_x_accum_t * acc, int n)
+int armas_accum_allocate(armas_accum_t * acc, int n)
 {
     // single block of n DTYPE and 2*n ints
-    size_t nb = armas_x_accum_bytes(n);
+    size_t nb = armas_accum_bytes(n);
     void *ptr = calloc(nb, 1);
     if (!ptr)
         return -1;
-    armas_x_accum_init(acc, n, ptr);
+    armas_accum_init(acc, n, ptr);
     return 0;
 }
 
@@ -67,7 +67,7 @@ int armas_x_accum_allocate(armas_x_accum_t * acc, int n)
  * @brief Release accumulator resources.
  * @ingroup sparse
  */
-void armas_x_accum_release(armas_x_accum_t * acc)
+void armas_accum_release(armas_accum_t * acc)
 {
     if (!acc)
         return;
@@ -78,7 +78,7 @@ void armas_x_accum_release(armas_x_accum_t * acc)
 }
 
 static inline
-void addpos(armas_x_accum_t * acc, int index, DTYPE value, int mark)
+void addpos(armas_accum_t * acc, int index, DTYPE value, int mark)
 {
     if (acc->mark[index] < mark) {
         acc->mark[index] = mark;
@@ -93,7 +93,7 @@ void addpos(armas_x_accum_t * acc, int index, DTYPE value, int mark)
  * @brief Add value to accumulator position
  * @ingroup sparse
  */
-void armas_x_accum_addpos(armas_x_accum_t * acc,
+void armas_accum_addpos(armas_accum_t * acc,
                           int index, DTYPE value, int mark)
 {
     addpos(acc, index, value, mark);
@@ -103,8 +103,8 @@ void armas_x_accum_addpos(armas_x_accum_t * acc,
  * @brief accumulate acc = acc + beta*x[:]
  * @ingroup sparse
  */
-void armas_x_accum_scatter(armas_x_accum_t * acc,
-                           const armas_x_spvec_t * x, DTYPE beta, int mark)
+void armas_accum_scatter(armas_accum_t * acc,
+                           const armas_spvec_t * x, DTYPE beta, int mark)
 {
     for (int i = 0; i < x->nz; i++) {
         int k = x->ix[i];
@@ -122,10 +122,10 @@ void armas_x_accum_scatter(armas_x_accum_t * acc,
  * @brief Update accumulator with sparse \f$ x^T y \f$
  * @ingroup sparse
  */
-void armas_x_accum_dot(armas_x_accum_t * acc,
+void armas_accum_dot(armas_accum_t * acc,
                        int k,
-                       const armas_x_spvec_t * x,
-                       const armas_x_spvec_t * y, int mark)
+                       const armas_spvec_t * x,
+                       const armas_spvec_t * y, int mark)
 {
     int px, py, d, changed = 0;
     DTYPE v;
@@ -153,8 +153,8 @@ void armas_x_accum_dot(armas_x_accum_t * acc,
  * @brief Update matrix from accumulator.
  * @ingroup sparse
  */
-void armas_x_accum_gather(armas_x_sparse_t * C,
-                          DTYPE alpha, armas_x_accum_t * acc, int ik, int maxnz)
+void armas_accum_gather(armas_sparse_t * C,
+                          DTYPE alpha, armas_accum_t * acc, int ik, int maxnz)
 {
     int k, head;
     C->ptr[ik] = C->nnz;
@@ -172,7 +172,7 @@ void armas_x_accum_gather(armas_x_sparse_t * C,
  * @brief Unmark accumulator elements.
  * @ingroup sparse
  */
-void armas_x_accum_clear(armas_x_accum_t * acc)
+void armas_accum_clear(armas_accum_t * acc)
 {
     for (int i = 0; i < acc->nz; acc->mark[i++] = -1);
 }

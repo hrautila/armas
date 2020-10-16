@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -32,7 +32,7 @@ static inline
 void armassp_iunmark(int *w, int j)
 {
     if (w[j] < 0)
-        sp_imark(w, j);
+        armassp_imark(w, j);
 }
 // @brief Get index value as unmarked
 static inline
@@ -46,43 +46,36 @@ int armassp_iunmarked(int *w, int j)
 
 // @brief Mark vertex in graph.
 static inline
-void armassp_mark(sparse_t *G, int j)
+void armassp_mark(armas_sparse_t *G, int j)
 {
     G->ptr[j] = -G->ptr[j]-1;
 }
 
 // @brief Test if vertex is marked in graph.
 static inline
-int armassp_marked(const sparse_t *G, int j)
+int armassp_marked(const armas_sparse_t *G, int j)
 {
     return G->ptr[j] < 0;
 }
 
 static inline
-int armassp_get_unmarked(const sparse_t *G, int j)
+int armassp_get_unmarked(const armas_sparse_t *G, int j)
 {
     return G->ptr[j] < 0 ? -G->ptr[j]-1 : G->ptr[j];
 }
 
 // @brief Unmark vertex in graph.
 static inline
-void armassp_unmark(sparse_t *G, int j) {
+void armassp_unmark(armas_sparse_t *G, int j)
+{
     if (G->ptr[j] < 0)
-        sp_mark(G, j);
+        armassp_mark(G, j);
 }
 
 // ------------------------------------------------------------------------------
 // bits string vertex marking
 
 typedef unsigned char armas_bits_t;
-
-// @brief Compute number of bytes needed for n bit string
-static inline
-size_t __nbits_aligned8(size_t n)
-{
-    // this many bytes ;
-    return ((n + 7) >> 3);
-}
 
 static inline
 void armassp_bit_mark(armas_bits_t *w, int j)
@@ -109,7 +102,7 @@ void armassp_bit_unmark(armas_bits_t *w, int j)
 }
 
 static inline
-void sp_bit_zero(spbits_t *w, int n)
+void armassp_bit_zero(armas_bits_t *w, int n)
 {
     memset(w, 0, __nbits_aligned8(n));
 }
@@ -117,14 +110,14 @@ void sp_bit_zero(spbits_t *w, int n)
 
 static inline
 int armassp_test_alloc(
-    const armas_x_sparse_t *A, int rows, int cols, int nnz, armassp_type_enum typ)
+    const armas_sparse_t *A, int rows, int cols, int nnz, armassp_type_enum typ)
 {
-    return A->__nbytes >= armassp_x_bytes_needed(rows, cols, nnz, typ);
+    return A->__nbytes >= armassp_bytes_needed(rows, cols, nnz, typ);
 }
 
 static inline
 int armassp_test_structure(
-    const armas_x_sparse_t *A, int rows, int cols, int nnz, armassp_type_enum typ)
+    const armas_sparse_t *A, int rows, int cols, int nnz, armassp_type_enum typ)
 {
     int n = typ == ARMASSP_CSR ? rows : cols;
     // non-zero elements
@@ -136,7 +129,7 @@ int armassp_test_structure(
 
 static inline
 int armassp_init_structure(
-    armas_x_sparse_t *A, int rows, int cols, int nnz, armassp_type_enum typ)
+    armas_sparse_t *A, int rows, int cols, int nnz, armassp_type_enum typ)
 {
     int n = typ == ARMASSP_CSR ? rows : cols;
     A->ptr = (int *)&A->elems.v[nnz];
@@ -152,7 +145,7 @@ int armassp_init_structure(
 
 static inline
 int armassp_init_arrays(
-    armas_x_sparse_t *A, int rows, int cols, int nnz, armassp_type_enum typ)
+    armas_sparse_t *A, int rows, int cols, int nnz, armassp_type_enum typ)
 {
     int n = typ == ARMASSP_CSR ? rows : cols;
     A->ptr = (int *)&A->elems.v[nnz];

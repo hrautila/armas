@@ -1,24 +1,24 @@
 
-// Copyright (c) Harri Rautila, 2018-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "spdefs.h"
 
 // -----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armassp_x_mmload) && defined(armassp_x_mmdump)
+// this file provides following type dependent functions
+#if defined(armassp_mmload) && defined(armassp_mmdump)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armassp_x_new)
+#if defined(armassp_new)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // -----------------------------------------------------------------------------
 
 
@@ -185,28 +185,28 @@ int armasio_mmread_size(FILE * f, int typecode, int *m, int *n, int *nnz)
  * @return Pointer to loaded sparse matrix or null pointer.
  * @ingroup sparse
  */
-armas_x_sparse_t *armassp_x_mmload(int *typecode, FILE * f)
+armas_sparse_t *armassp_mmload(int *typecode, FILE * f)
 {
     int tc;
     int m, n, nnz;
     char *iobuf, *bp, *endptr;
     size_t ioblen;
-    armas_x_sparse_t *A;
+    armas_sparse_t *A;
 
     if (armasio_mmread_banner(f, &tc) < 0) {
-        return (armas_x_sparse_t *) 0;
+        return (armas_sparse_t *) 0;
     }
     *typecode = tc;
     if ((tc & ARMAS_MM_MATRIX) == 0 ||
         (tc & ARMAS_MM_REAL) == 0 || (tc & ARMAS_MM_COORDINATE) == 0) {
         // must be real matrix in coordinate format
-        return (armas_x_sparse_t *) 0;
+        return (armas_sparse_t *) 0;
     }
     if (armasio_mmread_size(f, tc, &m, &n, &nnz) < 0) {
-        return (armas_x_sparse_t *) 0;
+        return (armas_sparse_t *) 0;
     }
 
-    A = armassp_x_new(m, n, nnz, ARMASSP_COO);
+    A = armassp_new(m, n, nnz, ARMASSP_COO);
     if (!A)
         return A;
 
@@ -221,10 +221,10 @@ armas_x_sparse_t *armassp_x_mmload(int *typecode, FILE * f)
         n = strtol(bp, &endptr, 10);
         bp = endptr + 1;
         v = strtod(bp, &endptr);
-        armassp_x_append(A, m - 1, n - 1, v);
+        armassp_append(A, m - 1, n - 1, v);
 #if 0
         if ((tc & ARMAS_MM_SYMMETRIC) != 0 && m != n) {
-            armassp_x_append(A, n - 1, m - 1, v);
+            armassp_append(A, n - 1, m - 1, v);
         }
 #endif
         k++;
@@ -253,7 +253,7 @@ armas_x_sparse_t *armassp_x_mmload(int *typecode, FILE * f)
  * @return Number of bytes writen.
  * @ingroup sparse
  */
-int armassp_x_mmdump(FILE * f, const armas_x_sparse_t * A, int flags)
+int armassp_mmdump(FILE * f, const armas_sparse_t * A, int flags)
 {
     int n;
     char *s = "general";
@@ -295,8 +295,8 @@ int armassp_x_mmdump(FILE * f, const armas_x_sparse_t * A, int flags)
     return n;
 }
 
-#if defined(armassp_x_pprintf)
-void armassp_x_pprintf(FILE * f, const armas_x_sparse_t * A)
+#if defined(armassp_pprintf)
+void armassp_pprintf(FILE * f, const armas_sparse_t * A)
 {
     coo_elem_t *Ae;
     char *s = malloc(A->rows * A->cols);
@@ -335,12 +335,12 @@ void armassp_x_pprintf(FILE * f, const armas_x_sparse_t * A)
 }
 #endif
 
-#if defined(armassp_x_iprintf)
+#if defined(armassp_iprintf)
 /**
  * @brief Print compressed column or row structure to file.
  * @ingroup sparse
  */
-void armassp_x_iprintf(FILE * f, const armas_x_sparse_t * A)
+void armassp_iprintf(FILE * f, const armas_sparse_t * A)
 {
     if (A->kind == ARMASSP_COO)
         return;
