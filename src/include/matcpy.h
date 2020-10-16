@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2012-2014
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -297,7 +297,7 @@ void copy_conj4x1(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC)
 }
 
 static inline
-void CPBLK_TRANS(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int flags)
+void CPBLK_TRANS(armas_dense_t *d, const armas_dense_t *s, int nR, int nC, int flags)
 {
     if (flags & (ARMAS_CTRANSA|ARMAS_CTRANSB|ARMAS_CONJA|ARMAS_CONJB)) {
         copy_trans_conj4x1(d->elems, d->step, s->elems, s->step, nR, nC);
@@ -307,7 +307,7 @@ void CPBLK_TRANS(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, i
 }
 
 static inline
-void CPBLK(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int flags)
+void CPBLK(armas_dense_t *d, const armas_dense_t *s, int nR, int nC, int flags)
 {
     if (flags & (ARMAS_CTRANSA|ARMAS_CTRANSB|ARMAS_CONJA|ARMAS_CONJB)) {
         copy_conj4x1(d->elems, d->step, s->elems, s->step, nR, nC);
@@ -317,7 +317,7 @@ void CPBLK(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int fla
 }
 
 static inline
-void CPBLK_TRIL_UFILL(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int flags)
+void CPBLK_TRIL_UFILL(armas_dense_t *d, const armas_dense_t *s, int nR, int nC, int flags)
 {
     if (flags & (ARMAS_CTRANSA|ARMAS_CTRANSB|ARMAS_CONJA|ARMAS_CONJB)) {
     } else {
@@ -326,7 +326,7 @@ void CPBLK_TRIL_UFILL(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int 
 }
 
 static inline
-void CPBLK_TRIU_LFILL(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int flags)
+void CPBLK_TRIU_LFILL(armas_dense_t *d, const armas_dense_t *s, int nR, int nC, int flags)
 {
     if (flags & (ARMAS_CTRANSA|ARMAS_CTRANSB|ARMAS_CONJA|ARMAS_CONJB)) {
     } else {
@@ -348,19 +348,19 @@ void CP(DTYPE *d, int ldD, const DTYPE *s, int ldS, int nR, int nC)
 }
 
 static inline
-void CPTRIL_UFILL(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int unit)
+void CPTRIL_UFILL(armas_dense_t *d, const armas_dense_t *s, int nR, int nC, int unit)
 {
     colcpy_fill_up(d->elems, d->step, s->elems, s->step, nR, nC, unit);
 }
 
 static inline
-void CPTRIU_LFILL(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int unit)
+void CPTRIU_LFILL(armas_dense_t *d, const armas_dense_t *s, int nR, int nC, int unit)
 {
     colcpy_fill_low(d->elems, d->step, s->elems, s->step, nR, nC, unit);
 }
 
 static inline
-void CPBLK_TRANS(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int flags)
+void CPBLK_TRANS(armas_dense_t *d, const armas_dense_t *s, int nR, int nC, int flags)
 {
     if (flags & (ARMAS_ABSA|ARMAS_ABSB)) {
         copy_trans4x1_abs(d->elems, d->step, s->elems, s->step, nR, nC);
@@ -370,7 +370,7 @@ void CPBLK_TRANS(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, i
 }
 
 static inline
-void CPBLK(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int flags)
+void CPBLK(armas_dense_t *d, const armas_dense_t *s, int nR, int nC, int flags)
 {
     if ((flags & (ARMAS_ABSA|ARMAS_ABSB)) != 0) {
         copy_plain_abs(d->elems, d->step, s->elems, s->step, nR, nC);
@@ -380,7 +380,7 @@ void CPBLK(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int fla
 }
 
 static inline
-void CPBLK_TRIL_UFILL(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int flags)
+void CPBLK_TRIL_UFILL(armas_dense_t *d, const armas_dense_t *s, int nR, int nC, int flags)
 {
     if (flags & (ARMAS_ABSA|ARMAS_ABSB)) {
         colcpy_fill_up_abs(d->elems, d->step, s->elems, s->step, nR, nC, (flags&ARMAS_UNIT));
@@ -390,7 +390,7 @@ void CPBLK_TRIL_UFILL(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int 
 }
 
 static inline
-void CPBLK_TRIU_LFILL(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int nC, int flags)
+void CPBLK_TRIU_LFILL(armas_dense_t *d, const armas_dense_t *s, int nR, int nC, int flags)
 {
     if (flags & (ARMAS_ABSA|ARMAS_ABSB)) {
         colcpy_fill_low_abs(d->elems, d->step, s->elems, s->step, nR, nC, (flags&ARMAS_UNIT));
@@ -402,7 +402,7 @@ void CPBLK_TRIU_LFILL(armas_x_dense_t *d, const armas_x_dense_t *s, int nR, int 
 #endif  /* FLOAT32 && FLOAT64*/
 
 static inline
-void blk_scale(armas_x_dense_t *x, const DTYPE beta, int M, int N)
+void blk_scale(armas_dense_t *x, const DTYPE beta, int M, int N)
 {
     register DTYPE *X = x->elems;
     register int ldX = x->step;

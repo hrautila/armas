@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012,2013
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
 // This file is part of github.com/hrautila/matops package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -80,7 +80,7 @@
 #if HAVE_6COL == 1
 // update 6 columns of C;
 static inline
-void __CMULT6(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *B, DTYPE alpha, int col, int nI, int nP)
+void __CMULT6(armas_dense_t *C, const armas_dense_t *A, const armas_dense_t *B, DTYPE alpha, int col, int nI, int nP)
 {
   register int i;
   DTYPE *c0, *c1, *c2, *c3, *c4, *c5;
@@ -117,7 +117,7 @@ void __CMULT6(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_
 
 // update 4 columns of C;
 static inline
-void __CMULT4(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *B, DTYPE alpha, int col, int nI, int nP)
+void __CMULT4(armas_dense_t *C, const armas_dense_t *A, const armas_dense_t *B, DTYPE alpha, int col, int nI, int nP)
 {
   register int i;
   DTYPE *c0, *c1, *c2, *c3;
@@ -148,7 +148,7 @@ void __CMULT4(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_
 
 //  update two columns of C
 static inline
-void __CMULT2(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *B, DTYPE alpha, int col, int nI, int nP)
+void __CMULT2(armas_dense_t *C, const armas_dense_t *A, const armas_dense_t *B, DTYPE alpha, int col, int nI, int nP)
 {
   register int i;
   DTYPE *c0, *c1, *a0, *a1;
@@ -171,7 +171,7 @@ void __CMULT2(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_
 
 // update one column of C;
 static inline
-void __CMULT1(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *B, DTYPE alpha, int col, int nI, int nP)
+void __CMULT1(armas_dense_t *C, const armas_dense_t *A, const armas_dense_t *B, DTYPE alpha, int col, int nI, int nP)
 {
   register int i;
   DTYPE *c0;
@@ -187,7 +187,7 @@ void __CMULT1(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_
 
 // update 4 rows of C;
 static inline
-void __RMULT4(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *B, DTYPE alpha, int row, int nJ, int nP)
+void __RMULT4(armas_dense_t *C, const armas_dense_t *A, const armas_dense_t *B, DTYPE alpha, int row, int nJ, int nP)
 {
   register int k;
   DTYPE *c0, *c1;
@@ -212,7 +212,7 @@ void __RMULT4(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_
 
 // update 2 rows of C;
 static inline
-void __RMULT2(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *B, DTYPE alpha, int row, int nJ, int nP)
+void __RMULT2(armas_dense_t *C, const armas_dense_t *A, const armas_dense_t *B, DTYPE alpha, int row, int nJ, int nP)
 {
   register int k;
   DTYPE *c0, *c1;
@@ -235,7 +235,7 @@ void __RMULT2(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_
 
 // update 1row of C;
 static inline
-void __RMULT1(armas_x_dense_t *C, const armas_x_dense_t *A, const armas_x_dense_t *B, DTYPE alpha, int row, int nJ, int nP)
+void __RMULT1(armas_dense_t *C, const armas_dense_t *A, const armas_dense_t *B, DTYPE alpha, int row, int nJ, int nP)
 {
   register int k;
   DTYPE *c0;

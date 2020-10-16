@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2017-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -58,7 +58,7 @@ typedef struct coo_elem {
 /**
  * @brief Sparse matrix
  */
-typedef struct armas_x_sparse {
+typedef struct armas_sparse {
     union {
         DTYPE *v;
         coo_elem_t *ep;
@@ -72,33 +72,33 @@ typedef struct armas_x_sparse {
     int size;       ///< Size of elements buffer
     armassp_type_enum kind;
     size_t __nbytes;
-} armas_x_sparse_t;
+} armas_sparse_t;
 
 /**
  * @brief Sparse column or row of sparse CSC/CSR matrix
  */
-typedef struct armas_x_spvec {
+typedef struct armas_spvec {
     DTYPE *elems;           ///< Vector elements
     int *ix;                ///< Indexes of non zero elements
     int nz;                 ///< Number of non-zero entries
-} armas_x_spvec_t;
+} armas_spvec_t;
 
 /**
  * @brief Accumulator for sparse-sparse multiply.
  */
-typedef struct armas_x_accum {
+typedef struct armas_accum {
     DTYPE *elems;
     int *mark;
     int *queue;
     int nz;
     int tail;
-} armas_x_accum_t;
+} armas_accum_t;
 
 /**
  * @brief Accumulator memory requirement for matrix of dimension n.
  */
 __ARMAS_INLINE
-size_t armas_x_accum_bytes(int n) {
+size_t armas_accum_bytes(int n) {
     return __align64(n*sizeof(DTYPE) + 2*n*sizeof(int));
 }
 
@@ -106,7 +106,7 @@ size_t armas_x_accum_bytes(int n) {
  * @brief Get accumulater dimension for matrix.
  */
 __ARMAS_INLINE
-int armas_x_accum_dim(const armas_x_sparse_t *A) {
+int armas_accum_dim(const armas_sparse_t *A) {
     return A->kind == ARMASSP_CSR ? A->cols : A->rows;
 }
 
@@ -115,46 +115,46 @@ int armas_x_accum_dim(const armas_x_sparse_t *A) {
  * @return Number of bytes needed.
  */
 __ARMAS_INLINE
-size_t armas_x_accum_need(const armas_x_sparse_t *A) {
-    return armas_x_accum_bytes(armas_x_accum_dim(A));
+size_t armas_accum_need(const armas_sparse_t *A) {
+    return armas_accum_bytes(armas_accum_dim(A));
 }
 
-extern size_t armas_x_accum_make(armas_x_accum_t *acc,
+extern size_t armas_accum_make(armas_accum_t *acc,
                                  int n, void *ptr, size_t len);
-extern int armas_x_accum_allocate(armas_x_accum_t *acc, int n);
-extern void armas_x_accum_release(armas_x_accum_t *acc);
-extern void armas_x_accum_addpos(armas_x_accum_t *acc,
+extern int armas_accum_allocate(armas_accum_t *acc, int n);
+extern void armas_accum_release(armas_accum_t *acc);
+extern void armas_accum_addpos(armas_accum_t *acc,
                                  int k, DTYPE v, int mark);
-extern void armas_x_accum_scatter(armas_x_accum_t *acc, const armas_x_spvec_t *x,
+extern void armas_accum_scatter(armas_accum_t *acc, const armas_spvec_t *x,
                                   DTYPE beta, int mark);
-extern void armas_x_accum_dot(armas_x_accum_t *acc, int k, const armas_x_spvec_t *x,
-                              const armas_x_spvec_t *y, int mark);
-extern void armas_x_accum_gather(armas_x_sparse_t *C, DTYPE alpha,
-                                 armas_x_accum_t *acc, int ik, int maxnz);
-extern void armas_x_accum_clear(armas_x_accum_t *acc);
+extern void armas_accum_dot(armas_accum_t *acc, int k, const armas_spvec_t *x,
+                              const armas_spvec_t *y, int mark);
+extern void armas_accum_gather(armas_sparse_t *C, DTYPE alpha,
+                                 armas_accum_t *acc, int ik, int maxnz);
+extern void armas_accum_clear(armas_accum_t *acc);
 
 
 /**
  * @brief Sparse matrix preconditioner
  */
-typedef struct armassp_x_precond {
-    armas_x_sparse_t *M;
+typedef struct armassp_precond {
+    armas_sparse_t *M;
     int flags;
-    int (*precond)(armas_x_dense_t *z,
-                   const struct armassp_x_precond_s *M,
-                   const armas_x_dense_t *x, armas_conf_t *cf);
-    int (*partial)(armas_x_dense_t *z,
-                   const struct armassp_x_precond_s *M,
-                   const armas_x_dense_t *x, int flags, armas_conf_t *cf);
-} armassp_x_precond_t;
+    int (*precond)(armas_dense_t *z,
+                   const struct armassp_precond *M,
+                   const armas_dense_t *x, armas_conf_t *cf);
+    int (*partial)(armas_dense_t *z,
+                   const struct armassp_precond *M,
+                   const armas_dense_t *x, int flags, armas_conf_t *cf);
+} armassp_precond_t;
 
 extern
-int armassp_x_init_iluz(armassp_x_precond_t *P, armas_x_sparse_t *A);
+int armassp_init_iluz(armassp_precond_t *P, armas_sparse_t *A);
 extern
-int armassp_x_init_icholz(armassp_x_precond_t *P,
-                          armas_x_sparse_t *A, int flags);
+int armassp_init_icholz(armassp_precond_t *P,
+                          armas_sparse_t *A, int flags);
 extern
-void armassp_x_precond_release(armassp_x_precond_t *P);
+void armassp_precond_release(armassp_precond_t *P);
 
 // -------------------------------------------------------------------------
 //
@@ -168,7 +168,7 @@ void armassp_x_precond_release(armassp_x_precond_t *P);
  * @return Number of bytes.
  */
 __ARMAS_INLINE
-size_t armassp_x_bytes_needed(int rows, int cols,
+size_t armassp_bytes_needed(int rows, int cols,
                               int nnz, armassp_type_enum kind)
 {
     if (kind == ARMASSP_COO)
@@ -179,16 +179,16 @@ size_t armassp_x_bytes_needed(int rows, int cols,
 
 /**
  * @brief Calculate memory requirement for matrix.
- * @see armassp_x_bytes_needed
+ * @see armassp_bytes_needed
  */
 __ARMAS_INLINE
-size_t armassp_x_bytes_for(const armas_x_sparse_t *A)
+size_t armassp_bytes_for(const armas_sparse_t *A)
 {
-    return armassp_x_bytes_needed(A->rows, A->cols, A->nnz, A->kind);
+    return armassp_bytes_needed(A->rows, A->cols, A->nnz, A->kind);
 }
 
 __ARMAS_INLINE
-size_t armassp_x_nbytes(const armas_x_sparse_t *A)
+size_t armassp_nbytes(const armas_sparse_t *A)
 {
     return A->__nbytes;
 }
@@ -204,7 +204,7 @@ size_t armassp_x_nbytes(const armas_x_sparse_t *A)
  * @brief Get start of row/column index in graph.
  */
 __ARMAS_INLINE
-int armassp_x_index(const armas_x_sparse_t *A, int j)
+int armassp_index(const armas_sparse_t *A, int j)
 {
     return A->ptr[j];
 }
@@ -212,7 +212,7 @@ int armassp_x_index(const armas_x_sparse_t *A, int j)
 #if 0
 // @brief Get safely index position in graph. (never value < 0)
 __ARMAS_INLINE
-int armassp_x_index_safe(const armas_x_sparse_t *A, int j)
+int armassp_index_safe(const armas_sparse_t *A, int j)
 {
     return armassp_get_unmarked(A, j);
 }
@@ -221,7 +221,7 @@ int armassp_x_index_safe(const armas_x_sparse_t *A, int j)
  * @brief Number of non-zero element on column/row.
  */
 __ARMAS_INLINE
-int armassp_x_len(const armas_x_sparse_t *A, int j)
+int armassp_len(const armas_sparse_t *A, int j)
 {
     return A->ptr[j+1]-A->ptr[j];
 }
@@ -229,7 +229,7 @@ int armassp_x_len(const armas_x_sparse_t *A, int j)
  * @brief Get value of column/row index at position p.
  */
 __ARMAS_INLINE
-int armassp_x_at(const armas_x_sparse_t *A, int p)
+int armassp_at(const armas_sparse_t *A, int p)
 {
     return A->ix[p];
 }
@@ -238,7 +238,7 @@ int armassp_x_at(const armas_x_sparse_t *A, int p)
  * @brief Get pointer to column/row indexes.
  */
 __ARMAS_INLINE
-int *armassp_x_iptr(const armas_x_sparse_t *A, int j)
+int *armassp_iptr(const armas_sparse_t *A, int j)
 {
     return &A->ix[A->ptr[j]];
 }
@@ -253,7 +253,7 @@ int *armassp_x_iptr(const armas_x_sparse_t *A, int j)
  * @retval  -1  Element value is zero
  */
 __ARMAS_INLINE
-int armassp_x_nz(const armas_x_sparse_t *A, int j, int ix)
+int armassp_nz(const armas_sparse_t *A, int j, int ix)
 {
     for (int p = A->ptr[j]; A->ix[p] <= ix && p < A->ptr[j+1]; p++) {
         if (A->ix[p] == ix)
@@ -265,16 +265,16 @@ int armassp_x_nz(const armas_x_sparse_t *A, int j, int ix)
  * @brief Get pointer to non-zero values of column/row.
  */
 __ARMAS_INLINE
-DTYPE *armassp_x_data(const armas_x_sparse_t *A, int j)
+DTYPE *armassp_data(const armas_sparse_t *A, int j)
 {
-    return &A->elems.v[armassp_x_index(A, j)];
+    return &A->elems.v[armassp_index(A, j)];
 }
 
 /**
  * @brief Get non-zero value at position.
  */
 __ARMAS_INLINE
-DTYPE armassp_x_value(const armas_x_sparse_t *A, int p)
+DTYPE armassp_value(const armas_sparse_t *A, int p)
 {
     return A->elems.v[p];
 }
@@ -283,7 +283,7 @@ DTYPE armassp_x_value(const armas_x_sparse_t *A, int p)
  * @brief Get number of vertexes.
  */
 __ARMAS_INLINE
-int armassp_x_nvertex(const armas_x_sparse_t *A)
+int armassp_nvertex(const armas_sparse_t *A)
 {
     return A->nptr;
 }
@@ -292,7 +292,7 @@ int armassp_x_nvertex(const armas_x_sparse_t *A)
  * @brief Matrix size (number of elements)
  */
 __ARMAS_INLINE
-int armassp_x_size(const armas_x_sparse_t *A)
+int armassp_size(const armas_sparse_t *A)
 {
     return A ? A->rows * A->cols : 0;
 }
@@ -301,17 +301,17 @@ int armassp_x_size(const armas_x_sparse_t *A)
  * @brief Column/row as sparse vector.
  */
 __ARMAS_INLINE
-armas_x_spvec_t *armassp_x_vector(armas_x_spvec_t *x,
-                                  const armas_x_sparse_t *A, int k)
+armas_spvec_t *armassp_vector(armas_spvec_t *x,
+                                  const armas_sparse_t *A, int k)
 {
-    x->elems = armassp_x_data(A, k);
-    x->ix = armassp_x_iptr(A, k);
-    x->nz = armassp_x_len(A, k);
+    x->elems = armassp_data(A, k);
+    x->ix = armassp_iptr(A, k);
+    x->nz = armassp_len(A, k);
     return x;
 }
 
 __ARMAS_INLINE
-armas_x_sparse_t *armassp_x_clear(armas_x_sparse_t *A) {
+armas_sparse_t *armassp_clear(armas_sparse_t *A) {
     A->ptr = A->ix = (int *)0;
     A->rows = A->cols = A->nnz = A->size = A->nptr = 0;
     A->elems.v = (DTYPE *)0;
@@ -323,168 +323,168 @@ armas_x_sparse_t *armassp_x_clear(armas_x_sparse_t *A) {
  * @brief Release sparse matrix resources.
  */
 __ARMAS_INLINE
-void armassp_x_release(armas_x_sparse_t *A) {
+void armassp_release(armas_sparse_t *A) {
     if (A->elems.v)
         free(A->elems.v);
-    armassp_x_clear(A);
+    armassp_clear(A);
 }
 
 /**
  * @brief Free sparse matrix and its resources.
  */
 __ARMAS_INLINE
-void armassp_x_free(armas_x_sparse_t *A)
+void armassp_free(armas_sparse_t *A)
 {
     if (A) {
-        armassp_x_release(A);
+        armassp_release(A);
         free(A);
     }
 }
 
 
 extern
-int armassp_x_make(armas_x_sparse_t *A, int rows, int cols, int nnz,
+int armassp_make(armas_sparse_t *A, int rows, int cols, int nnz,
                    armassp_type_enum storage, void *data, size_t dlen);
 extern
-armas_x_sparse_t *armassp_x_init(armas_x_sparse_t *A, int rows,
+armas_sparse_t *armassp_init(armas_sparse_t *A, int rows,
                                  int cols, int nnz, armassp_type_enum kind);
 extern
-armas_x_sparse_t *armassp_x_new(int rows, int cols, int nnz,
+armas_sparse_t *armassp_new(int rows, int cols, int nnz,
                                 armassp_type_enum kind);
 extern
-armas_x_sparse_t *armassp_x_spa_alloc(armas_x_sparse_t *A, int nnz);
+armas_sparse_t *armassp_spa_alloc(armas_sparse_t *A, int nnz);
 extern
-int armassp_x_append(armas_x_sparse_t *A, int row,
+int armassp_append(armas_sparse_t *A, int row,
                      int col, DTYPE val);
 extern
-int armassp_x_resize(armas_x_sparse_t *A, int newsize);
+int armassp_resize(armas_sparse_t *A, int newsize);
 extern
-int armassp_x_sort_to(armas_x_sparse_t *A, armassp_order_t order);
+int armassp_sort_to(armas_sparse_t *A, armassp_order_t order);
 extern
-int armassp_x_sort(armas_x_sparse_t *A);
+int armassp_sort(armas_sparse_t *A);
 
 extern
-armas_x_sparse_t *armassp_x_convert(const armas_x_sparse_t *B,
+armas_sparse_t *armassp_convert(const armas_sparse_t *B,
                                     armassp_type_enum target);
 extern
-armas_x_sparse_t *armassp_x_convert_to(armas_x_sparse_t *A,
-                                       const armas_x_sparse_t *B,
+armas_sparse_t *armassp_convert_to(armas_sparse_t *A,
+                                       const armas_sparse_t *B,
                                        armassp_type_enum target);
 extern
-armas_x_sparse_t *armassp_x_transpose(const armas_x_sparse_t *B);
+armas_sparse_t *armassp_transpose(const armas_sparse_t *B);
 extern
-armas_x_sparse_t *armassp_x_transpose_to(armas_x_sparse_t *A,
-                                         const armas_x_sparse_t *B);
+armas_sparse_t *armassp_transpose_to(armas_sparse_t *A,
+                                         const armas_sparse_t *B);
 extern
-armas_x_sparse_t *armassp_x_copy_to(armas_x_sparse_t *A,
-                                    const armas_x_sparse_t *B);
+armas_sparse_t *armassp_copy_to(armas_sparse_t *A,
+                                    const armas_sparse_t *B);
 extern
-armas_x_sparse_t *armassp_x_mkcopy(const armas_x_sparse_t *B);
+armas_sparse_t *armassp_mkcopy(const armas_sparse_t *B);
 
 extern
-armas_x_sparse_t *armassp_x_mmload(int *typecode, FILE *f);
+armas_sparse_t *armassp_mmload(int *typecode, FILE *f);
 extern
-int armassp_x_mmdump(FILE *f, const armas_x_sparse_t *A, int flags);
+int armassp_mmdump(FILE *f, const armas_sparse_t *A, int flags);
 extern
-void armassp_x_pprintf(FILE *f, const armas_x_sparse_t *A);
+void armassp_pprintf(FILE *f, const armas_sparse_t *A);
 extern
-void armassp_x_iprintf(FILE *f, const armas_x_sparse_t *A);
+void armassp_iprintf(FILE *f, const armas_sparse_t *A);
 extern
-int armassp_x_todense(armas_x_dense_t *A,
-                      const armas_x_sparse_t *B, armas_conf_t *cf);
+int armassp_todense(armas_dense_t *A,
+                      const armas_sparse_t *B, armas_conf_t *cf);
 
 extern
-int armassp_x_mvmult_trm(armas_x_dense_t *x, DTYPE alpha,
-                         const armas_x_sparse_t *A,
+int armassp_mvmult_trm(armas_dense_t *x, DTYPE alpha,
+                         const armas_sparse_t *A,
                          int flags, armas_conf_t *cf);
 extern
-int armassp_x_mvsolve_trm(armas_x_dense_t *x, DTYPE alpha,
-                          const armas_x_sparse_t *A,
+int armassp_mvsolve_trm(armas_dense_t *x, DTYPE alpha,
+                          const armas_sparse_t *A,
                           int flags, armas_conf_t *cf);
 extern
-int armassp_x_mvmult(DTYPE beta, armas_x_dense_t *y,
-                     DTYPE alpha, const armas_x_sparse_t *A,
-                     const armas_x_dense_t *x, int flags,
+int armassp_mvmult(DTYPE beta, armas_dense_t *y,
+                     DTYPE alpha, const armas_sparse_t *A,
+                     const armas_dense_t *x, int flags,
                      armas_conf_t *cf);
 extern
-int armassp_x_mvmult_sym(DTYPE beta, armas_x_dense_t *y,
-                         DTYPE alpha, const armas_x_sparse_t *A,
-                         const armas_x_dense_t *x, int flags,
+int armassp_mvmult_sym(DTYPE beta, armas_dense_t *y,
+                         DTYPE alpha, const armas_sparse_t *A,
+                         const armas_dense_t *x, int flags,
                          armas_conf_t *cf);
 
 extern
-int armassp_x_cgrad(armas_x_dense_t *x, const armas_x_sparse_t *A,
-                    const armas_x_dense_t *b,int flags, armas_conf_t *cf);
+int armassp_cgrad(armas_dense_t *x, const armas_sparse_t *A,
+                    const armas_dense_t *b,int flags, armas_conf_t *cf);
 extern
-int armassp_x_cgrad_w(armas_x_dense_t *x, const armas_x_sparse_t *A,
-                      const armas_x_dense_t *b, int flags, armas_wbuf_t *W,
+int armassp_cgrad_w(armas_dense_t *x, const armas_sparse_t *A,
+                      const armas_dense_t *b, int flags, armas_wbuf_t *W,
                       armas_conf_t *cf);
 extern
-int armassp_x_pcgrad_w(armas_x_dense_t *x, const armas_x_sparse_t *A,
-                       const armas_x_dense_t *b, armassp_x_precond_t *P,
+int armassp_pcgrad_w(armas_dense_t *x, const armas_sparse_t *A,
+                       const armas_dense_t *b, armassp_precond_t *P,
                        int flags, armas_wbuf_t *W, armas_conf_t *cf);
 extern
-int armassp_x_pcgrad(armas_x_dense_t *x, const armas_x_sparse_t *A,
-                     const armas_x_dense_t *b, armassp_x_precond_t *P,
+int armassp_pcgrad(armas_dense_t *x, const armas_sparse_t *A,
+                     const armas_dense_t *b, armassp_precond_t *P,
                      int flags, armas_conf_t *cf);
 
 extern
-int armassp_x_cgnr(armas_x_dense_t *x, const armas_x_sparse_t *A,
-                   const armas_x_dense_t *b,armas_conf_t *cf);
+int armassp_cgnr(armas_dense_t *x, const armas_sparse_t *A,
+                   const armas_dense_t *b,armas_conf_t *cf);
 extern
-int armassp_x_cgnr_w(armas_x_dense_t *x, const armas_x_sparse_t *A,
-                     const armas_x_dense_t *b, armas_wbuf_t *W,
+int armassp_cgnr_w(armas_dense_t *x, const armas_sparse_t *A,
+                     const armas_dense_t *b, armas_wbuf_t *W,
                      armas_conf_t *cf);
 extern
-int armassp_x_cgne(armas_x_dense_t *x, const armas_x_sparse_t *A,
-                   const armas_x_dense_t *b, armas_conf_t *cf);
+int armassp_cgne(armas_dense_t *x, const armas_sparse_t *A,
+                   const armas_dense_t *b, armas_conf_t *cf);
 extern
-int armassp_x_cgne_w(armas_x_dense_t *x, const armas_x_sparse_t *A,
-                     const armas_x_dense_t *b,armas_wbuf_t *W,
+int armassp_cgne_w(armas_dense_t *x, const armas_sparse_t *A,
+                     const armas_dense_t *b,armas_wbuf_t *W,
                      armas_conf_t *cf);
 extern
-int armassp_x_gmres(armas_x_dense_t *x, const armas_x_sparse_t *A,
-                    const armas_x_dense_t *b,armas_conf_t *cf);
+int armassp_gmres(armas_dense_t *x, const armas_sparse_t *A,
+                    const armas_dense_t *b,armas_conf_t *cf);
 extern
-int armassp_x_gmres_w(armas_x_dense_t *x,  const armas_x_sparse_t *A,
-                      const armas_x_dense_t *b, armas_wbuf_t *W,
+int armassp_gmres_w(armas_dense_t *x,  const armas_sparse_t *A,
+                      const armas_dense_t *b, armas_wbuf_t *W,
                       armas_conf_t *cf);
 extern
-int armassp_x_pgmres(armas_x_dense_t *x, const armas_x_sparse_t *A,
-                     const armas_x_dense_t *b,const armassp_x_precond_t *M,
+int armassp_pgmres(armas_dense_t *x, const armas_sparse_t *A,
+                     const armas_dense_t *b,const armassp_precond_t *M,
                      armas_conf_t *cf);
 extern
-int armassp_x_pgmres_w(armas_x_dense_t *x,  const armas_x_sparse_t *A,
-                       const armas_x_dense_t *b, const armassp_x_precond_t *M,
+int armassp_pgmres_w(armas_dense_t *x,  const armas_sparse_t *A,
+                       const armas_dense_t *b, const armassp_precond_t *M,
                        armas_wbuf_t *W, armas_conf_t *cf);
 
 extern
-int armassp_x_addto_w(armas_x_sparse_t *C, DTYPE alpha, const armas_x_sparse_t *A,
-                      DTYPE beta, const armas_x_sparse_t *B, int bits,
+int armassp_addto_w(armas_sparse_t *C, DTYPE alpha, const armas_sparse_t *A,
+                      DTYPE beta, const armas_sparse_t *B, int bits,
                       armas_wbuf_t *work,armas_conf_t *cf);
 extern
-armas_x_sparse_t *armassp_x_add(DTYPE alpha, const armas_x_sparse_t *A,
-                                DTYPE beta, const armas_x_sparse_t *B,
+armas_sparse_t *armassp_add(DTYPE alpha, const armas_sparse_t *A,
+                                DTYPE beta, const armas_sparse_t *B,
                                 int bits, armas_conf_t *cf);
 
 extern
-int armassp_x_multto_w(armas_x_sparse_t *C, DTYPE alpha,
-                       const armas_x_sparse_t *A, const armas_x_sparse_t *B,
+int armassp_multto_w(armas_sparse_t *C, DTYPE alpha,
+                       const armas_sparse_t *A, const armas_sparse_t *B,
                        int bits, armas_wbuf_t *work, armas_conf_t *cf);
 extern
-armas_x_sparse_t *armassp_x_mult(DTYPE alpha, const armas_x_sparse_t *A,
-                                 const armas_x_sparse_t *B, int bits,
+armas_sparse_t *armassp_mult(DTYPE alpha, const armas_sparse_t *A,
+                                 const armas_sparse_t *B, int bits,
                                  armas_conf_t *cf);
 
 extern
-int armassp_x_init_icholz(armassp_x_precond_t *P,
-                          armas_x_sparse_t *A, int flags);
+int armassp_init_icholz(armassp_precond_t *P,
+                          armas_sparse_t *A, int flags);
 extern
-int armassp_x_icholz(armas_x_sparse_t *A, int flags);
+int armassp_icholz(armas_sparse_t *A, int flags);
 extern
-int armassp_x_iluz(armas_x_sparse_t *L);
+int armassp_iluz(armas_sparse_t *L);
 
-extern int armassp_x_hasdiag(const armas_x_sparse_t *A, int diag);
+extern int armassp_hasdiag(const armas_sparse_t *A, int diag);
 
 /**
  * @}

@@ -111,8 +111,8 @@ struct armas_ac_blas1 {
     DTYPE result;
     DTYPE beta;
     DTYPE alpha;
-    struct armas_x_dense *y;
-    const struct armas_x_dense *x;
+    struct armas_dense *y;
+    const struct armas_dense *x;
     int flags;
 };
 
@@ -122,10 +122,10 @@ struct armas_ac_blas1 {
 struct armas_ac_blas2 {
     size_t tag;
     DTYPE beta;
-    struct armas_x_dense *y;
+    struct armas_dense *y;
     DTYPE alpha;
-    const struct armas_x_dense *A;
-    const struct armas_x_dense *x;
+    const struct armas_dense *A;
+    const struct armas_dense *x;
     int flags;
     char fill[8];
 };
@@ -136,10 +136,10 @@ struct armas_ac_blas2 {
 struct armas_ac_blas3 {
     size_t tag;
     DTYPE beta;
-    struct armas_x_dense *C;
+    struct armas_dense *C;
     DTYPE alpha;
-    const struct armas_x_dense *A;
-    const struct armas_x_dense *B;
+    const struct armas_dense *A;
+    const struct armas_dense *B;
     int flags;
     char fill[16];
 };
@@ -177,8 +177,8 @@ int armas_ac_test_tag(const void *args, enum armas_ac_types arg_type)
 }
 
 static inline
-void armas_ac_set_blas2_args(struct armas_ac_blas2 *args, DTYPE beta, armas_x_dense_t *y,
-                             DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *x, int flags)
+void armas_ac_set_blas2_args(struct armas_ac_blas2 *args, DTYPE beta, armas_dense_t *y,
+                             DTYPE alpha, const armas_dense_t *A, const armas_dense_t *x, int flags)
 {
     args->tag = armas_ac_blas2_tag();
     args->alpha = alpha;
@@ -190,8 +190,8 @@ void armas_ac_set_blas2_args(struct armas_ac_blas2 *args, DTYPE beta, armas_x_de
 }
 
 static inline
-void armas_ac_set_blas3_args(struct armas_ac_blas3 *args, DTYPE beta, armas_x_dense_t *C,
-                             DTYPE alpha, const armas_x_dense_t *A, const armas_x_dense_t *B, int flags)
+void armas_ac_set_blas3_args(struct armas_ac_blas3 *args, DTYPE beta, armas_dense_t *C,
+                             DTYPE alpha, const armas_dense_t *A, const armas_dense_t *B, int flags)
 {
     args->tag = armas_ac_blas3_tag();
     args->alpha = alpha;

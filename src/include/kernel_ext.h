@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2015
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
 // This file is part of github.com/hrautila/matops package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -40,8 +40,8 @@
 
 // update 4 columns of C;
 static inline
-void __CMULT4EXT(armas_x_dense_t *C, armas_x_dense_t *dC, const armas_x_dense_t *A,
-                 const armas_x_dense_t *B, DTYPE alpha, int col, int nI, int nP)
+void __CMULT4EXT(armas_dense_t *C, armas_dense_t *dC, const armas_dense_t *A,
+                 const armas_dense_t *B, DTYPE alpha, int col, int nI, int nP)
 {
   register int i;
   DTYPE *c0, *c1, *c2, *c3, *d0, *d1, *d2, *d3;
@@ -68,8 +68,8 @@ void __CMULT4EXT(armas_x_dense_t *C, armas_x_dense_t *dC, const armas_x_dense_t 
 
 //  update two columns of C
 static inline
-void __CMULT2EXT(armas_x_dense_t *C, armas_x_dense_t *dC, const armas_x_dense_t *A,
-                 const armas_x_dense_t *B, DTYPE alpha, int col, int nI, int nP)
+void __CMULT2EXT(armas_dense_t *C, armas_dense_t *dC, const armas_dense_t *A,
+                 const armas_dense_t *B, DTYPE alpha, int col, int nI, int nP)
 {
   register int i;
   DTYPE *c0, *c1, *d0, *d1, *a0;
@@ -87,8 +87,8 @@ void __CMULT2EXT(armas_x_dense_t *C, armas_x_dense_t *dC, const armas_x_dense_t 
 
 // update one column of C;
 static inline
-void __CMULT1EXT(armas_x_dense_t *C, armas_x_dense_t *dC, const armas_x_dense_t *A,
-                 const armas_x_dense_t *B, DTYPE alpha, int col, int nI, int nP)
+void __CMULT1EXT(armas_dense_t *C, armas_dense_t *dC, const armas_dense_t *A,
+                 const armas_dense_t *B, DTYPE alpha, int col, int nI, int nP)
 {
   register int i;
   DTYPE *c0, *d0;
@@ -103,7 +103,7 @@ void __CMULT1EXT(armas_x_dense_t *C, armas_x_dense_t *dC, const armas_x_dense_t 
 }
 
 static inline
-void armas_x_merge2_unsafe(armas_x_dense_t *C, const armas_x_dense_t *C0, const armas_x_dense_t *dC)
+void armas_merge2_unsafe(armas_dense_t *C, const armas_dense_t *C0, const armas_dense_t *dC)
 {
     int i, j;
   for (j = 0; j < C->cols; j++) {
@@ -118,7 +118,7 @@ void armas_x_merge2_unsafe(armas_x_dense_t *C, const armas_x_dense_t *C0, const 
 }
 
 static inline
-void armas_x_merge_unsafe(armas_x_dense_t *A, const armas_x_dense_t *B)
+void armas_merge_unsafe(armas_dense_t *A, const armas_dense_t *B)
 {
   int i, j;
   for (j = 0; j < A->cols; j++) {
