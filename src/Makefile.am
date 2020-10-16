@@ -217,6 +217,12 @@ COMPAT += \
 	compat/syr2k.c
 endif
 
+if CONFIG_NOTYPENAMES
+NOTYPENAMES = yes
+else
+NOTYPENAMES = no
+endif
+
 noinst_LTLIBRARIES =
 
 # common to all
@@ -251,10 +257,10 @@ libdc_la_CPPFLAGS = -DFLOAT64
 libds_la_CPPFLAGS = -DFLOAT64
 
 armas/ddense.h: include/matrix.h
-	$(top_srcdir)/src/make-header.sh $< $@ double
+	$(top_srcdir)/src/make-header.sh $< $@ double $(NOTYPENAMES)
 
 armas/dsparse.h: include/sparse.h
-	$(top_srcdir)/src/make-header.sh $< $@ double
+	$(top_srcdir)/src/make-header.sh $< $@ double $(NOTYPENAMES)
 
 endif
 
