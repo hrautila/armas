@@ -1,14 +1,9 @@
 
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#define ARMAS_PROVIDES 1
-// this file requires external public functions
-#define ARMAS_REQUIRES 1
-
-// compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
-// ------------------------------------------------------------------------------
+// This file is part of libARMAS library. It is free software,
+// distributed under the terms of GNU Lesser General Public License Version 3, or
+// any later version. See the COPYING tile included in this archive.
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -55,7 +50,7 @@ static struct armas_conf __default_conf = {
     .residual = 0.0       // last residual computed (output)
 };
 
-static int armas_x_read_environment = 0;
+static int has_read_environment = 0;
 
 
 #ifndef ENV_ARMAS_CONFIG
@@ -74,7 +69,7 @@ void armas_read_environment()
     char *cstr, *tok;
     int n, val;
 
-    if (armas_x_read_environment)
+    if (has_read_environment)
         return;
 
     cstr = getenv(ENV_ARMAS_CONFIG);
@@ -146,7 +141,7 @@ void armas_read_environment()
         }
     }
 
-    armas_x_read_environment = 1;
+    has_read_environment = 1;
 }
 
 /**
@@ -173,6 +168,3 @@ struct armas_conf *armas_conf_default()
 }
 
 //! @}
-#else
-#warning "No active code"
-#endif // __ARMAS_PROVIDES && __ARMAS_REQUIRES
