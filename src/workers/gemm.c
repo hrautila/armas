@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2012-2014
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
 // This file is part of github.com/armas package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
@@ -17,15 +17,15 @@
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
+// this file provides following type dependent functions
 #define ARMAS_PROVIDES 1
 // this file requires external public functions
-#if defined(armas_x_mult_kernel)
+#if defined(armas_mult_kernel)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 //! \cond
@@ -40,39 +40,39 @@
 static
 void *compute_block(void *argptr)
 {
-    armas_x_dense_t C, A, B;
+    armas_dense_t C, A, B;
     struct armas_ac_block *args = (struct armas_ac_block *)argptr;
     struct armas_ac_blas3 *blas = args->u.blas3;
 
     /*
      * Slice proper part of argument matrices.
      */
-    armas_x_submatrix_unsafe(
+    armas_submatrix_unsafe(
         &C, blas->C, args->row, args->column, args->nrows, args->ncolumns);
 
     switch (blas->flags & (ARMAS_TRANSA | ARMAS_TRANSB)) {
     case ARMAS_TRANSA | ARMAS_TRANSB:
-        armas_x_submatrix_unsafe(
+        armas_submatrix_unsafe(
             &A, blas->A, 0, args->row, blas->A->rows, args->nrows);
-        armas_x_submatrix_unsafe(
+        armas_submatrix_unsafe(
             &B, blas->B, args->column, 0, args->ncolumns, blas->B->cols);
         break;
     case ARMAS_TRANSA:
-        armas_x_submatrix_unsafe(
+        armas_submatrix_unsafe(
             &A, blas->A, 0, args->row, blas->A->rows, args->nrows);
-        armas_x_submatrix_unsafe(
+        armas_submatrix_unsafe(
             &B, blas->B, 0, args->column, blas->B->rows, args->ncolumns);
         break;
     case ARMAS_TRANSB:
-        armas_x_submatrix_unsafe(
+        armas_submatrix_unsafe(
             &A, blas->A, args->row, 0, args->nrows, blas->A->cols);
-        armas_x_submatrix_unsafe(
+        armas_submatrix_unsafe(
             &B, blas->B, args->column, 0, args->ncolumns, blas->B->cols);
         break;
     default:
-        armas_x_submatrix_unsafe(
+        armas_submatrix_unsafe(
             &A, blas->A, args->row, 0, args->nrows, blas->A->cols);
-        armas_x_submatrix_unsafe(
+        armas_submatrix_unsafe(
             &B, blas->B, 0, args->column, blas->B->rows, args->ncolumns);
         break;
     }
@@ -81,7 +81,7 @@ void *compute_block(void *argptr)
     armas_env_t *env = armas_getenv();
     armas_cache_setup2(&cache, cbuf, env->mb, env->nb, env->kb, sizeof(DTYPE));
 
-    armas_x_mult_kernel(blas->beta, &C,
+    armas_mult_kernel(blas->beta, &C,
                         blas->alpha, &A, &B, blas->flags, &cache);
 
     return (void *)0;
@@ -192,7 +192,7 @@ int armas_ac_workers_mult(
         // wb = ((int)floor(sqrt((double)env->num_items))) & 0x3;
         ntask = worker_tiles(&rN, &cN, args->C->rows, args->C->cols, env->num_items);
     } else {
-        ntask = (int)(env->weight*armas_x_size(args->C)/env->num_items);
+        ntask = (int)(env->weight*armas_size(args->C)/env->num_items);
         if (ntask > env->max_cores)
             ntask = env->max_cores;
     }
