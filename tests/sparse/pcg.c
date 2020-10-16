@@ -1,24 +1,24 @@
 
-// Copyright (c) Harri Rautila, 2017
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
 #include <stdio.h>
 #include <unistd.h>
 #include "testing.h"
 
 static inline
-void __pr_vec(const char *s, armas_x_dense_t *x, int n)
+void __pr_vec(const char *s, armas_dense_t *x, int n)
 {
-    armas_x_dense_t tx, x0;
-    armas_x_submatrix(&x0, x, 0, 0, x->rows < n ? x->rows : n, 1);
+    armas_dense_t tx, x0;
+    armas_submatrix(&x0, x, 0, 0, x->rows < n ? x->rows : n, 1);
     printf("%s: ", s);
-    armas_x_printf(stdout, "%9.2e", armas_x_col_as_row(&tx, &x0));  
+    armas_printf(stdout, "%9.2e", armas_col_as_row(&tx, &x0));  
 }
 
 static
-int __x_pcgrad(armas_x_dense_t *x,
-               const armas_x_sparse_t *A,
-               armas_x_dense_t *b,
-               armassp_x_precond_t *M,
+int __x_pcgrad(armas_dense_t *x,
+               const armas_sparse_t *A,
+               armas_dense_t *b,
+               armassp_precond_t *M,
                int flags,
                int maxiter,
                DTYPE tolmult,
@@ -27,37 +27,37 @@ int __x_pcgrad(armas_x_dense_t *x,
                armas_wbuf_t *W,
                armas_conf_t *cf)
 {
-    armas_x_dense_t p, Ap, r, z;
-    armas_x_dense_t ztmp, tmp;
+    armas_dense_t p, Ap, r, z;
+    armas_dense_t ztmp, tmp;
     int m = A->rows;
     DTYPE dot_r, dot_p, alpha, beta, dot_rz1, dot_rz;
 
     // r0 = b - A*x
     DTYPE *t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&r, m, 1, m, t);
-    armas_x_mcopy(&r, b);
-    armassp_x_mvmult_sym(__ONE, &r, -__ONE, A, x, flags, cf);
+    armas_make(&r, m, 1, m, t);
+    armas_mcopy(&r, b);
+    armassp_mvmult_sym(__ONE, &r, -__ONE, A, x, flags, cf);
 
     __pr_vec(" r0", &r, 10);
 
     if (rstop == __ZERO) 
-        rstop = (tolmult == __ZERO ? __EPSILON*__EPSILON : tolmult*tolmult ) *armas_x_dot(&r, &r, cf);
+        rstop = (tolmult == __ZERO ? __EPSILON*__EPSILON : tolmult*tolmult ) *armas_dot(&r, &r, cf);
 
     // z0 = M^-1*r0
     t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&z, m, 1, m, t);
-    //armas_x_mcopy(&z, &r);
+    armas_make(&z, m, 1, m, t);
+    //armas_mcopy(&z, &r);
     M->precond(&z, M, &r, cf);
     
     __pr_vec(" z0", &z, 10);
 
     // p0 = z0
     t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&p, m, 1, m, t);
-    armas_x_mcopy(&p, &z);
+    armas_make(&p, m, 1, m, t);
+    armas_mcopy(&p, &z);
 
     t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&Ap, m, 1, m, t);
+    armas_make(&Ap, m, 1, m, t);
     
     if (maxiter == 0)
         maxiter = m;
@@ -65,29 +65,29 @@ int __x_pcgrad(armas_x_dense_t *x,
     int niter;
     for (niter = 0; niter < maxiter; niter++) {
         // Ap = A*p
-        armassp_x_mvmult_sym(__ZERO, &Ap, __ONE, A, &p, flags, cf);
-        dot_p  = armas_x_dot(&Ap, &p, cf);
-        dot_rz = armas_x_dot(&r, &z, cf);
+        armassp_mvmult_sym(__ZERO, &Ap, __ONE, A, &p, flags, cf);
+        dot_p  = armas_dot(&Ap, &p, cf);
+        dot_rz = armas_dot(&r, &z, cf);
         alpha = dot_rz / dot_p;
 
         // x = x + alpha*p
-        armas_x_axpy(x, alpha, &p, cf);
+        armas_axpy(x, alpha, &p, cf);
         // r = r - alpha*Ap
-        armas_x_axpy(&r, -alpha, &Ap, cf);
+        armas_axpy(&r, -alpha, &Ap, cf);
         // z = M^-1*r
-        armas_x_mcopy(&z, &r);
+        armas_mcopy(&z, &r);
         //__pr_vec("z.0", &r, 10);
         M->precond(&z, M, &r, cf);
         //__pr_vec("z.1", &z, 10);
         
-        dot_rz1 = armas_x_dot(&r, &z, cf);
+        dot_rz1 = armas_dot(&r, &z, cf);
         printf("%3d: stop %e, dot_p %e, dot_rz %e, dot_rz1 %e\n", niter, rstop, dot_p, dot_rz, dot_rz1);
         if (dot_rz1 < rstop) {
             break;
         }
         beta = dot_rz1 / dot_rz;
         // p = beta*p + z;
-        armas_x_scale_plus(beta, &p, __ONE, &z, 0, cf);
+        armas_scale_plus(beta, &p, __ONE, &z, 0, cf);
     }
     return niter;
 }
@@ -147,7 +147,7 @@ int test_pcg(armas_d_sparse_t *A, int flags, int verbose,
         __pr_vec("y = A*x  ", &y, 10);
         __pr_vec("z = A-1*z", &z, 10);
     } else {
-        armassp_x_pcgrad_w(&z, C, &y, &P, flags, &ipar, &wb, &cf);
+        armassp_pcgrad_w(&z, C, &y, &P, flags, &ipar, &wb, &cf);
         fprintf(stderr, "numiters = %d, res = %e, [tolmult=%e, rstop=%e]\n",
                 ipar.numiters, ipar.residual, ipar.tolmult, ipar.stop);
     }

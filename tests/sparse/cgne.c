@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2017
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
 #include <stdio.h>
 #include <unistd.h>
@@ -34,16 +34,16 @@
  */
 
 static
-int __x_cgne(armas_x_dense_t *x,
-             const armas_x_sparse_t *A,
-             armas_x_dense_t *b,
+int __x_cgne(armas_dense_t *x,
+             const armas_sparse_t *A,
+             armas_dense_t *b,
              int maxiter,
              DTYPE rstop,
              DTYPE *res,
              armas_wbuf_t *W,
              armas_conf_t *cf)
 {
-    armas_x_dense_t p, Ap, r;
+    armas_dense_t p, Ap, r;
     int niter;
     int m = A->rows;
     int n = A->cols;
@@ -51,38 +51,38 @@ int __x_cgne(armas_x_dense_t *x,
 
     // r0 = b - A*x
     DTYPE *t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&r, m, 1, m, t);
-    armas_x_mcopy(&r, b);
-    armassp_x_mvmult(__ONE, &r, -__ONE, A, x, 0, cf);
+    armas_make(&r, m, 1, m, t);
+    armas_mcopy(&r, b);
+    armassp_mvmult(__ONE, &r, -__ONE, A, x, 0, cf);
 
     if (rstop == __ZERO)
-        rstop = __SQRT(__EPSILON) * armas_x_nrm2(&r, cf);
+        rstop = __SQRT(__EPSILON) * armas_nrm2(&r, cf);
 
     // z0 = A^T*r0
     t = armas_wreserve(W, n, sizeof(DTYPE));
-    armas_x_make(&p, n, 1, n, t);
-    armassp_x_mvmult(__ZERO, &p, __ONE, A, &r, ARMAS_TRANS, cf);
+    armas_make(&p, n, 1, n, t);
+    armassp_mvmult(__ZERO, &p, __ONE, A, &r, ARMAS_TRANS, cf);
 
     // Ap
     t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&Ap, m, 1, m, t);
+    armas_make(&Ap, m, 1, m, t);
     
     if (maxiter == 0)
         maxiter = 4*m;
     
     for (niter = 0; niter < maxiter; niter++) {
         // Ap = A*p
-        armassp_x_mvmult(__ZERO, &Ap, __ONE, A, &p, 0, cf);
-        dot_r = armas_x_dot(&r, &r, cf);
-        dot_p = armas_x_dot(&p, &p, cf);
+        armassp_mvmult(__ZERO, &Ap, __ONE, A, &p, 0, cf);
+        dot_r = armas_dot(&r, &r, cf);
+        dot_p = armas_dot(&p, &p, cf);
         alpha = dot_r / dot_p;
 
         // x = x + alpha*p
-        armas_x_axpy(x, alpha, &p, cf);
+        armas_axpy(x, alpha, &p, cf);
         // r = r - alpha*Ap
-        armas_x_axpy(&r, -alpha, &Ap, cf);
+        armas_axpy(&r, -alpha, &Ap, cf);
 
-        dot_r1 = armas_x_dot(&r, &r, cf);
+        dot_r1 = armas_dot(&r, &r, cf);
         printf("%3d: stop %e, dot_r %e, dot_r1 %e, dot_p %e\n", niter, rstop, dot_r, dot_r1, dot_p);
         if (__SQRT(dot_r1) < rstop) {
             if (res)
@@ -91,7 +91,7 @@ int __x_cgne(armas_x_dense_t *x,
         }
         beta = dot_r1 / dot_r;
         // p = beta*p + A^T*r;
-        armassp_x_mvmult(beta, &p, __ONE, A, &r, ARMAS_TRANS, cf);
+        armassp_mvmult(beta, &p, __ONE, A, &r, ARMAS_TRANS, cf);
     }
     return niter;
 }

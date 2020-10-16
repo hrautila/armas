@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2017
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
 #include <stdio.h>
 #include <unistd.h>
@@ -36,7 +36,7 @@ int __ilufactor_nopiv(armas_d_dense_t *A, armas_d_sparse_t *As, armas_conf_t *co
 
     for (int i = 0; i < A->rows; i++) {
         // a21 = a21/a11
-        a11val = armas_x_get(A, i, i);
+        a11val = armas_get(A, i, i);
         armas_d_submatrix(&a21, A, i+1, i, A->rows-i-1, 1);
         armas_d_scale(&a21, 1.0/a11val, conf);
 

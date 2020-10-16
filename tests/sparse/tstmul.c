@@ -1,5 +1,5 @@
 
-// Copyright (c) Harri Rautila, 2017
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
 #include <stdio.h>
 #include <unistd.h>

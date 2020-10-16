@@ -1,14 +1,14 @@
 
-// Copyright (c) Harri Rautila, 2017
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
 #include <stdio.h>
 #include <unistd.h>
 #include "testing.h"
 
 static
-int __x_cgrad(armas_x_dense_t *x,
-              const armas_x_sparse_t *A,
-              armas_x_dense_t *b,
+int __x_cgrad(armas_dense_t *x,
+              const armas_sparse_t *A,
+              armas_dense_t *b,
               int flags,
               int maxiter,
               int recalc,
@@ -18,26 +18,26 @@ int __x_cgrad(armas_x_dense_t *x,
               armas_wbuf_t *W,
               armas_conf_t *cf)
 {
-    armas_x_dense_t p, Ap, r;
+    armas_dense_t p, Ap, r;
     int m = A->rows;
     DTYPE dot_r, dot_p, alpha, beta, dot_r1;
 
     // r0 = b - A*x
     DTYPE *t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&r, m, 1, m, t);
-    armas_x_mcopy(&r, b);
-    armassp_x_mvmult_sym(__ONE, &r, -__ONE, A, x, flags, cf);
+    armas_make(&r, m, 1, m, t);
+    armas_mcopy(&r, b);
+    armassp_mvmult_sym(__ONE, &r, -__ONE, A, x, flags, cf);
 
     if (rstop == __ZERO)
-        rstop = (rmult == __ZERO ? __EPSILON : rmult) * armas_x_dot(&r, &r, cf);
+        rstop = (rmult == __ZERO ? __EPSILON : rmult) * armas_dot(&r, &r, cf);
 
     // p0 = r0
     t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&p, m, 1, m, t);
-    armas_x_mcopy(&p, &r);
+    armas_make(&p, m, 1, m, t);
+    armas_mcopy(&p, &r);
 
     t = armas_wreserve(W, m, sizeof(DTYPE));
-    armas_x_make(&Ap, m, 1, m, t);
+    armas_make(&Ap, m, 1, m, t);
     
     if (maxiter == 0)
         maxiter = 4*m;
@@ -45,22 +45,22 @@ int __x_cgrad(armas_x_dense_t *x,
     int niter;
     for (niter = 0; niter < maxiter; niter++) {
         // Ap = A*p
-        armassp_x_mvmult_sym(__ZERO, &Ap, __ONE, A, &p, flags, cf);
-        dot_r = armas_x_dot(&r, &r, cf);
-        dot_p = armas_x_dot(&Ap, &p, cf);
+        armassp_mvmult_sym(__ZERO, &Ap, __ONE, A, &p, flags, cf);
+        dot_r = armas_dot(&r, &r, cf);
+        dot_p = armas_dot(&Ap, &p, cf);
         alpha = dot_r / dot_p;
 
         // x = x + alpha*p
-        armas_x_axpy(x, alpha, &p, cf);
+        armas_axpy(x, alpha, &p, cf);
         if (recalc > 0 && niter % recalc == 0) {
-            armas_x_mcopy(&r, b);
-            armassp_x_mvmult_sym(__ONE, &r, -__ONE, A, x, flags, cf);
+            armas_mcopy(&r, b);
+            armassp_mvmult_sym(__ONE, &r, -__ONE, A, x, flags, cf);
         } else {
             // r = r - alpha*Ap
-            armas_x_axpy(&r, -alpha, &Ap, cf);
+            armas_axpy(&r, -alpha, &Ap, cf);
         }
 
-        dot_r1 = armas_x_dot(&r, &r, cf);
+        dot_r1 = armas_dot(&r, &r, cf);
         printf("%3d: stop %e, dot_r %e, dot_r1 %e, dot_p %e\n", niter, rstop, dot_r, dot_r1, dot_p);
         if (dot_r1 < rstop) {
             if (res)
@@ -69,7 +69,7 @@ int __x_cgrad(armas_x_dense_t *x,
         }
         beta = dot_r1 / dot_r;
         // p = beta*p + r;
-        armas_x_scale_plus(beta, &p, __ONE, &r, 0, cf);
+        armas_scale_plus(beta, &p, __ONE, &r, 0, cf);
     }
     printf("%3d: stop %e, dot_r %e, dot_r1 %e, dot_p %e\n", niter, rstop, dot_r, dot_r1, dot_p);
     return niter;
