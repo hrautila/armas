@@ -48,6 +48,10 @@ AC_ARG_ENABLE(sparse,
    AC_HELP_STRING([--enable-sparse], [enable sparse iterative methods (default is no)]),
       [enable_sparse=$enableval], [enable_sparse=no])
 
+AC_ARG_ENABLE(notypenames,
+   AC_HELP_STRING([--enable-notypenames], [enable compilation without type indicators. (default is no)]),
+      [enable_notypenames=$enableval], [enable_notypenames=no])
+
 # Checks for programs.
 AC_PROG_CC
 ##AC_PROG_RANLIB
@@ -85,6 +89,11 @@ AS_IF([test "$enable_sparse" = "yes"],
   [AC_DEFINE([CONFIG_SPARSE], [1], [Enable sparse methods]),
    AC_DEFINE([CONFIG_OPT_SPARSE],["--enable-sparse"], [Config option enable sparse methods])] , [])
 
+AS_IF([test "$enable_notypenames" = "yes"],
+  [AC_DEFINE([CONFIG_NOTYPENAMES], [1], [Enable without type indicators in names.]),
+   AC_DEFINE([CONFIG_OPT_NOTYPENAMES],
+     ["--enable-notypenames"], [Config option enable without type indicators.])] , [])
+
 AS_IF([test "$enable_float64" = "yes"],
   [AC_DEFINE([CONFIG_OPT_FLOAT64], ["--enable-float64"], [Config option enable float64])], [])
 
@@ -101,6 +110,7 @@ AM_CONDITIONAL([CONFIG_ACCELERATORS], [test "$enable_accelerators" = "yes"])
 AM_CONDITIONAL([CONFIG_EXT_PRECISION], [test "$enable_ext_precision" = "yes"])
 AM_CONDITIONAL([CONFIG_COMPAT], [test "$enable_compat" = "yes"])
 AM_CONDITIONAL([CONFIG_SPARSE], [test "$enable_sparse" = "yes"])
+AM_CONDITIONAL([CONFIG_NOTYPENAMES], [test "$enable_notypenames" = "yes"])
 
 ## enable floating point types
 AM_CONDITIONAL([ENABLE_FLOAT64],    [test "$enable_float64" = "yes"])
@@ -117,6 +127,7 @@ AC_MSG_NOTICE([CONFIG_ACCELERATORS = $enable_accelerators])
 AC_MSG_NOTICE([CONFIG_EXT_PRECISION = $enable_ext_precision])
 AC_MSG_NOTICE([CONFIG_COMPAT = $enable_compat])
 AC_MSG_NOTICE([CONFIG_SPARSE = $enable_sparse])
+AC_MSG_NOTICE([CONFIG_NOTYPENAMES = $enable_notypenames])
 
 AC_CONFIG_FILES([
    Makefile
