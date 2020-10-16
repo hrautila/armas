@@ -1,23 +1,23 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING tile included in this archive.
 
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_ext_mvsolve_trm_unsafe) && defined(armas_x_ext_mvsolve_trm_w) && \
-    defined(armas_x_ext_mvsolve_trm)
+// this file provides following type dependent functions
+#if defined(armas_ext_mvsolve_trm_unsafe) && defined(armas_ext_mvsolve_trm_w) && \
+    defined(armas_ext_mvsolve_trm)
 #define ARMAS_PROVIDES 1
 #endif
 // this module requires external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -37,47 +37,47 @@
  */
 static
 void trsv_ext_unb_ll(
-    armas_x_dense_t *X,
-    armas_x_dense_t *dX,
-    const armas_x_dense_t *Ac,
+    armas_dense_t *X,
+    armas_dense_t *dX,
+    const armas_dense_t *Ac,
     DTYPE alpha,
     int unit)
 {
     register int i;
-    armas_x_dense_t x0, dx0, a0;
+    armas_dense_t x0, dx0, a0;
     DTYPE s0, u0, p0, r0, ak, xk;
 
-    s0 = armas_x_get_at_unsafe(X, 0);
+    s0 = armas_get_at_unsafe(X, 0);
     twoprod(&s0, &u0, s0, alpha);
-    u0 = u0 + alpha * armas_x_get_at_unsafe(dX, 0);
+    u0 = u0 + alpha * armas_get_at_unsafe(dX, 0);
     if (!unit) {
-        ak = armas_x_get_unsafe(Ac, 0, 0);
+        ak = armas_get_unsafe(Ac, 0, 0);
         approx_twodiv(&p0, &r0, s0, ak);
         fastsum(&s0, &u0, p0, u0/ak + r0);
     }
-    armas_x_set_at_unsafe(X,  0, s0);
-    armas_x_set_at_unsafe(dX, 0, u0);
+    armas_set_at_unsafe(X,  0, s0);
+    armas_set_at_unsafe(dX, 0, u0);
 
     for (i = 1; i < Ac->cols; ++i) {
-        armas_x_subvector_unsafe(&x0, X, 0, i);
-        armas_x_subvector_unsafe(&dx0, dX, 0, i);
-        armas_x_submatrix_unsafe(&a0, Ac, i, 0, 1, i);
+        armas_subvector_unsafe(&x0, X, 0, i);
+        armas_subvector_unsafe(&dx0, dX, 0, i);
+        armas_submatrix_unsafe(&a0, Ac, i, 0, 1, i);
 
-        xk = armas_x_get_at_unsafe(X, i);
+        xk = armas_get_at_unsafe(X, i);
         twoprod(&s0, &u0, xk, alpha);
-        armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
+        armas_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
 
         if (unit) {
-            armas_x_set_at_unsafe(X,  i, s0);
-            armas_x_set_at_unsafe(dX, i, u0);
+            armas_set_at_unsafe(X,  i, s0);
+            armas_set_at_unsafe(dX, i, u0);
             continue;
         }
         // if not unit diagonal then here
-        ak = armas_x_get_unsafe(Ac, i, i);
+        ak = armas_get_unsafe(Ac, i, i);
         approx_twodiv(&p0, &r0, s0, ak);
         fastsum(&s0, &u0, p0, u0/ak + r0);
-        armas_x_set_at_unsafe(X,  i, s0);
-        armas_x_set_at_unsafe(dX, i, u0);
+        armas_set_at_unsafe(X,  i, s0);
+        armas_set_at_unsafe(dX, i, u0);
     }
 }
 
@@ -95,47 +95,47 @@ void trsv_ext_unb_ll(
  */
 static
 void trsv_ext_unb_llt(
-    armas_x_dense_t *X,
-    armas_x_dense_t *dX,
-    const armas_x_dense_t *Ac,
+    armas_dense_t *X,
+    armas_dense_t *dX,
+    const armas_dense_t *Ac,
     DTYPE alpha,
     int unit)
 {
     register int i;
-    armas_x_dense_t x0, dx0, a0;
+    armas_dense_t x0, dx0, a0;
     DTYPE s0, u0, p0, r0, ak, xk;
 
-    s0 = armas_x_get_at_unsafe(X, Ac->cols-1);
+    s0 = armas_get_at_unsafe(X, Ac->cols-1);
     twoprod(&s0, &u0, s0, alpha);
-    u0 = u0 + alpha * armas_x_get_at_unsafe(dX, Ac->cols-1);
+    u0 = u0 + alpha * armas_get_at_unsafe(dX, Ac->cols-1);
     if (!unit) {
-        ak = armas_x_get_unsafe(Ac, Ac->cols - 1, Ac->cols - 1);
+        ak = armas_get_unsafe(Ac, Ac->cols - 1, Ac->cols - 1);
         approx_twodiv(&p0, &r0, s0, ak);
         fastsum(&s0, &u0, p0, u0 / ak + r0);
     }
-    armas_x_set_at_unsafe(X, Ac->cols - 1, s0);
-    armas_x_set_at_unsafe(dX, Ac->cols-1, u0);
+    armas_set_at_unsafe(X, Ac->cols - 1, s0);
+    armas_set_at_unsafe(dX, Ac->cols-1, u0);
 
     for (i = Ac->cols-2; i >= 0; --i) {
-        armas_x_subvector_unsafe(&x0, X, i+1, Ac->cols-1-i);
-        armas_x_subvector_unsafe(&dx0, dX, i+1, Ac->cols-1-i);
-        armas_x_submatrix_unsafe(&a0, Ac, i+1, i, Ac->cols-1-i, i);
+        armas_subvector_unsafe(&x0, X, i+1, Ac->cols-1-i);
+        armas_subvector_unsafe(&dx0, dX, i+1, Ac->cols-1-i);
+        armas_submatrix_unsafe(&a0, Ac, i+1, i, Ac->cols-1-i, i);
 
-        xk = armas_x_get_at_unsafe(X, i);
+        xk = armas_get_at_unsafe(X, i);
         twoprod(&s0, &u0, xk, alpha);
-        armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
+        armas_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
 
         if (unit) {
-            armas_x_set_at_unsafe(dX, i, u0);
-            armas_x_set_at_unsafe(X, i, s0);
+            armas_set_at_unsafe(dX, i, u0);
+            armas_set_at_unsafe(X, i, s0);
             continue;
         }
 
-        ak = armas_x_get_unsafe(Ac, i, i);
+        ak = armas_get_unsafe(Ac, i, i);
         approx_twodiv(&p0, &r0, s0, ak);
         fastsum(&s0, &u0, p0, u0/ak + r0);
-        armas_x_set_at_unsafe(X,  i, s0);
-        armas_x_set_at_unsafe(dX, i, u0);
+        armas_set_at_unsafe(X,  i, s0);
+        armas_set_at_unsafe(dX, i, u0);
     }
 }
 
@@ -152,49 +152,49 @@ void trsv_ext_unb_llt(
  */
 static
 void trsv_ext_unb_lu(
-    armas_x_dense_t *X,
-    armas_x_dense_t *dX,
-    const armas_x_dense_t *Ac,
+    armas_dense_t *X,
+    armas_dense_t *dX,
+    const armas_dense_t *Ac,
     DTYPE alpha,
     int unit)
 {
     register int i;
-    armas_x_dense_t x0, dx0, a0;
+    armas_dense_t x0, dx0, a0;
     DTYPE s0, u0, p0, r0, c0, ak, xk;
 
-    s0 = armas_x_get_at_unsafe(X, Ac->cols-1);
+    s0 = armas_get_at_unsafe(X, Ac->cols-1);
     twoprod(&s0, &u0, s0, alpha);
-    u0 = u0 + alpha * armas_x_get_at_unsafe(dX, Ac->cols-1);
+    u0 = u0 + alpha * armas_get_at_unsafe(dX, Ac->cols-1);
     if (!unit) {
-        ak = armas_x_get_unsafe(Ac, Ac->cols-1, Ac->cols-1);
+        ak = armas_get_unsafe(Ac, Ac->cols-1, Ac->cols-1);
         approx_twodiv(&p0, &r0, s0, ak);
         fastsum(&s0, &u0, p0, u0/ak + r0);
     }
-    armas_x_set_at_unsafe(X,  Ac->cols-1, s0);
-    armas_x_set_at_unsafe(dX, Ac->cols-1, u0);
+    armas_set_at_unsafe(X,  Ac->cols-1, s0);
+    armas_set_at_unsafe(dX, Ac->cols-1, u0);
 
     for (i = Ac->cols-2; i >= 0; --i) {
         p0 = r0 = ZERO;
-        armas_x_subvector_unsafe(&x0, X, i+1, Ac->cols-1-i);
-        armas_x_subvector_unsafe(&dx0, dX, i+1, Ac->cols-1-i);
-        armas_x_submatrix_unsafe(&a0, Ac, i, i+1, 1, Ac->cols-1-i);
+        armas_subvector_unsafe(&x0, X, i+1, Ac->cols-1-i);
+        armas_subvector_unsafe(&dx0, dX, i+1, Ac->cols-1-i);
+        armas_submatrix_unsafe(&a0, Ac, i, i+1, 1, Ac->cols-1-i);
 
-        xk = armas_x_get_at_unsafe(X, i);
+        xk = armas_get_at_unsafe(X, i);
         twoprod(&s0, &u0, xk, alpha);
-        armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
+        armas_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
 
         if (unit) {
             fastsum(&s0, &c0, s0, u0);
-            armas_x_set_at_unsafe(X,  i, s0);
-            armas_x_set_at_unsafe(dX, i, u0);
+            armas_set_at_unsafe(X,  i, s0);
+            armas_set_at_unsafe(dX, i, u0);
             continue;
         }
 
-        ak = armas_x_get_unsafe(Ac, i, i);
+        ak = armas_get_unsafe(Ac, i, i);
         approx_twodiv(&p0, &r0, s0, ak);
         fastsum(&s0, &u0, p0, u0/ak + r0);
-        armas_x_set_at_unsafe(X,  i, s0);
-        armas_x_set_at_unsafe(dX, i, u0);
+        armas_set_at_unsafe(X,  i, s0);
+        armas_set_at_unsafe(dX, i, u0);
     }
 }
 
@@ -211,55 +211,55 @@ void trsv_ext_unb_lu(
  */
 static
 void trsv_ext_unb_lut(
-    armas_x_dense_t *X,
-    armas_x_dense_t *dX,
-    const armas_x_dense_t *Ac,
+    armas_dense_t *X,
+    armas_dense_t *dX,
+    const armas_dense_t *Ac,
     DTYPE alpha,
     int unit)
 {
     register int i;
-    armas_x_dense_t x0, dx0, a0;
+    armas_dense_t x0, dx0, a0;
     DTYPE s0, u0, p0, r0, ak, xk;
 
-    s0 = armas_x_get_at_unsafe(X, 0);
+    s0 = armas_get_at_unsafe(X, 0);
     twoprod(&s0, &u0, s0, alpha);
-    u0 = u0 + alpha * armas_x_get_at_unsafe(dX, 0);
+    u0 = u0 + alpha * armas_get_at_unsafe(dX, 0);
     if (!unit) {
-        ak = armas_x_get_unsafe(Ac, 0, 0);
+        ak = armas_get_unsafe(Ac, 0, 0);
         approx_twodiv(&p0, &r0, s0, ak);
         fastsum(&s0, &u0, p0, u0/ak + r0);
     }
-    armas_x_set_at_unsafe(X,  0, s0);
-    armas_x_set_at_unsafe(dX, 0, u0);
+    armas_set_at_unsafe(X,  0, s0);
+    armas_set_at_unsafe(dX, 0, u0);
 
     for (i = 1; i < Ac->cols; ++i) {
-        armas_x_subvector_unsafe(&x0, X, 0, i);
-        armas_x_subvector_unsafe(&dx0, dX, 0, i);
-        armas_x_submatrix_unsafe(&a0, Ac, 0, i, i, 1);
+        armas_subvector_unsafe(&x0, X, 0, i);
+        armas_subvector_unsafe(&dx0, dX, 0, i);
+        armas_submatrix_unsafe(&a0, Ac, 0, i, i, 1);
 
-        xk = armas_x_get_at_unsafe(X, i);
+        xk = armas_get_at_unsafe(X, i);
         twoprod(&s0, &u0, xk, alpha);
-        armas_x_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
+        armas_ext_adot_dx_unsafe(&s0, &u0, -ONE, &x0, &dx0, &a0);
 
         if (unit) {
-            armas_x_set_at_unsafe(X,  i, s0);
-            armas_x_set_at_unsafe(dX, i, u0);
+            armas_set_at_unsafe(X,  i, s0);
+            armas_set_at_unsafe(dX, i, u0);
             continue;
         }
 
-        ak = armas_x_get_unsafe(Ac, i, i);
+        ak = armas_get_unsafe(Ac, i, i);
         approx_twodiv(&p0, &r0, s0, ak);
         fastsum(&s0, &u0, p0, u0/ak + r0);
-        armas_x_set_at_unsafe(X,  i, s0);
-        armas_x_set_at_unsafe(dX, i, u0);
+        armas_set_at_unsafe(X,  i, s0);
+        armas_set_at_unsafe(dX, i, u0);
     }
 }
 
-int armas_x_ext_mvsolve_trm_unsafe(
-    armas_x_dense_t *X,
-    armas_x_dense_t *dX,
+int armas_ext_mvsolve_trm_unsafe(
+    armas_dense_t *X,
+    armas_dense_t *dX,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags)
 {
     int unit = flags & ARMAS_UNIT ? 1 : 0;
@@ -304,20 +304,20 @@ int armas_x_ext_mvsolve_trm_unsafe(
  *
  * @ingroup blasext
  */
-int armas_x_ext_mvsolve_trm_w(
-    armas_x_dense_t *x,
+int armas_ext_mvsolve_trm_w(
+    armas_dense_t *x,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     armas_wbuf_t *wb,
     armas_conf_t *cf)
 {
-    armas_x_dense_t dX;
+    armas_dense_t dX;
     if (!cf)
         cf = armas_conf_default();
 
-    int N = armas_x_size(x);
-    if (!armas_x_isvector(x)) {
+    int N = armas_size(x);
+    if (!armas_isvector(x)) {
         cf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
@@ -333,8 +333,8 @@ int armas_x_ext_mvsolve_trm_w(
         cf->error = ARMAS_EMEMORY;
         return -ARMAS_EMEMORY;
     }
-    armas_x_make(&dX, A->cols, 1, A->cols, (DTYPE *)armas_wptr(wb));
-    armas_x_ext_mvsolve_trm_unsafe(x, &dX, alpha, A, flags);
+    armas_make(&dX, A->cols, 1, A->cols, (DTYPE *)armas_wptr(wb));
+    armas_ext_mvsolve_trm_unsafe(x, &dX, alpha, A, flags);
     return 0;
 }
 
@@ -345,10 +345,10 @@ int armas_x_ext_mvsolve_trm_w(
  *
  * @ingroup blasext
  */
-int armas_x_ext_mvsolve_trm(
-    armas_x_dense_t *x,
+int armas_ext_mvsolve_trm(
+    armas_dense_t *x,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     armas_conf_t *cf)
 {
@@ -362,7 +362,7 @@ int armas_x_ext_mvsolve_trm(
         cf->error = ARMAS_EMEMORY;
         return -ARMAS_EMEMORY;
     }
-    err = armas_x_ext_mvsolve_trm_w(x, alpha, A, flags, &wb, cf);
+    err = armas_ext_mvsolve_trm_w(x, alpha, A, flags, &wb, cf);
     armas_wrelease(&wb);
     return err;
 }

@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2013-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -12,16 +12,16 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_ext_update_trm)
+#if defined(armas_ext_update_trm)
 #define ARMAS_PROVIDES 1
 #endif
 // this file requires external public functions
-#if defined(armas_x_ext_mult_kernel)
+#if defined(armas_ext_mult_kernel)
 #define ARMAS_REQUIRES 1
 #endif
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -38,15 +38,15 @@
 static
 void ext_update_trm_diagonal(
     DTYPE beta,
-    armas_x_dense_t *C,
-    armas_x_dense_t *dC,
+    armas_dense_t *C,
+    armas_dense_t *dC,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *B,
+    const armas_dense_t *A,
+    const armas_dense_t *B,
     int flags)
 {
     register int i, flg = 0;
-    armas_x_dense_t A0, B0, c0, a0, b0, d0;
+    armas_dense_t A0, B0, c0, a0, b0, d0;
 
     if (flags & ARMAS_UPPER) {
         // index by row
@@ -55,27 +55,27 @@ void ext_update_trm_diagonal(
         for (i = 0; i < M; ++i) {
             switch (flags & (ARMAS_TRANSA|ARMAS_TRANSB)) {
             case ARMAS_TRANSA|ARMAS_TRANSB:
-                armas_x_column_unsafe(&a0, A, i);
-                armas_x_submatrix_unsafe(&B0, B, i, 0, B->rows-i, B->cols);
+                armas_column_unsafe(&a0, A, i);
+                armas_submatrix_unsafe(&B0, B, i, 0, B->rows-i, B->cols);
                 break;
             case ARMAS_TRANSA:
-                armas_x_column_unsafe(&a0, A, i);
-                armas_x_submatrix_unsafe(&B0, B, 0, i, B->rows, B->cols-i);
+                armas_column_unsafe(&a0, A, i);
+                armas_submatrix_unsafe(&B0, B, 0, i, B->rows, B->cols-i);
                 break;
             case ARMAS_TRANSB:
-                armas_x_row_unsafe(&a0, A, i);
-                armas_x_submatrix_unsafe(&B0, B, i, 0, B->rows-i, B->cols);
+                armas_row_unsafe(&a0, A, i);
+                armas_submatrix_unsafe(&B0, B, i, 0, B->rows-i, B->cols);
                 break;
             default:
-                armas_x_row_unsafe(&a0, A, i);
-                armas_x_submatrix_unsafe(&B0, B, 0, i, B->rows, B->cols-i);
+                armas_row_unsafe(&a0, A, i);
+                armas_submatrix_unsafe(&B0, B, 0, i, B->rows, B->cols-i);
                 break;
             }
-            armas_x_submatrix_unsafe(&c0, C, i, i, 1, C->cols-i);
-            armas_x_submatrix_unsafe(&d0, dC, i, i, 1, C->cols-i);
-            armas_x_scale_unsafe(&d0, ZERO);
-            armas_x_ext_mvmult_dx_unsafe(beta, &C0, &d0, alpha, &B0, &a0, flg);
-            armas_x_ext_merge(&c0, &c0, &d0);
+            armas_submatrix_unsafe(&c0, C, i, i, 1, C->cols-i);
+            armas_submatrix_unsafe(&d0, dC, i, i, 1, C->cols-i);
+            armas_scale_unsafe(&d0, ZERO);
+            armas_ext_mvmult_dx_unsafe(beta, &C0, &d0, alpha, &B0, &a0, flg);
+            armas_ext_merge(&c0, &c0, &d0);
         }
     } else {
         // index by column
@@ -84,27 +84,27 @@ void ext_update_trm_diagonal(
         for (i = 0; i < N; ++i) {
             switch (flags & (ARMAS_TRANSA|ARMAS_TRANSB)) {
             case ARMAS_TRANSA|ARMAS_TRANSB:
-                armas_x_row_unsafe(&b0, B, i);
-                armas_x_submatrix_unsafe(&A0, A, 0, i, A->rows, A->cols-i);
+                armas_row_unsafe(&b0, B, i);
+                armas_submatrix_unsafe(&A0, A, 0, i, A->rows, A->cols-i);
                 break;
             case ARMAS_TRANSA:
-                armas_x_column_unsafe(&b0, B, i);
-                armas_x_submatrix_unsafe(&A0, A, 0, i, A->rows, A->cols-i);
+                armas_column_unsafe(&b0, B, i);
+                armas_submatrix_unsafe(&A0, A, 0, i, A->rows, A->cols-i);
                 break;
             case ARMAS_TRANSB:
-                armas_x_row_unsafe(&b0, B, i);
-                armas_x_submatrix_unsafe(&A0, A, i, 0, A->rows-i, A->cols);
+                armas_row_unsafe(&b0, B, i);
+                armas_submatrix_unsafe(&A0, A, i, 0, A->rows-i, A->cols);
                 break;
             default:
-                armas_x_column_unsafe(&b0, B, i);
-                armas_x_submatrix_unsafe(&A0, A, i, 0, A->rows-i, A->cols);
+                armas_column_unsafe(&b0, B, i);
+                armas_submatrix_unsafe(&A0, A, i, 0, A->rows-i, A->cols);
                 break;
             }
-            armas_x_submatrix_unsafe(&c0, C, i, i, C->rows-i, 1);
-            armas_x_submatrix_unsafe(&d0, dC, i, i, C->rows-i, 1);
-            armas_x_scale_unsafe(&d0, ZERO);
-            armas_x_mvmult_unsafe(beta, &c0, &dc, alpha, &A0, &b0, flg);
-            armas_x_ext_merge(&c0, &c0, &d0);
+            armas_submatrix_unsafe(&c0, C, i, i, C->rows-i, 1);
+            armas_submatrix_unsafe(&d0, dC, i, i, C->rows-i, 1);
+            armas_scale_unsafe(&d0, ZERO);
+            armas_mvmult_unsafe(beta, &c0, &dc, alpha, &A0, &b0, flg);
+            armas_ext_merge(&c0, &c0, &d0);
         }
     }
 }
@@ -119,15 +119,15 @@ void ext_update_trm_diagonal(
 static
 void update_trm_ext_blk(
     DTYPE beta,
-    armas_x_dense_t *C,
+    armas_dense_t *C,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *B,
+    const armas_dense_t *A,
+    const armas_dense_t *B,
     int flags,
     cache_t *cache)
 {
     register int i, nI, N, M;
-    armas_x_dense_t Cd, Ad, Bd, Dd;
+    armas_dense_t Cd, Ad, Bd, Dd;
     int NB = cache->NB;
 
     if ((flags & ARMAS_UPPER) != 0) {
@@ -139,37 +139,37 @@ void update_trm_ext_blk(
             //printf("i=%dm nI=%d, L-i=%d, L-i-nI=%d\n", i, nI, L-i, L-i-nI);
             switch (flags & (ARMAS_TRANSA|ARMAS_TRANSB)) {
             case ARMAS_TRANSA|ARMAS_TRANSB:
-                armas_x_submatrix_unsafe(&Ad, A, 0, i, A->rows, nI);
-                armas_x_submatrix_unsafe(&Bd, B, i, 0, nI, B->cols);
+                armas_submatrix_unsafe(&Ad, A, 0, i, A->rows, nI);
+                armas_submatrix_unsafe(&Bd, B, i, 0, nI, B->cols);
                 break;
             case ARMAS_TRANSA:
-                armas_x_submatrix_unsafe(&Ad, A, 0, i, A->rows, nI);
-                armas_x_submatrix_unsafe(&Bd, B, 0, i, B->rows, nI);
+                armas_submatrix_unsafe(&Ad, A, 0, i, A->rows, nI);
+                armas_submatrix_unsafe(&Bd, B, 0, i, B->rows, nI);
                 break;
             case ARMAS_TRANSB:
-                armas_x_submatrix_unsafe(&Ad, A, i, 0, nI, A->cols);
-                armas_x_submatrix_unsafe(&Bd, B, i, 0, nI, B->cols);
+                armas_submatrix_unsafe(&Ad, A, i, 0, nI, A->cols);
+                armas_submatrix_unsafe(&Bd, B, i, 0, nI, B->cols);
                 break;
             default:
-                armas_x_submatrix_unsafe(&Ad, A, i, 0, nI, A->cols);
-                armas_x_submatrix_unsafe(&Bd, B, 0, i, B->rows, nI);
+                armas_submatrix_unsafe(&Ad, A, i, 0, nI, A->cols);
+                armas_submatrix_unsafe(&Bd, B, 0, i, B->rows, nI);
                 break;
             }
-            armas_x_submatrix_unsafe(&Cd, C, i,  i, nI, nI);
-            armas_x_submatrix_unsafe(&Cd, C, i,  i, nI, nI);
+            armas_submatrix_unsafe(&Cd, C, i,  i, nI, nI);
+            armas_submatrix_unsafe(&Cd, C, i,  i, nI, nI);
             ext_update_trm_diagonal(beta, &Cd, alpha, &Ad, &Bd, flags, cache);
 
             // 2. update right of the diagonal block (rectangle, nI rows)
             switch (flags & ARMAS_TRANSB) {
             case ARMAS_TRANSB:
-                armas_x_submatrix_unsafe(&Bd, B, i+nI, 0, B->rows-i-nI, B->cols);
+                armas_submatrix_unsafe(&Bd, B, i+nI, 0, B->rows-i-nI, B->cols);
                 break;
             default:
-                armas_x_submatrix_unsafe(&Bd, B, 0, i+nI, B->rows, B->cols-i-nI);
+                armas_submatrix_unsafe(&Bd, B, 0, i+nI, B->rows, B->cols-i-nI);
                 break;
             }
-            armas_x_submatrix_unsafe(&Cd, C, i, i+nI, nI, C->cols-i-nI);
-            armas_x_ext_mult_kernel(beta, &Cd, alpha, &Ad, &Bd, flags, cache);
+            armas_submatrix_unsafe(&Cd, C, i, i+nI, nI, C->cols-i-nI);
+            armas_ext_mult_kernel(beta, &Cd, alpha, &Ad, &Bd, flags, cache);
         }
         return;
     }
@@ -181,36 +181,36 @@ void update_trm_ext_blk(
         // 1. update on diagonal (square block)
         switch (flags & (ARMAS_TRANSA|ARMAS_TRANSB)) {
         case ARMAS_TRANSA|ARMAS_TRANSB:
-            armas_x_submatrix_unsafe(&Ad, A, 0, i, A->rows, nI);
-            armas_x_submatrix_unsafe(&Bd, B, i, 0, nI, B->cols);
+            armas_submatrix_unsafe(&Ad, A, 0, i, A->rows, nI);
+            armas_submatrix_unsafe(&Bd, B, i, 0, nI, B->cols);
             break;
         case ARMAS_TRANSA:
-            armas_x_submatrix_unsafe(&Ad, A, 0, i, A->rows, nI);
-            armas_x_submatrix_unsafe(&Bd, B, 0, i, B->rows, nI);
+            armas_submatrix_unsafe(&Ad, A, 0, i, A->rows, nI);
+            armas_submatrix_unsafe(&Bd, B, 0, i, B->rows, nI);
             break;
         case ARMAS_TRANSB:
-            armas_x_submatrix_unsafe(&Ad, A, i, 0, nI, A->cols);
-            armas_x_submatrix_unsafe(&Bd, B, i, 0, nI, B->cols);
+            armas_submatrix_unsafe(&Ad, A, i, 0, nI, A->cols);
+            armas_submatrix_unsafe(&Bd, B, i, 0, nI, B->cols);
             break;
         default:
-            armas_x_submatrix_unsafe(&Ad, A, i, 0, nI, A->cols);
-            armas_x_submatrix_unsafe(&Bd, B, 0, i, B->rows, nI);
+            armas_submatrix_unsafe(&Ad, A, i, 0, nI, A->cols);
+            armas_submatrix_unsafe(&Bd, B, 0, i, B->rows, nI);
             break;
         }
-        armas_x_submatrix_unsafe(&Cd, C, i,  i, nI, nI);
+        armas_submatrix_unsafe(&Cd, C, i,  i, nI, nI);
         ext_update_trm_diagonal(beta, &Cd, &Dd, alpha, &Ad, &Bd, flags, cache);
 
         // 2. update block below the diagonal block (rectangle, nI columns)
         switch (flags & ARMAS_TRANSA) {
         case ARMAS_TRANSA:
-            armas_x_submatrix_unsafe(&Ad, A, 0, i+nI, A->rows, A->cols-i-nI);
+            armas_submatrix_unsafe(&Ad, A, 0, i+nI, A->rows, A->cols-i-nI);
             break;
         default:
-            armas_x_submatrix_unsafe(&Ad, A, i+nI, 0, A->rows-i-nI, A->cols);
+            armas_submatrix_unsafe(&Ad, A, i+nI, 0, A->rows-i-nI, A->cols);
             break;
         }
-        armas_x_submatrix_unsafe(&Cd, C, i+nI, i, C->rows-i-nI, nI);
-        armas_x_ext_mult_kernel(beta, &Cd, alpha, &Ad, &Bd, flags, cache);
+        armas_submatrix_unsafe(&Cd, C, i+nI, i, C->rows-i-nI, nI);
+        armas_ext_mult_kernel(beta, &Cd, alpha, &Ad, &Bd, flags, cache);
     }
 }
 
@@ -240,18 +240,18 @@ void update_trm_ext_blk(
  *
  * @ingroup blasext
  */
-int armas_x_ext_update_trm(
+int armas_ext_update_trm(
     DTYPE beta,
-    armas_x_dense_t *C,
+    armas_dense_t *C,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *B,
+    const armas_dense_t *A,
+    const armas_dense_t *B,
     int flags,
     armas_conf_t *conf)
 {
     int ok;
 
-    if (armas_x_size(C) == 0 || armas_x_size(A) == 0 || armas_x_size(B) == 0)
+    if (armas_size(C) == 0 || armas_size(A) == 0 || armas_size(B) == 0)
         return 0;
 
     if (!conf)

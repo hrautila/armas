@@ -1,40 +1,40 @@
 
-// Copyright (c) Harri Rautila, 2015-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_ext_axpy_unsafe) && defined(armas_x_ext_axpby_unsafe) \
-    && defined(armas_x_ext_axpby) && defined(armas_x_ext_axpby_dx_unsafe)
+// this file provides following type dependent functions
+#if defined(armas_ext_axpy_unsafe) && defined(armas_ext_axpby_unsafe) \
+    && defined(armas_ext_axpby) && defined(armas_ext_axpby_dx_unsafe)
 #define ARMAS_PROVIDES 1
 #endif
 // extended precision enabled
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
 #include "internal.h"
 #include "eft.h"
 
-int armas_x_ext_axpy_unsafe(
-    armas_x_dense_t *Y,
+int armas_ext_axpy_unsafe(
+    armas_dense_t *Y,
     DTYPE alpha,
-    const armas_x_dense_t *X)
+    const armas_dense_t *X)
 {
     register int i, kx, ky;
     DTYPE y0, y1, x0, x1;
     DTYPE p0, p1, c0, c1;
     int xinc = X->rows == 1 ? X->step : 1;
     int yinc = Y->rows == 1 ? Y->step : 1;
-    int N = armas_x_size(X);
+    int N = armas_size(X);
 
     for (i = 0; i < N-1; i += 2) {
         twoprod(&x0, &p0, X->elems[(i+0)*xinc], alpha);
@@ -56,21 +56,21 @@ int armas_x_ext_axpy_unsafe(
     return 0;
 }
 
-int armas_x_ext_axpby_unsafe(
+int armas_ext_axpby_unsafe(
     DTYPE beta,
-    armas_x_dense_t *Y,
+    armas_dense_t *Y,
     DTYPE alpha,
-    const armas_x_dense_t *X)
+    const armas_dense_t *X)
 {
     register int i, kx, ky, xinc, yinc, N;
     DTYPE y0, y1, p0, p1, x0, x1, c0, c1;
 
     if (beta == ONE)
-        return armas_x_ext_axpy_unsafe(Y, alpha, X);
+        return armas_ext_axpy_unsafe(Y, alpha, X);
 
     xinc = X->rows == 1 ? X->step : 1;
     yinc = Y->rows == 1 ? Y->step : 1;
-    N = armas_x_size(X);
+    N = armas_size(X);
 
     for (i = 0; i < N-1; i += 2) {
         twoprod(&x0, &p0, X->elems[(i+0)*xinc], alpha);
@@ -100,19 +100,19 @@ int armas_x_ext_axpby_unsafe(
 }
 
 // Compute y = beta*y + (alpha, dx) * x
-int armas_x_ext_axpby_dx_unsafe(
+int armas_ext_axpby_dx_unsafe(
     DTYPE beta,
-    armas_x_dense_t *Y,
+    armas_dense_t *Y,
     DTYPE alpha,
     DTYPE dx,
-    const armas_x_dense_t *X)
+    const armas_dense_t *X)
 {
     register int i, xinc, yinc, N;
     DTYPE y0, p0, x0, c0, z0, y1, c1;
 
     xinc = X->rows == 1 ? X->step : 1;
     yinc = Y->rows == 1 ? Y->step : 1;
-    N = armas_x_size(X);
+    N = armas_size(X);
 
     for (i = 0; i < N; ++i) {
         twoprod(&y0, &c0, Y->elems[i*yinc], beta);
@@ -140,27 +140,27 @@ int armas_x_ext_axpby_dx_unsafe(
  *
  * @ingroup blasext
  */
-int armas_x_ext_axpby(
+int armas_ext_axpby(
     DTYPE beta,
-    armas_x_dense_t *y,
+    armas_dense_t *y,
     DTYPE alpha,
-    const armas_x_dense_t *x,
+    const armas_dense_t *x,
     armas_conf_t *conf)
 {
     // only for column or row vectors
     if (!conf)
         conf = armas_conf_default();
 
-    if (!(armas_x_isvector(x) && armas_x_isvector(y))) {
+    if (!(armas_isvector(x) && armas_isvector(y))) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -1;
     }
-    if (armas_x_size(x) != armas_x_size(y)) {
+    if (armas_size(x) != armas_size(y)) {
         conf->error = ARMAS_ESIZE;
         return -1;
     }
 
-    armas_x_ext_axpby_unsafe(beta, y, alpha, x);
+    armas_ext_axpby_unsafe(beta, y, alpha, x);
     return 0;
 }
 #else

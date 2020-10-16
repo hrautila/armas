@@ -1,22 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2012-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_ext_mvmult_trm_unsafe) && defined(armas_x_ext_mvmult_trm)
+// this file provides following type dependent functions
+#if defined(armas_ext_mvmult_trm_unsafe) && defined(armas_ext_mvmult_trm)
 #define ARMAS_PROVIDES 1
 #endif
 // this module requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -36,15 +36,15 @@
  */
 static
 void trmv_ex_unb_ll(
-    armas_x_dense_t *X,
-    const armas_x_dense_t *A,
+    armas_dense_t *X,
+    const armas_dense_t *A,
     DTYPE alpha,
     int unit,
     int xinc)
 {
     register int i, j;
     DTYPE s0, u0, p0, r0, c0;
-    int N = armas_x_size(X);
+    int N = armas_size(X);
 
     //printf("..ex_unb_lut: LOWER-NOTRANSPOSE...\n");
     for (i = N-1; i >= 0; --i) {
@@ -77,15 +77,15 @@ void trmv_ex_unb_ll(
  */
 static
 void trmv_ex_unb_llt(
-    armas_x_dense_t *X,
-    const armas_x_dense_t *A,
+    armas_dense_t *X,
+    const armas_dense_t *A,
     DTYPE alpha,
     int unit,
     int xinc)
 {
     register int i, j;
     DTYPE s0, u0, p0, r0, c0;
-    int N = armas_x_size(X);
+    int N = armas_size(X);
 
     //printf("..ex_unb_llt: LOWER-TRANSPOSE... unit=%d\n", unit);
     for (i = 0; i < N; ++i) {
@@ -117,15 +117,15 @@ void trmv_ex_unb_llt(
  */
 static
 void trmv_ex_unb_lu(
-    armas_x_dense_t *X,
-    const armas_x_dense_t *A,
+    armas_dense_t *X,
+    const armas_dense_t *A,
     DTYPE alpha,
     int unit,
     int xinc)
 {
     register int i, j;
     DTYPE s0, u0, p0, r0, c0;
-    int N = armas_x_size(X);
+    int N = armas_size(X);
 
     //printf("..ex_unb_lu: UPPER-NOTRANSPOSE...\n");
     for (i = 0; i < N; ++i) {
@@ -157,15 +157,15 @@ void trmv_ex_unb_lu(
  */
 static
 void trmv_ex_unb_lut(
-    armas_x_dense_t *X,
-    const armas_x_dense_t *A,
+    armas_dense_t *X,
+    const armas_dense_t *A,
     DTYPE alpha,
     int unit,
     int xinc)
 {
     register int i, j;
     DTYPE s0, u0, p0, r0, c0;
-    int N = armas_x_size(X);
+    int N = armas_size(X);
 
     for (i = N-1; i >= 0; --i) {
         s0 = unit ? X->elems[i*xinc] : 0.0;
@@ -184,10 +184,10 @@ void trmv_ex_unb_lut(
 }
 
 
-int armas_x_ext_mvmult_trm_unsafe(
-    armas_x_dense_t *X,
+int armas_ext_mvmult_trm_unsafe(
+    armas_dense_t *X,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags)
 {
     int unit = flags & ARMAS_UNIT ? 1 : 0;
@@ -234,22 +234,22 @@ int armas_x_ext_mvmult_trm_unsafe(
  *
  * @ingroup blasext
  */
-int armas_x_ext_mvmult_trm(
-    armas_x_dense_t *x,
+int armas_ext_mvmult_trm(
+    armas_dense_t *x,
     DTYPE alpha,
-    const armas_x_dense_t *A,
+    const armas_dense_t *A,
     int flags,
     armas_conf_t *cf)
 {
-    int nx = armas_x_size(x);
+    int nx = armas_size(x);
 
-    if (armas_x_size(A) == 0 || nx == 0)
+    if (armas_size(A) == 0 || nx == 0)
         return 0;
 
     if (!cf)
         cf = armas_conf_default();
 
-    if (!armas_x_isvector(x)) {
+    if (!armas_isvector(x)) {
         cf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
@@ -257,7 +257,7 @@ int armas_x_ext_mvmult_trm(
         cf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
-    armas_x_ext_mvmult_trm_unsafe(x, alpha, A, flags);
+    armas_ext_mvmult_trm_unsafe(x, alpha, A, flags);
     return 0;
 }
 

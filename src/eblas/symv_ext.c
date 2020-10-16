@@ -1,22 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2012-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "dtype.h"
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_ext_mvmult_sym_unsafe) && defined(armas_x_ext_mvmult_sym)
+// this file provides following type dependent functions
+#if defined(armas_ext_mvmult_sym_unsafe) && defined(armas_ext_mvmult_sym)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -47,19 +47,19 @@
  */
 
 
-int armas_x_ext_mvmult_sym_unsafe(
+int armas_ext_mvmult_sym_unsafe(
     DTYPE beta,
-    armas_x_dense_t *Y,
+    armas_dense_t *Y,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *X,
+    const armas_dense_t *A,
+    const armas_dense_t *X,
     int flags)
 {
     int i, j;
     DTYPE y0, s0, x0, p0, c0;
     int xinc = X->rows == 1 ? X->step : 1;
     int yinc = Y->rows == 1 ? Y->step : 1;
-    int N = armas_x_size(Y);
+    int N = armas_size(Y);
 
     if ( N <= 0 )
         return 0;
@@ -143,30 +143,30 @@ int armas_x_ext_mvmult_sym_unsafe(
  *
  * @ingroup blasext
  */
-int armas_x_ext_mvmult_sym(
+int armas_ext_mvmult_sym(
     DTYPE beta,
-    armas_x_dense_t *y,
+    armas_dense_t *y,
     DTYPE alpha,
-    const armas_x_dense_t *A,
-    const armas_x_dense_t *x,
+    const armas_dense_t *A,
+    const armas_dense_t *x,
     int flags,
     armas_conf_t *conf)
 {
     int ok;
-    int nx = armas_x_size(x);
-    int ny = armas_x_size(y);
+    int nx = armas_size(x);
+    int ny = armas_size(y);
 
-    if (armas_x_size(A) == 0 || nx == 0 || ny == 0)
+    if (armas_size(A) == 0 || nx == 0 || ny == 0)
         return 0;
 
     if (!conf)
         conf = armas_conf_default();
 
-    if (!armas_x_isvector(x)) {
+    if (!armas_isvector(x)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
-    if (!armas_x_isvector(y)) {
+    if (!armas_isvector(y)) {
         conf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
@@ -176,7 +176,7 @@ int armas_x_ext_mvmult_sym(
         conf->error = ARMAS_ESIZE;
         return -ARMAS_ESIZE;
     }
-    armas_x_ext_mvmult_sym_unsafe(beta, y, alpha, A, x, flags);
+    armas_ext_mvmult_sym_unsafe(beta, y, alpha, A, x, flags);
     return 0;
 }
 #else

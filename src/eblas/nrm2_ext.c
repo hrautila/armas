@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2014-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -10,15 +10,15 @@
 //! @endcond
 
 // ------------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_ext_nrm2)
+// this file provides following type dependent functions
+#if defined(armas_ext_nrm2)
 #define ARMAS_PROVIDES 1
 #endif
 // this this requires no external public functions
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 //! @cond
 #include "internal.h"
@@ -101,7 +101,7 @@ ABSTYPE __vec_nrm2_ext_scaled(const mvec_t *X,  int N)
  *
  * @ingroup blasext
  */
-ABSTYPE armas_x_ext_nrm2(const armas_x_dense_t *x, armas_conf_t *conf)
+ABSTYPE armas_ext_nrm2(const armas_dense_t *x, armas_conf_t *conf)
 {
     if (!conf)
         conf = armas_conf_default();
@@ -112,17 +112,17 @@ ABSTYPE armas_x_ext_nrm2(const armas_x_dense_t *x, armas_conf_t *conf)
         return ABSZERO;
     }
 
-    if (armas_x_size(x) == 0) {
+    if (armas_size(x) == 0) {
         return ABSZERO;
     }
-    if (armas_x_size(x) == 1) {
+    if (armas_size(x) == 1) {
         return ABS(x->elems[0]);
     }
     mvec_t X = {x->elems, (x->rows == 1 ? x->step : 1)};
     if (conf && (conf->optflags & ARMAS_SNAIVE)) {
-        return __vec_nrm2_ext(&X, armas_x_size(x));
+        return __vec_nrm2_ext(&X, armas_size(x));
     }
-    return __vec_nrm2_ext_scaled(&X, armas_x_size(x));
+    return __vec_nrm2_ext_scaled(&X, armas_size(x));
 }
 
 #endif /* ARMAS_REQUIRES && ARMAS_PROVIDES */

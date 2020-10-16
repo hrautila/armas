@@ -1,22 +1,22 @@
 
-// Copyright (c) Harri Rautila, 2014-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas library. It is free software,
+// This file is part of libARMAS library. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
 #include "dtype.h"
 
 // ----------------------------------------------------------------------------
-// this file provides following type independet functions
-#if defined(armas_x_ext_asum) && defined(armas_x_ext_sum_unsafe)
+// this file provides following type dependent functions
+#if defined(armas_ext_asum) && defined(armas_ext_sum_unsafe)
 #define ARMAS_PROVIDES 1
 #endif
 // if extended precision enabled
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ----------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -24,7 +24,7 @@
 #include "eft.h"
 
 static
-void ext_asum2s(DTYPE *h, DTYPE *l, const armas_x_dense_t *X, int N)
+void ext_asum2s(DTYPE *h, DTYPE *l, const armas_dense_t *X, int N)
 {
     register int i, k;
     ABSTYPE c0, c1, z0, z1;
@@ -52,7 +52,7 @@ void ext_asum2s(DTYPE *h, DTYPE *l, const armas_x_dense_t *X, int N)
 }
 
 static
-void ext_sum2s(DTYPE *h, DTYPE *l, const armas_x_dense_t *X, int N)
+void ext_sum2s(DTYPE *h, DTYPE *l, const armas_dense_t *X, int N)
 {
     register int i, k;
     DTYPE c0, c1, c2, c3, z0, z1, z2, z3;
@@ -106,10 +106,10 @@ void ext_sum2s(DTYPE *h, DTYPE *l, const armas_x_dense_t *X, int N)
  *
  * @ingroup blasext
  */
-DTYPE armas_x_ext_sum_unsafe(const armas_x_dense_t *X)
+DTYPE armas_ext_sum_unsafe(const armas_dense_t *X)
 {
     DTYPE h, l;
-    ext_sum2s(&h, &l, X, armas_x_size(X));
+    ext_sum2s(&h, &l, X, armas_size(X));
     return h+l;
 }
 
@@ -132,13 +132,13 @@ DTYPE armas_x_ext_sum_unsafe(const armas_x_dense_t *X)
  *
  * @ingroup blasext
  */
-int armas_x_ext_sum(DTYPE *result, DTYPE alpha, const armas_x_dense_t *X, int flags, armas_conf_t *cf)
+int armas_ext_sum(DTYPE *result, DTYPE alpha, const armas_dense_t *X, int flags, armas_conf_t *cf)
 {
     DTYPE h, l, q;
     if (!cf)
         cf = armas_conf_default();
 
-    if (!armas_x_isvector(X)) {
+    if (!armas_isvector(X)) {
         cf->error = ARMAS_ENEED_VECTOR;
         return -ARMAS_ENEED_VECTOR;
     }
@@ -148,9 +148,9 @@ int armas_x_ext_sum(DTYPE *result, DTYPE alpha, const armas_x_dense_t *X, int fl
     }
 
     if (flags & ARMAS_ABS) {
-        ext_asum2s(&h, &l, X, armas_x_size(X));
+        ext_asum2s(&h, &l, X, armas_size(X));
     } else {
-        ext_sum2s(&h, &l, X, armas_x_size(X));
+        ext_sum2s(&h, &l, X, armas_size(X));
     }
 
     if (alpha != ONE) {

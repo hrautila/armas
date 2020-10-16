@@ -1,7 +1,7 @@
 
-// Copyright (c) Harri Rautila, 2015-2020
+// Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/hrautila/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,7 +9,7 @@
 
 // ------------------------------------------------------------------------------
 // this file provides following type independent functions
-#if defined(armas_x_ext_scale_unsafe)
+#if defined(armas_ext_scale_unsafe)
 #define ARMAS_PROVIDES 1
 #endif
 
@@ -17,7 +17,7 @@
 #define ARMAS_REQUIRES 1
 
 // compile if type dependent public function names defined
-#if defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)
+#if (defined(ARMAS_PROVIDES) && defined(ARMAS_REQUIRES)) || defined(CONFIG_NOTYPENAMES)
 // ------------------------------------------------------------------------------
 
 #include "matrix.h"
@@ -26,10 +26,10 @@
 #include "eft.h"
 
 // scale block with constant (C + dC = beta*A)
-void armas_x_ext_scale_unsafe(
-  armas_x_dense_t *C0, armas_x_dense_t *dC,
+void armas_ext_scale_unsafe(
+  armas_dense_t *C0, armas_dense_t *dC,
   DTYPE beta,
-  const armas_x_dense_t *A)
+  const armas_dense_t *A)
 {
     int i, j;
     if (beta == ZERO) {
