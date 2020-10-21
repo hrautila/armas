@@ -573,7 +573,6 @@ void armas_wfree(armas_wbuf_t *wb)
 __ARMAS_INLINE
 void *armas_wreserve_bytes(armas_wbuf_t *W, size_t nbytes)
 {
-    nbytes = __align64(nbytes);
     if (!W || nbytes > W->bytes - W->offset)
         return (char *)0;
     char *r = &W->buf[W->offset];
