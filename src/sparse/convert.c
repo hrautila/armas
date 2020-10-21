@@ -35,7 +35,7 @@ static
 armas_sparse_t *csr_to_csc(armas_sparse_t * A,
                              const armas_sparse_t * B)
 {
-    double *Ae, *Be;
+    DTYPE *Ae, *Be;
 
     for (int i = 0; i < A->cols; i++)
         A->ptr[i] = 0;
@@ -84,7 +84,7 @@ static
 armas_sparse_t *csc_to_csr(armas_sparse_t * A,
                              const armas_sparse_t * B)
 {
-    double *Ae, *Be;
+    DTYPE *Ae, *Be;
 
     for (int i = 0; i < A->rows; i++)
         A->ptr[i] = 0;
@@ -131,7 +131,7 @@ static
 void csc_convert(armas_sparse_t * A, const armas_sparse_t * B)
 {
     coo_elem_t *Be = B->elems.ep;
-    double *Ae = A->elems.v;
+    DTYPE *Ae = A->elems.v;
     int cur, sum, col, *Ax = A->ix;
 
     // count rows in column
@@ -170,7 +170,7 @@ static
 void csr_convert(armas_sparse_t * A, const armas_sparse_t * B)
 {
     coo_elem_t *Be = B->elems.ep;
-    double *Ae = A->elems.v;
+    DTYPE *Ae = A->elems.v;
     int cur, sum, row, *Ax = A->ix;
 
     // count rows in column
