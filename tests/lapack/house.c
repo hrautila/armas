@@ -327,9 +327,9 @@ int test_unitrand_hyper(int M, int verbose)
     return fails;
 }
 
-double _two(int i, int j)
+DTYPE _two(int i, int j)
 {
-    return 2.0;
+    return (DTYPE)2.0;
 }
 
 int test_hyper(int M, int verbose)

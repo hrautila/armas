@@ -18,7 +18,7 @@
 int test_left(int flags, int verbose, int m, int n, int p)
 {
     armas_dense_t x, y, z, x0, x1, t, tau, P, w;
-    double relerr, nrm;
+    DTYPE relerr, nrm;
     armas_conf_t cf = *armas_conf_default();
 
     // x and y 
@@ -71,7 +71,7 @@ int test_left(int flags, int verbose, int m, int n, int p)
 int test_right(int flags, int verbose, int m, int n, int p)
 {
     armas_dense_t x, y, z, x0, x1, t, tau, P, w;
-    double relerr, nrm;
+    DTYPE relerr, nrm;
     armas_conf_t cf = *armas_conf_default();
     int stat = 0;
     // x and y 
