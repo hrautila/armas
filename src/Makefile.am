@@ -228,24 +228,25 @@ noinst_LTLIBRARIES =
 # common to all
 lib_LTLIBRARIES =
 
-##libx_la_SOURCES = $(COMMON)
 BUILT_SOURCES = armas/armas.h
 
 armas/armas.h: include/armas.h
 	$(top_srcdir)/install-sh $< $@
 
+noinst_LTLIBRARIES += libx.la
+libx_la_SOURCES = $(COMMON)
+
 ## ----------------- double precission -------------------------
 if ENABLE_FLOAT64
 
 lib_LTLIBRARIES += libarmasd.la
-noinst_LTLIBRARIES += libx.la libdb.la libda.la libds.la libdc.la
+noinst_LTLIBRARIES += libdb.la libda.la libds.la libdc.la
 libarmasd_la_SOURCES =
 libarmasd_la_LIBADD = libdb.la libx.la libda.la libds.la libdc.la
 libarmasd_la_LDFLAGS = -version-info @SOVERSION@
 
 BUILT_SOURCES += armas/ddense.h armas/dsparse.h
 
-libx_la_SOURCES = $(COMMON)
 libdb_la_SOURCES = $(BLAS) $(EBLAS) $(LAPACK)
 libda_la_SOURCES = $(ACCEL)
 libds_la_SOURCES = $(SPARSE)
@@ -266,6 +267,30 @@ endif
 
 ## ----------------- single precission -------------------------
 if ENABLE_FLOAT32
+
+lib_LTLIBRARIES += libarmass.la
+noinst_LTLIBRARIES += libsb.la libsa.la libss.la libsc.la
+libarmass_la_SOURCES =
+libarmass_la_LIBADD = libsb.la libx.la libsa.la libss.la libsc.la
+libarmass_la_LDFLAGS = -version-info @SOVERSION@
+
+BUILT_SOURCES += armas/sdense.h armas/ssparse.h
+
+libsb_la_SOURCES = $(BLAS) $(EBLAS) $(LAPACK)
+libsa_la_SOURCES = $(ACCEL)
+libss_la_SOURCES = $(SPARSE)
+libsc_la_SOURCES = $(COMPAT)
+
+libsb_la_CPPFLAGS = -DFLOAT32
+libsa_la_CPPFLAGS = -DFLOAT32
+libsc_la_CPPFLAGS = -DFLOAT32
+libss_la_CPPFLAGS = -DFLOAT32
+
+armas/sdense.h: include/matrix.h
+	$(top_srcdir)/src/make-header.sh $< $@ float $(NOTYPENAMES)
+
+armas/ssparse.h: include/sparse.h
+	$(top_srcdir)/src/make-header.sh $< $@ float $(NOTYPENAMES)
 
 endif
 
