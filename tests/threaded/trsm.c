@@ -39,7 +39,7 @@ int test_left_right(int N, int verbose, int unit)
     armas_init(&A, N, N);
     armas_init(&B, N, N);
     armas_init(&Bt, N, N);
-    armas_ac_init(&ac, ARMAS_AC_THREADED);
+    armas_ac_init(&ac, ARMAS_AC_SIMPLE);
     cf.accel = ac;
 
     printf("** trsm: left-and-right, %s\n", unit ? "unit diagonal" : "");
@@ -67,7 +67,7 @@ int test_left_right(int N, int verbose, int unit)
 
 int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
 {
-    armas_d_dense_t X, Y, X0, A;
+    armas_dense_t X, Y, X0, A;
     DTYPE n0, n1;
     int ok, fails = 0;
     armas_ac_handle_t ac;
@@ -76,7 +76,7 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
     armas_init(&X0, N, K);
     armas_init(&X, N, K);
     armas_init(&A, N, N);
-    armas_ac_init(&ac, ARMAS_AC_THREADED);
+    armas_ac_init(&ac, ARMAS_AC_SIMPLE);
     cf->accel = ac;
 
     armas_set_values(&X0, unitrand, ARMAS_NULL);
@@ -155,7 +155,7 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
 
 int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
 {
-    armas_d_dense_t X, Y, X0, A, At;
+    armas_dense_t X, Y, X0, A, At;
     DTYPE n0, n1;
     int ok, fails = 0;
     armas_ac_handle_t ac;
@@ -165,7 +165,7 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     armas_init(&X, K, N);
     armas_init(&A, N, N);
     armas_init(&At, N, N);
-    armas_ac_init(&ac, ARMAS_AC_THREADED);
+    armas_ac_init(&ac, ARMAS_AC_SIMPLE);
     cf->accel = ac;
 
     armas_set_values(&X0, unitrand, ARMAS_NULL);

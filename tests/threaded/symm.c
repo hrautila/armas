@@ -20,7 +20,7 @@ int test_left(int M, int N, int K, int verbose, armas_conf_t *cf)
     DTYPE n0, n1;
     armas_ac_handle_t ac;
 
-    armas_ac_init(&ac, ARMAS_AC_THREADED);
+    armas_ac_init(&ac, ARMAS_AC_SIMPLE);
     cf->accel = ac;
 
     armas_init(&C, M, N);
@@ -94,7 +94,7 @@ int test_right(int M, int N, int K, int verbose, armas_conf_t *cf)
     armas_ac_handle_t ac;
     DTYPE n0, n1;
 
-    armas_ac_init(&ac, ARMAS_AC_THREADED);
+    armas_ac_init(&ac, ARMAS_AC_SIMPLE);
     cf->accel = ac;
 
     armas_init(&C, M, N);

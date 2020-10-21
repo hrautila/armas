@@ -17,7 +17,7 @@ int test_std(int M, int N, int K, int verbose, armas_conf_t *cf)
     DTYPE n0, n1;
     armas_ac_handle_t ac;
     char *ac_name = getenv("ARMAS_ACCELERATOR");
-    armas_ac_init(&ac, ac_name);
+    armas_ac_init(&ac, (ac_name ? ac_name : ARMAS_AC_SIMPLE));
 
     armas_init(&C, M, N);
     armas_init(&Ct, N, M);

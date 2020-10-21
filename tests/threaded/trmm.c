@@ -20,7 +20,7 @@ int left(int N, int K, int unit, int verbose, armas_conf_t *cf)
     armas_init(&Xg, N, K);
     armas_init(&A, N, N);
     armas_init(&At, N, N);
-    armas_ac_init(&ac, ARMAS_AC_THREADED);
+    armas_ac_init(&ac, ARMAS_AC_SIMPLE);
     cf->accel = ac;
 
     armas_set_values(&X, unitrand, 0);
@@ -111,7 +111,7 @@ int right(int N, int K, int unit, int verbose, armas_conf_t *cf)
     armas_init(&Xg, K, N);
     armas_init(&A, N, N);
     armas_init(&At, N, N);
-    armas_ac_init(&ac, ARMAS_AC_THREADED);
+    armas_ac_init(&ac, ARMAS_AC_SIMPLE);
     cf->accel = ac;
 
     armas_set_values(&X, unitrand, 0);
