@@ -30,7 +30,7 @@ typedef float ABSTYPE;
 #define ABS  fabsf
 #define SQRT sqrtf
 #define HYPOT hypotf
-#define SIGN  signbitf
+#define SIGN  signbit
 #define COPYSIGN copysignf
 #define POW   powf
 #define EXP   expf
@@ -59,6 +59,7 @@ typedef float ABSTYPE;
 #define armas_alloc         armas_s_alloc
 #define armas_free          armas_s_free
 #define armas_make          armas_s_make
+#define armas_zero          armas_s_zero
 #define armas_column        armas_s_column
 #define armas_row           armas_s_row
 #define armas_submatrix     armas_s_submatrix

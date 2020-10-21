@@ -53,6 +53,7 @@ typedef float ABSTYPE;
 #define armas_alloc         armas_c_alloc
 #define armas_free          armas_c_free
 #define armas_make          armas_c_make
+#define armas_zero          armas_c_zero
 #define armas_column        armas_c_column
 #define armas_row           armas_c_row
 #define armas_submatrix     armas_c_submatrix

@@ -211,12 +211,23 @@ armas_dense_t *armas_make(armas_dense_t *m, int r, int c, int s, DTYPE *elems)
     return m;
 }
 
+__ARMAS_INLINE
+void armas_zero(armas_dense_t *A)
+{
+    A->rows = A->cols = A->step = 0;
+    A->elems = (DTYPE *)0;
+    A->__data = 0;
+    A->__nbytes = 0;
+}
+
 //! @brief Make A a column vector of B; A = B[:, c]
 __ARMAS_INLINE
 armas_dense_t *armas_column(armas_dense_t *A, const armas_dense_t *B, int c)
 {
-    if (armas_size(B) == 0)
+    if (armas_size(B) == 0) {
+        armas_zero(A);
         return (armas_dense_t *)0;
+    }
     if (c < 0) {
         c += B->cols;
     }
@@ -247,8 +258,10 @@ armas_dense_t *armas_column_unsafe(armas_dense_t *A, const armas_dense_t *B, int
 __ARMAS_INLINE
 armas_dense_t *armas_row(armas_dense_t *A, const armas_dense_t *B, int r)
 {
-    if (armas_size(B) == 0)
+    if (armas_size(B) == 0) {
+        armas_zero(A);
         return (armas_dense_t *)0;
+    }
     if (r < 0) {
         r += B->rows;
     }
@@ -280,8 +293,10 @@ __ARMAS_INLINE
 armas_dense_t *armas_submatrix_ext(armas_dense_t *A, const armas_dense_t *B,
                                        int r, int c, int nr, int nc, int step)
 {
-    if (armas_size(B) == 0)
+    if (armas_size(B) == 0) {
+        armas_zero(A);
         return (armas_dense_t *)0;
+    }
     if (r < 0) {
         r += B->rows;
     }

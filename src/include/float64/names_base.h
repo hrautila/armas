@@ -58,6 +58,7 @@ typedef double ABSTYPE;
 #define armas_alloc         armas_d_alloc
 #define armas_free          armas_d_free
 #define armas_make          armas_d_make
+#define armas_zero          armas_d_zero
 #define armas_column        armas_d_column
 #define armas_row           armas_d_row
 #define armas_submatrix     armas_d_submatrix
