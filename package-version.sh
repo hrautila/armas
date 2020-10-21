@@ -1,7 +1,7 @@
 #!/bin/sh
 CMDDIR=$(dirname $0)
 if [ -d $CMDDIR/.git ]; then
-    VERSION=$(git describe --always)
+    VERSION=$(git describe --always --tags)
     DIRTY=$(git diff-index --name-only HEAD)
     test "${DIRTY}" != "" && VERSION="${VERSION}-dirty"
 elif [ -f $CMDDIR/.version ]; then
