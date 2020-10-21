@@ -35,7 +35,7 @@
  */
 #include "float32/names_base.h"
 #include "float32/names_blas.h"
-#include "float32/names_sparese.h"
+#include "float32/names_sparse.h"
 
 #else
 /*

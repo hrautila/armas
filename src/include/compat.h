@@ -60,7 +60,7 @@ enum CBLAS_SIDE		{CblasLeft=141, CblasRight=142};
 /* ---------------------------------------------------------------------------
  * Definitions for single precision floating type.
  */
-#include "float64/names_compat.h"
+#include "float32/names_compat.h"
 
 #else  // default is double precision float (FLOAT64)
 /* ---------------------------------------------------------------------------
