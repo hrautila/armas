@@ -13,7 +13,7 @@ int test_row_vector(int N, int verbose, int flags)
     armas_env_t *env = armas_getenv();
     armas_dense_t Z, X, A, X0;
     int ok, fails = 0;
-    double n0, n1;
+    DTYPE n0, n1;
     char uplo = (flags & ARMAS_UPPER) ? 'U' : 'L';
 
     armas_init(&Z, N + 2, N);
@@ -22,10 +22,9 @@ int test_row_vector(int N, int verbose, int flags)
     armas_submatrix(&A, &Z, 2, 0, N, N);
 
     armas_set_values(&A, zeromean, flags);
-    if (flags & ARMAS_UNIT) {
-        for (int i = 0; i < N; i++) {
-            armas_set(&A, i, i, ONE);
-        }
+    DTYPE ondiag = (flags & ARMAS_UNIT) != 0 ? ONE : TWO;
+    for (int i = 0; i < N; i++) {
+        armas_set(&A, i, i, ondiag);
     }
     armas_set_values(&X0, one, ARMAS_NULL);
     printf("** trsv (row vector): %s %s %s\n",
@@ -55,7 +54,7 @@ int test_col_vector(int N, int verbose, int flags)
     armas_env_t *env = armas_getenv();
     armas_dense_t Z, X, A, X0;
     int ok, fails = 0;
-    double n0, n1;
+    DTYPE n0, n1;
     char uplo = (flags & ARMAS_UPPER) ? 'U' : 'L';
 
     armas_init(&Z, N, N + 2);
@@ -64,10 +63,9 @@ int test_col_vector(int N, int verbose, int flags)
     armas_submatrix(&A, &Z, 0, 2, N, N);
 
     armas_set_values(&A, zeromean, flags);
-    if (flags & ARMAS_UNIT) {
-        for (int i = 0; i < N; i++) {
-            armas_set(&A, i, i, ONE);
-        }
+    DTYPE ondiag = (flags & ARMAS_UNIT) != 0 ? ONE : TWO;
+    for (int i = 0; i < N; i++) {
+        armas_set(&A, i, i, ondiag);
     }
     armas_set_values(&X0, one, ARMAS_NULL);
 
@@ -100,7 +98,7 @@ int test_blocked(int N, int verbose, int lb, int flags)
     armas_env_t *env = armas_getenv();
     armas_dense_t Z, X1, A, X0;
     int ok, fails = 0;
-    double n0, n1;
+    DTYPE n0, n1;
 
     armas_init(&Z, N, N + 2);
     armas_column(&X0, &Z, 0);
@@ -108,10 +106,9 @@ int test_blocked(int N, int verbose, int lb, int flags)
     armas_submatrix(&A, &Z, 0, 2, N, N);
 
     armas_set_values(&A, zeromean, flags);
-    if (flags & ARMAS_UNIT) {
-        for (int i = 0; i < N; i++) {
-            armas_set(&A, i, i, ONE);
-        }
+    DTYPE ondiag = (flags & ARMAS_UNIT) != 0 ? ONE : TWO;
+    for (int i = 0; i < N; i++) {
+        armas_set(&A, i, i, ondiag);
     }
     armas_set_values(&X0, one, ARMAS_NULL);
     armas_mvmult(ZERO, &X1, TWO, &A, &X0, flags, &conf);
@@ -145,7 +142,7 @@ int main(int argc, char **argv)
     int opt;
     int N = 77;
     int lb = 16;
-    int verbose = 0;
+    int verbose = 1;
     int all = 1;
     int unit = 0;
     int lower = 0;
