@@ -8,7 +8,7 @@
 
 int test_std(int N, int verbose, int flags, armas_conf_t *cf)
 {
-    armas_dense_t X, Y0, A0, tmp;
+    armas_dense_t X, Y0, A0;
     const char *uplo = (flags & ARMAS_LOWER) ? "lower" : "upper";
     DTYPE nrm_y, nrm_z;
     int ok;
