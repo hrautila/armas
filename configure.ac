@@ -74,37 +74,19 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([gettimeofday sqrt])
 
 AS_IF([test "$enable_ext_precision" = "yes"],
-  [AC_DEFINE([CONFIG_EXT_PRECISION], [1], [Enable extended precision]),
-   AC_DEFINE([CONFIG_OPT_PRECISION],["--enable-ext-precision"], [Config option enable extended precision])], [])
+  [AC_DEFINE([CONFIG_EXT_PRECISION], [1], [Enable extended precision])], [])
 
 AS_IF([test "$enable_accelerators" = "yes"],
-  [AC_DEFINE([CONFIG_ACCELERATORS], [1], [Enable accelerators]),
-   AC_DEFINE([CONFIG_OPT_ACCELERATOR],["--enable-accelerators"], [Config option enable accelerators])], [])
+  [AC_DEFINE([CONFIG_ACCELERATORS], [1], [Enable accelerators])], [])
 
 AS_IF([test "$enable_compat" = "yes"],
-  [AC_DEFINE([CONFIG_COMPAT], [1], [Enable compability]),
-   AC_DEFINE([CONFIG_OPT_COMPAT],["--enable-compat"], [Config option enable compability functions])], [])
+  [AC_DEFINE([CONFIG_COMPAT], [1], [Enable compability])], [])
 
 AS_IF([test "$enable_sparse" = "yes"],
-  [AC_DEFINE([CONFIG_SPARSE], [1], [Enable sparse methods]),
-   AC_DEFINE([CONFIG_OPT_SPARSE],["--enable-sparse"], [Config option enable sparse methods])] , [])
+  [AC_DEFINE([CONFIG_SPARSE], [1], [Enable sparse methods])] , [])
 
 AS_IF([test "$enable_notypenames" = "yes"],
-  [AC_DEFINE([CONFIG_NOTYPENAMES], [1], [Enable without type indicators in names.]),
-   AC_DEFINE([CONFIG_OPT_NOTYPENAMES],
-     ["--enable-notypenames"], [Config option enable without type indicators.])] , [])
-
-AS_IF([test "$enable_float64" = "yes"],
-  [AC_DEFINE([CONFIG_OPT_FLOAT64], ["--enable-float64"], [Config option enable float64])], [])
-
-AS_IF([test "$enable_float32" = "yes"],
-  [AC_DEFINE([CONFIG_OPT_FLOAT32], ["--enable-float32"], [Config option enable float32])], [])
-
-AS_IF([test "$enable_complex64" = "yes"],
-  [AC_DEFINE([CONFIG_OPT_COMPLEX64], ["--enable-complex64"], [Config option enable complex64])], [])
-
-AS_IF([test "$enable_complex128" = "yes"],
-  [AC_DEFINE([CONFIG_OPT_COMPLEX128], ["--enable-complex128"], [Config option enable complex128])], [])
+  [AC_DEFINE([CONFIG_NOTYPENAMES], [1], [Enable without type indicators in names.])] , [])
 
 AM_CONDITIONAL([CONFIG_ACCELERATORS], [test "$enable_accelerators" = "yes"])
 AM_CONDITIONAL([CONFIG_EXT_PRECISION], [test "$enable_ext_precision" = "yes"])
