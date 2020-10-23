@@ -217,6 +217,10 @@ COMPAT += \
 	compat/syr2k.c
 endif
 
+CONFIG_SETTINGS != @top_builddir@/config.status --config | tr -d "\'"
+COMPILER_INFO != @CC@ --version | head -1
+COMPILE_TIME != date -Iseconds
+
 if CONFIG_NOTYPENAMES
 NOTYPENAMES = yes
 else
@@ -235,6 +239,10 @@ armas/armas.h: include/armas.h
 
 noinst_LTLIBRARIES += libx.la
 libx_la_SOURCES = $(COMMON)
+libx_la_CPPFLAGS = \
+	-DCONFIG_SETTINGS="\"$(CONFIG_SETTINGS)\"" \
+	-DCOMPILER="\"$(COMPILER_INFO)\"" \
+	-DCOMPILE_TIME="\"$(COMPILE_TIME)\""
 
 ## ----------------- double precission -------------------------
 if ENABLE_FLOAT64

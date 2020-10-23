@@ -1,6 +1,6 @@
 // Copyright by libARMAS authors. See AUTHORS file in this archive.
 
-// This file is part of github.com/armas package. It is free software,
+// This file is part of libARMAS package. It is free software,
 // distributed under the terms of GNU Lesser General Public License Version 3, or
 // any later version. See the COPYING file included in this archive.
 
@@ -9,26 +9,26 @@
 #endif
 #include "armas.h"
 
-static const char *config_options[] = {
-#ifdef CONFIG_OPT_FLOAT32
-    CONFIG_OPT_FLOAT32,
+#ifndef CONFIG_SETTINGS
+#define CONFIG_SETTINGS "unknown"
 #endif
-#ifdef CONFIG_OPT_FLOAT64
-    CONFIG_OPT_FLOAT64,
+#ifndef COMPILER
+#define "cc-unknown"
 #endif
-#ifdef CONFIG_OPT_SPARSE
-    CONFIG_OPT_SPARSE,
+#ifndef COMPILE_TIME
+#define "compile time unknown"
 #endif
-#ifdef CONFIG_OPT_COMPAT
-    CONFIG_OPT_COMPAT,
-#endif
-#ifdef CONFIG_OPT_ACCELERATOR
-    CONFIG_OPT_ACCELERATOR,
-#endif
-#ifdef CONFIG_OPT_PRECISION
-    CONFIG_OPT_PRECISION,
-#endif
-    ""
+
+static const char *info[] = {
+    PACKAGE_NAME,
+    PACKAGE_VERSION,
+    "configure " CONFIG_SETTINGS,
+    COMPILER,
+    COMPILE_TIME,
+    "This is free software, distributed under the terms of GNU Lesser General Public License\n"
+    "Version 3, or any later version. See the source for copying conditions. There is NO\n"
+    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    (char *)0
 };
 
 /**
@@ -48,9 +48,9 @@ const char *armas_name()
 }
 
 /**
- * @brief Return library build configuration options. Last entry is always zero length string.
+ * @brief Return library build settings. Last entry is always null pointer.
  */
-const char **armas_config_options()
+const char **armas_info()
 {
-    return config_options;
+    return info;
 }

@@ -262,7 +262,7 @@ typedef struct armas_conf {
 
 extern const char *armas_version();
 extern const char *armas_name();
-extern const char **armas_config_options();
+extern const char **armas_info();
 extern armas_conf_t *armas_conf_default();
 
 extern int armas_ac_init(armas_ac_handle_t *handle, const char *name);
