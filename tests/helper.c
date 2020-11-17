@@ -149,7 +149,7 @@ DTYPE rel_error(DTYPE * dnorm, armas_dense_t * computed,
                 armas_dense_t * expected, int norm, int flags,
                 armas_conf_t * conf)
 {
-    double cnrm, enrm;
+    DTYPE cnrm, enrm;
     if (armas_isvector(computed)) {
         armas_axpy(computed, -1.0, expected, conf);
     } else {
