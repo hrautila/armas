@@ -119,4 +119,12 @@ do {                                            \
     }                                           \
 } while (0)
 
+#define MAT_PRINT_COND(s, A, yes, col)          \
+do {                                            \
+    if ((yes) && (A)->cols < col) {             \
+        printf("%s\n", s);                      \
+        armas_printf(stdout, "%9.2e", (A));     \
+    }                                           \
+} while (0)
+
 #endif /* TEST_TESTING_H */
