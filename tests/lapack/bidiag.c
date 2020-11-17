@@ -8,7 +8,7 @@
 
 #include "testing.h"
 #if FLOAT32
-#define ERROR 6e-6
+#define ERROR 6e-5
 #else
 #define ERROR 1e-12
 #endif
@@ -353,8 +353,8 @@ int test_build_qp(int M, int N, int lb, int K, int flags, int verbose)
 int main(int argc, char **argv)
 {
     int opt;
-    int M = 787;
-    int N = 741;
+    int M = 411;
+    int N = 401;
     int LB = 48;
     int verbose = 1;
 
