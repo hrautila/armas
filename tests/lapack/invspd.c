@@ -9,7 +9,7 @@
 #include "testing.h"
 
 #if FLOAT32
-#define ERROR 1e-4
+#define ERROR 1e-3
 #else
 #define ERROR 1e-8
 #endif

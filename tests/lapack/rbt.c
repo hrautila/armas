@@ -169,7 +169,7 @@ int test_update_rbt(int N, int P, int verbose)
 }
 
 #if FLOAT32
-#define MAX_ERROR  1e-6
+#define MAX_ERROR  1e-5
 #else
 #define MAX_ERROR  1e-12
 #endif
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
 {
     int N, P, opt, verbose = 1;
 
-    N = 144;
+    N = 88;
     P = 2;
 
     while ((opt = getopt(argc, argv, "v")) != -1) {
@@ -316,9 +316,3 @@ int main(int argc, char **argv)
         fails++;
     return fails;
 }
-
-
-// Local Variables:
-// indent-tabs-mode: nil
-// c-basic-offset: 4
-// End:

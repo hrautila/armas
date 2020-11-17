@@ -10,7 +10,7 @@
 
 #define NAME "ldl"
 #if FLOAT32
-#define REL_ERROR 8e-6
+#define REL_ERROR 8e-4
 #else
 #define REL_ERROR 1e-11
 #endif

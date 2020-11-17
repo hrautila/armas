@@ -14,7 +14,7 @@
 #define NAME "ldlnp"
 
 #if FLOAT32
-#define __ERROR 1e-4
+#define __ERROR 1e-3
 #else
 #define __ERROR 1e-9
 #endif

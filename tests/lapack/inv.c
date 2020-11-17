@@ -11,7 +11,7 @@
 #define NAME "inverse"
 
 #if FLOAT32
-#define ERROR 1e-5
+#define ERROR 1e-4
 #else
 #define ERROR 1e-12
 #endif
