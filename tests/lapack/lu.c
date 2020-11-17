@@ -59,34 +59,69 @@ int test_solve(int M, int N, int lb, int verbose)
     return ok;
 }
 
+int check_lufactor(DTYPE *nrm, armas_dense_t *LU, armas_dense_t *T, armas_pivot_t *P, armas_dense_t *ref)
+{
+    armas_dense_t D;
+    armas_conf_t *cf = armas_conf_default();
+    armas_set_values(T, zero, ARMAS_ANY);
+    armas_diag(&D, T, 0);
+    armas_set_values(&D, one, ARMAS_ANY);
+    // I * L * U
+    armas_mult_trm(T, 1.0, LU, ARMAS_RIGHT|ARMAS_LOWER|ARMAS_UNIT, cf);
+    armas_mult_trm(T, 1.0, LU, ARMAS_RIGHT|ARMAS_UPPER, cf);
+    if (ref && nrm) {
+        if (P)
+            armas_pivot_rows(T, P, ARMAS_PIVOT_BACKWARD, cf);
+        *nrm =  rel_error((DTYPE *)0, T, ref, ARMAS_NORM_ONE, ARMAS_NONE, cf);
+    }
+    return 1;
+}
+
 int test_factor(int M, int N, int lb, int verbose)
 {
-    armas_dense_t A0, A1;
+    armas_dense_t A, A0, A1;
     armas_pivot_t P0, P1;
     armas_env_t *env = armas_getenv();
     armas_conf_t conf = *armas_conf_default();
     int ok;
     DTYPE nrm;
 
+    armas_init(&A,  M, N);
     armas_init(&A0, M, N);
     armas_init(&A1, M, N);
     armas_pivot_init(&P0, N);
     armas_pivot_init(&P1, N);
 
     // set source data
-    armas_set_values(&A0, unitrand, ARMAS_ANY);
-    armas_mcopy(&A1, &A0, 0, &conf);
+    armas_set_values(&A, unitrand, ARMAS_ANY);
+    armas_mcopy(&A0, &A, 0, &conf);
 
     //armas_lufactor(&A0, &P0, &conf);
     env->lb = 0;
     armas_lufactor(&A0, &P0, &conf);
+    check_lufactor(&nrm, &A0, &A1, &P0, &A);
+
+    ok = isOK(nrm, N);
+    printf("%s: unblk: I*LU == A\n", PASS(ok));
+    if (verbose > 0) {
+        printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
+    }
+
     env->lb = lb;
+    armas_mcopy(&A1, &A, 0, &conf);
     armas_lufactor(&A1, &P1, &conf);
 
     nrm = rel_error((DTYPE *) 0, &A0, &A1, ARMAS_NORM_ONE, ARMAS_NONE, &conf);
     ok = isOK(nrm, N);
 
     printf("%s: unblk.LU(A) == blk.LU(A)\n", PASS(ok));
+    if (verbose > 0) {
+        printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
+    }
+
+    check_lufactor(&nrm, &A1, &A0, &P0, &A);
+    ok = isOK(nrm, N);
+    printf("%s:  blk: I*LU == A\n", PASS(ok));
     if (verbose > 0) {
         printf("  || rel error ||: %e [%d]\n", nrm, ndigits(nrm));
     }
@@ -101,9 +136,9 @@ int test_factor(int M, int N, int lb, int verbose)
 int main(int argc, char **argv)
 {
     int opt;
-    int M = 789;
-    int N = 711;
-    int LB = 36;
+    int M = 411;
+    int N = 411;
+    int LB = 32;
     int verbose = 1;
 
     while ((opt = getopt(argc, argv, "v")) != -1) {
