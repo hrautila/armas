@@ -17,7 +17,6 @@ COMMON = \
 	base/version.c \
 	base/env.c \
 	base/system.c \
-	base/pivot.c \
 	base/pivot_ext.c \
 	io/iomm.c \
 	io/json_base.c \
@@ -29,6 +28,7 @@ BLAS = \
 	base/matrix.c \
 	base/matrix_ext.c \
 	base/partition.c \
+	base/pivot.c \
 	blas/mapply.c \
 	blas/asum.c \
 	blas/axpy.c \
