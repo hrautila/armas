@@ -56,10 +56,10 @@ int coo_colcmp(const void *ap, const void *bp)
 
 // Simple bubble sort to sort (index, value) pairs to ascending order
 static
-void simple_sort(int *index, double *elems, int n)
+void simple_sort(int *index, DTYPE *elems, int n)
 {
     int ix, k, j;
-    double ex;
+    DTYPE ex;
     for (k = 1; k < n; k++) {
         for (j = k; j > 0 && index[j] < index[j - 1]; j--) {
             ix = index[j];
@@ -75,7 +75,7 @@ void simple_sort(int *index, double *elems, int n)
 static
 void compressed_sort(armas_sparse_t * A)
 {
-    double *Ae = A->elems.v;
+    DTYPE *Ae = A->elems.v;
     int k, *Ax = A->ix;
     for (k = 0; k < A->nptr; k++) {
         simple_sort(&Ax[A->ptr[k]], &Ae[A->ptr[k]],

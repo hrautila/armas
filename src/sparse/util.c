@@ -64,7 +64,7 @@ int armassp_make(armas_sparse_t * A, int rows, int cols, int nnz,
         A->ix = A->ptr = (int *) 0;
         break;
     default:
-        A->elems.v = (double *) data;
+        A->elems.v = (DTYPE *) data;
         A->ptr = (int *) &A->elems.v[nnz];
         A->nptr = (storage == ARMASSP_CSR ? rows : cols);
         A->ix = &A->ptr[A->nptr + 1];
