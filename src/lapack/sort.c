@@ -45,19 +45,28 @@ void armas_abs_sort_vec(armas_dense_t * D, int updown)
     DTYPE cval, tmpval;
 
     // simple insertion sort
-    for (k = 1; k < armas_size(D); k++) {
-        cval = ABS(armas_get_at_unsafe(D, k));
-        for (j = k; j > 0; j--) {
-            tmpval = ABS(armas_get_at_unsafe(D, j - 1));
-            if (updown > 0 && tmpval >= cval) {
-                break;
+    if (updown > 0) {
+        for (k = 1; k < armas_size(D); k++) {
+            cval = ABS(armas_get_at_unsafe(D, k));
+            for (j = k; j > 0; j--) {
+                tmpval = ABS(armas_get_at_unsafe(D, j - 1));
+                if (tmpval <= cval)
+                    break;
+                armas_set_at_unsafe(D, j, tmpval);
             }
-            if (updown < 0 && tmpval <= cval) {
-                break;
-            }
-            armas_set_at_unsafe(D, j, tmpval);
+            armas_set_at_unsafe(D, j, cval);
         }
-        armas_set_at_unsafe(D, j, cval);
+    } else {
+        for (k = 1; k < armas_size(D); k++) {
+            cval = ABS(armas_get_at_unsafe(D, k));
+            for (j = k; j > 0; j--) {
+                tmpval = ABS(armas_get_at_unsafe(D, j - 1));
+                if (tmpval >= cval)
+                    break;
+                armas_set_at_unsafe(D, j, tmpval);
+            }
+            armas_set_at_unsafe(D, j, cval);
+        }
     }
 }
 
@@ -78,19 +87,28 @@ void armas_sort_vec(armas_dense_t * D, int updown)
     DTYPE cval, tmpval;
 
     // simple insertion sort
-    for (k = 1; k < armas_size(D); k++) {
-        cval = armas_get_at_unsafe(D, k);
-        for (j = k; j > 0; j--) {
-            tmpval = armas_get_at_unsafe(D, j - 1);
-            if (updown > 0 && tmpval >= cval) {
-                break;
+    if (updown > 0) {
+        for (k = 1; k < armas_size(D); k++) {
+            cval = armas_get_at_unsafe(D, k);
+            for (j = k; j > 0; j--) {
+                tmpval = armas_get_at_unsafe(D, j - 1);
+                if (tmpval <= cval)
+                    break;
+                armas_set_at_unsafe(D, j, tmpval);
             }
-            if (updown < 0 && tmpval <= cval) {
-                break;
-            }
-            armas_set_at_unsafe(D, j, tmpval);
+            armas_set_at_unsafe(D, j, cval);
         }
-        armas_set_at_unsafe(D, j, cval);
+    } else {
+        for (k = 1; k < armas_size(D); k++) {
+            cval = armas_get_at_unsafe(D, k);
+            for (j = k; j > 0; j--) {
+                tmpval = armas_get_at_unsafe(D, j - 1);
+                if (tmpval >= cval)
+                    break;
+                armas_set_at_unsafe(D, j, tmpval);
+            }
+            armas_set_at_unsafe(D, j, cval);
+        }
     }
 }
 
@@ -106,15 +124,21 @@ int vec_minmax(armas_dense_t * D, int updown)
     data = armas_data(D);
     cval = data[0];
     ix = 0;
-    for (k = 1, n = incx; k < armas_size(D); k++, n += incx) {
-        tmpval = data[n];
-        if (updown > 0 && tmpval > cval) {
-            cval = tmpval;
-            ix = k;
+    if (updown > 0) {
+        for (k = 1, n = incx; k < armas_size(D); k++, n += incx) {
+            tmpval = data[n];
+            if (tmpval > cval) {
+                cval = tmpval;
+                ix = k;
+            }
         }
-        if (updown < 0 && tmpval < cval) {
-            cval = tmpval;
-            ix = k;
+    } else {
+        for (k = 1, n = incx; k < armas_size(D); k++, n += incx) {
+            tmpval = data[n];
+            if (tmpval < cval) {
+                cval = tmpval;
+                ix = k;
+            }
         }
     }
     return ix;
@@ -133,15 +157,21 @@ int vec_abs_minmax(armas_dense_t * D, int minmax)
     data = armas_data(D);
     cval = ABS(data[0]);
     ix = 0;
-    for (k = 1, n = incx; k < armas_size(D); k++, n += incx) {
-        tmpval = ABS(data[n]);
-        if (minmax > 0 && tmpval > cval) {
-            cval = tmpval;
-            ix = k;
+    if (minmax > 0) {
+        for (k = 1, n = incx; k < armas_size(D); k++, n += incx) {
+            tmpval = ABS(data[n]);
+            if (tmpval > cval) {
+                cval = tmpval;
+                ix = k;
+            }
         }
-        if (minmax < 0 && tmpval < cval) {
-            cval = tmpval;
-            ix = k;
+    } else {
+        for (k = 1, n = incx; k < armas_size(D); k++, n += incx) {
+            tmpval = ABS(data[n]);
+            if (tmpval < cval) {
+                cval = tmpval;
+                ix = k;
+            }
         }
     }
     return ix;
@@ -178,6 +208,10 @@ int armas_sort_eigenvec(armas_dense_t * D, armas_dense_t * U,
 
     if (!armas_isvector(D)) {
         return -ARMAS_ENEED_VECTOR;
+    }
+    if (!U && !V && !C) {
+        armas_sort_vec(D, updown);
+        return 0;
     }
     // This is simple insertion sort - find index to largest/smallest value
     // in remaining subvector and swap that with value in current index.
