@@ -26,7 +26,7 @@ AM_CPPFLAGS = $(INCLUDE) -DCOMPLEX128
 endif
 
 UNIT_TESTS = \
-	chol givens house housem ldlbk ldlt lu qrbld qrfact qrmult \
+	sort chol givens house housem ldlbk ldlt lu qrbld qrfact qrmult \
 	qrsol qlfact qlbld qlmult lqfact lqbld lqmult lqsol \
 	rqfact rqbld rqmult hessred trdred bidiag bdsvd trdevd \
 	evd gesvd rbt secular invtrm inv invspd invldlt
@@ -101,6 +101,8 @@ trdred_SOURCES = trdred.c ../helper.c
 trdred_LDADD   = $(LIBARMAS)
 secular_SOURCES = secular.c ../helper.c
 secular_LDADD  = $(LIBARMAS)
+sort_SOURCES = sort.c ../helper.c
+sort_LDADD  = $(LIBARMAS)
 
 TESTS = $(check_PROGRAMS)
 
