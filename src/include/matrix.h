@@ -983,6 +983,15 @@ extern int armas_pivot_rows(armas_dense_t *A, armas_pivot_t *P, int flags, armas
 
 extern int armas_pivot_cols(armas_dense_t *A, armas_pivot_t *P, int flags, armas_conf_t *cf);
 
+extern int armas_qsort_vec(armas_dense_t * D, int updown);
+
+extern void armas_sort_vec(armas_dense_t * D, int updown);
+
+extern void armas_abs_sort_vec(armas_dense_t * D, int updown);
+
+extern int armas_sort_eigenvec(
+    armas_dense_t * D, armas_dense_t * U,  armas_dense_t * V, armas_dense_t * C, int updown);
+
 /*! @endcond */
 
 #ifdef __cplusplus

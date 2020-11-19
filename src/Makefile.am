@@ -154,6 +154,7 @@ LAPACK = \
 	lapack/rq.c \
 	lapack/rqmult.c \
 	lapack/sort.c \
+	lapack/qsort.c \
 	lapack/trdbis.c \
 	lapack/trdevd.c \
 	lapack/trdsec.c \

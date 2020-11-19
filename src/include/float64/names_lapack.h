@@ -241,6 +241,7 @@
 #define armas_eigen_sort               armas_d_eigen_sort
 #define armas_abs_sort_vec             armas_d_abs_sort_vec
 #define armas_sort_vec                 armas_d_sort_vec
+#define armas_qsort_vec                armas_d_qsort_vec
 #define armas_sort_eigenvec            armas_d_sort_eigenvec
 
 // Additional
