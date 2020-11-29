@@ -11,6 +11,8 @@ endif
 
 AM_CFLAGS = -O3 -march=native -ffast-math -fomit-frame-pointer -Wall $(USE_PTHREAD) -I$(top_srcdir)/src/include $(DEBUG)
 
+
+## COMMON holds matrix element type independent functions
 COMMON = \
 	base/armas.c \
 	base/cache.c \
@@ -18,9 +20,7 @@ COMMON = \
 	base/env.c \
 	base/system.c \
 	base/pivot_ext.c \
-	io/iomm.c \
-	io/json_base.c \
-	io/json_file.c \
+	io/ios.c \
 	io/json_reader.c \
 	io/json_writer.c
 
@@ -28,6 +28,9 @@ BLAS = \
 	base/matrix.c \
 	base/matrix_ext.c \
 	base/partition.c \
+	io/iomm.c \
+	io/json_file.c \
+	io/json_base.c \
 	base/pivot.c \
 	blas/mapply.c \
 	blas/asum.c \
