@@ -121,10 +121,6 @@ extern int armas_json_dump(FILE *fp, const armas_dense_t *A, int flags);
 // -------------------------------------------------------------------------------------------
 // inline functions
 
-#ifndef __ARMAS_INLINE
-#define __ARMAS_INLINE extern inline
-#endif
-
 /**
  * @addtogroup matrix
  * @{
