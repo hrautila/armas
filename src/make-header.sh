@@ -89,7 +89,6 @@ s/ABSTYPE/${ABSTYPE}/g;\
 s/ZERO/${ZERO}/;\
 s/ABSZERO/${ABSZERO}/;\
 s/ONE/${ONE}/;\
-s/^__ARMAS_INLINE/extern inline/;\
 s:\"matrix.h\":<${MATRIXH}>:;\
 s:/\* COMPLEX_H \*/:${COMPLEX_H}:;"
 
