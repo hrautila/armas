@@ -355,6 +355,11 @@ int armas_ios_putchar(armas_iostream_t *ios, int c)
     return ios->vt->put_char(ios->stream, c);
 }
 
+/**
+ * @brief Make iostream of provided file stream.
+ */
+void armas_ios_filestream(armas_iostream_t *ios, FILE *fp);
+
 extern int armas_json_read_token(char *iobuf, size_t len, armas_iostream_t *ios);
 extern int armas_json_write_token(int tok, const void *ptr, size_t len, armas_iostream_t *ios);
 extern int armas_json_write_simple_token(int tok, armas_iostream_t *ios);
