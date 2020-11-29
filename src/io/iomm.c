@@ -265,7 +265,7 @@ int armas_mmload(armas_dense_t *A, int *flags,  FILE *f)
     int m, n, nc, nnz, r, c, nelem, nread, k;
     char *iobuf;
     size_t ioblen;
-    double v;
+    DTYPE v;
 
     if (__mmread_banner(f, &typecode) < 0) {
         return -1;
