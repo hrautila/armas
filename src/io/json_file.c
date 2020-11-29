@@ -26,34 +26,6 @@
 #include "matrix.h"
 //! \endcond
 
-static
-int file_getc(void *ptr)
-{
-    FILE *fp = (FILE *)ptr;
-    return fgetc(fp);
-}
-
-static
-void file_ungetc(void *ptr, int c)
-{
-    FILE *fp = (FILE *)ptr;
-    ungetc(c, fp);
-}
-
-static
-int file_putc(void *ptr, int c)
-{
-    FILE *fp = (FILE *)ptr;
-    return fputc(c, fp);
-}
-
-static
-armas_iostream_vtable_t file_vtable = (armas_iostream_vtable_t){
-    .get_char = file_getc,
-    .unget_char = file_ungetc,
-    .put_char = file_putc
-};
-
 /**
  * @brief Initialize matrix from JSON serialized file stream
  *
@@ -73,7 +45,7 @@ int armas_json_load(armas_dense_t **A, FILE *fp)
 {
     armas_iostream_t reader;
 
-    armas_ios_init(&reader, &file_vtable, fp);
+    armas_ios_filestream(&reader, fp);
     return armas_json_read(A, &reader);
 }
 
@@ -90,7 +62,7 @@ int armas_json_dump(FILE *fp, const armas_dense_t *A, int flags)
 {
     armas_iostream_t writer;
 
-    armas_ios_init(&writer, &file_vtable, fp);
+    armas_ios_filestream(&writer, fp);
     return armas_json_write(&writer, A, flags);
 }
 #else
