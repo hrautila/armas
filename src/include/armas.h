@@ -287,6 +287,7 @@ typedef struct armas_iostream_vtable {
     int (*get_char)(void *stream);             ///< Get one chracter from stream
     void (*unget_char)(void *stream, int c);   ///< Unget character received from stream back to the stream
     int (*put_char)(void *stream, int c);      ///< Put character to stream
+    void (*close)(void *stream);
 } armas_iostream_vtable_t;
 
 /**
@@ -326,7 +327,7 @@ void armas_ios_init(armas_iostream_t *ios, armas_iostream_vtable_t *vt, void *st
 __ARMAS_INLINE
 int armas_ios_getchar(armas_iostream_t *ios)
 {
-    if (!ios)
+    if (!ios || !ios->stream || !ios->vt->get_char)
         return -1;
     return ios->vt->get_char(ios->stream);
 }
@@ -337,7 +338,7 @@ int armas_ios_getchar(armas_iostream_t *ios)
 __ARMAS_INLINE
 void armas_ios_ungetchar(armas_iostream_t *ios, int c)
 {
-    if (!ios)
+    if (!ios || !ios->stream || !ios->vt->unget_char)
         return;
     ios->vt->unget_char(ios->stream, c);
 }
@@ -350,15 +351,35 @@ void armas_ios_ungetchar(armas_iostream_t *ios, int c)
 __ARMAS_INLINE
 int armas_ios_putchar(armas_iostream_t *ios, int c)
 {
-    if (!ios)
+    if (!ios || !ios->stream || !ios->vt->put_char)
         return -1;
     return ios->vt->put_char(ios->stream, c);
 }
 
 /**
+ * @brief Close an iostream.
+ *
+ * Closing an iostream does not affect resources provided at initialization. After closing
+ * stream is no more accessible.
+ */
+__ARMAS_INLINE
+void armas_ios_close(armas_iostream_t *ios)
+{
+    if (ios && ios->vt->close)
+        ios->vt->close(ios->stream);
+    ios->stream = (void *)0;
+}
+
+/**
  * @brief Make iostream of provided file stream.
  */
-void armas_ios_filestream(armas_iostream_t *ios, FILE *fp);
+extern void armas_ios_file(armas_iostream_t *ios, FILE *fp);
+
+/**
+ * @brief Make an iostream of provided string.
+ */
+extern void armas_ios_string(armas_iostream_t *ios, const char *s, int len);
+
 
 extern int armas_json_read_token(char *iobuf, size_t len, armas_iostream_t *ios);
 extern int armas_json_write_token(int tok, const void *ptr, size_t len, armas_iostream_t *ios);
@@ -641,6 +662,7 @@ void armas_wsetpos(armas_wbuf_t *W, size_t pos)
     if (W && pos < W->bytes)
         W->offset = pos;
 }
+
 #ifdef __cplusplus
 }
 #endif
