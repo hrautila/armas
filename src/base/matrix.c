@@ -54,7 +54,8 @@ armas_dense_t *armas_init(armas_dense_t *m, int r, int c)
     int doff;
 
     if (r <= 0 || c <= 0) {
-        m->rows = 0; m->cols = 0;
+        m->rows = r < 0 ? 0 : r;
+        m->cols = c < 0 ? 0 : c;
         m->step = 0;
         m->elems = (DTYPE *)0;
         m->__data = (void *)0;
