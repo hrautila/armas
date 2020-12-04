@@ -45,7 +45,7 @@ int armas_json_load(armas_dense_t **A, FILE *fp)
 {
     armas_iostream_t reader;
 
-    armas_ios_filestream(&reader, fp);
+    armas_ios_file(&reader, fp);
     return armas_json_read(A, &reader);
 }
 
@@ -62,7 +62,7 @@ int armas_json_dump(FILE *fp, const armas_dense_t *A, int flags)
 {
     armas_iostream_t writer;
 
-    armas_ios_filestream(&writer, fp);
+    armas_ios_file(&writer, fp);
     return armas_json_write(&writer, A, flags);
 }
 #else
