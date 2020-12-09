@@ -84,12 +84,18 @@ int armas_json_write_token(int token, const void *ptr, size_t len, armas_iostrea
             JSON_ONERROR(armas_ios_putchar(writer, buf[k]));
         break;
     case ARMAS_JSON_NUMBER:
-        if (len == sizeof(double)) {
+        switch (len) {
+        case sizeof(double):
             v = *((double *)ptr);
-        } else if (len == sizeof(float)) {
+            break;
+        case sizeof(float):
             v = (double)(*((float *)ptr));
             numformat = "%.8g";
+            break;
+        default:
+            return -1;
         }
+
         if (isfinite(v)) {
             n = snprintf(buf, sizeof(buf), numformat, v);
             for (int k = 0; k < n; k++)
