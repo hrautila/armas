@@ -111,6 +111,97 @@ enum {
     MEMBER_DTA_VAL
 };
 
+static
+int armas_json_read_coord(int *row, int *col, double *dval, armas_iostream_t *ios, char *iob, size_t ioblen)
+{
+    int tok;
+    *row = 0; *col = 0; *dval = 0.0;
+    if ((tok = armas_json_read_token(iob, ioblen, ios)) != '[')
+        return -1;
+    if ((tok = armas_json_read_token(iob, ioblen, ios)) != ARMAS_JSON_NUMBER)
+        return -1;
+    *row = atoi(iob);
+    if ((tok = armas_json_read_token(iob, ioblen, ios)) != ',')
+        return -1;
+    if ((tok = armas_json_read_token(iob, ioblen, ios)) != ARMAS_JSON_NUMBER)
+        return -1;
+    *col = atoi(iob);
+    if ((tok = armas_json_read_token(iob, ioblen, ios)) != ',')
+        return -1;
+    if ((tok = armas_json_read_token(iob, ioblen, ios)) != ARMAS_JSON_NUMBER)
+        return -1;
+    *dval = strtod(iob, (char **)0);
+    if ((tok = armas_json_read_token(iob, ioblen, ios)) != ']')
+        return -1;
+    return 0;
+}
+
+static
+int armas_json_read_coorddata(armas_dense_t *A, armas_iostream_t *ios, char *iob, size_t ioblen)
+{
+    int row, col, tok, n = 0;
+    double dval;
+
+    for (;;) {
+        if ((tok = armas_json_read_coord(&row, &col, &dval, ios, iob, ioblen)) < 0)
+            return -1;
+
+        n++;
+        if (row >= 0 && row <= A->rows && col >= 0 && col <= A->cols)
+            armas_set_unsafe(A, row, col, (DTYPE)dval);
+
+        tok = armas_json_read_token(iob, ioblen, ios);
+        if (tok == ']') {
+            /* data array ending token */
+            armas_ios_ungetchar(ios, tok);
+            break;
+        }
+        if (tok != ',')
+            return -1;
+    }
+    return n;
+}
+
+static
+int armas_json_read_data(armas_dense_t *A, armas_iostream_t *ios, char *iob, size_t ioblen)
+{
+    int tok, n = 0;
+    double dval;
+    for (int j = 0; j < A->cols; j++) {
+        for (int i = 0; i < A->rows; i++, n++) {
+            if (n > 0) {
+                if ((tok = armas_json_read_token(iob, ioblen, ios)) != ',') {
+                    if (tok == ']') {
+                        /* array closing ']' */
+                        armas_ios_ungetchar(ios, tok);
+                        return n;
+                    }
+                    return -1;
+                }
+            }
+            tok = armas_json_read_token(iob, ioblen, ios);
+            if (tok != ARMAS_JSON_NUMBER && tok != ARMAS_JSON_INT) {
+                if (n == 0 && tok == '[') {
+                    /* If no elements read and start of list, assume coordinate format. */
+                    armas_ios_ungetchar(ios, tok);
+                    return armas_json_read_coorddata(A, ios, iob, ioblen);
+                }
+                return -1;
+            }
+            switch (tok) {
+            case ARMAS_JSON_INT:
+                dval = (double)atoi(iob);
+                break;
+            default:
+                dval = strtod(iob, (char **)0);
+                break;
+            }
+            armas_set_unsafe(A, i, j, (DTYPE)dval);
+        }
+    }
+    return n;
+}
+
 /**
  * @brief Read and initialize matrix from JSON serialized stream.
  *
@@ -119,15 +210,18 @@ enum {
  *    from JSON stream.
  * @param[in] ios
  *    Simple JSON stream.
- * 
- *  Reads JSON serialization of matrix from defined stream starting from
- *  current position. On exit stream is positioned at first character after the JSON 
- *  serialization of matrix.
  *
- * TODO: null matrix? is it: null | "{}"? Is it same as {"rows":0, "cols":0,...}
- * Should we return pointer to new matrix? Maybe A is armas_dense_t ** and
- * if *A == null we allocate, otherwise we deserialize into provided space.
- * 
+ * Reads JSON serialization of matrix from defined stream starting from
+ * current position. On exit stream is positioned at first character after the JSON
+ * serialization of matrix.
+ *
+ * Assumes that matrix size elemts "rows" and "cols" preceed "data" element in
+ * serialization stream. Data array is either an array of column-major of values or an array
+ * of coordinate elements. Coordinate element is array of [int, int, number] where
+ * first element is row number, second the column number and third the element
+ * value. If coordinate element row/column indexes are outside matrix dimensions
+ * the element is silently discarded.
+ *
  * @retval  0  Success
  * @retval <0  Failure
  *
@@ -285,28 +379,9 @@ int armas_json_read(armas_dense_t **A, armas_iostream_t *ios)
     }
     armas_init(aa, rows, cols);
 
-    int n = 0;
-    double dval;
-    for (int j = 0; j < cols; j++) {
-        for (int i = 0; i < rows; i++, n++) {
-            if (n > 0) {
-                if ((tok = armas_json_read_token(iob, sizeof(iob), ios)) != ',')
-                    goto error_exit;
-            }
-            tok = armas_json_read_token(iob, sizeof(iob), ios);
-            if (tok != ARMAS_JSON_NUMBER && tok != ARMAS_JSON_INT)
-                goto error_exit;
-            switch (tok) {
-            case ARMAS_JSON_INT:
-                dval = (double)atoi(iob);
-                break;
-            default:
-                dval = strtod(iob, (char **)0);
-                break;
-            }
-            armas_set_unsafe(aa, i, j, dval);
-        }
-    }
+    if (armas_json_read_data(aa, ios, iob, sizeof(iob)) < 0)
+        goto error_exit;
+
     // end of array
     if (armas_json_read_token(iob, sizeof(iob), ios) != ']')
         goto error_exit;
