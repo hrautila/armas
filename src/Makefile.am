@@ -18,7 +18,6 @@ COMMON = \
 	base/cache.c \
 	base/version.c \
 	base/env.c \
-	base/system.c \
 	base/pivot_ext.c \
 	io/ios.c \
 	io/json_reader.c \
