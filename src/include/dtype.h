@@ -12,6 +12,9 @@
 #if HAVE_CONFIG_H
   #include "config.h"
 #endif
+#ifndef CONFIG_ACCELERATORS
+#define CONFIG_ACCELERATORS 0
+#endif
 
 #include <math.h>
 #include <float.h>
