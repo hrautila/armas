@@ -323,8 +323,11 @@ int armas_mmload(armas_dense_t *A, int *flags,  FILE *f)
         else {
             if (read_line(iobuf, &r, &c, &v) < 0)
                 goto endloop;
+            // indexing starting from 1
+            r--; c--;
         }
-        armas_set_unsafe(A, r, c, v);
+        if (r >= 0 && r < A->rows && c >= 0 && c < A->cols)
+            armas_set_unsafe(A, r, c, v);
         k++;
     }
  endloop:
