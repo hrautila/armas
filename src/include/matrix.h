@@ -75,16 +75,33 @@ typedef struct armas_eigen_parameter {
     &(armas_eigen_parameter_t) { -1, -1, 0.0, 0.0, tau }
 
 //! @brief Function that returns a constants.
-typedef DTYPE (*armas_constfunc_t)();
+typedef DTYPE (*armas_constfunc_t)(void);
 
-//! @brief Fucntion that returns value for element at [i, j].
-typedef DTYPE (*armas_valuefunc_t)(int, int);
+//! @brief Function that returns value for element at [i, j].
+typedef DTYPE (*armas_valuefunc_t)(int r, int c);
 
-//! @brief Element wise operator function oper(elem)
+/**
+ * @brief Element wise operator function oper(x)
+ * @param x Element value
+ * @return New value oper(x)
+ */
 typedef DTYPE (*armas_operator_t)(DTYPE x);
 
-//! @brief Element wise operator functions, v := oper(x, y)
+/**
+ * @brief Element wise operator function, v := oper(x, y)
+ * @param x Element value
+ * @param y Constant value
+ * @return New value for element v = oper(elem, y)
+ */
 typedef DTYPE (*armas_operator2_t)(DTYPE x, DTYPE y);
+
+/**
+ *  @brief Element wise iterator
+ *  @param x element value
+ *  @param p pointer to function private space
+ *  @returns New value for element
+ */
+typedef DTYPE (*armas_iterator_t)(DTYPE x, void *p);
 
 // @cond
 extern armas_dense_t *armas_init(armas_dense_t *m, int r, int c);
@@ -109,6 +126,7 @@ extern int armas_mplus(DTYPE alpha, armas_dense_t *A, DTYPE beta, const armas_de
 extern int armas_mul_elems(armas_dense_t *A, DTYPE beta, const armas_dense_t *B, int flags);
 extern int armas_apply(armas_dense_t *A, armas_operator_t func, int flags);
 extern int armas_apply2(armas_dense_t *A, armas_operator2_t func, DTYPE val, int flags);
+extern int armas_iterate(const armas_dense_t *A, armas_iterator_t func, void *p, int flags);
 
 extern int armas_mmload(armas_dense_t *A, int *flags, FILE *f);
 extern int armas_mmdump(FILE *f, const armas_dense_t *A, int flags);
