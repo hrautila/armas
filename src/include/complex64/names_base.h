@@ -44,6 +44,12 @@ typedef double ABSTYPE;
 // nil matrix
 #define __nil                 ((armas_dense_t *)0)
 
+#define armas_valuefunc_t   armas_z_valuefunc_t
+#define armas_constfunc_t   armas_z_constfunc_t
+#define armas_operator_t    armas_z_operator_t
+#define armas_operator2_t   armas_z_operator2_t
+#define armas_iterator_t    armas_z_iterator_t
+
 // ------------------------------------------------------------------------------
 // public matrix functions
 #define armas_size          armas_z_size
@@ -88,9 +94,10 @@ typedef double ABSTYPE;
 #define armas_div_elems     armas_z_div_elems
 #define armas_apply         armas_z_apply
 #define armas_apply2        armas_z_apply2
+#define armas_iterate       armas_z_iterate
 // I/O functions
-#define armas_mmload	      armas_z_mmload
-#define armas_mmdump	      armas_z_mmdump
+#define armas_mmload	    armas_z_mmload
+#define armas_mmdump	    armas_z_mmdump
 #define armas_json_dump     armas_z_json_dump
 #define armas_json_load     armas_z_json_load
 #define armas_json_read     armas_z_json_read

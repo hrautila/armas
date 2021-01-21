@@ -50,6 +50,12 @@ typedef double ABSTYPE;
 #define armas_dense_t       armas_d_dense_t
 #define armas_dense         armas_d_dense
 
+#define armas_valuefunc_t   armas_d_valuefunc_t
+#define armas_constfunc_t   armas_d_constfunc_t
+#define armas_operator_t    armas_d_operator_t
+#define armas_operator2_t   armas_d_operator2_t
+#define armas_iterator_t    armas_d_iterator_t
+
 // ------------------------------------------------------------------------------
 // public matrix functions
 #define armas_size          armas_d_size
@@ -94,9 +100,10 @@ typedef double ABSTYPE;
 #define armas_div_elems     armas_d_div_elems
 #define armas_apply         armas_d_apply
 #define armas_apply2        armas_d_apply2
+#define armas_iterate       armas_d_iterate
 // I/O functions
-#define armas_mmload	      armas_d_mmload
-#define armas_mmdump	      armas_d_mmdump
+#define armas_mmload	    armas_d_mmload
+#define armas_mmdump	    armas_d_mmdump
 #define armas_json_dump     armas_d_json_dump
 #define armas_json_load     armas_d_json_load
 #define armas_json_read     armas_d_json_read
