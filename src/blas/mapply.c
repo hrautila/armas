@@ -124,4 +124,55 @@ int armas_apply2(armas_dense_t *A, armas_operator2_t oper, DTYPE alpha, int flag
     return 0;
 }
 
+
+/**
+ * @brief Iterate through elements of A.
+ *
+ * @param[in,out] A
+ *    Input matrix;
+ * @param[in] oper
+ *    Iterator function.
+ * @param[in] alpha
+ *    Iterator function private parameters.
+ * @param[in] flags
+ *    Indicator flags for matrix shape, ARMAS_UPPER or ARMAS_LOWER
+ *
+ * @retval 0  Success
+ * @retval <0 Error
+ *
+ * @ingroup matrix
+ */
+int armas_iterate(const armas_dense_t *A, armas_iterator_t oper, void *p, int flags)
+{
+    int i, j;
+
+    if (armas_size(A) == 0)
+        return 0;
+
+    switch (flags & (ARMAS_LOWER | ARMAS_UPPER)) {
+    case ARMAS_LOWER:
+        for (j = 0; j < A->cols; j++) {
+            for (i = j; i < A->rows; i++) {
+                oper(armas_get_unsafe(A, i, j), p);
+            }
+        }
+        break;
+    case ARMAS_UPPER:
+        for (j = 0; j < A->cols; j++) {
+            for (i = 0; i <= j; i++) {
+                oper(armas_get_unsafe(A, i, j), p);
+            }
+        }
+        break;
+    default:
+        for (j = 0; j < A->cols; j++) {
+            for (i = 0; i < A->rows; i++) {
+                oper(armas_get_unsafe(A, i, j), p);
+            }
+        }
+        break;
+    }
+    return 0;
+}
+
 #endif /* ARMAS_PROVIDES && ARMAS_REQUIRES */
