@@ -101,14 +101,14 @@ typedef DTYPE (*armas_operator2_t)(DTYPE x, DTYPE y);
  *  @param p pointer to function private space
  *  @returns New value for element
  */
-typedef DTYPE (*armas_iterator_t)(DTYPE x, void *p);
+typedef int (*armas_iterator_t)(DTYPE x, void *p);
 
 // @cond
 extern armas_dense_t *armas_init(armas_dense_t *m, int r, int c);
 
 extern void armas_print(const armas_dense_t *m, FILE *out);
 extern void armas_printf(FILE *out, const char *efmt, const armas_dense_t *m);
-extern int armas_set_consts(armas_dense_t *m, armas_constfunc_t func, int flags);
+extern int armas_set_all(armas_dense_t *m, armas_constfunc_t func, int flags);
 extern int armas_set_values(armas_dense_t *m, armas_valuefunc_t func, int flags);
 
 extern int armas_allclose(const armas_dense_t *A, const armas_dense_t *B);
@@ -127,6 +127,12 @@ extern int armas_mul_elems(armas_dense_t *A, DTYPE beta, const armas_dense_t *B,
 extern int armas_apply(armas_dense_t *A, armas_operator_t func, int flags);
 extern int armas_apply2(armas_dense_t *A, armas_operator2_t func, DTYPE val, int flags);
 extern int armas_iterate(const armas_dense_t *A, armas_iterator_t func, void *p, int flags);
+//
+extern long armas_seed(long);
+extern DTYPE armas_normal(void);
+extern DTYPE armas_normal_at(int r, int c);
+extern DTYPE armas_uniform(void);
+extern DTYPE armas_uniform_at(int r, int c);
 
 extern int armas_mmload(armas_dense_t *A, int *flags, FILE *f);
 extern int armas_mmdump(FILE *f, const armas_dense_t *A, int flags);
