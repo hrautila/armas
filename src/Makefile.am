@@ -27,6 +27,7 @@ BLAS = \
 	base/matrix.c \
 	base/matrix_ext.c \
 	base/partition.c \
+	base/random.c \
 	io/iomm.c \
 	io/json_file.c \
 	io/json_base.c \
