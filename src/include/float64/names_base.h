@@ -80,6 +80,7 @@ typedef double ABSTYPE;
 #define armas_col_as_row    armas_d_col_as_row
 #define armas_printf        armas_d_printf
 #define armas_print         armas_d_print
+#define armas_set_all       armas_d_set_all
 #define armas_set_values    armas_d_set_values
 #define armas_newcopy       armas_d_newcopy
 #define armas_mcopy         armas_d_mcopy
@@ -108,6 +109,11 @@ typedef double ABSTYPE;
 #define armas_json_load     armas_d_json_load
 #define armas_json_read     armas_d_json_read
 #define armas_json_write    armas_d_json_write
+//
+#define armas_uniform       armas_d_uniform
+#define armas_uniform_at    armas_d_uniform_at
+#define armas_normal        armas_d_normal
+#define armas_normal_at     armas_d_normal_at
 
 #define armas_submatrix_unsafe  armas_d_submatrix_unsafe
 #define armas_subvector_unsafe  armas_d_subvector_unsafe

@@ -75,6 +75,7 @@ typedef float ABSTYPE;
 #define armas_col_as_row    armas_c_col_as_row
 #define armas_printf        armas_c_printf
 #define armas_print         armas_c_print
+#define armas_set_all       armas_c_set_all
 #define armas_set_values    armas_c_set_values
 #define armas_newcopy       armas_c_newcopy
 #define armas_mcopy         armas_c_mcopy
@@ -103,6 +104,11 @@ typedef float ABSTYPE;
 #define armas_json_load     armas_c_json_load
 #define armas_json_read     armas_c_json_read
 #define armas_json_write    armas_c_json_write
+//
+#define armas_uniform       armas_c_uniform
+#define armas_uniform_at    armas_c_uniform_at
+#define armas_normal        armas_c_normal
+#define armas_normal_at     armas_c_normal_at
 
 #define armas_submatrix_unsafe  armas_c_submatrix_unsafe
 #define armas_subvector_unsafe  armas_c_subvector_unsafe
