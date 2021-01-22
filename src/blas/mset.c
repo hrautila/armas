@@ -111,26 +111,26 @@ int armas_set_values(armas_dense_t *A, armas_valuefunc_t value, int flags)
  * @returns 0  Succes
  * @ingroup matrix
  */
-int armas_set_all(armas_dense_t *A, armas_constfunc_t value, int flags)
+int armas_set_all(armas_dense_t *A, armas_generator_t value, int flags)
 {
     int i, j;
     switch (flags & (ARMAS_UPPER|ARMAS_LOWER|ARMAS_SYMM)) {
     case ARMAS_UPPER:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < j && i < A->rows; i++) {
-                armas_set_unsafe(A, i, j, value());
+                armas_set_unsafe(A, i, j, generator());
             }
             // don't set diagonal on upper trapezoidal matrix (cols > rows)
             if (j < A->rows && !(flags & ARMAS_UNIT))
-                armas_set_unsafe(A, j, j, value());
+                armas_set_unsafe(A, j, j, generator());
         }
         break;
     case ARMAS_LOWER:
         for (j = 0; j < A->cols; j++) {
             if (j < A->rows && !(flags & ARMAS_UNIT))
-                armas_set_unsafe(A, j, j, value());
+                armas_set_unsafe(A, j, j, generator());
             for (i = j+1; i < A->rows; i++) {
-                armas_set_unsafe(A, i, j, value());
+                armas_set_unsafe(A, i, j, generator());
             }
         }
         break;
@@ -138,9 +138,9 @@ int armas_set_all(armas_dense_t *A, armas_constfunc_t value, int flags)
         if (A->rows != A->cols)
             return -1;
         for (j = 0; j < A->cols; j++) {
-            A->elems[j*A->step + j] = flags & ARMAS_UNIT ? ONE : value();
+            A->elems[j*A->step + j] = flags & ARMAS_UNIT ? ONE : generator();
             for (i = j+1; i < A->rows; i++) {
-                armas_set_unsafe(A, i, j, value());
+                armas_set_unsafe(A, i, j, generator());
                 armas_set_unsafe(A, j, i, armas_get_unsafe(A, i, j));
             }
         }
@@ -148,7 +148,7 @@ int armas_set_all(armas_dense_t *A, armas_constfunc_t value, int flags)
     default:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < A->rows; i++) {
-                armas_set_unsafe(A, i, j, value());
+                armas_set_unsafe(A, i, j, generator());
             }
         }
     }

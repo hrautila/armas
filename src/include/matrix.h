@@ -74,8 +74,8 @@ typedef struct armas_eigen_parameter {
 #define ARMAS_EIGEN_ALL_TAU(tau) \
     &(armas_eigen_parameter_t) { -1, -1, 0.0, 0.0, tau }
 
-//! @brief Function that returns a constants.
-typedef DTYPE (*armas_constfunc_t)(void);
+//! @brief Function that generates for matrix element.
+typedef DTYPE (*armas_generator_t)(void);
 
 //! @brief Function that returns value for element at [i, j].
 typedef DTYPE (*armas_valuefunc_t)(int r, int c);
@@ -108,7 +108,7 @@ extern armas_dense_t *armas_init(armas_dense_t *m, int r, int c);
 
 extern void armas_print(const armas_dense_t *m, FILE *out);
 extern void armas_printf(FILE *out, const char *efmt, const armas_dense_t *m);
-extern int armas_set_all(armas_dense_t *m, armas_constfunc_t func, int flags);
+extern int armas_set_all(armas_dense_t *m, armas_generator_t func, int flags);
 extern int armas_set_values(armas_dense_t *m, armas_valuefunc_t func, int flags);
 
 extern int armas_allclose(const armas_dense_t *A, const armas_dense_t *B);
