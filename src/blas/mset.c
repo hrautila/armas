@@ -118,19 +118,19 @@ int armas_set_all(armas_dense_t *A, armas_generator_t value, int flags)
     case ARMAS_UPPER:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < j && i < A->rows; i++) {
-                armas_set_unsafe(A, i, j, generator());
+                armas_set_unsafe(A, i, j, value());
             }
             // don't set diagonal on upper trapezoidal matrix (cols > rows)
             if (j < A->rows && !(flags & ARMAS_UNIT))
-                armas_set_unsafe(A, j, j, generator());
+                armas_set_unsafe(A, j, j, value());
         }
         break;
     case ARMAS_LOWER:
         for (j = 0; j < A->cols; j++) {
             if (j < A->rows && !(flags & ARMAS_UNIT))
-                armas_set_unsafe(A, j, j, generator());
+                armas_set_unsafe(A, j, j, value());
             for (i = j+1; i < A->rows; i++) {
-                armas_set_unsafe(A, i, j, generator());
+                armas_set_unsafe(A, i, j, value());
             }
         }
         break;
@@ -138,9 +138,9 @@ int armas_set_all(armas_dense_t *A, armas_generator_t value, int flags)
         if (A->rows != A->cols)
             return -1;
         for (j = 0; j < A->cols; j++) {
-            A->elems[j*A->step + j] = flags & ARMAS_UNIT ? ONE : generator();
+            A->elems[j*A->step + j] = flags & ARMAS_UNIT ? ONE : value();
             for (i = j+1; i < A->rows; i++) {
-                armas_set_unsafe(A, i, j, generator());
+                armas_set_unsafe(A, i, j, value());
                 armas_set_unsafe(A, j, i, armas_get_unsafe(A, i, j));
             }
         }
@@ -148,7 +148,7 @@ int armas_set_all(armas_dense_t *A, armas_generator_t value, int flags)
     default:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < A->rows; i++) {
-                armas_set_unsafe(A, i, j, generator());
+                armas_set_unsafe(A, i, j, value());
             }
         }
     }
