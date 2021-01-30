@@ -81,8 +81,8 @@ int armas_apply(armas_dense_t *A, armas_operator_t oper, int flags)
  *    On entry, first input matrix. On exit result matrix.
  * @param[in] oper
  *    Operator function.
- * @param[in] alpha
- *    Operator function constant parameter
+ * @param[in] p
+ *    Pointer to operator functions second argument.
  * @param[in] flags
  *    Indicator flags for matrix shape, ARMAS_UPPER or ARMAS_LOWER
  *
@@ -91,7 +91,7 @@ int armas_apply(armas_dense_t *A, armas_operator_t oper, int flags)
  *
  * @ingroup matrix
  */
-int armas_apply2(armas_dense_t *A, armas_operator2_t oper, DTYPE alpha, int flags)
+int armas_apply2(armas_dense_t *A, armas_operator2_t oper, void *p, int flags)
 {
     int i, j;
 
@@ -102,21 +102,21 @@ int armas_apply2(armas_dense_t *A, armas_operator2_t oper, DTYPE alpha, int flag
     case ARMAS_LOWER:
         for (j = 0; j < A->cols; j++) {
             for (i = j; i < A->rows; i++) {
-                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j), alpha));
+                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j), p));
             }
         }
         break;
     case ARMAS_UPPER:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i <= j; i++) {
-                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j), alpha));
+                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j), p));
             }
         }
         break;
     default:
         for (j = 0; j < A->cols; j++) {
             for (i = 0; i < A->rows; i++) {
-                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j), alpha));
+                armas_set_unsafe(A, i, j, oper(armas_get_unsafe(A, i, j), p));
             }
         }
         break;

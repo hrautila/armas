@@ -90,10 +90,10 @@ typedef DTYPE (*armas_operator_t)(DTYPE x);
 /**
  * @brief Element wise operator function, v := oper(x, y)
  * @param x Element value
- * @param y Constant value
+ * @param y Pointer to second parameter.
  * @return New value for element v = oper(elem, y)
  */
-typedef DTYPE (*armas_operator2_t)(DTYPE x, DTYPE y);
+typedef DTYPE (*armas_operator2_t)(DTYPE x, void  *y);
 
 /**
  *  @brief Element wise iterator
