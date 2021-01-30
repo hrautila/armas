@@ -125,7 +125,7 @@ extern int armas_mplus(DTYPE alpha, armas_dense_t *A, DTYPE beta, const armas_de
 // element wise operators
 extern int armas_mul_elems(armas_dense_t *A, DTYPE beta, const armas_dense_t *B, int flags);
 extern int armas_apply(armas_dense_t *A, armas_operator_t func, int flags);
-extern int armas_apply2(armas_dense_t *A, armas_operator2_t func, DTYPE val, int flags);
+extern int armas_apply2(armas_dense_t *A, armas_operator2_t func, void *arg, int flags);
 extern int armas_iterate(const armas_dense_t *A, armas_iterator_t func, void *p, int flags);
 //
 extern long armas_seed(long);
